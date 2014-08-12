@@ -573,8 +573,8 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.installedVersion   - (mandatory) installed version
 * common.enabled            - (mandatory) value should be false so new instances are disabled by default
 * common.platform           - (mandatory) possible values: Javascript/Node.js, more coming
-* common.webserver          - (optional) array of webserver instances that should serve content from the adapters www folder
-
+* common.webservers         - (optional) array of webserver instances that should serve content from the adapters www folder
+* common.noRepository       - (optional) if adapter delivered with initial installation or has own repository
 
 #### instance
 
