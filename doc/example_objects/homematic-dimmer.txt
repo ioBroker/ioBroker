@@ -1,0 +1,89 @@
+{
+   "_id": "hm-rpc.0.JEQ0205612",
+   "type": "device",
+   "parent": null,
+   "common": {
+       "name": "Dimmer OG 1 Arbeitszimmer"
+   },
+   "native": {
+       "ADDRESS": "JEQ0205612",
+       "CHILDREN": [
+           "JEQ0205612:0",
+           "JEQ0205612:1",
+           "JEQ0205612:2",
+           "JEQ0205612:3"
+       ],
+       "FIRMWARE": "2.2",
+       "FLAGS": 1,
+       "INTERFACE": "JEQ0739174",
+       "PARAMSETS": [
+           "MASTER"
+       ],
+       "PARENT": "",
+       "RF_ADDRESS": 1732775,
+       "ROAMING": 0,
+       "RX_MODE": 1,
+       "TYPE": "HM-LC-Dim1TPBU-FM",
+       "VERSION": 10
+   }
+}
+
+
+
+{
+   "_id": "hm-rpc.0.JEQ0205612:1",
+   "type": "channel",
+   "parent": "hm-rpc.0.JEQ0205612",
+   "common": {
+       "name": "Licht Arbeitszimmer"
+   },
+   "native": {
+       "ADDRESS": "JEQ0205612:1",
+       "AES_ACTIVE": 0,
+       "DIRECTION": 2,
+       "FLAGS": 1,
+       "INDEX": 1,
+       "LINK_SOURCE_ROLES": "",
+       "LINK_TARGET_ROLES": "SWITCH WCS_TIPTRONIC_SENSOR WEATHER_CS",
+       "PARAMSETS": [
+           "LINK",
+           "MASTER",
+           "VALUES"
+       ],
+       "PARENT": "JEQ0205612",
+       "PARENT_TYPE": "HM-LC-Dim1TPBU-FM",
+       "TYPE": "DIMMER",
+       "VERSION": 10
+   }
+}
+
+
+
+{
+   "_id": "hm-rpc.0.JEQ0205612:1.LEVEL",
+   "type": "state",
+   "parent": "hm-rpc.0.JEQ0205612:1",
+   "common": {
+       "def": 0,
+       "type": "number",
+       "read": true,
+       "write": true,
+       "min": 0,
+       "max": 100,
+       "unit": "%",
+       "role": "level.dimmer"
+   },
+   "native": {
+       "CONTROL": "DIMMER.LEVEL",
+       "DEFAULT": 0,
+       "FLAGS": 1,
+       "ID": "LEVEL",
+       "MAX": 1,
+       "MIN": 0,
+       "OPERATIONS": 7,
+       "TAB_ORDER": 0,
+       "TYPE": "FLOAT",
+       "UNIT": "100%"
+   }
+}
+
