@@ -1,4 +1,5 @@
 # ioBroker
+
 *...domesticate the Internet of Things.*
 
 ioBroker is an integration platform for the Internet of Things, focused on Smarthome, Building Automation, Ambient
@@ -6,46 +7,20 @@ Assisted Living, Process Automation, Visualization and Data Logging. It aims to 
 like f.e. OpenHAB or The Thing System. ioBroker will be the successor of [CCU.IO](http://ccu.io), a project quite
 popular in the german HomeMatic community.
 
+
 ## Concept
+
 ioBroker is not just an application, it's more of a a concept, a database schema, and offers a very easy way for systems
 to interoperate. ioBroker defines some common rules for a pair of databases used to exchange data and publish events
 between different systems.
 
+
 ### Adapters
+
 Systems are attached to ioBrokers databases via so called adapters, technically processes running anywhere
 in the network and connecting all kinds of systems to ioBrokers databases. A connection to ioBrokers databases can be
-easily implemented in nearly any programming language on nearly any platform that is capable of doing ip networking.
-
-
-### Databases
-ioBroker uses Redis and CouchDB. Redis is an in-memory key-value data store and also a message broker with
-publish/subscribe pattern. It's used to maintain and publish all states of connected systems. CouchDB is used to store
-rarely changing and larger data, like metadata of systems and things, configurations or any additional files.
-
-
-### Security
-ioBroker is designed to be accessed by trusted adapters inside trusted networks. This means that usually it is not a
-good idea to expose the ioBroker databases directly to the internet or, in general, to an environment where untrusted
-clients can directly access ioBroker databases network services. There are different special adapters that offer
-services supposed to be exposed to the internet, for example webserver-adapters for user interfaces. These should be
-handled with care, for example with additional security measures like VPN and VLAN usage or reverse proxys.
-
-### Operating System and Hardware
-ioBroker.nodejs should run on any hardware and platform that runs Node.js (ARM, x86, Windows, Linux, OSX). Binary builds
-for CouchDB and Redis are also available for the ARM and x86 under Windows, Linux and OSX. ioBroker spawns a new
-Node.js-Process for every adapter instance, so RAM becomes is a limiting factor. An adapters memory fingerprint is
-roundabout 10-60MB. Because CouchDB can create quite a lot of load a dual core system is suggested.
-
-We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.org/p/product.html) or
-[Cubietruck](http://www.exp-tech.de/Mainboards/ARM/Cubietruck.html) using a Debian based Linux as operating system.
-
-## Getting Started
-
-* automated installation packages for windows and linux coming soon
-* [ioBroker.nodejs manual install](https://github.com/iobroker/ioBroker.nodejs/blob/master/README.md)
-
-
-### Adapters
+easily implemented in nearly any programming language on nearly any platform and an adapter can run on any host that is
+able to reach the databases via ip networking.
 
 | adapter    	                                                                                            | description                                                                     	                                                                                                                                                                                                        | status 	|
 |-------------------------------------------------------------------------------------------------------    |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------   |--------	|
@@ -102,6 +77,40 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 
 
 
+### Databases
+
+ioBroker uses Redis and CouchDB. Redis is an in-memory key-value data store and also a message broker with
+publish/subscribe pattern. It's used to maintain and publish all states of connected systems. CouchDB is used to store
+rarely changing and larger data, like metadata of systems and things, configurations or any additional files.
+
+
+### Security
+
+ioBroker is designed to be accessed by trusted adapters inside trusted networks. This means that usually it is not a
+good idea to expose the ioBroker databases directly to the internet or, in general, to an environment where untrusted
+clients can directly access ioBroker databases network services. Adapters that offer services exposed to the internet
+should be handled with care, for example with additional security measures like VPN, VLAN and reverse proxys.
+
+
+### Operating System and Hardware
+
+[ioBroker.nodejs](https://github.com/iobroker/ioBroker.nodejs/) should run on any hardware and os that runs
+[Node.js](http://nodejs.org/) (ARM, x86, Windows, Linux, OSX). Binary builds for CouchDB and Redis are also available
+for the ARM and x86 under Windows, Linux and OSX. ioBroker spawns a new Node.js-Process for every adapter instance, so
+RAM becomes is a limiting factor. A single adapters memory fingerprint is roundabout 10-60MB. Since CouchDB can create
+quite a lot of load a dual core system is beneficial.
+
+We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.org/p/product.html) or
+[Cubietruck](http://www.exp-tech.de/Mainboards/ARM/Cubietruck.html) using Debian based Linux as operating system.
+
+
+## Getting Started
+
+* automated installation packages for windows and linux coming soon
+* [ioBroker.nodejs manual install](https://github.com/iobroker/ioBroker.nodejs/blob/master/README.md)
+
+
+
 ## More docs for (adapter) developers
 
 * [Core Concepts and Database Schema](doc/SCHEMA.md)
@@ -109,8 +118,8 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 * [ioBroker styleguides](doc/STYLE.md)
 * [ioBroker.nodejs Changelog](https://github.com/ioBroker/ioBroker.nodejs/blob/master/CHANGELOG.md)
 * [ioBroker.nodejs Roadmap](https://github.com/ioBroker/ioBroker.nodejs/blob/master/ROADMAP.md)
-* Direct access to all ioBroker Objects is possible via the CouchDB-Webinterface "Futon": http://&lt;couch&gt;:5984/_utils/
-* Use the View selector on the upper right in CouchDB to browse ioBroker objects
+* Direct access to all ioBroker Objects is possible via the CouchDB-Webinterface "Futon": ```http://<couch>:5984/_utils/```
+* Use the view selector on the upper right in CouchDB to browse ioBroker objects
 * you can use ```redis_cli``` and issue the command ```PSUBSCRIBE *``` to watch all stateChange Events on the Console
 
 
