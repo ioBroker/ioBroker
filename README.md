@@ -15,12 +15,19 @@ to interoperate. ioBroker defines some common rules for a pair of databases used
 between different systems.
 
 
-### Adapters
+#### Adapters
 
 Systems are attached to ioBrokers databases via so called adapters, technically processes running anywhere
 in the network and connecting all kinds of systems to ioBrokers databases. A connection to ioBrokers databases can be
 easily implemented in nearly any programming language on nearly any platform and an adapter can run on any host that is
 able to reach the databases via ip networking.
+
+#### Databases
+
+ioBroker uses [Redis](http://redis.io/) and [CouchDB](http://couchdb.apache.org/). Redis is an in-memory key-value data
+store and also a message broker with publish/subscribe pattern. It's used to maintain and publish all states of
+connected systems. CouchDB is used to store rarely changing and larger data, like metadata of systems and things,
+configurations or any additional files.
 
 | adapter    	                                                                                            | description                                                                     	                                                                                                                                                                                                        | status 	|
 |-------------------------------------------------------------------------------------------------------    |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------   |--------	|
@@ -76,14 +83,8 @@ able to reach the databases via ip networking.
 
 
 
-### Databases
 
-ioBroker uses Redis and CouchDB. Redis is an in-memory key-value data store and also a message broker with
-publish/subscribe pattern. It's used to maintain and publish all states of connected systems. CouchDB is used to store
-rarely changing and larger data, like metadata of systems and things, configurations or any additional files.
-
-
-### Security
+#### Security
 
 ioBroker is designed to be accessed by trusted adapters inside trusted networks. This means that usually it is not a
 good idea to expose the ioBroker databases directly to the internet or, in general, to an environment where untrusted
@@ -91,7 +92,10 @@ clients can directly access ioBroker databases network services. Adapters that o
 should be handled with care, for example with additional security measures like VPN, VLAN and reverse proxys.
 
 
-### Operating System and Hardware
+
+## Getting Started
+
+#### Operating System and Hardware
 
 [ioBroker.nodejs](https://github.com/iobroker/ioBroker.nodejs/) should run on any hardware and os that runs
 [Node.js](http://nodejs.org/) (ARM, x86, Windows, Linux, OSX). Binary builds for CouchDB and Redis are also available
@@ -102,15 +106,14 @@ quite a lot of load a dual core system is beneficial.
 We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.org/p/product.html) or
 [Cubietruck](http://www.exp-tech.de/Mainboards/ARM/Cubietruck.html) using Debian based Linux as operating system.
 
-
-## Getting Started
+#### Installation and first steps
 
 * automated installation packages for windows and linux coming soon
 * [ioBroker.nodejs manual install](https://github.com/iobroker/ioBroker.nodejs/blob/master/README.md)
 
 
 
-## More docs for (adapter) developers
+## Docs for (adapter-)developers
 
 * [Core Concepts and Database Schema](doc/SCHEMA.md)
 * [Example Javascript/Node.js Adapter](https://github.com/ioBroker/ioBroker.nodejs/blob/master/adapter/example/example.js)
