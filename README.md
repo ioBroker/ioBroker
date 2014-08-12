@@ -34,7 +34,7 @@ handled with care, for example with additional security measures like VPN and VL
 ## Getting Started
 
 * automated installation packages for windows and linux coming soon
-* [ioBroker.nodejs manual install](https://github.com/iobroker/ioBroker.nodejs/README.md)
+* [ioBroker.nodejs manual install](https://github.com/iobroker/ioBroker.nodejs/blob/master/README.md)
 
 
 ### Adapters
@@ -82,10 +82,6 @@ handled with care, for example with additional security measures like VPN and VL
 * [ioBroker styleguides](doc/STYLE.md)
 * [ioBroker.nodejs Changelog](https://github.com/ioBroker/ioBroker.nodejs/blob/master/CHANGELOG.md)
 * [ioBroker.nodejs Roadmap](https://github.com/ioBroker/ioBroker.nodejs/blob/master/ROADMAP.md)
-
-
-### Hints
-
 * Direct access to all ioBroker Objects is possible via the CouchDB-Webinterface "Futon": http://&lt;couch&gt;:5984/_utils/
 * Use the View selector on the upper right in CouchDB to browse ioBroker objects
 * you can use ```redis_cli``` and issue the command ```PSUBSCRIBE *``` to watch all stateChange Events on the Console
