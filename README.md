@@ -14,6 +14,12 @@ ioBroker is not just an application, it's more of a a concept, a database schema
 to interoperate. ioBroker defines some common rules for a pair of databases used to exchange data and publish events
 between different systems.
 
+#### Databases
+
+ioBroker uses [Redis](http://redis.io/) and [CouchDB](http://couchdb.apache.org/). Redis is an in-memory key-value data
+store and also a message broker with publish/subscribe pattern. It's used to maintain and publish all states of
+connected systems. CouchDB is used to store rarely changing and larger data, like metadata of systems and things,
+configurations or any additional files.
 
 #### Adapters
 
@@ -22,12 +28,7 @@ in the network and connecting all kinds of systems to ioBrokers databases. A con
 easily implemented in nearly any programming language on nearly any platform and an adapter can run on any host that is
 able to reach the databases via ip networking.
 
-#### Databases
 
-ioBroker uses [Redis](http://redis.io/) and [CouchDB](http://couchdb.apache.org/). Redis is an in-memory key-value data
-store and also a message broker with publish/subscribe pattern. It's used to maintain and publish all states of
-connected systems. CouchDB is used to store rarely changing and larger data, like metadata of systems and things,
-configurations or any additional files.
 
 | adapter    	                                                                                            | description                                                                     	                                                                                                                                                                                                        | status 	|
 |-------------------------------------------------------------------------------------------------------    |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------   |--------	|
