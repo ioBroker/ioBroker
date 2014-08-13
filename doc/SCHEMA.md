@@ -584,7 +584,7 @@ id *system.adapter.&lt;adapter.name&gt;.&lt;instance-number&gt;*
 * common.host       - (mandatory) host where the adapter should be started at - object *system.host.&lt;host&gt;* must exist
 * common.enabled    - (mandatory)
 * common.mode       - (mandatory) possible values see below
-* common.messagebox - (optional)  if true, then the adapter can receive messages/commands from other adapters over state "system.adapter.<adapterName>.<instance>.common.messagebox" as object {command: command, message: message}
+
 
 ##### adapter/instance common.mode
 
