@@ -254,6 +254,7 @@ possible values:
 * switch (common.type=boolean, common.oper.write=true)
 * ...
 * text.phone_number
+* messagebox            (common.type=object, common.oper.write=true) used to send messages to email, pushover and other adapters
 
 
 #### channel
