@@ -567,7 +567,7 @@ id
 
 id *system.adapter.&lt;adapter.name&gt;*
 
-* common.children           - (optional)  array of adapter instance IDs
+* children                  - (optional)  array of adapter instance IDs
 * common.mode               - (mandatory) possible values see below
 * common.version            - (mandatory) available version
 * common.installedVersion   - (mandatory) installed version
