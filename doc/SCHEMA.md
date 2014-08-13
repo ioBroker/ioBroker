@@ -574,6 +574,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.enabled            - (mandatory) value should be false so new instances are disabled by default
 * common.platform           - (mandatory) possible values: Javascript/Node.js, more coming
 * common.webserver          - (optional)  array of webserver instances that should serve content from the adapters www folder
+* common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
 
 
 #### instance
