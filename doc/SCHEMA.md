@@ -254,8 +254,10 @@ possible values:
 * switch (common.type=boolean, common.oper.write=true)
 * ...
 * text.phone_number
-* messagebox            (common.type=object, common.oper.write=true) used to send messages to email, pushover and other adapters
-
+* 
+* adapter.messagebox     (common.type=object, common.oper.write=true) used to send messages to email, pushover and other adapters
+* adapter.wakeup         (common.type=boolean, common.oper.write=true) wake up adapter from suspended mode
+* adapter.run            (common.type=boolean, common.oper.write=true) start or stop adapter, that supoprt it
 
 #### channel
 
