@@ -15,6 +15,8 @@ ioBroker is not just an application, it's more of a a concept, a database schema
 to interoperate. ioBroker defines some common rules for a pair of databases used to exchange data and publish events
 between different systems.
 
+![architecture][img/architecture.png]
+
 #### Databases
 
 ioBroker uses [Redis](http://redis.io/) and [CouchDB](http://couchdb.apache.org/). Redis is an in-memory key-value data
@@ -30,7 +32,7 @@ implemented in nearly any programming language on nearly any platform and an ada
 reach the databases via ip networking.
 
 A library module for fast and comfortable adapter development exists for Javascript/Node.js until now. Libraries for
-adapter development in other languages are planned (python, php, java, perl, ...).
+adapter development in other languages are planned (python, java, perl, ...).
 
 
 
@@ -64,7 +66,7 @@ adapter development in other languages are planned (python, php, java, perl, ...
 | [z-wave](https://github.com/GermanBluefox/ioBroker.z-wave)                                                | [Z-Wave](http://www.z-wave.com/)                                                                                                                                                                                                                                                          | planned   |
 |           	                                                                                            |                                                                                	                                                                                                                                                                                                        |        	|
 |                                                                                                           | **home entertainment**                                                                                                                                                                                                                                                                    |           |
-| [sonos](https://github.com/GermanBluefox/ioBroker.sonos)                                                  | [Sonos](http://www.sonos.com/)                                                                                                                                                                                                                                                            | planned   |
+| [sonos](https://github.com/ioBroker/ioBroker.sonos)                                                  | [Sonos](http://www.sonos.com/)                                                                                                                                                                                                                                                            | planned   |
 | [mpd](https://github.com/iobroker/ioBroker.mpd)                                                           | [mpd](http://www.musicpd.org/)                                                                                                                                                                                                                                                            | planned   |
 | [lirc](https://github.com/iobroker/ioBroker.lirc)                                                         | [LIRC](http://www.lirc.org/)                                                                                                                                                                                                                                                              | planned   |
 |           	                                                                                            | ...several TVs and AV Receivers (Pioneer, Onkyo, Yamaha, Samsung, Sony)                                                                         	                                                                                                                                        | planned   |
