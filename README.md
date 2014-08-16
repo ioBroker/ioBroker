@@ -15,7 +15,7 @@ ioBroker is not just an application, it's more of a a concept, a database schema
 to interoperate. ioBroker defines some common rules for a pair of databases used to exchange data and publish events
 between different systems.
 
-![architecture][img/architecture.png]
+![architecture](img/architecture.png)
 
 #### Databases
 
