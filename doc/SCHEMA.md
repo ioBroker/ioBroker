@@ -254,7 +254,10 @@ possible values:
 * switch (common.type=boolean, common.oper.write=true)
 * ...
 * text.phone_number
-
+* 
+* adapter.messagebox     (common.type=object, common.oper.write=true) used to send messages to email, pushover and other adapters
+* adapter.wakeup         (common.type=boolean, common.oper.write=true) wake up adapter from suspended mode
+* adapter.run            (common.type=boolean, common.oper.write=true) start or stop adapter, that supoprt it
 
 #### channel
 
@@ -567,7 +570,7 @@ id
 
 id *system.adapter.&lt;adapter.name&gt;*
 
-* common.children           - (optional) array of adapter instance IDs
+* children                  - (optional)  array of adapter instance IDs
 * common.mode               - (mandatory) possible values see below
 * common.version            - (mandatory) available version
 * common.installedVersion   - (mandatory) installed version
@@ -575,15 +578,19 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.platform           - (mandatory) possible values: Javascript/Node.js, more coming
 * common.webservers         - (optional) array of webserver instances that should serve content from the adapters www folder
 * common.noRepository       - (optional) if adapter delivered with initial installation or has own repository
+* common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
+* common.wakeup             - (optional)  
+* common.run                - (optional)  
 
 #### instance
 
 id *system.adapter.&lt;adapter.name&gt;.&lt;instance-number&gt;*
 
-* parent          - (mandatory) adapter id
-* common.host     - (mandatory) host where the adapter should be started at - object *system.host.&lt;host&gt;* must exist
-* common.enabled  - (mandatory)
-* common.mode     - (mandatory) possible values see below
+* parent            - (mandatory) adapter id
+* common.host       - (mandatory) host where the adapter should be started at - object *system.host.&lt;host&gt;* must exist
+* common.enabled    - (mandatory)
+* common.mode       - (mandatory) possible values see below
+
 
 ##### adapter/instance common.mode
 
