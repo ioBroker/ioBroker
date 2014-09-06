@@ -36,7 +36,7 @@ a string with a maximum length of 240 bytes, hierarchically structured, levels s
 * &lt;adapter-name&gt;.meta. - common meta-data used by all instances of this adapter
 * &lt;adapter-name&gt;.&lt;instance-number&gt;. - An adapters instance namespace
 * enum.               - Enumerations
-* hist.               - History Data (only states, no objects)
+* history.            - History Data
 * scripts.            - Script Engine Scripts
 * scripts.js.         - javascript Script Engine Scripts
 * scripts.py.         - python Script Engine Scripts
