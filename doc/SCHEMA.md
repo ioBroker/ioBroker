@@ -52,6 +52,11 @@ a string with a maximum length of 240 bytes, hierarchically structured, levels s
         currency:     '€',          // Default currency sign.
         dateFormat:   'DD.MM.YYYY'  // Default date format.
         isFloatComma: true,         // Default float divider ('.' - false, ',' - true)
+        "activeRepo": "online1",    // active repository 
+        "listRepo": {               // list of possible repositories
+            "default": "conf/sources-dist.json",
+            "online1": "https://raw.githubusercontent.com/ioBroker/ioBroker.nodejs/master/conf/sources-dist.json"
+        }
     }
 }
 </pre>
