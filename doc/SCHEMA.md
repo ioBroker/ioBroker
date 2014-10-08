@@ -586,6 +586,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
 * common.wakeup             - (optional)  
 * common.run                - (optional)  
+* common.availableModes     - (optional) values for common.mode if more than one mode is possible
 
 #### instance
 
