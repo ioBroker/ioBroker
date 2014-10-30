@@ -216,6 +216,7 @@ possible values:
 * value.min         (common.type=number, common.oper.write=false)
 * value.max         (common.type=number, common.oper.write=false)
 * value.default     (common.type=number, common.oper.write=false)
+* value.battery     (common.type=number, common.oper.write=false) - battery level
 * ...
 * value.power.consumption or power.consumption ?
 
@@ -257,6 +258,8 @@ possible values:
 * ...
 
 * switch (common.type=boolean, common.oper.write=true)
+* 
+
 * ...
 * text.phone_number
 * 
@@ -303,6 +306,8 @@ possible values:
 * light.color.hslct - Set color in Hue/Saturation/Luminance or Color Temperature (Hue extended color light)
 * light.color.ct    - color temperature K 
 
+* switch            - Some generic switch
+
 * sensor            - E.g. window or door contact, water leak sensor, fire sensor
 * sensor.door       - open, close
 * sensor.door.lock  - open, close, locked
@@ -311,12 +316,17 @@ possible values:
 * sensor.water      - true(alarm), false (no alarm)
 * sensor.fire       - true(alarm), false (no alarm)
 * sensor.CO2        - true(alarm), false (no alarm)
+* 
+* alarm             - some alarm
 
 * phone             - fritz box, speedport and so on
 
 * button            - like wall switch or TV remote, where every button is a state like .play, .stop, .pause
 * remote            - TV or other remotes with state is string with pressed values, e.g. "PLAY", "STOP", "PAUSE"
 
+* meta              - Information about device
+* meta.version      - device version
+* meta.config       - configuration from device
 * ...
 
 
