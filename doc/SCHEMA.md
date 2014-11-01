@@ -597,6 +597,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.wakeup             - (optional)  
 * common.run                - (optional)  
 * common.availableModes     - (optional) values for common.mode if more than one mode is possible
+* common.localLink          - (optional) link to the web service of this adapter. E.g to http://localhost:5984/_utils for futon from admin
 
 #### instance
 
