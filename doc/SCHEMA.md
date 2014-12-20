@@ -166,7 +166,7 @@ with an array of children IDs - if parent is used children is mandatory and vice
 
 attributes:
 
-* common.type  (optional - (default is mixed==any type) (possible values: number, string, bool, array, object, mixed)
+* common.type  (optional - (default is mixed==any type) (possible values: number, string, boolean, array, object, mixed)
 * common.min   (optional)
 * common.max   (optional)
 * common.unit  (optional)
