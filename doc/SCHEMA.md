@@ -599,6 +599,11 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.availableModes     - (optional) values for common.mode if more than one mode is possible
 * common.localLink          - (optional) link to the web service of this adapter. E.g to http://localhost:5984/_utils for futon from admin
 * common.logTransporter     - (optional) if this adapter receives logs from other hosts and adapters (e.g. to strore them somewhere)
+* common.nondeletable       - (optional) this adapter cannot be deleted or updated. It will be updated together with controller.
+* common.icon               - (optional) name of the local icon (should be located in subdirectory "admin")
+* common.extIcon            - (optional) link to extrenal icon for uninstalled adapters. Normally on github.
+* common.logLevel           - (optional) debug, info, warn or error
+* common.supportStopInstance- (optional) if adapter supports signal stopInstance (messagebox required)
 
 
 #### instance
@@ -617,8 +622,7 @@ id *system.adapter.&lt;adapter.name&gt;.&lt;instance-number&gt;*
 * **daemon**      - always running process (will be restarted if process exits)
 * **subscribe**   - is started when state *system.adapter.&lt;adapter-name&gt;.&lt;instance-number&gt;.alive* changes to *true*. Is killed when *.alive* changes to *false* and sets *.alive* to *false* if process exits (will **not** be restarted when process exits)
 * **schedule**    - is started by schedule found in *system.adapter.&lt;adapter-name&gt;.&lt;instance-number&gt;.schedule* - reacts on changes of *.schedule* by rescheduling with new state
-
-
+* **once**        - this adapter will be started every time the system.adapter.yyy.x object changed. It will not be restarted after termination.
 
 #### host
 
