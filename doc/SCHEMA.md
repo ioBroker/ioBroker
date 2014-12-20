@@ -175,6 +175,7 @@ attributes:
 * common.read  (boolean, mandatory) - true if state is readable
 * common.write (boolean, mandatory) - true if state is writeable
 * common.role  (string, mandatory) - role of the state (used in user interfaces to indicate which widget to choose, see below)
+* common.states (optional) attribut of type number with array of possible states
 
 
 ##### state common.history
