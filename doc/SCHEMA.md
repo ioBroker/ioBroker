@@ -603,7 +603,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.icon               - (optional) name of the local icon (should be located in subdirectory "admin")
 * common.extIcon            - (optional) link to extrenal icon for uninstalled adapters. Normally on github.
 * common.logLevel           - (optional) debug, info, warn or error
-* common.supportStopInstance- (optional) if adapter supports signal stopInstance (messagebox required)
+* common.supportStopInstance- (optional) if adapter supports signal stopInstance (messagebox required). The signal will be snet before stop to the adapter. (used if the problems occured with SIGTERM)
 
 
 #### instance
