@@ -606,6 +606,9 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.logLevel           - (optional) debug, info, warn or error
 * common.supportStopInstance- (optional) if adapter supports signal stopInstance (messagebox required). The signal will be snet before stop to the adapter. (used if the problems occured with SIGTERM)
 * common.allowInit          - (optional) allow for "scheduled" adapter call not in time schedule if settings changed or adapter started.
+* common.onlyWWW            - (optional) say to controller, that adapter has only html files and no main.js, like rickshaw
+* common.singleton          - (optional) adapter can be installed only once in whole system
+* common.singletonHost      - (optional) adapter can be installed only once on one host
 
 
 #### instance
