@@ -1,6 +1,6 @@
 {
   "name": "iobroker",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "engines": {
     "node": ">=0.8"
   },
