@@ -46,7 +46,7 @@ chmod 777 /etc/init.d/iobroker.sh
 #Replace user pi with current user
 sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /etc/init.d/iobroker.sh
 chown root:root /etc/init.d/iobroker.sh
-update-rc.d /etc/init.d/iobroker.sh defaults
+update-rc.d iobroker.sh defaults
 
 # Start the service!
 echo "Start iobroker..."
