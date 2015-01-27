@@ -9,7 +9,7 @@
 # Description:       starts ioBroker
 ### END INIT INFO
 (( EUID )) && echo .You need to have root privileges.. && exit 1
-PIDF=@@PATH@@/lib/iobroker.pid
+PIDF=@@PATH@@lib/iobroker.pid
 NODECMD=/usr/local/bin/node
 IOBROKERCMD=@@PATH@@iobroker.js
 RETVAL=0
