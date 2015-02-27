@@ -176,6 +176,7 @@ attributes:
 * common.write  (boolean, mandatory) - true if state is writeable
 * common.role   (string,  mandatory) - role of the state (used in user interfaces to indicate which widget to choose, see below)
 * common.states (optional) attribut of type number with array of possible states
+* common.workingID (string, optional) - if this state has helper state WORKING. Here must be written the full name or just the last part if the first parts are the same with actual. Used for HM.LEVEL and normally has value "WORKING"
 
 
 ##### state common.history
