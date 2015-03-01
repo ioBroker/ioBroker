@@ -1,7 +1,7 @@
 #!/bin/bash
 #Create empty directories
 IO_USER=$USER
-
+NODE=`which node`
 #Create user if first install
 #if [ ! -f "/opt/iobroker/conf/iobroker.json" ]; then
 #    if [ $(cat /etc/passwd | grep "/home" |cut -d: -f1 | grep '^iobroker$' | wc -l) -eq 0 ]
@@ -45,6 +45,8 @@ echo "Set permissions..."
 chmod 777 /etc/init.d/iobroker.sh
 #Replace user pi with current user
 sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /etc/init.d/iobroker.sh
+NODE=${NODE//\//\\/}
+sed -i -e s/NODECMD=.*/NODECMD=$NODE/ /etc/init.d/iobroker.sh
 chown root:root /etc/init.d/iobroker.sh
 update-rc.d iobroker.sh defaults
 

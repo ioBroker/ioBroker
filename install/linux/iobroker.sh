@@ -10,12 +10,13 @@
 ### END INIT INFO
 (( EUID )) && echo .You need to have root privileges.. && exit 1
 PIDF=@@PATH@@lib/iobroker.pid
-NODECMD=/usr/local/bin/node
+NODECMD=@@node
 IOBROKERCMD=@@PATH@@iobroker.js
 RETVAL=0
 IOBROKERUSER=@@user
 
 start() {
+            export IOBROKER_HOME=@@HOME@@
             echo -n "Starting ioBroker"
             sudo -u ${IOBROKERUSER} $NODECMD $IOBROKERCMD start
             RETVAL=$?
