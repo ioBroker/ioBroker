@@ -601,7 +601,10 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.singleton          - (optional) adapter can be installed only once in whole system
 * common.singletonHost      - (optional) adapter can be installed only once on one host
 * common.allowInit          - (optional) allow scheduled adapter start once after configuration changed and then by schedule
-
+* common.config.width       - (optional) default width for configuration dialog
+* common.config.height      - (optional) default height for configuration dialog
+* common.config.minWidth    - (optional) minimal width for configuration dialog
+* common.config.minHeight   - (optional) minimal height for configuration dialog
 
 #### instance
 
