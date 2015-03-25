@@ -2,5 +2,6 @@ Gruntfile.js
 tasks
 data
 node_modules
+wiki
 .idea
 .git
