@@ -1,5 +1,7 @@
 # ioBroker
 
+See [ioBroker wiki](https://github.com/ioBroker/ioBroker/wiki/Home-(English)) for more information
+
 *...domesticate the Internet of Things.*
 
 ioBroker is an integration platform for the [Internet of Things](http://en.wikipedia.org/wiki/Internet_of_Things),
