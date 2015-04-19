@@ -37,6 +37,14 @@ NODE=`which node`
 #    /usr/bin/couchdb -b
 #fi
 
+## if iobroker.sh not exists. Copy it
+if [ ! -f "/etc/init.d/iobroker.sh" ]; then
+    cp iobroker.sh /etc/init.d/iobroker.sh
+fi
+if [ ! -f "/usr/bin/iobroker" ]; then
+    echo 'node @@PATH@@iobroker.js $1 $2 $3 $4 $5" > /usr/bin/iobroker
+fi
+
 #Set rights
 echo "Set permissions..."
 #find @@PATH@@ -type d -exec chmod 777 {} \;
