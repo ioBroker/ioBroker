@@ -606,6 +606,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.config.minWidth    - (optional) minimal width for configuration dialog
 * common.config.minHeight   - (optional) minimal height for configuration dialog
 * common.os                 - (optional) string or array of supported operation systems, e.g ["linux", "darwin"]
+* common.stopBeforeUpdate   - (optional) if adapter must be stopped before update
 
 #### instance
 
