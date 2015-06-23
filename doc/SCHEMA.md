@@ -134,15 +134,11 @@ Following attributes have to exist in every object:
 
 ### Optional attributes
 
-* parent   - ID of parent object (see below)
-* children - Array of children IDs
-* common.name - the name of the object
+* common.name - the name of the object (optional but strictly suggested to fill it)
 
 ### Tree structure
 
-Objects can have a *parent* attribute containing the *id* of their parent to build a tree structure. This should be
-limited to 3 levels (except for objects of type enum). An object referenced as a parent has to have a children property
-with an array of children IDs - if parent is used children is mandatory and vice versa.
+The tree structure is assembled automatically by names. E.g. ```system.adapter.0.admin``` is parent for ```system.adapter.0.admin.uptime```. Use this name convetion with point ".", as divider of levels.
 
 ### Object types
 
