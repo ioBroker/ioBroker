@@ -603,6 +603,9 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.config.minHeight   - (optional) minimal height for configuration dialog
 * common.os                 - (optional) string or array of supported operation systems, e.g ["linux", "darwin"]
 * common.stopBeforeUpdate   - (optional) if adapter must be stopped before update
+* common.adminTab.singleton - (optional) if adapter has TAB for admin. Only one TAB for all instances will be shown.
+* common.adminTab.name      - (optional) name of TAB in admin
+* common.adminTab.link      - (optional) link for iframe in the TAB. You can use parameters replacement like this: "http://%ip%:%port%". IP will be replaced with host IP. "port" will be extracted from native.port.
 
 #### instance
 
