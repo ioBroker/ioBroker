@@ -215,6 +215,7 @@ possible values:
 * value.max         (common.type=number, common.write=false)
 * value.default     (common.type=number, common.write=false)
 * value.battery     (common.type=number, common.write=false) - battery level
+* value.valve       (common.type=number, common.write=false) - valve level
 * ...
 * value.power.consumption or power.consumption ?
 
@@ -246,6 +247,7 @@ possible values:
 * level.dimmer
 * level.blind
 * level.temperature
+* level.valve           (common.type=number, common.write=true, set point for valve position)
 * level.color.red
 * level.color.green
 * level.color.blue
