@@ -216,6 +216,8 @@ possible values:
 * value.default     (common.type=number, common.write=false)
 * value.battery     (common.type=number, common.write=false) - battery level
 * value.valve       (common.type=number, common.write=false) - valve level
+* value.time        (common.type=number, common.write=false) - getTime() of Date() object
+* value.interval    (common.type=number, common.write=false, common.unit='sec') - Interval in seconds (can be 0.1 or less)
 * ...
 * value.power.consumption or power.consumption ?
 
