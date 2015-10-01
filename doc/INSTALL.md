@@ -8,6 +8,9 @@
 
 * ```wget http://ccu.io.mainskater.de/nodejs_0.10.22-1_armhf.deb ; sudo dpkg -i nodejs_0.10.22-1_armhf.deb ; rm nodejs_0.10.22-1_armhf.deb```
 
+Sometimes node.js has not installed the soft link. If you see outputs with ```/usr/bin/nodejs -v```, following can help:
+```ln -s /usr/bin/nodejs /usr/bin/node```
+
 #### Install [Redis](http://redis.io/)
 
 * ```sudo apt-get install redis-server```
