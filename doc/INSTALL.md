@@ -11,19 +11,6 @@
 Sometimes node.js has not installed the soft link. If you see outputs with ```/usr/bin/nodejs -v```, following can help:
 ```ln -s /usr/bin/nodejs /usr/bin/node```
 
-*** REDIS and COUCHDB are not reuiqired actually ***
-```
-#### Install [Redis](http://redis.io/)
-
-* ```sudo apt-get install redis-server```
-
-#### Install and configure [CouchDB](http://couchdb.apache.org/)
-
-* ```sudo apt-get install couchdb```
-* open the file /etc/couchdb/local.ini and replace the line ```;bind_address = 127.0.0.1``` by ```bind_address = 0.0.0.0``` (make sure to remove the semicolon at the beginning of the line)
-* ```sudo /etc/init.d/couchdb restart```
-```
-
 ### Download and Install
 
 * Create and change to the directory under which you want to install ioBroker.
