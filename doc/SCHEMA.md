@@ -611,6 +611,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.adminTab.name      - (optional) name of TAB in admin
 * common.adminTab.link      - (optional) link for iframe in the TAB. You can use parameters replacement like this: "http://%ip%:%port%". IP will be replaced with host IP. "port" will be extracted from native.port.
 * common.restartAdapters    - (optional) array with names of adapter that must be restarted after this adapter is installed, e.g. ["vis"]
+* common.preserveSettings   - (optional) string (or array) with names of attributes in common of instance, which will not be deleted. E.g. "history", so by setState('system.adapter.mqtt.0", {..}) the field common.history will not be deleted even if new object does not have this field. To delete the attribute it must be explicitly done with ```common:{history: null}```.  
 
 #### instance
 
