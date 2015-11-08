@@ -377,7 +377,7 @@ possible values:
    "type": "state",
    "parent": "channel or device",       // e.g. "hm-rpc.0.JEQ0205612:1"
    "common": {
-       "name":  'Name of state",        // mandatory, default _id ??
+       "name":  "Name of state",        // mandatory, default _id ??
        "def":   false,                  // optional,  default false
        "type":  "boolean",              // optional,  default "boolean"
        "read":  true,                   // mandatory, default true
@@ -385,7 +385,7 @@ possible values:
        "min":   false,                  // optional,  default false
        "max":   true,                   // optional,  default true
        "role":  "indicator.maintenance" // mandatory
-       "desc":  'Problem description'   // optional,  default undefined
+       "desc":  "Problem description"   // optional,  default undefined
    }
 }
 ,
