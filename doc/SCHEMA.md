@@ -117,8 +117,18 @@ attributes for getState/stateChange/setState object:
 * lc     - a unix timestamp indicating the last change of the state's actual value
 * from   - adapter instance that did the "setState"
 * expire - a integer value that can be used to set states that expire after a given number of seconds. Can be used ony with setValue. After the value expires, it disappears from redisDB.
+* q      - quality. Number with following states:
 
-
+```
+  0x00 - 00000000 - good (can be undefined or null)
+  0x01 - 00000001 - general bad, general problem
+  0x41 - 01000001 - general problem by device
+  0x81 - 10000001 - general problem by sensor
+  0x42 - 01000010 - device not connected
+  0x82 - 10000010 - sensor not connected
+  0x44 - 01000100 - device reports error
+  0x84 - 10000100 - sensor reports error
+```
 Every *state* has to be represented by an object of the type state containing Meta-Data for the state. see below.
 
 ## Objects
