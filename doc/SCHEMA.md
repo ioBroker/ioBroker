@@ -15,6 +15,42 @@ in the adapter module like setState, getState and so on.
 
 For every state there also has to exist a corresponding object with type=state.
 
+# Content
+- [Database Schema](#satabase-schema)
+    - [IDs](#ids)
+        - [Namespaces](#namespaces)
+            - [Namespace system.config.](#namespace-systemconfig)
+            - [Namespace system.host.&lt;hostname&gt;](#namespace-systemhosthostname)
+
+    - [States](#states)
+    - [Objects](#objects)
+        - [Mandatory attributes](#mandatory-attributes)
+        - [Optional attributes](#optional-attributes)
+        - [Tree structure](#tree-structure)
+        - [Object types](#object-types)
+        - [Attributes for specific object types](#attributes-for-specific-object-types)
+            - [state](#state)
+                - [state common.history](#state-commonhistory)
+                - [state common.role](#state-commonrole)
+            - [channel](#channel)
+                - [channel common.role](#channel-commonrole)
+                - [Channel descriptions](#channel-descriptions)
+                    - [Optional states for every channel/device](#optional-states-for-every-channeldevice)
+                    - [light.switch - Attributes description](#lightswitch---attributes-description)
+                    - [light.dimmer - Attributes description](#lightdimmer---attributes-description)
+                    - [blind - Attributes description](#blind---attributes-description)
+                    - [phone - Attributes description](#phone---attributes-description)
+            - [device](#device)
+            - [enum](#enum)
+            - [meta](#meta)
+            - [adapter](#adapter)
+            - [instance](#instance)
+            - [host](#host)
+            - [config](#config)
+            - [script](#script)
+            - [user](#user)
+            - [group](#group)
+
 # Database Schema
 
 ## IDs
@@ -187,25 +223,19 @@ attributes:
 
 ##### state common.history
 
-History function needs the history adapter
+History function needs the history adapter or any other storage adapter of type history
 
 fifo length is reduced to min when max is hit. set to null or leave undefined to use defaults
 
 for a list of transports see history adapter README
 
 * common.history (optional)
-* common.history.changesOnly (optional, boolean, if true only value changes are logged)
-* common.history.fifo (optional, high speed history storage)
-* common.history.fifo.enabled (boolean)
-* common.history.fifo.min (integer, min fifo length)
-* common.history.fifo.max (integer, max fifo length)
-* common.history.fifo.transports (array of strings, log-transports data should be sent to after leaving the fifo)
-* common.history.direct.enabled (boolean)
-* common.history.direct.transports (array of strings, log-transports data should be sent on change)
+* common.history.HISTORY-INSTANCE.changesOnly (optional, boolean, if true only value changes are logged)
+* common.history.HISTORY-INSTANCE.enabled (boolean)
 
-* common.role (indicates how this state should be represented in user interfaces)
 
 ##### state common.role
+* common.role (indicates how this state should be represented in user interfaces)
 
 possible values:
 
@@ -282,7 +312,7 @@ possible values:
 
 #### channel
 
-##### channel common.role - (HQ: Is it mandatory? I think no.)
+##### channel common.role (optional)
 
 suggestion: the channel-objects common.role should/could imply a set of mandatory and/or optional state-child-objects
 
