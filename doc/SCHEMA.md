@@ -626,6 +626,8 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.webservers         - (optional) array of webserver instances that should serve content from the adapters www folder
 * common.noRepository       - (optional) if adapter delivered with initial installation or has own repository
 * common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
+* common.subscribe          - (optional) name of variable, that is subscribed automatically
+* common.subscribable       - (optional) variables of this adapter must be subscribed with sendTo to enable updates
 * common.wakeup             - (optional)  
 * common.run                - (optional)  
 * common.availableModes     - (optional) values for common.mode if more than one mode is possible
