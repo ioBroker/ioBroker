@@ -2,12 +2,12 @@ var Service = require('node-windows').Service;
 
 // Create a new service object
 var svc = new Service({
-  name: 'ioBroker',
-  description: 'ioBroker Controller service.',
-  script: require('path').join(__dirname, 'controller.js'),
+  name:         'ioBroker',
+  description:  'ioBroker service.',
+  script:       require('path').join(__dirname, 'controller.js'),
   env: {
-    name: "NODE_ENV",
-    value: "production"
+    name:       'NODE_ENV',
+    value:      'production'
   }
 });
 
@@ -25,7 +25,7 @@ svc.on('alreadyinstalled', function () {
 // Listen for the "start" event and let us know when the
 // process has actually started working.
 svc.on('start', function () {
-  console.log(svc.name + ' started!\nVisit http://127.0.0.1:8081 to configure it.');
+  console.log(svc.name + ' started!\nVisit http://127.0.0.1:8080 to configure it.');
 });
 
 // Install the script as a service.

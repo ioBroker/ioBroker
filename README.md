@@ -183,7 +183,7 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2015 bluefox, hobbyquaker 
+Copyright (c) 2014-2016 bluefox
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
