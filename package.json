@@ -43,6 +43,9 @@
     "type": "git",
     "url": "https://github.com/ioBroker/ioBroker"
   },
+  "config": {
+    "unsafe-perm": true
+  },
   "scripts": {
     "install": "node lib/setup.js"
   },
