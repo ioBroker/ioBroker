@@ -1,13 +1,13 @@
 {
   "name": "iobroker",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "engines": {
     "node": ">=0.8"
   },
   "optionalDependencies": {
   },
   "dependencies": {
-    "yargs": "~4.2.0"
+    "yargs": "^4.2.0"
   },
   "homepage": "http://iobroker.net",
   "description": "...domesticate the Internet of Things",

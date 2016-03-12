@@ -5,6 +5,12 @@
 See [ioBroker wiki](https://github.com/ioBroker/ioBroker/wiki/Home-(English)) for more information
 
 
+[ioBroker website](http://iobroker.net)
+[Bug tracking JIRA](http://iobroker.net:8000)
+[Demo admin](http://iobroker.net:8081)
+[Demo VIS](https://iobroker.net:8080)
+
+
 ioBroker is an integration platform for the [Internet of Things](http://en.wikipedia.org/wiki/Internet_of_Things),
 focused on Building Automation, Smart Metering, Ambient Assisted Living, Process Automation, Visualization and
 Data Logging. It aims to be a possible replacement for software like f.e. [fhem](http://fhem.de),
