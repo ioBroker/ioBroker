@@ -1,6 +1,6 @@
 # ioBroker
 
-*...domesticate the Internet of Things.*
+*Automate your life!*
 
 See [ioBroker wiki](https://github.com/ioBroker/ioBroker/wiki/Home-(English)) for more information
 
