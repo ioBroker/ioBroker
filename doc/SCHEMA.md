@@ -657,6 +657,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.preserveSettings   - (optional) string (or array) with names of attributes in common of instance, which will not be deleted. E.g. "history", so by setState('system.adapter.mqtt.0", {..}) the field common.history will not be deleted even if new object does not have this field. To delete the attribute it must be explicitly done with ```common:{history: null}```.  
 * common.noConfig           - (optional) do not show configuration dialog for instance
 * common.stopTimeout        - (optional) timeout in ms to wait, till adapter shut down. Defaut 500ms.
+* common.unsafePerm         - (optional) if the package must be installed with "npm --unsafe-perm" parameter
 
 #### instance
 
