@@ -258,6 +258,8 @@ possible values:
 * value.valve       (common.type=number, common.write=false) - valve level
 * value.time        (common.type=number, common.write=false) - getTime() of Date() object
 * value.interval    (common.type=number, common.write=false, common.unit='sec') - Interval in seconds (can be 0.1 or less)
+* value.date        (common.type=string, common.write=false) Date in form 2015.01.01 (without time)
+* value.datetime    (common.type=string, common.write=false) Date and time in system format
 * ...
 * value.power.consumption or power.consumption ?
 
