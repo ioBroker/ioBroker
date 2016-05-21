@@ -208,7 +208,7 @@ The tree structure is assembled automatically by names. E.g. ```system.adapter.0
 
 attributes:
 
-* common.type   (optional - (default is mixed==any type) (possible values: number, string, boolean, array, object, mixed)
+* common.type   (optional - (default is mixed==any type) (possible values: number, string, boolean, array, object, mixed, file)
 * common.min    (optional)
 * common.max    (optional)
 * common.unit   (optional)
