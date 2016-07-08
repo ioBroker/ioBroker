@@ -260,6 +260,9 @@ possible values:
 * value.interval    (common.type=number, common.write=false, common.unit='sec') - Interval in seconds (can be 0.1 or less)
 * value.date        (common.type=string, common.write=false) Date in form 2015.01.01 (without time)
 * value.datetime    (common.type=string, common.write=false) Date and time in system format
+* value.gps.longitude (common.type=string, common.write=false) gps longitude coordinates
+* value.gps.latitude (common.type=string, common.write=false) gps latitude
+* value.gps         (common.type=string, common.write=false) longitude and latitude together like '5.56;43.45'
 * ...
 * value.power.consumption or power.consumption ?
 
