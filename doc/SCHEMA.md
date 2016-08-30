@@ -663,6 +663,8 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.noConfig           - (optional) do not show configuration dialog for instance
 * common.stopTimeout        - (optional) timeout in ms to wait, till adapter shut down. Defaut 500ms.
 * common.unsafePerm         - (optional) if the package must be installed with "npm --unsafe-perm" parameter
+* common.supportCustoms     - (optional) if the adapter support settings for every state. It has to have custom.html file in admin. Sample can be found in ioBroker.history
+* common.getHistory         - (optional) if adapter supports getHistory message
 
 #### instance
 
