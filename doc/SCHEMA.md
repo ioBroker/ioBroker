@@ -313,7 +313,6 @@ possible values:
 * 
 * adapter.messagebox     (common.type=object, common.write=true) used to send messages to email, pushover and other adapters
 * adapter.wakeup         (common.type=boolean, common.write=true) wake up adapter from suspended mode
-* adapter.run            (common.type=boolean, common.write=true) start or stop adapter, that supoprt it
 
 #### channel
 
@@ -634,7 +633,6 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.subscribe          - (optional) name of variable, that is subscribed automatically
 * common.subscribable       - (optional) variables of this adapter must be subscribed with sendTo to enable updates
 * common.wakeup             - (optional)  
-* common.run                - (optional)  
 * common.availableModes     - (optional) values for common.mode if more than one mode is possible
 * common.localLink          - (optional) link to the web service of this adapter. E.g to http://localhost:5984/_utils for futon from admin
 * common.logTransporter     - (optional) if this adapter receives logs from other hosts and adapters (e.g. to strore them somewhere)
