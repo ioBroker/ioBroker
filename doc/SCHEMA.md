@@ -625,10 +625,10 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.mode               - (mandatory) possible values see below
 * common.version            - (mandatory) available version
 * common.installedVersion   - (mandatory) installed version
-* common.enabled            - (mandatory) value should be false so new instances are disabled by default
+* common.enabled            - (mandatory) [true/false] value should be false so new instances are disabled by default
 * common.platform           - (mandatory) possible values: Javascript/Node.js, more coming
 * common.webservers         - (optional) array of webserver instances that should serve content from the adapters www folder
-* common.noRepository       - (optional) if adapter delivered with initial installation or has own repository
+* common.noRepository       - (optional) [true/false] if adapter delivered with initial installation or has own repository
 * common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
 * common.subscribe          - (optional) name of variable, that is subscribed automatically
 * common.subscribable       - (optional) variables of this adapter must be subscribed with sendTo to enable updates
@@ -636,33 +636,34 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.availableModes     - (optional) values for common.mode if more than one mode is possible
 * common.localLink          - (optional) link to the web service of this adapter. E.g to http://localhost:5984/_utils for futon from admin
 * common.logTransporter     - (optional) if this adapter receives logs from other hosts and adapters (e.g. to strore them somewhere)
-* common.nondeletable       - (optional) this adapter cannot be deleted or updated. It will be updated together with controller.
+* common.nondeletable       - (optional) [true/false] this adapter cannot be deleted or updated. It will be updated together with controller.
 * common.icon               - (optional) name of the local icon (should be located in subdirectory "admin")
 * common.extIcon            - (optional) link to extrenal icon for uninstalled adapters. Normally on github.
 * common.logLevel           - (optional) debug, info, warn or error
-* common.supportStopInstance- (optional) if adapter supports signal stopInstance (messagebox required). The signal will be snet before stop to the adapter. (used if the problems occured with SIGTERM)
-* common.allowInit          - (optional) allow for "scheduled" adapter to be called "not in the time schedule", if settings changed or adapter started.
-* common.onlyWWW            - (optional) say to controller, that adapter has only html files and no main.js, like rickshaw
+* common.supportStopInstance- (optional) [true/false] if adapter supports signal stopInstance (messagebox required). The signal will be snet before stop to the adapter. (used if the problems occured with SIGTERM)
+* common.allowInit          - (optional) [true/false] allow for "scheduled" adapter to be called "not in the time schedule", if settings changed or adapter started.
+* common.onlyWWW            - (optional) [true/false] say to controller, that adapter has only html files and no main.js, like rickshaw
 * common.singleton          - (optional) adapter can be installed only once in whole system
 * common.singletonHost      - (optional) adapter can be installed only once on one host
-* common.allowInit          - (optional) allow scheduled adapter start once after configuration changed and then by schedule
+* common.allowInit          - (optional) [true/false] allow scheduled adapter start once after configuration changed and then by schedule
 * common.config.width       - (optional) default width for configuration dialog
 * common.config.height      - (optional) default height for configuration dialog
 * common.config.minWidth    - (optional) minimal width for configuration dialog
 * common.config.minHeight   - (optional) minimal height for configuration dialog
 * common.os                 - (optional) string or array of supported operation systems, e.g ["linux", "darwin"]
-* common.stopBeforeUpdate   - (optional) if adapter must be stopped before update
-* common.adminTab.singleton - (optional) if adapter has TAB for admin. Only one TAB for all instances will be shown.
+* common.stopBeforeUpdate   - (optional) [true/false] if adapter must be stopped before update
+* common.adminTab.singleton - (optional) [true/false] if adapter has TAB for admin. Only one TAB for all instances will be shown.
 * common.adminTab.name      - (optional) name of TAB in admin
 * common.adminTab.link      - (optional) link for iframe in the TAB. You can use parameters replacement like this: "http://%ip%:%port%". IP will be replaced with host IP. "port" will be extracted from native.port.
 * common.adminTab.ignoreConfigUpdate - (optional) do not update config TAB if configuration changed (to enable configure settings in TAB)
 * common.restartAdapters    - (optional) array with names of adapter that must be restarted after this adapter is installed, e.g. ["vis"]
 * common.preserveSettings   - (optional) string (or array) with names of attributes in common of instance, which will not be deleted. E.g. "history", so by setState('system.adapter.mqtt.0", {..}) the field common.history will not be deleted even if new object does not have this field. To delete the attribute it must be explicitly done with ```common:{history: null}```.  
-* common.noConfig           - (optional) do not show configuration dialog for instance
+* common.noConfig           - (optional) [true/false] do not show configuration dialog for instance
 * common.stopTimeout        - (optional) timeout in ms to wait, till adapter shut down. Defaut 500ms.
-* common.unsafePerm         - (optional) if the package must be installed with "npm --unsafe-perm" parameter
-* common.supportCustoms     - (optional) if the adapter support settings for every state. It has to have custom.html file in admin. Sample can be found in ioBroker.history
-* common.getHistory         - (optional) if adapter supports getHistory message
+* common.unsafePerm         - (optional) [true/false] if the package must be installed with "npm --unsafe-perm" parameter
+* common.supportCustoms     - (optional) [true/false] if the adapter support settings for every state. It has to have custom.html file in admin. Sample can be found in ioBroker.history
+* common.getHistory         - (optional) [true/false] if adapter supports getHistory message
+* common.blockly            - (optional) [true/false] if adapter has custom blocks for blockly. (admin/blockly.js required) 
 
 #### instance
 
