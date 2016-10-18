@@ -1,4 +1,10 @@
 # ioBroker
+![Logo](img/ioBrokerLogoSmall.png)
+=====================
+[![NPM version](http://img.shields.io/npm/v/iobroker.iobroker.svg)](https://www.npmjs.com/package/iobroker.iobroker)
+[![Downloads](https://img.shields.io/npm/dm/iobroker.iobroker.svg)](https://www.npmjs.com/package/iobroker.iobroker)
+
+[![NPM](https://nodei.co/npm/iobroker.iobroker.png?downloads=true)](https://nodei.co/npm/iobroker.iobroker/)
 
 *Automate your life!*
 
