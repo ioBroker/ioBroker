@@ -1,6 +1,6 @@
 {
   "name": "iobroker",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "engines": {
     "node": ">=0.8"
   },
@@ -8,9 +8,6 @@
   },
   "dependencies": {
     "yargs": "^4.2.0"
-  },
-  "peerDependencies": {
-    "iobroker.js-controller": ">=0.12.3"
   },
   "homepage": "http://iobroker.net",
   "description": "...domesticate the Internet of Things",
