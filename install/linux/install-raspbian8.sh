@@ -10,6 +10,7 @@
 
 # add repos for node_4.x for Raspbian 8/Debian Jessie
 echo "###############  add repos for node_4.x for Raspbian 8/Debian Jessie ###############"
+curl --silent https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
 if true ; then
     sudo cat <<- EOF > /etc/apt/sources.list.d/nodesource.list
 deb https://deb.nodesource.com/node_4.x jessie main
