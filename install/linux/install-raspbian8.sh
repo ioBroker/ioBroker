@@ -134,4 +134,4 @@ sudo systemctl status iobroker.service
 
 echo "###############  You can login in ioBroker ###############"
 IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
-echo "###############  http://$IP/8081  ###############"
+echo "###############  http://$IP:8081/  ###############"
