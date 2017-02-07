@@ -6,6 +6,8 @@
 # install NodeJS for non Raspbian 8/Debian Jessie
 #curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
 
+# install NodeJS 6.x 
+#curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 
 
 # add repos for node_4.x for Raspbian 8/Debian Jessie
@@ -21,8 +23,8 @@ fi
 
 # add start script /etc/init.d/iobroker
 echo "############### add start script /etc/init.d/iobroker  ###############"
-if true ; then
-    sudo cat <<- EOF > /etc/init.d/iobroker
+
+sudo cat <<- EOF > /etc/init.d/iobroker
 #!/bin/bash
 
 ### BEGIN INIT INFO
@@ -52,15 +54,16 @@ IOBROKERUSER=roker
 export IOBROKER_HOME=/opt/iobroker
 echo -n "Starting ioBroker"
 sudo -u ${IOBROKERUSER} $NODECMD $IOBROKERCMD start
-    EOF
-fi
+
+EOF
+
 
 
 
 # add service script /etc/systemd/system/iobroker.service
 echo "############### add service script /etc/systemd/system/iobroker.service  ###############"
-if true ; then
-    sudo cat <<- EOF > /etc/systemd/system/iobroker.service
+
+sudo cat <<- EOF > /etc/systemd/system/iobroker.service
 #
 # Start ioBroker Daemon
 #
@@ -84,8 +87,9 @@ ExecStart=/etc/init.d/iobroker
 
 [Install]
 WantedBy=multi-user.target
-    EOF
-fi
+
+EOF
+
 
 
 
