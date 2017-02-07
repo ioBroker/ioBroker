@@ -29,8 +29,8 @@ sudo cat <<- EOF > /etc/init.d/iobroker
 
 ### BEGIN INIT INFO
 # Provides:          iobroker
-# Required-Start:    $network $local_fs $remote_fs
-# Required-Stop::    $network $local_fs $remote_fs
+# Required-Start:    \$network \$local_fs \$remote_fs
+# Required-Stop::    \$network \$local_fs \$remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: starts ioBroker
