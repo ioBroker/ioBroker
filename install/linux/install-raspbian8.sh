@@ -53,7 +53,7 @@ IOBROKERUSER=roker
 # Starting ioBroker
 export IOBROKER_HOME=/opt/iobroker
 echo -n "Starting ioBroker"
-sudo -u ${IOBROKERUSER} $NODECMD $IOBROKERCMD start
+sudo -u \${IOBROKERUSER} \$NODECMD \$IOBROKERCMD start
 
 EOF
 
