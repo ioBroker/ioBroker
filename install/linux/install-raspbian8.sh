@@ -114,9 +114,9 @@ sudo apt-get update -y
 sudo apt-get --purge remove node -y
 sudo apt-get --purge remove nodejs -y
 sudo apt-get autoremove
-sudo apt-get install -y build-essential python-rpi.gpio nodejs 
+sudo apt-get install -y build-essential nodejs 
 # install another tools
-#sudo apt-get install -y redis-server redis-tools mosquitto mosquitto-clients
+#sudo apt-get install -y redis-server redis-tools mosquitto mosquitto-clients python-rpi.gpio
 
 
 
