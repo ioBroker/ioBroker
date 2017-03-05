@@ -2,6 +2,8 @@
 # install ioBroker on Raspbian 8/Debian Jessie with SystemD
 # Copyright (c) 2017, keynight iobroker.net/forum
 
+# install tools for nodels install
+sudo apt-get install -y apt-transport-https curl 
 
 # install NodeJS for non Raspbian 8/Debian Jessie
 #curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
@@ -48,8 +50,8 @@ PIDF=/opt/iobroker/node_modules/iobroker.js-controller/lib/iobroker.pid
 NODECMD=/usr/bin/node
 IOBROKERCMD=/opt/iobroker/node_modules/iobroker.js-controller/iobroker.js
 RETVAL=0
-#IOBROKERUSER=root
-IOBROKERUSER=roker
+IOBROKERUSER=root
+#IOBROKERUSER=roker
 
 # Starting ioBroker
 export IOBROKER_HOME=/opt/iobroker
@@ -77,8 +79,8 @@ Requires=network.target
 
 [Service]
 
-User=roker
-#User=root
+#User=roker
+User=root
 
 Type=forking
 RemainAfterExit=yes
@@ -95,9 +97,9 @@ EOF
 
 
 # add user for ioBroker
-echo "###############  Add user roker with sudo permisions for ioBroker ###############"
-sudo adduser roker -G sudo --home /opt/iobroker
-sudo sh -c "echo 'roker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+#echo "###############  Add user roker with sudo permisions for ioBroker ###############"
+#sudo useradd roker -G sudo -d /opt/iobroker
+#sudo sh -c "echo 'roker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
 
 
 # fix permisions
@@ -108,24 +110,24 @@ sudo chmod 755  /etc/systemd/system/iobroker.service
 # install nodejs and another tools
 echo "###############  install NodeJs and another tools ###############"
 # install nodejs
-sudo apt-get update
-sudo apt-get --purge remove node
-sudo apt-get --purge remove nodejs
+sudo apt-get update -y
+sudo apt-get --purge remove node -y
+sudo apt-get --purge remove nodejs -y
 sudo apt-get autoremove
-sudo apt-get install -y build-essential python-rpi.gpio nodejs 
+sudo apt-get install -y build-essential nodejs 
 # install another tools
-#sudo apt-get install -y redis-server redis-tools mosquitto mosquitto-clients
+#sudo apt-get install -y redis-server redis-tools mosquitto mosquitto-clients python-rpi.gpio
 
 
 
 # install ioBroker
 echo "###############  install ioBroker ###############"
 sudo mkdir /opt/iobroker
-sudo chown -R roker.roker /opt/iobroker
+#sudo chown -R roker.roker /opt/iobroker
 sudo chmod 777 /opt/iobroker
 cd /opt/iobroker
 sudo npm install iobroker --unsafe-perm
-sudo chown -R roker.roker /opt/iobroker
+#sudo chown -R roker.roker /opt/iobroker
 sudo ln -s /opt/iobroker/iobroker /usr/sbin/iobroker
 
 echo "###############  start ioBroker ###############"
