@@ -666,6 +666,8 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.blockly            - (optional) [true/false] if adapter has custom blocks for blockly. (admin/blockly.js required) 
 * common.webExtendable      - (optional) [true/false] if web server in this adapter can be extended with plugin/extensions like proxy, simple-api
 * common.webExtension       - (optional) relative filename to connect the web extension. E.g. in simple-api "lib/simpleapi.js" relative to the adapter root directory. Additionally is native.webInstance required to say where this extension will be included. Empty means, it must run as own web service. "*" means every web server must include it. 
+* common.welcomeScreen      - (optional) array of pages, that should be shown on the "web" index.html page. ["vis/edit.html", "vis/index.html"] or [{"link": "vis/edit.html", "name": "Vis editor", "img": "vis/img/edit.png", "color": "blue"}, "vis/index.html"]
+* common.unchanged          - (system) please do not use this flag. It is a flag to inform the system, that configuration dialog must be shown in admin.
 
 #### instance
 
