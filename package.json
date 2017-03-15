@@ -1,16 +1,16 @@
 {
   "name": "iobroker",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "engines": {
     "node": ">=0.8"
   },
   "optionalDependencies": {
   },
   "dependencies": {
-    "yargs": "^4.2.0"
+    "yargs": "^7.0.2"
   },
   "homepage": "http://iobroker.net",
-  "description": "...domesticate the Internet of Things",
+  "description": "automate your life - platfom",
   "keywords": [
     "ioBroker",
     "Smarthome",
@@ -37,7 +37,8 @@
   ],
   "author": "bluefox <dogafox@gmail.com>",
   "contributors": [
-    "bluefox <dogafox@gmail.com>"
+    "bluefox <dogafox@gmail.com>",
+    "hobbyquaker"
   ],
   "repository": {
     "type": "git",

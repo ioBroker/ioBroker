@@ -11,7 +11,6 @@
 See [ioBroker wiki](https://github.com/ioBroker/ioBroker/wiki/Home-(English)) for more information
 
 [ioBroker website](http://iobroker.net)
-[Bug tracking JIRA](http://iobroker.net:8000)
 [Demo admin](http://iobroker.net:8081)
 [Demo VIS](https://iobroker.net:8080)
 [Forum](http://forum.iobroker.net)
@@ -97,8 +96,7 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 * [ioBroker.nodejs Roadmap](https://github.com/ioBroker/ioBroker.js-controller/blob/master/ROADMAP.md)
 
 ## License
-
-The MIT License (MIT)
+This module is distributer under the MIT License (MIT). Please notice, that other ioBroker adapters can have different licenses.
 
 Copyright (c) 2014-2017 bluefox<dogafox@gmail.com>,
 
