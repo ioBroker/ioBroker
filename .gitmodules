@@ -1,0 +1,402 @@
+[submodule "adapterlist/admin"]
+	path = adapterlist/admin
+	url = https://github.com/ioBroker/ioBroker.admin
+[submodule "adapterlist/amazon-dash"]
+	path = adapterlist/amazon-dash
+	url = https://github.com/PArns/ioBroker.amazon-dash
+[submodule "adapterlist/artnet"]
+	path = adapterlist/artnet
+	url = https://github.com/ioBroker/ioBroker.artnet
+[submodule "adapterlist/b-control-em"]
+	path = adapterlist/b-control-em
+	url = https://github.com/ioBroker/ioBroker.b-control-em
+[submodule "adapterlist/botvac"]
+	path = adapterlist/botvac
+	url = https://github.com/Pmant/ioBroker.botvac
+[submodule "adapterlist/broadlink"]
+	path = adapterlist/broadlink
+	url = https://github.com/hieblmedia/ioBroker.broadlink
+[submodule "adapterlist/chromecast"]
+	path = adapterlist/chromecast
+	url = https://github.com/angelnu/ioBroker.chromecast
+[submodule "adapterlist/cloud"]
+	path = adapterlist/cloud
+	url = https://github.com/ioBroker/ioBroker.cloud
+[submodule "adapterlist/cul"]
+	path = adapterlist/cul
+	url = https://github.com/ioBroker/ioBroker.cul
+[submodule "adapterlist/daikin"]
+	path = adapterlist/daikin
+	url = https://github.com/Apollon77/ioBroker.daikin
+[submodule "adapterlist/discovery"]
+	path = adapterlist/discovery
+	url = https://github.com/ioBroker/ioBroker.discovery
+[submodule "adapterlist/dwd"]
+	path = adapterlist/dwd
+	url = https://github.com/ioBroker/ioBroker.dwd
+[submodule "adapterlist/email"]
+	path = adapterlist/email
+	url = https://github.com/ioBroker/ioBroker.email
+[submodule "adapterlist/epson_stylus_px830"]
+	path = adapterlist/epson_stylus_px830
+	url = https://github.com/Pix---/ioBroker.epson_stylus_px830
+[submodule "adapterlist/fakeroku"]
+	path = adapterlist/fakeroku
+	url = https://github.com/Pmant/ioBroker.fakeroku
+[submodule "adapterlist/feiertage"]
+	path = adapterlist/feiertage
+	url = https://github.com/Pix---/ioBroker.feiertage
+[submodule "adapterlist/fhem"]
+	path = adapterlist/fhem
+	url = https://github.com/ioBroker/ioBroker.fhem
+[submodule "adapterlist/find-my-iphone"]
+	path = adapterlist/find-my-iphone
+	url = https://github.com/soef/ioBroker.find-my-iphone
+[submodule "adapterlist/flot"]
+	path = adapterlist/flot
+	url = https://github.com/ioBroker/ioBroker.flot
+[submodule "adapterlist/foobar2000"]
+	path = adapterlist/foobar2000
+	url = https://github.com/instalator/ioBroker.foobar2000
+[submodule "adapterlist/fritzbox"]
+	path = adapterlist/fritzbox
+	url = https://github.com/ruhr70/ioBroker.fritzbox
+[submodule "adapterlist/fronius"]
+	path = adapterlist/fronius
+	url = https://github.com/ldittmar81/ioBroker.fronius
+[submodule "adapterlist/geofency"]
+	path = adapterlist/geofency
+	url = https://github.com/ioBroker/ioBroker.geofency
+[submodule "adapterlist/harmony"]
+	path = adapterlist/harmony
+	url = https://github.com/Pmant/ioBroker.harmony
+[submodule "adapterlist/hid"]
+	path = adapterlist/hid
+	url = https://github.com/soef/ioBroker.hid
+[submodule "adapterlist/history"]
+	path = adapterlist/history
+	url = https://github.com/ioBroker/ioBroker.history
+[submodule "adapterlist/hm-rega"]
+	path = adapterlist/hm-rega
+	url = https://github.com/ioBroker/ioBroker.hm-rega
+[submodule "adapterlist/hm-rpc"]
+	path = adapterlist/hm-rpc
+	url = https://github.com/ioBroker/ioBroker.hm-rpc
+[submodule "adapterlist/hmm"]
+	path = adapterlist/hmm
+	url = https://github.com/husky-koglhof/ioBroker.hmm
+[submodule "adapterlist/homekit"]
+	path = adapterlist/homekit
+	url = https://github.com/ioBroker/ioBroker.homekit
+[submodule "adapterlist/homepilot"]
+	path = adapterlist/homepilot
+	url = https://github.com/Pix---/ioBroker.homepilot
+[submodule "adapterlist/hue"]
+	path = adapterlist/hue
+	url = https://github.com/ioBroker/ioBroker.hue
+[submodule "adapterlist/ical"]
+	path = adapterlist/ical
+	url = https://github.com/ioBroker/ioBroker.ical
+[submodule "adapterlist/icons-addictive-flavour-png"]
+	path = adapterlist/icons-addictive-flavour-png
+	url = https://github.com/ioBroker/ioBroker.icons-addictive-flavour-png
+[submodule "adapterlist/icons-fatcow-hosting"]
+	path = adapterlist/icons-fatcow-hosting
+	url = https://github.com/ioBroker/ioBroker.icons-fatcow-hosting
+[submodule "adapterlist/icons-icons8"]
+	path = adapterlist/icons-icons8
+	url = https://github.com/ioBroker/ioBroker.icons-icons8
+[submodule "adapterlist/icons-material-png"]
+	path = adapterlist/icons-material-png
+	url = https://github.com/ioBroker/ioBroker.icons-material-png
+[submodule "adapterlist/icons-material-svg"]
+	path = adapterlist/icons-material-svg
+	url = https://github.com/ioBroker/ioBroker.icons-material-svg
+[submodule "adapterlist/icons-mfd-png"]
+	path = adapterlist/icons-mfd-png
+	url = https://github.com/ioBroker/ioBroker.icons-mfd-png
+[submodule "adapterlist/icons-mfd-svg"]
+	path = adapterlist/icons-mfd-svg
+	url = https://github.com/ioBroker/ioBroker.icons-mfd-svg
+[submodule "adapterlist/icons-open-icon-library-png"]
+	path = adapterlist/icons-open-icon-library-png
+	url = https://github.com/ioBroker/ioBroker.icons-open-icon-library-png
+[submodule "adapterlist/icons-ultimate-png"]
+	path = adapterlist/icons-ultimate-png
+	url = https://github.com/ioBroker/ioBroker.icons-ultimate-png
+[submodule "adapterlist/influxdb"]
+	path = adapterlist/influxdb
+	url = https://github.com/ioBroker/ioBroker.influxdb
+[submodule "adapterlist/innogy-smarthome"]
+	path = adapterlist/innogy-smarthome
+	url = https://github.com/PArns/ioBroker.innogy-smarthome
+[submodule "adapterlist/javascript"]
+	path = adapterlist/javascript
+	url = https://github.com/ioBroker/ioBroker.javascript
+[submodule "adapterlist/js-controller"]
+	path = adapterlist/js-controller
+	url = https://github.com/ioBroker/ioBroker.js-controller
+[submodule "adapterlist/km200"]
+	path = adapterlist/km200
+	url = https://github.com/frankjoke/ioBroker.km200
+[submodule "adapterlist/knx"]
+	path = adapterlist/knx
+	url = https://github.com/ioBroker/ioBroker.knx
+[submodule "adapterlist/kodi"]
+	path = adapterlist/kodi
+	url = https://github.com/instalator/ioBroker.kodi
+[submodule "adapterlist/landroid"]
+	path = adapterlist/landroid
+	url = https://github.com/ldittmar81/ioBroker.landroid
+[submodule "adapterlist/lgtv"]
+	path = adapterlist/lgtv
+	url = https://github.com/SMundt/ioBroker.lgtv
+[submodule "adapterlist/lightify"]
+	path = adapterlist/lightify
+	url = https://github.com/soef/ioBroker.lightify
+[submodule "adapterlist/megad"]
+	path = adapterlist/megad
+	url = https://github.com/ioBroker/ioBroker.megad
+[submodule "adapterlist/megadd"]
+	path = adapterlist/megadd
+	url = https://github.com/ausHaus/ioBroker.megadd
+[submodule "adapterlist/megaesp"]
+	path = adapterlist/megaesp
+	url = https://github.com/ausHaus/ioBroker.megaesp
+[submodule "adapterlist/miele"]
+	path = adapterlist/miele
+	url = https://github.com/soef/ioBroker.miele
+[submodule "adapterlist/mihome-vacuum"]
+	path = adapterlist/mihome-vacuum
+	url = https://github.com/ioBroker/ioBroker.mihome-vacuum
+[submodule "adapterlist/mobile"]
+	path = adapterlist/mobile
+	url = https://github.com/ioBroker/ioBroker.mobile
+[submodule "adapterlist/modbus"]
+	path = adapterlist/modbus
+	url = https://github.com/ioBroker/ioBroker.modbus
+[submodule "adapterlist/mpd"]
+	path = adapterlist/mpd
+	url = https://github.com/instalator/ioBroker.mpd
+[submodule "adapterlist/mqtt"]
+	path = adapterlist/mqtt
+	url = https://github.com/ioBroker/ioBroker.mqtt
+[submodule "adapterlist/mqtt-client"]
+	path = adapterlist/mqtt-client
+	url = https://github.com/Pmant/ioBroker.mqtt-client
+[submodule "adapterlist/mysensors"]
+	path = adapterlist/mysensors
+	url = https://github.com/ioBroker/ioBroker.mysensors
+[submodule "adapterlist/netatmo"]
+	path = adapterlist/netatmo
+	url = https://github.com/PArns/ioBroker.netatmo
+[submodule "adapterlist/node-red"]
+	path = adapterlist/node-red
+	url = https://github.com/ioBroker/ioBroker.node-red
+[submodule "adapterlist/noolite"]
+	path = adapterlist/noolite
+	url = https://github.com/ioBroker/ioBroker.noolite
+[submodule "adapterlist/nut"]
+	path = adapterlist/nut
+	url = https://github.com/Apollon77/ioBroker.nut
+[submodule "adapterlist/onkyo"]
+	path = adapterlist/onkyo
+	url = https://github.com/ioBroker/ioBroker.onkyo
+[submodule "adapterlist/owfs"]
+	path = adapterlist/owfs
+	url = https://github.com/ioBroker/ioBroker.owfs
+[submodule "adapterlist/owntracks"]
+	path = adapterlist/owntracks
+	url = https://github.com/ioBroker/ioBroker.owntracks
+[submodule "adapterlist/parser"]
+	path = adapterlist/parser
+	url = https://github.com/ioBroker/ioBroker.parser
+[submodule "adapterlist/phantomjs"]
+	path = adapterlist/phantomjs
+	url = https://github.com/ioBroker/ioBroker.phantomjs
+[submodule "adapterlist/piface"]
+	path = adapterlist/piface
+	url = https://github.com/eisbaeeer/ioBroker.piface
+[submodule "adapterlist/pimatic"]
+	path = adapterlist/pimatic
+	url = https://github.com/ioBroker/ioBroker.pimatic
+[submodule "adapterlist/ping"]
+	path = adapterlist/ping
+	url = https://github.com/ioBroker/ioBroker.ping
+[submodule "adapterlist/proxy"]
+	path = adapterlist/proxy
+	url = https://github.com/ioBroker/ioBroker.proxy
+[submodule "adapterlist/pushbullet"]
+	path = adapterlist/pushbullet
+	url = https://github.com/Jens1809/ioBroker.pushbullet
+[submodule "adapterlist/pushover"]
+	path = adapterlist/pushover
+	url = https://github.com/ioBroker/ioBroker.pushover
+[submodule "adapterlist/pushsafer"]
+	path = adapterlist/pushsafer
+	url = https://github.com/ioBroker/ioBroker.pushsafer
+[submodule "adapterlist/radar"]
+	path = adapterlist/radar
+	url = https://github.com/frankjoke/ioBroker.radar
+[submodule "adapterlist/rflink"]
+	path = adapterlist/rflink
+	url = https://github.com/ioBroker/ioBroker.rflink
+[submodule "adapterlist/rickshaw"]
+	path = adapterlist/rickshaw
+	url = https://github.com/ioBroker/ioBroker.rickshaw
+[submodule "adapterlist/rpi2"]
+	path = adapterlist/rpi2
+	url = https://github.com/ioBroker/ioBroker.rpi2
+[submodule "adapterlist/rwe-smarthome"]
+	path = adapterlist/rwe-smarthome
+	url = https://github.com/PArns/ioBroker.rwe-smarthome
+[submodule "adapterlist/s7"]
+	path = adapterlist/s7
+	url = https://github.com/ioBroker/ioBroker.s7
+[submodule "adapterlist/samsung"]
+	path = adapterlist/samsung
+	url = https://github.com/soef/ioBroker.samsung
+[submodule "adapterlist/sayit"]
+	path = adapterlist/sayit
+	url = https://github.com/ioBroker/ioBroker.sayit
+[submodule "adapterlist/scenes"]
+	path = adapterlist/scenes
+	url = https://github.com/ioBroker/ioBroker.scenes
+[submodule "adapterlist/simple-api"]
+	path = adapterlist/simple-api
+	url = https://github.com/ioBroker/ioBroker.simple-api
+[submodule "adapterlist/smartmeter"]
+	path = adapterlist/smartmeter
+	url = https://github.com/Apollon77/ioBroker.smartmeter
+[submodule "adapterlist/socketio"]
+	path = adapterlist/socketio
+	url = https://github.com/ioBroker/ioBroker.socketio
+[submodule "adapterlist/solarwetter"]
+	path = adapterlist/solarwetter
+	url = https://github.com/Pix---/ioBroker.solarwetter
+[submodule "adapterlist/sonos"]
+	path = adapterlist/sonos
+	url = https://github.com/ioBroker/ioBroker.sonos
+[submodule "adapterlist/sql"]
+	path = adapterlist/sql
+	url = https://github.com/ioBroker/ioBroker.sql
+[submodule "adapterlist/squeezebox"]
+	path = adapterlist/squeezebox
+	url = https://github.com/UncleSamSwiss/ioBroker.squeezebox
+[submodule "adapterlist/starline"]
+	path = adapterlist/starline
+	url = https://github.com/instalator/ioBroker.starline
+[submodule "adapterlist/tankerkoenig"]
+	path = adapterlist/tankerkoenig
+	url = https://github.com/Pix---/ioBroker.tankerkoenig
+[submodule "adapterlist/telegram"]
+	path = adapterlist/telegram
+	url = https://github.com/ioBroker/ioBroker.telegram
+[submodule "adapterlist/terminal"]
+	path = adapterlist/terminal
+	url = https://github.com/ioBroker/ioBroker.terminal
+[submodule "adapterlist/text2command"]
+	path = adapterlist/text2command
+	url = https://github.com/ioBroker/ioBroker.text2command
+[submodule "adapterlist/tr-064"]
+	path = adapterlist/tr-064
+	url = https://github.com/soef/ioBroker.tr-064
+[submodule "adapterlist/tvspielfilm"]
+	path = adapterlist/tvspielfilm
+	url = https://github.com/Pix---/ioBroker.tvspielfilm
+[submodule "adapterlist/unifi"]
+	path = adapterlist/unifi
+	url = https://github.com/jens-maus/ioBroker.unifi
+[submodule "adapterlist/upnp"]
+	path = adapterlist/upnp
+	url = https://github.com/Jey-Cee/ioBroker.upnp
+[submodule "adapterlist/vcard"]
+	path = adapterlist/vcard
+	url = https://github.com/hometm/ioBroker.vcard
+[submodule "adapterlist/vis"]
+	path = adapterlist/vis
+	url = https://github.com/ioBroker/ioBroker.vis
+[submodule "adapterlist/vis-bars"]
+	path = adapterlist/vis-bars
+	url = https://github.com/ioBroker/ioBroker.vis-bars
+[submodule "adapterlist/vis-canvas-gauges"]
+	path = adapterlist/vis-canvas-gauges
+	url = https://github.com/ioBroker/ioBroker.vis-canvas-gauges
+[submodule "adapterlist/vis-colorpicker"]
+	path = adapterlist/vis-colorpicker
+	url = https://github.com/ioBroker/ioBroker.vis-colorpicker
+[submodule "adapterlist/vis-fancyswitch"]
+	path = adapterlist/vis-fancyswitch
+	url = https://github.com/ioBroker/ioBroker.vis-fancyswitch
+[submodule "adapterlist/vis-google-fonts"]
+	path = adapterlist/vis-google-fonts
+	url = https://github.com/ioBroker/ioBroker.vis-google-fonts
+[submodule "adapterlist/vis-history"]
+	path = adapterlist/vis-history
+	url = https://github.com/ioBroker/ioBroker.vis-history
+[submodule "adapterlist/vis-hqwidgets"]
+	path = adapterlist/vis-hqwidgets
+	url = https://github.com/ioBroker/ioBroker.vis-hqwidgets
+[submodule "adapterlist/vis-jqui-mfd"]
+	path = adapterlist/vis-jqui-mfd
+	url = https://github.com/ioBroker/ioBroker.vis-jqui-mfd
+[submodule "adapterlist/vis-justgage"]
+	path = adapterlist/vis-justgage
+	url = https://github.com/Pmant/ioBroker.vis-justgage
+[submodule "adapterlist/vis-keyboard"]
+	path = adapterlist/vis-keyboard
+	url = https://github.com/ioBroker/ioBroker.vis-keyboard
+[submodule "adapterlist/vis-lcars"]
+	path = adapterlist/vis-lcars
+	url = https://github.com/ioBroker/ioBroker.vis-lcars
+[submodule "adapterlist/vis-map"]
+	path = adapterlist/vis-map
+	url = https://github.com/ioBroker/ioBroker.vis-map
+[submodule "adapterlist/vis-metro"]
+	path = adapterlist/vis-metro
+	url = https://github.com/ioBroker/ioBroker.vis-metro
+[submodule "adapterlist/vis-players"]
+	path = adapterlist/vis-players
+	url = https://github.com/instalator/ioBroker.vis-players
+[submodule "adapterlist/vis-plumb"]
+	path = adapterlist/vis-plumb
+	url = https://github.com/ioBroker/ioBroker.vis-plumb
+[submodule "adapterlist/vis-rgraph"]
+	path = adapterlist/vis-rgraph
+	url = https://github.com/ioBroker/ioBroker.vis-rgraph
+[submodule "adapterlist/vis-timeandweather"]
+	path = adapterlist/vis-timeandweather
+	url = https://github.com/ioBroker/ioBroker.vis-timeandweather
+[submodule "adapterlist/weatherunderground"]
+	path = adapterlist/weatherunderground
+	url = https://github.com/dschaedl/ioBroker.weatherunderground
+[submodule "adapterlist/web"]
+	path = adapterlist/web
+	url = https://github.com/ioBroker/ioBroker.web
+[submodule "adapterlist/wetty"]
+	path = adapterlist/wetty
+	url = https://github.com/ioBroker/ioBroker.wetty
+[submodule "adapterlist/wifilight"]
+	path = adapterlist/wifilight
+	url = https://github.com/soef/ioBroker.wifilight
+[submodule "adapterlist/wm-bus"]
+	path = adapterlist/wm-bus
+	url = https://github.com/soef/ioBroker.wm-bus
+[submodule "adapterlist/wolf"]
+	path = adapterlist/wolf
+	url = https://github.com/ioBroker/ioBroker.wolf
+[submodule "adapterlist/xs1"]
+	path = adapterlist/xs1
+	url = https://github.com/frankjoke/ioBroker.xs1
+[submodule "adapterlist/yahka"]
+	path = adapterlist/yahka
+	url = https://github.com/jensweigele/ioBroker.yahka
+[submodule "adapterlist/yamaha"]
+	path = adapterlist/yamaha
+	url = https://github.com/soef/ioBroker.yamaha
+[submodule "adapterlist/yr"]
+	path = adapterlist/yr
+	url = https://github.com/ioBroker/ioBroker.yr
+[submodule "adapterlist/zwave"]
+	path = adapterlist/zwave
+	url = https://github.com/ioBroker/ioBroker.zwave
