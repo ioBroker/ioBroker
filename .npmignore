@@ -3,5 +3,6 @@ tasks
 data
 node_modules
 wiki
+adapterlist
 .idea
 .git
