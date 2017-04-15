@@ -622,6 +622,9 @@ id
 id *system.adapter.&lt;adapter.name&gt;*
 
 * children                  - (optional)  array of adapter instance IDs
+* common.name               - (mandatory) name of adapter without "ioBroker."
+* common.title              - (deprecated) longer name of adapter to show in admin
+* common.titleLang          - (mandatory) longer name of adapter in all supported languages like {en: 'Adapter', de: 'adapter', ru: 'Драйвер'}
 * common.mode               - (mandatory) possible values see below
 * common.version            - (mandatory) available version
 * common.installedVersion   - (mandatory) installed version
