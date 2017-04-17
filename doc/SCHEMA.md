@@ -291,7 +291,7 @@ possible values:
 * indicator.maintenance.alarm
 
 * level                 (common.type=number, common.write=true)
-* level.dimmer
+* level.dimmer          (common.type=number, common.write=true, brightness is dimmer too)
 * level.blind
 * level.temperature
 * level.valve           (common.type=number, common.write=true, set point for valve position)
@@ -300,6 +300,7 @@ possible values:
 * level.color.blue
 * level.color.hue
 * level.color.saturation
+* level.color.rgb
 * level.color.luminance
 * level.color.temperature
 * ...
