@@ -307,6 +307,7 @@ possible values:
 * level.volume          (common.type=number, common.write=true, min=0, max=100)
 
 * switch (common.type=boolean, common.write=true)
+* switch.lock (common.type=boolean, common.write=true, lock)
 * 
 
 * ...
