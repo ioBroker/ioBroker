@@ -63,6 +63,6 @@ update-rc.d iobroker.sh defaults
 # Start the service!
 echo "Start iobroker..."
 cd @@PATH@@
-#chmod 777 * -R
+#chmod -R 777 *
 ./iobroker start
 echo "call http://ip_address:8081/ in browser to get the AdminUI of ioBroker"
