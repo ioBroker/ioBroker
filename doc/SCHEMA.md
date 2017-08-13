@@ -158,6 +158,8 @@ attributes for getState/stateChange/setState object:
 ```
   0x00 - 00000000 - good (can be undefined or null)
   0x01 - 00000001 - general bad, general problem
+  0x40 - 01000000 - substitute value from device or adapter
+  0x80 - 01000000 - substitute value from sensor
   0x41 - 01000001 - general problem by device
   0x81 - 10000001 - general problem by sensor
   0x42 - 01000010 - device not connected
