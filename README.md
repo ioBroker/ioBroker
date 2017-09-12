@@ -92,8 +92,7 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 * [Core Concepts and Database Schema](doc/SCHEMA.md)
 * [Example Javascript/Node.js Adapter](https://github.com/ioBroker/ioBroker.template)
 * [ioBroker styleguides](doc/STYLE.md)
-* [ioBroker.nodejs Changelog](https://github.com/ioBroker/ioBroker.js-controller/blob/master/CHANGELOG.md)
-* [ioBroker.nodejs Roadmap](https://github.com/ioBroker/ioBroker.js-controller/blob/master/ROADMAP.md)
+* [ioBroker.js-controller Changelog](https://github.com/ioBroker/ioBroker.js-controller/blob/master/CHANGELOG.md)
 
 ## License
 This module is distributer under the MIT License (MIT). Please notice, that other ioBroker adapters can have different licenses.
