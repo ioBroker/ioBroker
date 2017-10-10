@@ -14,11 +14,12 @@ fi
 echo "Set permissions..."
 chmod 755 /usr/local/etc/rc.d/iobroker
 chmod 755 /usr/local/bin/iobroker
+chown -R $IO_USER @@PATH@@
 
 #Replace user iobroker with current user
 sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /usr/local/etc/rc.d/iobroker
 NODE=${NODE//\//\\/}
-sed -i -e s/NODECMD=.*/NODECMD=$NODE/ /usr/local/etc/rc.d/iobroker
+sed -i -e s/command=.*/command=$NODE/ /usr/local/etc/rc.d/iobroker
 chown root:root /usr/local/etc/rc.d/iobroker
 sysrc iobroker_enable=YES
 
