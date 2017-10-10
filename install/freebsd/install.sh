@@ -10,14 +10,17 @@ if [ ! -f "/usr/local/bin/iobroker" ]; then
     echo '${NODE} @@PATH@@iobroker.js $1 $2 $3 $4 $5' > /usr/local/bin/iobroker
 fi
 
+# Create user
+pw useradd -n $IO_USER -c "User for IOBroker" -b /usr/local/www -s /usr/sbin/nologin -w none
+
 #Set rights
 echo "Set permissions..."
 chmod 755 /usr/local/etc/rc.d/iobroker
 chmod 755 /usr/local/bin/iobroker
-chown -R $IO_USER @@PATH@@
+chown -R $IO_USER @@PATH@@/../../
 
 #Replace user iobroker with current user
-sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /usr/local/etc/rc.d/iobroker
+#sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /usr/local/etc/rc.d/iobroker
 NODE=${NODE//\//\\/}
 sed -i -e s/command=.*/command=$NODE/ /usr/local/etc/rc.d/iobroker
 chown root:root /usr/local/etc/rc.d/iobroker
