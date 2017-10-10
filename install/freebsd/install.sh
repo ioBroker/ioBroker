@@ -11,7 +11,8 @@ if [ ! -f "/usr/local/bin/iobroker" ]; then
 fi
 
 # Create user
-pw useradd -n $IO_USER -c "User for IOBroker" -b /usr/local/www -s /usr/sbin/nologin -w none
+pw groupadd -n iobroker
+pw useradd -n $IO_USER -c "User for IOBroker" -b /usr/local/www -g iobroker -s /usr/sbin/nologin -w none
 
 #Set rights
 echo "Set permissions..."
