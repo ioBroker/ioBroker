@@ -24,7 +24,7 @@ chown -R $IO_USER @@PATH@@/../../
 #sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /usr/local/etc/rc.d/iobroker
 NODE=${NODE//\//\\/}
 sed -i -e s/command=.*/command=$NODE/ /usr/local/etc/rc.d/iobroker
-chown root:root /usr/local/etc/rc.d/iobroker
+chown root:wheel /usr/local/etc/rc.d/iobroker
 sysrc iobroker_enable=YES
 
 # Start the service!
