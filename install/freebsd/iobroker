@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+# PROVIDE: iobroker
+# REQUIRE: DAEMON
+# KEYWORD: shutdown
+
+# Add the following lines to /etc/rc.conf to enable iobroker:
+# iobroker_enable="YES"
+
+iobroker_enable=${iobroker_enable-"NO"}
+iobroker_pidfile=${iobroker_pidfile-"@@PATH@@lib/iobroker.pid"}
+
+. /etc/rc.subr
+name="iobroker"
+rcvar=iobroker_enable
+pidfile="${iobroker_pidfile}"
+
+iobroker_start ()
+{
+	su -m iobroker -c "${command} @@PATH@@iobroker.js start"
+}
+
+iobroker_stop ()
+{
+	su -m iobroker -c "${command} @@PATH@@iobroker.js stop"
+}
+
+iobroker_status ()
+{
+	su -m iobroker -c "${command} @@PATH@@iobroker.js status"
+}
+
+export IOBROKER_HOME=@@HOME@@
+
+command=@@node
+start_cmd=iobroker_start
+stop_cmd=iobroker_stop
+status_cmd=iobroker_status
+
+run_rc_command "$1"
+
