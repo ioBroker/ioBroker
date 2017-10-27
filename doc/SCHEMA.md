@@ -647,7 +647,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.icon               - (optional) name of the local icon (should be located in subdirectory "admin")
 * common.extIcon            - (optional) link to extrenal icon for uninstalled adapters. Normally on github.
 * common.logLevel           - (optional) debug, info, warn or error
-* common.supportStopInstance- (optional) [true/false] if adapter supports signal stopInstance (messagebox required). The signal will be snet before stop to the adapter. (used if the problems occured with SIGTERM)
+* common.supportStopInstance- (optional) [true/false] if adapter supports signal stopInstance (messagebox required). The signal will be sent before stop to the adapter. (used if the problems occured with SIGTERM)
 * common.allowInit          - (optional) [true/false] allow for "scheduled" adapter to be called "not in the time schedule", if settings changed or adapter started.
 * common.onlyWWW            - (optional) [true/false] say to controller, that adapter has only html files and no main.js, like rickshaw
 * common.singleton          - (optional) adapter can be installed only once in whole system
