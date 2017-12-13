@@ -676,6 +676,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.welcomeScreen      - (optional) array of pages, that should be shown on the "web" index.html page. ["vis/edit.html", "vis/index.html"] or [{"link": "vis/edit.html", "name": "Vis editor", "img": "vis/img/edit.png", "color": "blue"}, "vis/index.html"]
 * common.unchanged          - (system) please do not use this flag. It is a flag to inform the system, that configuration dialog must be shown in admin.
 * common.serviceStates      - (optional) [true/false or path] if adapter can deliver additional states. If yes, the path adapter/lib/states.js will be called and it give following parameters function (objects, states, instance, config, callback). The function must deliver the array of points with values like function (err, result) { result = [{id: 'id1', val: 1}, {id: 'id2', val: 2}]}
+* common.nogit              - (optional) if true, no install from github directly is possible
 
 #### instance
 
