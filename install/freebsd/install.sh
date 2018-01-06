@@ -31,4 +31,3 @@ sysrc iobroker_enable=YES
 echo "Start iobroker..."
 service iobroker start
 echo "call http://ip_address:8081/ in browser to get the AdminUI of ioBroker"
-

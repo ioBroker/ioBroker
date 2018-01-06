@@ -38,4 +38,3 @@ stop_cmd=iobroker_stop
 status_cmd=iobroker_status
 
 run_rc_command "$1"
-

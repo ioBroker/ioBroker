@@ -3,12 +3,12 @@
 # Copyright (c) 2017, keynight iobroker.net/forum
 
 # install tools for nodels install
-sudo apt-get install -y apt-transport-https curl 
+sudo apt-get install -y apt-transport-https curl
 
 # install NodeJS for non Raspbian 8/Debian Jessie
 #curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
 
-# install NodeJS 6.x 
+# install NodeJS 6.x
 #curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
 
 
@@ -19,7 +19,7 @@ curl --silent https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-ke
 sudo cat <<- EOF > /etc/apt/sources.list.d/nodesource.list
 deb https://deb.nodesource.com/node_4.x jessie main
 deb-src https://deb.nodesource.com/node_4.x jessie main
- 
+
 EOF
 
 
@@ -114,7 +114,7 @@ sudo apt-get update -y
 sudo apt-get --purge remove node -y
 sudo apt-get --purge remove nodejs -y
 sudo apt-get autoremove
-sudo apt-get install -y build-essential nodejs 
+sudo apt-get install -y build-essential nodejs
 # install another tools
 #sudo apt-get install -y redis-server redis-tools mosquitto mosquitto-clients python-rpi.gpio
 
@@ -132,7 +132,7 @@ sudo ln -s /opt/iobroker/iobroker /usr/sbin/iobroker
 
 echo "###############  start ioBroker ###############"
 sudo systemctl daemon-reload
-sudo systemctl enable iobroker.service 
+sudo systemctl enable iobroker.service
 sudo systemctl start iobroker.service
 
 
