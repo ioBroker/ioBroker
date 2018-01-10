@@ -9,7 +9,7 @@ describe('Test running Admin on port 8081', function() {
         request('http://127.0.0.1:8081/', function (error, response, body) {
             console.log('BODY: ' + body);
             expect(error).to.be.not.ok;
-            //expect(body.indexOf('<title>phpinfo()</title>')).to.be.not.equal(-1);
+            expect(body.indexOf('<title>ioBroker.admin</title>')).to.be.not.equal(-1);
             expect(response.statusCode).to.equal(200);
             done();
         });

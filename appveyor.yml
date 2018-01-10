@@ -25,6 +25,7 @@ test_script:
   - node --version
   - npm --version
   #- serviceIoBroker start
+  - ps: Start-Sleep -s 15
   - npm install request
   - npm install mocha
   - npm install chai
