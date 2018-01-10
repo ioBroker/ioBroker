@@ -11,12 +11,13 @@ platform:
   - x86
   - x64
 
-clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%
+clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
 # Install scripts. (runs after repo cloning)
 install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version $env:platform
   # install modules
+  - cd node_modules\iobroker
   - npm install
 # Post-install test scripts.
 test_script:
