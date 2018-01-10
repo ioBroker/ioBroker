@@ -24,10 +24,12 @@ test_script:
   - echo %cd%
   - node --version
   - npm --version
+  #- serviceIoBroker start
+  - npm install request
+  - npm install mocha
+  - npm install chai
   # run tests
-  #- npm test
-  - cd ../..
-  - serviceIoBroker start
+  - npm test
 
 # Don't actually build.
 build: off

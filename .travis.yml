@@ -19,8 +19,12 @@ before_install:
   - 'if [[ $(echo "$TRAVIS_NODE_VERSION > 4") ]]; then npm install -g npm@3; fi'
 install:
   - sudo env "PATH=$PATH" $(which npm) install --unsafe-perm
-after_script:
+before_script:
+  - ../../iobroker start
   - ps auxww|grep io
+  - npm install request
+  - npm install mocha
+  - npm install chai
 addons:
   apt:
     sources:

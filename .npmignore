@@ -6,3 +6,6 @@ wiki
 adapterlist
 .idea
 .git
+.travis.yml
+appveyor.yml
+test

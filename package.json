@@ -48,7 +48,8 @@
     "unsafe-perm": true
   },
   "scripts": {
-    "install": "node lib/setup.js"
+    "install": "node lib/setup.js",
+    "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "main": "lib/setup.js",
   "license": "MIT"
