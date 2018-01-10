@@ -13,7 +13,7 @@ before_install:
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
-  - sudo $(which npm) install --unsafe-perms
+  - sudo $(which npm) install --unsafe-perm
 addons:
   apt:
     sources:
