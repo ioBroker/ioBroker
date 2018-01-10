@@ -27,6 +27,7 @@ before_script:
   - npm install request
   - npm install mocha
   - npm install chai
+  - sleep 15
 addons:
   apt:
     sources:
