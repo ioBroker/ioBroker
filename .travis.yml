@@ -16,13 +16,10 @@ before_install:
   - cd node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
-  - 'if [[ $(echo "$TRAVIS_NODE_VERSION > 4") ]]; then npm install -g npm@3; fi'
+  - 'if [[ $(echo "$TRAVIS_NODE_VERSION > 6") ]]; then npm install -g npm@3; fi'
 install:
   - sudo env "PATH=$PATH" $(which npm) install --unsafe-perm
 before_script:
-  - cd ../../
-  - iobroker start
-  - cd node_modules/iobroker/
   - ps auxww|grep io
   - npm install request
   - npm install mocha
