@@ -26,6 +26,7 @@ test_script:
   - npm --version
   # run tests
   #- npm test
+  - serviceIoBroker start
 
 # Don't actually build.
 build: off
