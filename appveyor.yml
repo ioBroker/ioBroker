@@ -30,7 +30,7 @@ test_script:
   - cd ..\..
   - ps: Start-Sleep -s 15
   - tasklist
-  - serviceIoBroker stop && exit 0
+  - serviceIoBroker stop & exit 0
   - ps: Start-Sleep -s 15
   - serviceIoBroker start
   - ps: Start-Sleep -s 60
