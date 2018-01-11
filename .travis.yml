@@ -22,7 +22,7 @@ install:
 before_script:
   - cd ../..
   - sudo chmod -R 777 *
-  - sudo ./iobroker start
+  - ./iobroker start
   - ps auxww|grep io
   - cd node_modules/iobroker/
   - npm install request
