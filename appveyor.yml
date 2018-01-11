@@ -24,10 +24,11 @@ test_script:
   - echo %cd%
   - node --version
   - npm --version
-  - serviceIoBroker stop
-  - ps: Start-Sleep -s 30
-  - serviceIoBroker start
+  #- serviceIoBroker stop
+  #- ps: Start-Sleep -s 30
+  #- serviceIoBroker start
   - ps: Start-Sleep -s 60
+  - tasklist
   - type ../../log/iobroker*.log
   - npm install request
   - npm install mocha
