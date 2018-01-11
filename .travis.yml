@@ -22,7 +22,7 @@ install:
 before_script:
   - cd ../..
   - sudo chmod -R 777 *
-  #- ./iobroker start
+  - ./iobroker start
   - cd node_modules/iobroker/
   - npm install request
   - npm install mocha
