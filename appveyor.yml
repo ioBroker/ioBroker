@@ -27,6 +27,7 @@ test_script:
   - npm install request
   - npm install mocha
   - npm install chai
+  - cd ..\..
   - ps: Start-Sleep -s 15
   - tasklist
   - serviceIoBroker stop
@@ -34,9 +35,10 @@ test_script:
   - serviceIoBroker start
   - ps: Start-Sleep -s 60
   - tasklist
-  - dir ..\..\
-  - dir ..\..\log\
-  - type ..\..\log\iobroker*.log
+  - dir .\
+  - dir .\log\
+  - type .\log\iobroker*.log
+  - cd node_modules\iobroker
   # run tests
   - npm test
 
