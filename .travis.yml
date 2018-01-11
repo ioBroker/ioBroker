@@ -21,6 +21,7 @@ install:
   - sudo env "PATH=$PATH" $(which npm) install --unsafe-perm
 before_script:
   - ps auxww|grep io
+  - sudo chmod -R 777 *
   - npm install request
   - npm install mocha
   - npm install chai
