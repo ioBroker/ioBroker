@@ -20,12 +20,16 @@ before_install:
 install:
   - sudo env "PATH=$PATH" $(which npm) install --unsafe-perm
 before_script:
-  - ps auxww|grep io
+  - cd ../..
   - sudo chmod -R 777 *
+  - sudo ./iobroker start
+  - ps auxww|grep io
+  - cd node_modules/iobroker/
   - npm install request
   - npm install mocha
   - npm install chai
   - sleep 30
+  - cat ../../log/iobroker*.log
 addons:
   apt:
     sources:
