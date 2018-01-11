@@ -1,0 +1,46 @@
+version: 'test-{build}'
+
+# Test against this version of Node.js
+environment:
+  matrix:
+    - nodejs_version: "4"
+    - nodejs_version: "6"
+    - nodejs_version: "8"
+
+platform:
+  - x86
+  - x64
+
+clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
+# Install scripts. (runs after repo cloning)
+install:
+  # Get the latest stable version of Node.js or io.js
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  # install modules
+  - npm install
+# Post-install test scripts.
+test_script:
+  # Output useful info for debugging.
+  - echo %cd%
+  - node --version
+  - npm --version
+  - npm install request
+  - npm install mocha
+  - npm install chai
+  - cd ..\..
+  - ps: Start-Sleep -s 15
+  - tasklist
+  - serviceIoBroker stop & exit 0
+  - ps: Start-Sleep -s 15
+  - serviceIoBroker start
+  - ps: Start-Sleep -s 60
+  - tasklist
+  - dir .\
+  - dir .\log\
+  - type .\log\iobroker*.log
+  - cd node_modules\iobroker
+  # run tests
+  - npm test
+
+# Don't actually build.
+build: off

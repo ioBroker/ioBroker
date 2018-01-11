@@ -1,0 +1,40 @@
+git:
+  submodules: false
+os:
+  - linux
+  - osx
+sudo: required
+language: node_js
+node_js:
+  - "4"
+  - "6"
+  - "8"
+before_install:
+  - mkdir node_modules
+  - mkdir node_modules/iobroker
+  - mv !(node_modules) node_modules/iobroker/
+  - cd node_modules/iobroker/
+  - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
+  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
+  - 'if [[ $(echo "$TRAVIS_NODE_VERSION > 6") ]]; then npm install -g npm@3; fi'
+install:
+  - sudo env "PATH=$PATH" $(which npm) install --unsafe-perm
+before_script:
+  - cd ../..
+  - sudo chmod -R 777 *
+  - ps auxww|grep io
+  - ./iobroker start
+  - cd node_modules/iobroker/
+  - npm install request
+  - npm install mocha
+  - npm install chai
+  - sleep 60
+  - ps auxww|grep io
+  - date
+  - cat ../../log/iobroker*.log
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
