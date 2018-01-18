@@ -24,7 +24,6 @@ test_script:
   - echo %cd%
   - node --version
   - npm --version
-  - type ..\..\package.json
   - npm install request
   - npm install mocha
   - npm install chai
