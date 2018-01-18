@@ -16,7 +16,7 @@ clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
 install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version $env:platform
-  - ps: $NpmVersion = (npm -v).Substring(0,1) | Out-String
+  - ps: $NpmVersion = (npm -v).Substring(0,1)
   - ps: Write-Host $NpmVersion
   - ps: if($NpmVersion -eq 5) { npm install -g npm@4 }
   # install modules
