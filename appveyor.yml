@@ -17,6 +17,7 @@ install:
   - ps: $NpmVersion = (npm -v).Substring(0,1)
   - ps: Write-Host $NpmVersion
   - ps: if($NpmVersion -eq 5) { $NpmFail = (npm install 2>&1) }
+  - ps: if($NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
   - ps: if($NpmVersion -eq 5) { Write-Host $NpmFail }
   - ps: if($NpmVersion -eq 5) { npm install -g npm@4 }
   # install modules
