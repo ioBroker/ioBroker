@@ -17,7 +17,7 @@ before_install:
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
-  - export NPMVERSION = $(echo "$($(which npm) -v)"|cut -c1)
+  - export NPMVERSION=$(echo "$($(which npm) -v)"|cut -c1)
   - 'if [[ $(echo "$NPMVERSION < 5") ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi'
   - 'if [[ $(echo "$NPMVERSION > 4") ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi'
   - 'if [[ $(echo "$NPMVERSION > 4") ]]; then npm install -g npm@4; fi'
