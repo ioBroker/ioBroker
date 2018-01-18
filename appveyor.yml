@@ -18,7 +18,7 @@ install:
   - ps: Install-Product node $env:nodejs_version $env:platform
   - ps: $NpmVersion = (npm -v).Substring(0,1) | Out-String
   - ps: Write-Host $NpmVersion
-  - ps: if($NpmVersion -eq '5') {npm install -g npm@4}
+  - ps: if($NpmVersion -eq 5) { npm install -g npm@4 }
   # install modules
   - npm install
 # Post-install test scripts.
