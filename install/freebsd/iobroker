@@ -37,4 +37,6 @@ start_cmd=iobroker_start
 stop_cmd=iobroker_stop
 status_cmd=iobroker_status
 
+PATH="${PATH}:/usr/local/bin"
+
 run_rc_command "$1"
