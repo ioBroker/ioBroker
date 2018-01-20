@@ -12,7 +12,7 @@ fi
 
 # Create user
 pw groupadd -n iobroker
-pw useradd -n $IO_USER -c "User for IOBroker" -d /opt/iobroker -g iobroker -s /usr/sbin/nologin -w none
+pw useradd -n $IO_USER -c "User for IOBroker" -b /usr/local/www -g iobroker -s /usr/sbin/nologin -w none
 
 #Set rights
 echo "Set permissions..."
