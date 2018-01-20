@@ -3,7 +3,7 @@ IO_USER=iobroker
 NODE=`which node`
 
 ## if iobroker.sh not exists. Copy it
-if [ ! -f "/usr/local/rc.d/iobroker" ]; then
+if [ ! -f "/usr/local/etc/rc.d/iobroker" ]; then
     cp @@PATH@@../iobroker/install/freebsd/iobroker /usr/local/etc/rc.d/iobroker
 fi
 if [ ! -f "/usr/local/bin/iobroker" ]; then
