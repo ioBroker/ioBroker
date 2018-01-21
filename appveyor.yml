@@ -3,6 +3,7 @@ version: 'test-{build}'
 # Test against this version of Node.js
 environment:
   matrix:
+    - nodejs_version: "0.12"
     - nodejs_version: "4"
     - nodejs_version: "6"
     - nodejs_version: "8"
@@ -17,11 +18,16 @@ install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version $env:platform
   - ps: $NpmVersion = (npm -v).Substring(0,1)
+  - ps: $NodeVersion = (node -v).Substring(1,2)
   - ps: Write-Host $NpmVersion
-  - ps: if($NpmVersion -eq 5) { $NpmFail = (npm install 2>&1) }
-  - ps: if($NpmVersion -eq 5) { Write-Host $NpmFail }
-  - ps: if($NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
-  - ps: if($NpmVersion -eq 5) { npm install -g npm@4 }
+  - ps: Write-Host $NodeVersion
+  - ps: if($NodeVersion -eq 0) { $NodeFail = (npm install 2>&1) }
+  - ps: if($NodeVersion -eq 0) { Write-Host $NodeFail }
+  - ps: if($NodeVersion -eq 0) { if(-Not ($NodeFail -match "ioBroker needs at least nodejs 4.x.")) { exit 1 } }
+  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { $NpmFail = (npm install 2>&1) }
+  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { Write-Host $NpmFail }
+  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
+  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { npm install -g npm@4 }
   # install modules
   - npm install
 # Post-install test scripts.
