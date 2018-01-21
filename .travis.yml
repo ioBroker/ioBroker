@@ -21,10 +21,10 @@ install:
   - export NPMVERSION=$(echo "$($(which npm) -v)"|cut -c1)
   - export NODEVERSION=$(echo "$($(which node) -v)"|cut -c2)
   - if [[ $NODEVERSION < 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION >= 4 && $NPMVERSION < 5 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION >= 4 && $NPMVERSION > 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION >= 4 && $NPMVERSION > 4 ]]; then npm install -g npm@4; fi
-  - if [[ $NODEVERSION >= 4 && $NPMVERSION > 4 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
+  - if [[ $NODEVERSION > 3 && $NPMVERSION < 5 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
+  - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
+  - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then npm install -g npm@4; fi
+  - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
 before_script:
   - cd ../..
   - sudo chmod -R 777 *
