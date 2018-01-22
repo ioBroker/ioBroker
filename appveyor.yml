@@ -42,7 +42,7 @@ test_script:
   - ps: if($NodeVersion -ne 0) { cd ..\.. }
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
   - ps: if($NodeVersion -ne 0) { tasklist }
-  - ps: if($NodeVersion -ne 0) { serviceIoBroker stop & exit 0 }
+  - serviceIoBroker stop & exit 0
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
   - ps: if($NodeVersion -ne 0) { serviceIoBroker start }
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 60 }

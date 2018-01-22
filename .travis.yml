@@ -38,6 +38,8 @@ before_script:
   - if [[ $NODEVERSION > 3 ]]; then ps auxww|grep io; fi
   - if [[ $NODEVERSION > 3 ]]; then date; fi
   - if [[ $NODEVERSION > 3 ]]; then cat ../../log/iobroker*.log; fi
+script:
+  - if [[ $NODEVERSION > 3 ]]; then npm test; fi
 addons:
   apt:
     sources:
