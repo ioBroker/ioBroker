@@ -36,21 +36,21 @@ test_script:
   - echo %cd%
   - node --version
   - npm --version
-  - ps: if($NodeVersion -ne 0) { npm install request }
-  - ps: if($NodeVersion -ne 0) { npm install mocha }
-  - ps: if($NodeVersion -ne 0) { npm install chai }
-  - ps: if($NodeVersion -ne 0) { cd ..\.. }
+  - ps: if($NodeVersion -ne 0) { iex 'npm install request' }
+  - ps: if($NodeVersion -ne 0) { iex 'npm install mocha' }
+  - ps: if($NodeVersion -ne 0) { iex 'npm install chai' }
+  - ps: if($NodeVersion -ne 0) { iex 'cd ..\..' }
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
-  - ps: if($NodeVersion -ne 0) { tasklist }
+  - ps: if($NodeVersion -ne 0) { iex 'tasklist' }
   - serviceIoBroker stop & exit 0
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
-  - ps: if($NodeVersion -ne 0) { serviceIoBroker start }
+  - ps: if($NodeVersion -ne 0) { iex 'serviceIoBroker start' }
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 60 }
-  - ps: if($NodeVersion -ne 0) { tasklist }
-  - ps: if($NodeVersion -ne 0) { dir .\ }
-  - ps: if($NodeVersion -ne 0) { dir .\log\ }
-  - ps: if($NodeVersion -ne 0) { type .\log\iobroker*.log }
-  - ps: if($NodeVersion -ne 0) { cd node_modules\iobroker }
+  - ps: if($NodeVersion -ne 0) { iex 'tasklist' }
+  - ps: if($NodeVersion -ne 0) { iex 'dir .\' }
+  - ps: if($NodeVersion -ne 0) { iex 'dir .\log\' }
+  - ps: if($NodeVersion -ne 0) { iex 'type .\log\iobroker*.log' }
+  - ps: if($NodeVersion -ne 0) { iex 'cd node_modules\iobroker' }
   # run tests
   - ps: if($NodeVersion -ne 0) { npm test }
 
