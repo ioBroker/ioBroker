@@ -29,30 +29,30 @@ install:
   - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
   - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { npm install -g npm@4 }
   # install modules
-  - npm install
+  - ps: if($NodeVersion -ne 0) { npm install }
 # Post-install test scripts.
 test_script:
   # Output useful info for debugging.
   - echo %cd%
   - node --version
   - npm --version
-  - npm install request
-  - npm install mocha
-  - npm install chai
-  - cd ..\..
-  - ps: Start-Sleep -s 15
-  - tasklist
-  - serviceIoBroker stop & exit 0
-  - ps: Start-Sleep -s 15
-  - serviceIoBroker start
-  - ps: Start-Sleep -s 60
-  - tasklist
-  - dir .\
-  - dir .\log\
-  - type .\log\iobroker*.log
-  - cd node_modules\iobroker
+  - ps: if($NodeVersion -ne 0) { npm install request }
+  - ps: if($NodeVersion -ne 0) { npm install mocha }
+  - ps: if($NodeVersion -ne 0) { npm install chai }
+  - ps: if($NodeVersion -ne 0) { cd ..\.. }
+  - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
+  - ps: if($NodeVersion -ne 0) { tasklist }
+  - ps: if($NodeVersion -ne 0) { serviceIoBroker stop & exit 0 }
+  - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
+  - ps: if($NodeVersion -ne 0) { serviceIoBroker start }
+  - ps: if($NodeVersion -ne 0) { Start-Sleep -s 60 }
+  - ps: if($NodeVersion -ne 0) { tasklist }
+  - ps: if($NodeVersion -ne 0) { dir .\ }
+  - ps: if($NodeVersion -ne 0) { dir .\log\ }
+  - ps: if($NodeVersion -ne 0) { type .\log\iobroker*.log }
+  - ps: if($NodeVersion -ne 0) { cd node_modules\iobroker }
   # run tests
-  - npm test
+  - ps: if($NodeVersion -ne 0) { npm test }
 
 # Don't actually build.
 build: off
