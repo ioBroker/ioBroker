@@ -18,7 +18,7 @@ install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version $env:platform
   - ps: $NpmVersion = (npm -v).Substring(0,1)
-  - ps: $NodeVersion = (node -v).Substring(1,2)
+  - ps: $NodeVersion = (node -v).Substring(1,1)
   - ps: Write-Host $NpmVersion
   - ps: Write-Host $NodeVersion
   - ps: if($NodeVersion -eq 0) { $NodeFail = (npm install 2>&1) }

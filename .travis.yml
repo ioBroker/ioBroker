@@ -26,18 +26,18 @@ install:
   - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then npm install -g npm@4; fi
   - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
 before_script:
-  - if [[ $NODEVERSION < 4 ]]; then cd ../..; fi
-  - if [[ $NODEVERSION < 4 ]]; then sudo chmod -R 777 *; fi
-  - if [[ $NODEVERSION < 4 ]]; then ps auxww|grep io; fi
-  - if [[ $NODEVERSION < 4 ]]; then ./iobroker start; fi
-  - if [[ $NODEVERSION < 4 ]]; then cd node_modules/iobroker/; fi
-  - if [[ $NODEVERSION < 4 ]]; then npm install request; fi
-  - if [[ $NODEVERSION < 4 ]]; then npm install mocha; fi
-  - if [[ $NODEVERSION < 4 ]]; then npm install chai; fi
-  - if [[ $NODEVERSION < 4 ]]; then sleep 60; fi
-  - if [[ $NODEVERSION < 4 ]]; then ps auxww|grep io; fi
-  - if [[ $NODEVERSION < 4 ]]; then date; fi
-  - if [[ $NODEVERSION < 4 ]]; then cat ../../log/iobroker*.log; fi
+  - if [[ $NODEVERSION > 3 ]]; then cd ../..; fi
+  - if [[ $NODEVERSION > 3 ]]; then sudo chmod -R 777 *; fi
+  - if [[ $NODEVERSION > 3 ]]; then ps auxww|grep io; fi
+  - if [[ $NODEVERSION > 3 ]]; then ./iobroker start; fi
+  - if [[ $NODEVERSION > 3 ]]; then cd node_modules/iobroker/; fi
+  - if [[ $NODEVERSION > 3 ]]; then npm install request; fi
+  - if [[ $NODEVERSION > 3 ]]; then npm install mocha; fi
+  - if [[ $NODEVERSION > 3 ]]; then npm install chai; fi
+  - if [[ $NODEVERSION > 3 ]]; then sleep 60; fi
+  - if [[ $NODEVERSION > 3 ]]; then ps auxww|grep io; fi
+  - if [[ $NODEVERSION > 3 ]]; then date; fi
+  - if [[ $NODEVERSION > 3 ]]; then cat ../../log/iobroker*.log; fi
 addons:
   apt:
     sources:
