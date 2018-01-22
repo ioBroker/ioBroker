@@ -44,7 +44,7 @@ test_script:
   - ps: if($NodeVersion -ne 0) { iex 'tasklist' }
   - serviceIoBroker stop & exit 0
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
-  - ps: if($NodeVersion -ne 0) { iex 'serviceIoBroker start' }
+  - serviceIoBroker start & exit 0
   - ps: if($NodeVersion -ne 0) { Start-Sleep -s 60 }
   - ps: if($NodeVersion -ne 0) { iex 'tasklist' }
   - ps: if($NodeVersion -ne 0) { iex 'dir .\' }
