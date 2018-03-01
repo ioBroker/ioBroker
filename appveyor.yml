@@ -17,17 +17,17 @@ clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
 install:
   # Get the latest stable version of Node.js or io.js
   - ps: Install-Product node $env:nodejs_version $env:platform
-  - ps: $NpmVersion = (npm -v).Substring(0,1)
+  - ps: $NpmVersion = [System.Version](npm -v)
+  - ps: $NpmUnsupported = $NpmVersion -ge [System.Version]"5.0.0" -and $NpmVersion -lt [System.Version]"5.7.1"
   - ps: $NodeVersion = (node -v).Substring(1,1)
   - ps: Write-Host $NpmVersion
   - ps: Write-Host $NodeVersion
   - ps: if($NodeVersion -eq 0) { $NodeFail = (npm install 2>&1) }
   - ps: if($NodeVersion -eq 0) { Write-Host $NodeFail }
   - ps: if($NodeVersion -eq 0) { if(-Not ($NodeFail -match "ioBroker needs at least nodejs 4.x.")) { exit 1 } }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { $NpmFail = (npm install 2>&1) }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { Write-Host $NpmFail }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { npm install -g npm@4 }
+  - ps: if($NodeVersion -ne 0 -and NpmUnsupported) { $NpmFail = (npm install 2>&1) }
+  - ps: if($NodeVersion -ne 0 -and NpmUnsupported) { Write-Host $NpmFail }
+  - ps: if($NodeVersion -ne 0 -and NpmUnsupported) { if(-Not ($NpmFail -match "NPM 5 is only supported starting with version 5.7.1!")) { exit 1 } }
   # install modules
   - ps: if($NodeVersion -ne 0) { npm install }
 # Post-install test scripts.

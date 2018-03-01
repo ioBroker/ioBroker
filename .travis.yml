@@ -23,7 +23,6 @@ install:
   - if [[ $NODEVERSION < 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
   - if [[ $NODEVERSION > 3 && $NPMVERSION < 5 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
   - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then npm install -g npm@4; fi
   - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
 before_script:
   - if [[ $NODEVERSION > 3 ]]; then cd ../..; fi
