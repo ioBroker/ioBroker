@@ -48,8 +48,7 @@
     "unsafe-perm": true
   },
   "scripts": {
-    "preinstall": "node lib/prepareSetup.js",
-    "install": "node lib/setup.js",
+    "install": "node lib/prepareSetup.js & node lib/setup.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "main": "lib/setup.js",
