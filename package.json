@@ -4,9 +4,9 @@
   "engines": {
     "node": ">=0.8"
   },
-  "optionalDependencies": {
-  },
+  "optionalDependencies": {},
   "dependencies": {
+    "semver": "^5.5.0",
     "yargs": "^7.0.2"
   },
   "homepage": "http://iobroker.net",
@@ -48,6 +48,7 @@
     "unsafe-perm": true
   },
   "scripts": {
+    "preinstall": "node lib/prepareSetup.js",
     "install": "node lib/setup.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
