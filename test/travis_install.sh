@@ -10,7 +10,7 @@ export NODE_MINOR=$($NODE -v | cut -d. -f2)
 export NODE_BUILD=$($NODE -v | cut -d. -f3)
 
 # try to install ioBroker and capture the response code to test its behavior
-sudo env "PATH=$PATH" $NPM install --unsafe-perm; export EXIT_CODE=$?
+sudo env "PATH=$PATH" $NPM install --unsafe-perm --prefix "node_modules/iobroker"; export EXIT_CODE=$?
 # node version too old, the script should exit with code 2
 if [[ $NODE_MAJOR -lt 4 ]]
 then
