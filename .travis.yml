@@ -14,31 +14,27 @@ before_install:
   - mkdir node_modules
   - mkdir node_modules/iobroker
   - mv !(node_modules) node_modules/iobroker/
-  - cd node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
-  - export NPMVERSION=$(echo "$($(which npm) -v)"|cut -c1)
-  - export NODEVERSION=$(echo "$($(which node) -v)"|cut -c2)
-  - if [[ $NODEVERSION < 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION > 3 && $NPMVERSION < 5 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then ! sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
-  - if [[ $NODEVERSION > 3 && $NPMVERSION > 4 ]]; then sudo env "PATH=$PATH" $(which npm) install --unsafe-perm; fi
+  - cd node_modules/iobroker
+  - sudo chmod +x ./test/travis_install.sh
+  - ./test/travis_install.sh
+  - cd ../..
 before_script:
-  - if [[ $NODEVERSION > 3 ]]; then cd ../..; fi
-  - if [[ $NODEVERSION > 3 ]]; then sudo chmod -R 777 *; fi
-  - if [[ $NODEVERSION > 3 ]]; then ps auxww|grep io; fi
-  - if [[ $NODEVERSION > 3 ]]; then ./iobroker start; fi
-  - if [[ $NODEVERSION > 3 ]]; then cd node_modules/iobroker/; fi
-  - if [[ $NODEVERSION > 3 ]]; then npm install request; fi
-  - if [[ $NODEVERSION > 3 ]]; then npm install mocha; fi
-  - if [[ $NODEVERSION > 3 ]]; then npm install chai; fi
-  - if [[ $NODEVERSION > 3 ]]; then sleep 60; fi
-  - if [[ $NODEVERSION > 3 ]]; then ps auxww|grep io; fi
-  - if [[ $NODEVERSION > 3 ]]; then date; fi
-  - if [[ $NODEVERSION > 3 ]]; then cat ../../log/iobroker*.log; fi
+  - sudo chmod -R 777 *
+  - ps auxww|grep io
+  - ./iobroker start
+  - cd node_modules/iobroker/
+  - npm install request
+  - npm install mocha
+  - npm install chai
+  - sleep 60
+  - ps auxww|grep io
+  - date
+  - cat ../../log/iobroker*.log
 script:
-  - if [[ $NODEVERSION > 3 ]]; then npm test; fi
+  - npm test
 addons:
   apt:
     sources:
