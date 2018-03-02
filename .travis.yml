@@ -1,16 +1,56 @@
 git:
   submodules: false
-os:
-  - linux
-  - osx
-sudo: required
+
 language: node_js
-node_js:
-  - "0.12"
-  - "4"
-  - "6"
-  - "8"
+
+include: &all
+  sudo: required
+  addons:
+    apt:
+      sources:
+      - ubuntu-toolchain-r-test
+      packages:
+      - g++-4.8
+
+include: &linux
+  <<: *all
+  os: linux
+
+include: &osx
+  <<: *all
+  os: osx
+
+matrix:
+  include:
+    - <<: *linux
+      node_js: 0.12
+    - <<: *linux
+      node_js: 4
+    - <<: *linux
+      node_js: 6
+    - <<: *linux
+      node_js: 8
+    - <<: *linux
+      node_js: 8
+      env:
+        - NPM_VER=5.7.1
+
+    - <<: *osx
+      node_js: 0.12
+    - <<: *osx
+      node_js: 4
+    - <<: *osx
+      node_js: 6
+    - <<: *osx
+      node_js: 8
+    - <<: *osx
+      node_js: 8
+      env:
+        - NPM_VER=5.7.1
+
 before_install:
+  # if we have defined a specific npm version, use that one
+  - if [[ "$NPM_VER" != "" ]]; then npm i -g npm@$NPM_VER; fi
   - mkdir node_modules
   - mkdir node_modules/iobroker
   - mv !(node_modules) node_modules/iobroker/
@@ -34,9 +74,3 @@ before_script:
 script:
   # only continue tests if ioBroker was actually installed
   - if [ ! -e iob_not_installed ]; then npm test; fi
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - g++-4.8
