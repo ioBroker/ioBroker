@@ -16,10 +16,12 @@ if [[ $NODE_MAJOR -lt 4 ]]
 then
 	if [[ $EXIT_CODE -eq 2 ]]
 	then
+		echo "old node version, correct exit code. stopping installation"
 		# tell the install script that the test was ok but ioB wasn't installed
 		export IOB_INSTALLED="false"
 		exit 0
 	else
+		echo "old node version, incorrect exit code. canceling build"
 		exit 1
 	fi
 fi
@@ -27,6 +29,7 @@ fi
 # npm version != 5 definitely supported
 if [[ $NPM_MAJOR -ne 5 ]]
 then 
+	echo "npm version < 5, returning exit code $EXIT_CODE"
 	exit $EXIT_CODE
 fi
 
@@ -37,13 +40,16 @@ then
 	# the script should return with exit code 4
 	if [[ $EXIT_CODE -eq 4 ]]
 	then
+		echo "unsupported npm version $NPM_MAJOR.$NPM_MINOR.$NPM_BUILD, correct exit code. stopping installation"
 		# tell the install script that the test was ok but ioB wasn't installed
 		export IOB_INSTALLED="false"
 		exit 0
 	else
+		echo "unsupported npm version $NPM_MAJOR.$NPM_MINOR.$NPM_BUILD, incorrect exit code. canceling build"
 		exit 1
 	fi
 fi
 
 # default: just return the exit code
+echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE
