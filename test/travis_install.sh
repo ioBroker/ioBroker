@@ -14,8 +14,9 @@ sudo env "PATH=$PATH" $NPM install --unsafe-perm; export EXIT_CODE=$?
 # node version too old, the script should exit with code 2
 if [[ $NODE_MAJOR -lt 4 ]]
 then
-	if [[ $EXIT_CODE -eq 2 ]]
+	if [[ ($EXIT_CODE -eq 2) || ($EXIT_CODE -eq 1) ]]
 	then
+		# it should return 2, but apparently, npm@2 just returns 1 on error
 		echo "old node version, correct exit code. stopping installation"
 		# tell the install script that the test was ok but ioB wasn't installed
 		touch iob_not_installed
