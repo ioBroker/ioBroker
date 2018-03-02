@@ -14,27 +14,21 @@ before_install:
   - mkdir node_modules
   - mkdir node_modules/iobroker
   - mv !(node_modules) node_modules/iobroker/
+  - cd node_modules/iobroker
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
-  - cd node_modules/iobroker
-  - sudo chmod +x ./test/travis_install.sh
-  - ./test/travis_install.sh
-  - cd ../..
+  - sudo chmod +x test/travis_install.sh
+  - . test/travis_install.sh
 before_script:
-  - sudo chmod -R 777 *
-  - ps auxww|grep io
-  - ./iobroker start
-  - cd node_modules/iobroker/
-  - npm install request
-  - npm install mocha
-  - npm install chai
-  - sleep 60
-  - ps auxww|grep io
-  - date
-  - cat ../../log/iobroker*.log
+  - |
+    if [[ "$IOB_INSTALLED" != "false" ]]
+    then
+      sudo chmod +x test/travis_prepareTest.sh
+      . test/travis_prepareTest.sh
+    fi
 script:
-  - npm test
+  - if [[ "$IOB_INSTALLED" != "false" ]]; then npm test; fi
 addons:
   apt:
     sources:
