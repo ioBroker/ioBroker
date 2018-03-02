@@ -19,16 +19,21 @@ before_install:
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
   - sudo chmod +x test/travis_install.sh
-  - . test/travis_install.sh
+  # make sure the iob_not_installed file can be created
+  - sudo chmod 777 .
+  - test/travis_install.sh
+  - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
+  # only continue tests if ioBroker was actually installed
   - |
-    if [[ "$IOB_INSTALLED" != "false" ]]
+    if [ ! -e iob_not_installed ]
     then
       sudo chmod +x test/travis_prepareTest.sh
-      . test/travis_prepareTest.sh
+      test/travis_prepareTest.sh
     fi
 script:
-  - if [[ "$IOB_INSTALLED" != "false" ]]; then npm test; fi
+  # only continue tests if ioBroker was actually installed
+  - if [[ ! -e iob_not_installed ]]; then npm test; fi
 addons:
   apt:
     sources:

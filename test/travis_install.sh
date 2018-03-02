@@ -18,10 +18,10 @@ then
 	then
 		echo "old node version, correct exit code. stopping installation"
 		# tell the install script that the test was ok but ioB wasn't installed
-		export IOB_INSTALLED="false"
+		touch iob_not_installed
 		exit 0
 	else
-		echo "old node version, incorrect exit code. canceling build"
+		echo "old node version, incorrect exit code $EXIT_CODE. canceling build"
 		exit 1
 	fi
 fi
@@ -42,7 +42,7 @@ then
 	then
 		echo "unsupported npm version $NPM_MAJOR.$NPM_MINOR.$NPM_BUILD, correct exit code. stopping installation"
 		# tell the install script that the test was ok but ioB wasn't installed
-		export IOB_INSTALLED="false"
+		touch iob_not_installed
 		exit 0
 	else
 		echo "unsupported npm version $NPM_MAJOR.$NPM_MINOR.$NPM_BUILD, incorrect exit code. canceling build"
