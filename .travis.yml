@@ -53,26 +53,23 @@ before_install:
   - if [[ "$NPM_VER" != "" ]]; then npm i -g npm@$NPM_VER; fi
   - mkdir node_modules
   - mkdir node_modules/iobroker
-  - mv !(node_modules) node_modules/iobroker/
+  - mv !(node_modules|test) node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
-  - cd node_modules/iobroker
   - sudo chmod +x test/travis_install.sh
   # make sure the iob_not_installed file can be created
   - sudo chmod 777 .
-  - cd ../..
-  - node_modules/iobroker/test/travis_install.sh
+  - test/travis_install.sh
   - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
   # only continue tests if ioBroker was actually installed
   - |
     if [ ! -e iob_not_installed ]
     then
-      cd node_modules/iobroker
       sudo chmod +x test/travis_prepareTest.sh
       test/travis_prepareTest.sh
     fi
 script:
   # only continue tests if ioBroker was actually installed
-  - if [ ! -e iob_not_installed ]; then npm test; fi
+  - if [ ! -e iob_not_installed ]; then node_modules/mocha/bin/mocha --exit; fi
