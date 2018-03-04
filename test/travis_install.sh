@@ -30,7 +30,7 @@ fi
 # npm version != 5 definitely supported
 if [[ $NPM_MAJOR -ne 5 ]]
 then 
-	echo "npm version < 5, returning exit code $EXIT_CODE"
+	echo "npm version != 5.x, returning exit code $EXIT_CODE"
 	exit $EXIT_CODE
 fi
 
