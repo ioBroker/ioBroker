@@ -1,6 +1,6 @@
 {
   "name": "iobroker",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "engines": {
     "node": ">=0.8"
   },
@@ -38,7 +38,8 @@
   "author": "bluefox <dogafox@gmail.com>",
   "contributors": [
     "bluefox <dogafox@gmail.com>",
-    "hobbyquaker"
+    "hobbyquaker",
+    "AlCalzone <d.griesel@gmx.net>"
   ],
   "repository": {
     "type": "git",
