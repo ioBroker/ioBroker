@@ -7,6 +7,9 @@ environment:
     - nodejs_version: "4"
     - nodejs_version: "6"
     - nodejs_version: "8"
+    - nodejs_version: "8"
+      npm_version: "5.7.1"
+
 
 platform:
   - x86
@@ -15,44 +18,30 @@ platform:
 clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
 # Install scripts. (runs after repo cloning)
 install:
-  # Get the latest stable version of Node.js or io.js
-  - ps: Install-Product node $env:nodejs_version $env:platform
-  - ps: $NpmVersion = (npm -v).Substring(0,1)
-  - ps: $NodeVersion = (node -v).Substring(1,1)
-  - ps: Write-Host $NpmVersion
-  - ps: Write-Host $NodeVersion
-  - ps: if($NodeVersion -eq 0) { $NodeFail = (npm install 2>&1) }
-  - ps: if($NodeVersion -eq 0) { Write-Host $NodeFail }
-  - ps: if($NodeVersion -eq 0) { if(-Not ($NodeFail -match "ioBroker needs at least nodejs 4.x.")) { exit 1 } }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { $NpmFail = (npm install 2>&1) }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { Write-Host $NpmFail }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
-  - ps: if($NodeVersion -ne 0 -and $NpmVersion -eq 5) { npm install -g npm@4 }
-  # install modules
-  - ps: if($NodeVersion -ne 0) { npm install }
+  - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
+  # Move test dir to install root, because it will be deleted
+  - ps: Move-Item -Path node_modules\iobroker\test -Destination .
+  - ps: .\test\appveyor_install.ps1
+  - ps: |
+        if ($env:iob_not_installed -eq "true") {
+          echo "ioBroker was not installed (this was expected). Skipping next steps..."
+          Exit-AppVeyorBuild
+        }
 # Post-install test scripts.
 test_script:
-  # Output useful info for debugging.
-  - echo %cd%
-  - node --version
-  - npm --version
-  - ps: if($NodeVersion -ne 0) { iex 'npm install request' }
-  - ps: if($NodeVersion -ne 0) { iex 'npm install mocha' }
-  - ps: if($NodeVersion -ne 0) { iex 'npm install chai' }
-  - ps: if($NodeVersion -ne 0) { iex 'cd ..\..' }
-  - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
-  - ps: if($NodeVersion -ne 0) { iex 'tasklist' }
+  - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
+  - ps: npm install request mocha chai --no-optional --save
+  - ps: Start-Sleep -s 15
+  - ps: tasklist
   - serviceIoBroker stop & exit 0
-  - ps: if($NodeVersion -ne 0) { Start-Sleep -s 15 }
+  - ps: Start-Sleep -s 15
   - serviceIoBroker start & exit 0
-  - ps: if($NodeVersion -ne 0) { Start-Sleep -s 60 }
-  - ps: if($NodeVersion -ne 0) { iex 'tasklist' }
-  - ps: if($NodeVersion -ne 0) { iex 'dir .\' }
-  - ps: if($NodeVersion -ne 0) { iex 'dir .\log\' }
-  - ps: if($NodeVersion -ne 0) { iex 'type .\log\iobroker*.log' }
-  - ps: if($NodeVersion -ne 0) { iex 'cd node_modules\iobroker' }
-  # run tests
-  - ps: if($NodeVersion -ne 0) { npm test }
+  - ps: Start-Sleep -s 60
+  - ps: tasklist
+  - dir .\
+  - dir .\log\
+  - type .\log\iobroker*.log & exit 0
+  - node node_modules\mocha\bin\mocha --exit
 
 # Don't actually build.
 build: off

@@ -1,1 +1,4 @@
 .idea
+node_modules
+iobroker-*.tgz
+npm-debug.log
