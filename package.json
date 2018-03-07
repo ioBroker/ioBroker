@@ -2,7 +2,7 @@
   "name": "iobroker",
   "version": "1.1.0",
   "engines": {
-    "node": ">=0.8"
+    "node": ">=4.0"
   },
   "optionalDependencies": {},
   "dependencies": {
@@ -39,7 +39,8 @@
   "contributors": [
     "bluefox <dogafox@gmail.com>",
     "hobbyquaker",
-    "AlCalzone <d.griesel@gmx.net>"
+    "AlCalzone <d.griesel@gmx.net>",
+    "Apollon77 <ingo@fischer-ka.de>"
   ],
   "repository": {
     "type": "git",
