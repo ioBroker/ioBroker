@@ -678,6 +678,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.serviceStates      - (optional) [true/false or path] if adapter can deliver additional states. If yes, the path adapter/lib/states.js will be called and it give following parameters function (objects, states, instance, config, callback). The function must deliver the array of points with values like function (err, result) { result = [{id: 'id1', val: 1}, {id: 'id2', val: 2}]}
 * common.nogit              - (optional) if true, no install from github directly is possible
 * common.materialize        - (optional) if adapter supports > admin3 (materialize style)
+* common.materializeTab     - (optional) if adapter supports > admin3  for tab (materialize style)
 
 #### instance
 
