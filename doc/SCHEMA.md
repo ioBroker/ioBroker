@@ -265,6 +265,7 @@ possible values:
 * value.gps.longitude (common.type=number, common.write=false) gps longitude coordinates
 * value.gps.latitude (common.type=number, common.write=false) gps latitude
 * value.gps         (common.type=string, common.write=false) longitude and latitude together like '5.56;43.45'
+* value.color.mode  (common.type=string, common.write=false)
 * ...
 * value.power.consumption or power.consumption ?
 
@@ -293,10 +294,11 @@ possible values:
 * indicator.maintenance.alarm
 
 * level                 (common.type=number, common.write=true)
-* level.dimmer          (common.type=number, common.write=true, brightness is dimmer too)
+* level.dimmer          (common.type=number, common.write=true) brightness is dimmer too
 * level.blind
 * level.temperature
-* level.valve           (common.type=number, common.write=true, set point for valve position)
+* level.color.mode      (common.type=string, common.write=true)
+* level.valve           (common.type=number, common.write=true) set point for valve position
 * level.color.red
 * level.color.green
 * level.color.blue
@@ -310,6 +312,13 @@ possible values:
 
 * switch (common.type=boolean, common.write=true)
 * switch.lock (common.type=boolean, common.write=true, lock)
+* 
+
+* info
+* info.version         (common.type=string, common.write=false) Software or firmware version
+* info.version.hw      (common.type=string, common.write=false) Hardware version
+* info.serial          (common.type=string, common.write=false) Serial number
+* info.model           (common.type=string, common.write=false) Model
 * 
 
 * ...
