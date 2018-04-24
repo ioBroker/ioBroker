@@ -34,6 +34,12 @@ matrix:
       node_js: 8
       env:
         - NPM_VER=5.7.1
+    - <<: *linux
+      node_js: 10
+    - <<: *linux
+      node_js: 10
+      env:
+        - NPM_VER=5.7.1
 
     - <<: *osx
       node_js: 0.12
@@ -45,6 +51,12 @@ matrix:
       node_js: 8
     - <<: *osx
       node_js: 8
+      env:
+        - NPM_VER=5.7.1
+    - <<: *osx
+      node_js: 10
+    - <<: *osx
+      node_js: 10
       env:
         - NPM_VER=5.7.1
 
