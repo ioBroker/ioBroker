@@ -9,6 +9,9 @@ environment:
     - nodejs_version: "8"
     - nodejs_version: "8"
       npm_version: "5.7.1"
+    - nodejs_version: "10"
+    - nodejs_version: "10"
+      npm_version: "5.7.1"
 
 
 platform:
