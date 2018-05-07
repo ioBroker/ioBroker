@@ -3,9 +3,16 @@ version: 'test-{build}'
 # Test against this version of Node.js
 environment:
   matrix:
+    - nodejs_version: "0.12"
     - nodejs_version: "4"
     - nodejs_version: "6"
     - nodejs_version: "8"
+    - nodejs_version: "8"
+      npm_version: "5.7.1"
+    - nodejs_version: "10"
+    - nodejs_version: "10"
+      npm_version: "5.7.1"
+
 
 platform:
   - x86
@@ -14,39 +21,30 @@ platform:
 clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
 # Install scripts. (runs after repo cloning)
 install:
-  # Get the latest stable version of Node.js or io.js
-  - ps: Install-Product node $env:nodejs_version $env:platform
-  - ps: $NpmVersion = (npm -v).Substring(0,1)
-  - ps: Write-Host $NpmVersion
-  - ps: if($NpmVersion -eq 5) { $NpmFail = (npm install 2>&1) }
-  - ps: if($NpmVersion -eq 5) { Write-Host $NpmFail }
-  - ps: if($NpmVersion -eq 5) { if(-Not ($NpmFail -match "NPM 5 is currently NOT supported!")) { exit 1 } }
-  - ps: if($NpmVersion -eq 5) { npm install -g npm@4 }
-  # install modules
-  - npm install
+  - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
+  # Move test dir to install root, because it will be deleted
+  - ps: Move-Item -Path node_modules\iobroker\test -Destination .
+  - ps: .\test\appveyor_install.ps1
+  - ps: |
+        if ($env:iob_not_installed -eq "true") {
+          echo "ioBroker was not installed (this was expected). Skipping next steps..."
+          Exit-AppVeyorBuild
+        }
 # Post-install test scripts.
 test_script:
-  # Output useful info for debugging.
-  - echo %cd%
-  - node --version
-  - npm --version
-  - npm install request
-  - npm install mocha
-  - npm install chai
-  - cd ..\..
+  - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
+  - ps: npm install request mocha chai --no-optional --save
   - ps: Start-Sleep -s 15
-  - tasklist
+  - ps: tasklist
   - serviceIoBroker stop & exit 0
   - ps: Start-Sleep -s 15
-  - serviceIoBroker start
+  - serviceIoBroker start & exit 0
   - ps: Start-Sleep -s 60
-  - tasklist
+  - ps: tasklist
   - dir .\
   - dir .\log\
-  - type .\log\iobroker*.log
-  - cd node_modules\iobroker
-  # run tests
-  - npm test
+  - type .\log\iobroker*.log & exit 0
+  - node node_modules\mocha\bin\mocha --exit
 
 # Don't actually build.
 build: off

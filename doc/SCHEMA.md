@@ -219,7 +219,7 @@ attributes:
 * common.read   (boolean, mandatory) - true if state is readable
 * common.write  (boolean, mandatory) - true if state is writeable
 * common.role   (string,  mandatory) - role of the state (used in user interfaces to indicate which widget to choose, see below)
-* common.states (optional) attribut of type number with array of possible states
+* common.states (optional) attribut of type number with object of possible states {'value': 'valueName', 'value2': 'valueName2', 0: 'OFF', 1: 'ON'}
 * common.workingID (string, optional) - if this state has helper state WORKING. Here must be written the full name or just the last part if the first parts are the same with actual. Used for HM.LEVEL and normally has value "WORKING"
 
 
@@ -602,6 +602,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.serviceStates      - (optional) [true/false or path] if adapter can deliver additional states. If yes, the path adapter/lib/states.js will be called and it give following parameters function (objects, states, instance, config, callback). The function must deliver the array of points with values like function (err, result) { result = [{id: 'id1', val: 1}, {id: 'id2', val: 2}]}
 * common.nogit              - (optional) if true, no install from github directly is possible
 * common.materialize        - (optional) if adapter supports > admin3 (materialize style)
+* common.materializeTab     - (optional) if adapter supports > admin3  for tab (materialize style)
 
 #### instance
 

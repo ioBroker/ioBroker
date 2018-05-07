@@ -7,13 +7,15 @@
 # Add the following lines to /etc/rc.conf to enable iobroker:
 # iobroker_enable="YES"
 
+. /etc/rc.subr
+
+name="iobroker"
+rcvar="iobroker_enable"
+
+load_rc_config $name
+
 iobroker_enable=${iobroker_enable-"NO"}
 iobroker_pidfile=${iobroker_pidfile-"@@PATH@@lib/iobroker.pid"}
-
-. /etc/rc.subr
-name="iobroker"
-rcvar=iobroker_enable
-pidfile="${iobroker_pidfile}"
 
 iobroker_start ()
 {
@@ -31,8 +33,12 @@ iobroker_status ()
 }
 
 export IOBROKER_HOME=@@HOME@@
+PATH="${PATH}:/usr/local/bin"
+HOME=@@HOME@@
 
 command=@@node
+pidfile="${iobroker_pidfile}"
+
 start_cmd=iobroker_start
 stop_cmd=iobroker_stop
 status_cmd=iobroker_status
