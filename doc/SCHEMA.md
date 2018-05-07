@@ -239,84 +239,8 @@ for a list of transports see history adapter README
 ##### state common.role
 * common.role (indicates how this state should be represented in user interfaces)
 
-possible values:
+[possible values](STATE_ROLES.md)
 
-* text (common.type = string)
-* text.url (common.type = string) state val contains a url for usage in an anchor, iframe or img
-* html (common.type = string)
-* json (common.type = string)
-* list (common.type = array)
-* list.horizontal
-* ...
-
-* value             (common.type=number, common.write=false)
-* value.temperature (common.type=number, common.write=false, common.unit='°C' or '°F' or 'K')
-* value.humidity    (common.type=number, common.write=false)
-* value.brightness  (common.type=number, common.write=false)
-* value.min         (common.type=number, common.write=false)
-* value.max         (common.type=number, common.write=false)
-* value.default     (common.type=number, common.write=false)
-* value.battery     (common.type=number, common.write=false) - battery level
-* value.valve       (common.type=number, common.write=false) - valve level
-* value.time        (common.type=number, common.write=false) - getTime() of Date() object
-* value.interval    (common.type=number, common.write=false, common.unit='sec') - Interval in seconds (can be 0.1 or less)
-* value.date        (common.type=string, common.write=false) Date in form 2015.01.01 (without time)
-* value.datetime    (common.type=string, common.write=false) Date and time in system format
-* value.gps.longitude (common.type=number, common.write=false) gps longitude coordinates
-* value.gps.latitude (common.type=number, common.write=false) gps latitude
-* value.gps         (common.type=string, common.write=false) longitude and latitude together like '5.56;43.45'
-* ...
-* value.power.consumption or power.consumption ?
-
-* direction   (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
-
-* button (common.type=boolean)
-* button.long
-* button.stop
-* button.play
-* button.next
-* button.prev
-* button.pause
-* button.forward
-* button.reverse
-* button.fastforward
-* button.fastreverse
-* ...
-
-* indicator             (common.type=boolean)
-* indicator.working     (common.type=boolean, indicates that something the target systems is doing changes on the parent channel)
-* indicator.reachable
-* indicator.connected
-* indicator.maintenance (common.type=boolean, indicates system warnings/errors, alarms, service messages, battery empty or stuff like that)
-* indicator.maintenance.lowbat (description texts for stuff like that can be stored in adapter- or system-metadata)
-* indicator.maintenance.unreach
-* indicator.maintenance.alarm
-
-* level                 (common.type=number, common.write=true)
-* level.dimmer          (common.type=number, common.write=true, brightness is dimmer too)
-* level.blind
-* level.temperature
-* level.valve           (common.type=number, common.write=true, set point for valve position)
-* level.color.red
-* level.color.green
-* level.color.blue
-* level.color.hue
-* level.color.saturation
-* level.color.rgb
-* level.color.luminance
-* level.color.temperature
-* ...
-* level.volume          (common.type=number, common.write=true, min=0, max=100)
-
-* switch (common.type=boolean, common.write=true)
-* switch.lock (common.type=boolean, common.write=true, lock)
-* 
-
-* ...
-* text.phone_number
-* 
-* adapter.messagebox     (common.type=object, common.write=true) used to send messages to email, pushover and other adapters
-* adapter.wakeup         (common.type=boolean, common.write=true) wake up adapter from suspended mode
 
 #### channel
 
