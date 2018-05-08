@@ -21,7 +21,7 @@
 * state.alarm.secure - door opened, window opened or motion detected during alarm is ON.
 * state.alarm.power - No power (voltage = 0)
 * state.light  - feedback from lamp, that it is ON
-
+* state.lock   - actual position of lock (
 
 ## Buttons (booleans, write-only)
 
@@ -38,6 +38,8 @@
 * button.reverse
 * button.fastforward
 * button.fastreverse
+* button.open.door
+* button.open.window
 
 
 ## Values (numbers, read-only)
@@ -68,6 +70,7 @@
 * value.tilt        - actual tilt position
 * value.wind.speed  - wind speed
 * value.wind.direction - wind direction
+* value.lock        - actual position of lock
 
 ## Indicators (boolean, read-only)
 *common.type=boolean, common.write=false*
@@ -117,7 +120,7 @@ So the indicator may not be alone in the channel. It must be some other main sta
 *common.type=boolean, common.write=true*
 
 * switch
-* switch.lock - lock
+* switch.lock - lock (true - open lock, false - close lock)
 * switch.lock.door - door lock
 * switch.lock.window - window lock
 
