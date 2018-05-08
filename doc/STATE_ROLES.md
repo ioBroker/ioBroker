@@ -9,19 +9,19 @@
 * list              (common.type = array)
 
 
-## States (booleans, read-only)
+## Sensor (booleans, read-only)
 
 *common.type=boolean, common.write=false*
 
-* state.window - window opened (true) or closed (false)
-* state.door   - door opened (true) or closed (false)
-* state.alarm  -
-* state.alarm.flood -
-* state.alarm.fire -
-* state.alarm.secure - door opened, window opened or motion detected during alarm is ON.
-* state.alarm.power - No power (voltage = 0)
-* state.light  - feedback from lamp, that it is ON
-* state.lock   - actual position of lock (
+* sensor.window         - window opened (true) or closed (false)
+* sensor.door           - door opened (true) or closed (false)
+* sensor.alarm          -
+* sensor.alarm.flood    -
+* sensor.alarm.fire     -
+* sensor.alarm.secure   - door opened, window opened or motion detected during alarm is ON.
+* sensor.alarm.power    - No power (voltage = 0)
+* sensor.light          - feedback from lamp, that it is ON
+* sensor.lock           - actual position of lock
 
 ## Buttons (booleans, write-only)
 
@@ -29,18 +29,10 @@
 
 * button
 * button.long
-* button.stop
-* button.play
-* button.next
-* button.prev
-* button.pause
-* button.forward
-* button.reverse
-* button.fastforward
-* button.fastreverse
+* button.stop           - e.g. rollo stop,
+* button.start
 * button.open.door
 * button.open.window
-
 
 ## Values (numbers, read-only)
 
@@ -62,20 +54,38 @@
 * value.datetime    (common.type=string) - Date and time in system format
 * value.gps.longitude - gps longitude coordinates
 * value.gps.latitude - gps latitude
+* value.gps.elevation - gps elevation
 * value.gps         - longitude and latitude together like '5.56;43.45'
 * value.power.consumption (unit=Wh or KWh)
 * value.direction   (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
 * value.curtain     - actual position of curtain
 * value.blind       - actual position of blind
 * value.tilt        - actual tilt position
-* value.wind.speed  - wind speed
-* value.wind.direction - wind direction
 * value.lock        - actual position of lock
+* value.wind.speed  - wind speed
+* value.wind.speed.max  - maximal wind speed in last 24h
+* value.wind.speed.min  - minimal wind speed in last 24h
+* value.wind.direction - wind direction
+* value.wind.gust
+* value.pressure    - (unit: mbar)
+* value.temperature.windchill -
+* value.temperature.dewpoint -
+* value.temperature.feelslike -
+* value.distance
+* value.distance.visibility
+* value.radiation
+* value.uv
+* value.rain.hour
+* value.rain.today
+* value.snow.hour
+* value.snow.today
+* value.precipitation.hour
+* value.precipitation.today
 
 ## Indicators (boolean, read-only)
 *common.type=boolean, common.write=false*
 
-The difference of *Indicators* from *States* is that indicators will be shown as small icon. States as real value.
+The difference of *Indicators* from *Sensors* is that indicators will be shown as small icon. Sensors as a real value.
 So the indicator may not be alone in the channel. It must be some other main state inside channel.
 
 * indicator
@@ -94,6 +104,8 @@ So the indicator may not be alone in the channel. It must be some other main sta
 
 
 ## Levels (numbers, read-write)
+
+With **levels** you can control or set some number value.
 
 *common.type=number, common.write=true*
 
@@ -117,6 +129,8 @@ So the indicator may not be alone in the channel. It must be some other main sta
 
 ## Switches (booleans, read-write)
 
+Switch controls boolean device (true = ON, false = OFF)
+
 *common.type=boolean, common.write=true*
 
 * switch
@@ -124,9 +138,93 @@ So the indicator may not be alone in the channel. It must be some other main sta
 * switch.lock.door - door lock
 * switch.lock.window - window lock
 
+## Media
+
+Special roles for media players
+
+* button.stop
+* button.play
+* button.next
+* button.prev
+* button.pause
+* button.forward
+* button.reverse
+* button.fastforward
+* button.fastreverse
+* media.seek            - (common.type=number) %
+* media.mode.shuffle    - (common.type=boolean)
+* media.mode.repeat     - (common.type=boolean)
+* media.state           - [play,stop,pause] or [true/false]
+* media.artist
+* media.album
+* media.title
+* media.title.next
+* media.cover           - cover url
+* media.duration.text   - e.g "2:35"
+* media.duration        - (common.type=number) seconds
+* media.elapsed.text    - e.g "1:30"
+* media.elapsed         - (common.type=number) seconds
+* media.mute            - (common.type=boolean)
+* media.tts             - text to speech
+* media.bitrate         - kbps
+* media.genre           - genre song
+* media.date            - year song
+* media.track           - current play track id [0 - ~]
+* media.playid          - media player track id
+* media.add             - add current playlist
+* media.clear           - clear current playlist (write-only)
+* media.playlist        - json array like
+
+```
+[
+    {
+        "artist": "",
+        "album": "",
+        "bitrate":0,
+        "title": "",
+        "file": "",
+        "genre": "",
+        "year": 0,
+        "len": "00:00",
+        "rating": "",
+        "cover": ""
+    }
+]
+```
+
+* media.browser         - json array like "files"
+
+```
+[
+    {
+        "fanart": "",
+        "file": "",//smb://192.168.1.10/music/AtlantidaProject/
+        "filetype": "", //directory
+        "label": "",
+        "lastmodified": "",
+        "mimetype": "",
+        "size": 0,
+        "thumbnail": "",
+        "title": "",
+        "type": "",
+        "lastmodified": "2016-02-27 16:05:46",
+        "time": "88",
+        "track": "01",
+        "date": "2005",
+        "artist": "yonderboy (H)",
+        "album": "splendid isolation",
+        "genre": "Trip-Hop"
+    }
+]
+```
 
 ## Others
 
+* url
+* url.icon               - icon (additionally every object can have common.icon)
+* url.cam                - web camera url
+* url.blank              - open URL in new window
+* url.same               - open URL in this window
 * text.phone             - phone number
 
 * adapter.messagebox     (common.type=object, common.write=true) used to send messages to email, pushover and other adapters
