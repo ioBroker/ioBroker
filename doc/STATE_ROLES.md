@@ -46,28 +46,28 @@
 * value.min
 * value.max
 * value.default
-* value.battery      - battery level
-* value.valve        - valve level
-* value.time         - getTime() of Date() object
+* value.battery         - battery level
+* value.valve           - valve level
+* value.time            - getTime() of Date() object
 * value.interval    (common.unit='sec') - Interval in seconds (can be 0.1 or less)
 * value.date        (common.type=string) - Date in form 2015.01.01 (without time)
 * value.datetime    (common.type=string) - Date and time in system format
-* value.gps.longitude - gps longitude coordinates
-* value.gps.latitude - gps latitude
-* value.gps.elevation - gps elevation
-* value.gps         - longitude and latitude together like '5.56;43.45'
+* value.gps.longitude   - gps longitude coordinates
+* value.gps.latitude    - gps latitude
+* value.gps.elevation   - gps elevation
+* value.gps             - longitude and latitude together like '5.56;43.45'
 * value.power.consumption (unit=Wh or KWh)
 * value.direction   (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
-* value.curtain     - actual position of curtain
-* value.blind       - actual position of blind
-* value.tilt        - actual tilt position
-* value.lock        - actual position of lock
-* value.wind.speed  - wind speed
+* value.curtain         - actual position of curtain
+* value.blind           - actual position of blind
+* value.tilt            - actual tilt position
+* value.lock            - actual position of lock
+* value.wind.speed      - wind speed
 * value.wind.speed.max  - maximal wind speed in last 24h
 * value.wind.speed.min  - minimal wind speed in last 24h
-* value.wind.direction - wind direction
+* value.wind.direction  - wind direction
 * value.wind.gust
-* value.pressure    - (unit: mbar)
+* value.pressure        - (unit: mbar)
 * value.temperature.windchill -
 * value.temperature.dewpoint -
 * value.temperature.feelslike -
@@ -82,7 +82,9 @@
 * value.precipitation.hour
 * value.precipitation.today
 
+
 ## Indicators (boolean, read-only)
+
 *common.type=boolean, common.write=false*
 
 The difference of *Indicators* from *Sensors* is that indicators will be shown as small icon. Sensors as a real value.
@@ -96,7 +98,7 @@ So the indicator may not be alone in the channel. It must be some other main sta
 * indicator.maintenance.lowbat
 * indicator.maintenance.unreach
 * indicator.maintenance.alarm
-* indicator.battery     - true if low battery
+* indicator.lowbat      - true if low battery
 * indicator.alarm       - same as indicator.maintenance.alarm
 * indicator.alarm.fire  - fire detected
 * indicator.alarm.flood - flood detected
@@ -134,9 +136,12 @@ Switch controls boolean device (true = ON, false = OFF)
 *common.type=boolean, common.write=true*
 
 * switch
-* switch.lock - lock (true - open lock, false - close lock)
-* switch.lock.door - door lock
-* switch.lock.window - window lock
+* switch.lock           - lock (true - open lock, false - close lock)
+* switch.lock.door      - door lock
+* switch.lock.window    - window lock
+* switch.boost          - start/stop boost mode of thermostat
+* switch.light
+
 
 ## Media
 
