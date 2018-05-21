@@ -9,7 +9,7 @@ mandatory attributes a object of a specific type needs. Functions like setObject
 the adapter module.
 
 States represent often changing data in your system, like f.e. if a lamp is on or off, if a motion detector detected
-some motion, the temperature of your living room or if the button of a remotecontrol is pressed. Contrary to objects
+some motion, the temperature of your living room or if the button of a remote control is pressed. Contrary to objects
 states can be used to trigger actions and states can create history data. To work with states there are several functions
 in the adapter module like setState, getState and so on.
 
@@ -177,7 +177,7 @@ Following attributes have to exist in every object:
 
 * _id
 * type        - see below for possible values
-* common      - an object containing iobroker specific abstraction properties
+* common      - an object containing ioBroker specific abstraction properties
 * native      - an object containing congruent properties of the target system
 
 ### Optional attributes
@@ -217,9 +217,9 @@ attributes:
 * common.def    (optional - the default value)
 * common.desc   (optional, string)
 * common.read   (boolean, mandatory) - true if state is readable
-* common.write  (boolean, mandatory) - true if state is writeable
+* common.write  (boolean, mandatory) - true if state is writable
 * common.role   (string,  mandatory) - role of the state (used in user interfaces to indicate which widget to choose, see below)
-* common.states (optional) attribut of type number with object of possible states {'value': 'valueName', 'value2': 'valueName2', 0: 'OFF', 1: 'ON'}
+* common.states (optional) attribute of type number with object of possible states {'value': 'valueName', 'value2': 'valueName2', 0: 'OFF', 1: 'ON'}
 * common.workingID (string, optional) - if this state has helper state WORKING. Here must be written the full name or just the last part if the first parts are the same with actual. Used for HM.LEVEL and normally has value "WORKING"
 
 
@@ -558,7 +558,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.installedVersion   - (mandatory) installed version
 * common.enabled            - (mandatory) [true/false] value should be false so new instances are disabled by default
 * common.platform           - (mandatory) possible values: Javascript/Node.js, more coming
-* common.webservers         - (optional) array of webserver instances that should serve content from the adapters www folder
+* common.webservers         - (optional) array of web server's instances that should serve content from the adapters www folder
 * common.noRepository       - (optional) [true/false] if adapter delivered with initial installation or has own repository
 * common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
 * common.subscribe          - (optional) name of variable, that is subscribed automatically
@@ -569,9 +569,9 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.logTransporter     - (optional) if this adapter receives logs from other hosts and adapters (e.g. to strore them somewhere)
 * common.nondeletable       - (optional) [true/false] this adapter cannot be deleted or updated. It will be updated together with controller.
 * common.icon               - (optional) name of the local icon (should be located in subdirectory "admin")
-* common.extIcon            - (optional) link to extrenal icon for uninstalled adapters. Normally on github.
+* common.extIcon            - (optional) link to external icon for uninstalled adapters. Normally on github.
 * common.logLevel           - (optional) debug, info, warn or error
-* common.supportStopInstance- (optional) [true/false] if adapter supports signal stopInstance (messagebox required). The signal will be sent before stop to the adapter. (used if the problems occured with SIGTERM)
+* common.supportStopInstance- (optional) [true/false] if adapter supports signal stopInstance (**messagebox** required). The signal will be sent before stop to the adapter. (used if the problems occured with SIGTERM)
 * common.allowInit          - (optional) [true/false] allow for "scheduled" adapter to be called "not in the time schedule", if settings changed or adapter started.
 * common.onlyWWW            - (optional) [true/false] say to controller, that adapter has only html files and no main.js, like rickshaw
 * common.singleton          - (optional) adapter can be installed only once in whole system
@@ -590,7 +590,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.restartAdapters    - (optional) array with names of adapter that must be restarted after this adapter is installed, e.g. ["vis"]
 * common.preserveSettings   - (optional) string (or array) with names of attributes in common of instance, which will not be deleted. E.g. "history", so by setState('system.adapter.mqtt.0", {..}) the field common.history will not be deleted even if new object does not have this field. To delete the attribute it must be explicitly done with ```common:{history: null}```.  
 * common.noConfig           - (optional) [true/false] do not show configuration dialog for instance
-* common.stopTimeout        - (optional) timeout in ms to wait, till adapter shut down. Defaut 500ms.
+* common.stopTimeout        - (optional) timeout in ms to wait, till adapter shut down. Default 500ms.
 * common.unsafePerm         - (optional) [true/false] if the package must be installed with "npm --unsafe-perm" parameter
 * common.supportCustoms     - (optional) [true/false] if the adapter support settings for every state. It has to have custom.html file in admin. Sample can be found in ioBroker.history
 * common.getHistory         - (optional) [true/false] if adapter supports getHistory message
@@ -616,7 +616,7 @@ id *system.adapter.&lt;adapter.name&gt;.&lt;instance-number&gt;*
 
 ##### adapter/instance common.mode
 
-* **none**        - this adapter doesnt start a process
+* **none**        - this adapter doesn't start a process
 * **daemon**      - always running process (will be restarted if process exits)
 * **subscribe**   - is started when state *system.adapter.&lt;adapter-name&gt;.&lt;instance-number&gt;.alive* changes to *true*. Is killed when *.alive* changes to *false* and sets *.alive* to *false* if process exits (will **not** be restarted when process exits)
 * **schedule**    - is started by schedule found in *system.adapter.&lt;adapter-name&gt;.&lt;instance-number&gt;.schedule* - reacts on changes of *.schedule* by rescheduling with new state
@@ -641,11 +641,10 @@ id *system.host.&lt;host&gt;*
 
 #### script
 
-
 * common.platform   - (mandatory) possible Values 'Javascript/Node.js' (more to come)
 * common.enabled    - (mandatory) is script activated or not
 * common.source     - (mandatory) the script source
-* common.engine     - (optional) scriptengine instance that should run this script (f.e. 'javascript.0') - if ommited engine is automatically selected
+* common.engine     - (optional) *scriptengine* instance that should run this script (f.e. 'javascript.0') - if omitted engine is automatically selected
 
 #### user
 
