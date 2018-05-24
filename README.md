@@ -10,12 +10,12 @@
 
 See [ioBroker wiki](https://github.com/ioBroker/ioBroker/wiki/Home-(English)) for more information
 
-[ioBroker website](http://iobroker.net)
-[Demo admin](http://iobroker.net:8081)
-[Demo VIS](https://iobroker.net:8080)
-[Forum](http://forum.iobroker.net)
-[Whiteboard](https://trello.com/b/q0SZKdfW)
-[Statistics](http://download.iobroker.net/stat.html)
+* [ioBroker website](http://iobroker.net)
+* [Demo admin](http://iobroker.click)
+* [Demo VIS](https://iobroker.click)
+* [Forum](http://forum.iobroker.net)
+* [Requests for adapters](https://github.com/ioBroker/AdapterRequests/issues)
+* [Statistics](http://download.iobroker.net/stat.html)
 
 ioBroker is an integration platform for the [Internet of Things](http://en.wikipedia.org/wiki/Internet_of_Things),
 focused on Building Automation, Smart Metering, Ambient Assisted Living, Process Automation, Visualization and
