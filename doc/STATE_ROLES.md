@@ -15,13 +15,15 @@
 
 * sensor.window         - window opened (true) or closed (false)
 * sensor.door           - door opened (true) or closed (false)
-* sensor.alarm          -
-* sensor.alarm.flood    -
-* sensor.alarm.fire     -
+* sensor.alarm          - some common alarm
+* sensor.alarm.flood    - water leakage
+* sensor.alarm.fire     - fire sensor
 * sensor.alarm.secure   - door opened, window opened or motion detected during alarm is ON.
 * sensor.alarm.power    - No power (voltage = 0)
 * sensor.light          - feedback from lamp, that it is ON
 * sensor.lock           - actual position of lock
+* sensor.motion         - motion sensor
+* sensor.rain           - rain detected
 
 ## Buttons (booleans, write-only)
 
@@ -141,6 +143,7 @@ Switch controls boolean device (true = ON, false = OFF)
 * switch.lock.window    - window lock
 * switch.boost          - start/stop boost mode of thermostat
 * switch.light
+* switch.comfort        - comfort mode
 
 
 ## Media
