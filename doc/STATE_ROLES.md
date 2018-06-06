@@ -44,7 +44,7 @@
 * value.window      (common.states={"0": "CLOSED", "1": "TILTED", "2": "OPEN"}) It is important to have (CLOSED/TILTED/OPEN). Values can differ.
 * value.temperature (common.unit='°C' or '°F' or 'K')
 * value.humidity
-* value.brightness
+* value.brightness     - luminance level (unit: lux, )
 * value.min
 * value.max
 * value.default
