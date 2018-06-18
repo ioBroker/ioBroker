@@ -121,6 +121,7 @@ With **levels** you can control or set some number value.
 * level.color.red
 * level.color.green
 * level.color.blue
+* level.color.white     - rgbW
 * level.color.hue
 * level.color.saturation
 * level.color.rgb
