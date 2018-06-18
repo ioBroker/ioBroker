@@ -30,19 +30,15 @@ NODE=`which node`
     echo "Use user $IO_USER for install."
 #fi
 
-#Modify /etc/couchdb/local.ini. Replace ";bind_address = 127.0.0.1" with "bind_address = 0.0.0.0"
-#if grep -Fq ";bind_address = 127.0.0.1" /etc/couchdb/local.ini; then
-#    sed -i -e 's/;bind_address = 127\.0\.0\.1/bind_address = 0.0.0.0/g' /etc/couchdb/local.ini
-#    /usr/bin/couchdb -d
-#    /usr/bin/couchdb -b
-#fi
-
 ## if iobroker.sh not exists. Copy it
 if [ ! -f "/etc/init.d/iobroker.sh" ]; then
     cp @@PATH@@../iobroker/install/linux/iobroker.sh /etc/init.d/iobroker.sh
 fi
 if [ ! -f "/usr/bin/iobroker" ]; then
     echo 'node @@PATH@@iobroker.js $1 $2 $3 $4 $5' > /usr/bin/iobroker
+fi
+if [ ! -f "/usr/bin/iob" ]; then
+    echo 'node @@PATH@@iobroker.js $1 $2 $3 $4 $5' > /usr/bin/iob
 fi
 
 #Set rights
@@ -52,6 +48,7 @@ echo "Set permissions..."
 #chown -R $IO_USER:$IO_USER @@PATH@@
 chmod 755 /etc/init.d/iobroker.sh
 chmod 755 /usr/bin/iobroker
+chmod 755 /usr/bin/iob
 
 #Replace user pi with current user
 sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /etc/init.d/iobroker.sh
