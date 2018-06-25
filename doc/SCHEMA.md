@@ -603,6 +603,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.nogit              - (optional) if true, no install from github directly is possible
 * common.materialize        - (optional) if adapter supports > admin3 (materialize style)
 * common.materializeTab     - (optional) if adapter supports > admin3  for tab (materialize style)
+* common.dataFolder         - (optional) folder relative to iobroker-data where the adapter stores the data. This folder will be backed up and restored automatically. You can use variable '%INSTANCE%' in it.
 
 #### instance
 
