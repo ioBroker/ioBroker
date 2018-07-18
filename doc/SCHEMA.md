@@ -15,6 +15,7 @@ in the adapter module like setState, getState and so on.
 
 For every state there also has to exist a corresponding object with type=state.
 
+
 # Content
 - [Database Schema](#satabase-schema)
     - [IDs](#ids)
@@ -604,6 +605,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.materialize        - (optional) if adapter supports > admin3 (materialize style)
 * common.materializeTab     - (optional) if adapter supports > admin3  for tab (materialize style)
 * common.dataFolder         - (optional) folder relative to iobroker-data where the adapter stores the data. This folder will be backed up and restored automatically. You can use variable '%INSTANCE%' in it.
+* common.webPreSettings     - (optional) list of parameters that must be included into info.js by webServer adapter. (Example material)
 
 #### instance
 

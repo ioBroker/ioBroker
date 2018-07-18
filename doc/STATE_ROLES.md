@@ -128,7 +128,8 @@ With **levels** you can control or set some number value.
 * level.color.luminance
 * level.color.temperature
 * ...
-* level.volume          (min=0, max=100) - sound volume, but min, max can differ. min < max
+* level.volume         - (min=0, max=100) - sound volume, but min, max can differ. min < max
+* level.volume.group   - (min=0, max=100) - sound volume, for the group of devices
 * level.curtain        - set the curtain position
 * level.tilt           - set the tilt position of blinds
 
@@ -173,7 +174,8 @@ Special roles for media players
 * media.duration        - (common.type=number) seconds
 * media.elapsed.text    - e.g "1:30"
 * media.elapsed         - (common.type=number) seconds
-* media.mute            - (common.type=boolean)
+* media.mute            - (common.type=boolean) true is muted
+* media.mute.group      - (common.type=boolean) mute of group of devices
 * media.tts             - text to speech
 * media.bitrate         - kbps
 * media.genre           - genre song
