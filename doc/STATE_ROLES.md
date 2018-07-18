@@ -162,7 +162,7 @@ Special roles for media players
 * button.fastforward
 * button.fastreverse
 * media.seek            - (common.type=number) %
-* media.mode.shuffle    - (common.type=boolean)
+* media.mode.shuffle    - (common.type=number) 0 - none, 1 - all, 2 - one
 * media.mode.repeat     - (common.type=boolean)
 * media.state           - [play,stop,pause] or [true/false]
 * media.artist
