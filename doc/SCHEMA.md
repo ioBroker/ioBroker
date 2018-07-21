@@ -550,7 +550,9 @@ id
 
 id *system.adapter.&lt;adapter.name&gt;*
 
-* children                  - (optional)  array of adapter instance IDs
+*Notice:* all flags are optional except special marked as **mandatory**.
+
+* children                  - array of adapter instance IDs
 * common.name               - (mandatory) name of adapter without "ioBroker."
 * common.title              - (deprecated) longer name of adapter to show in admin
 * common.titleLang          - (mandatory) longer name of adapter in all supported languages like {en: 'Adapter', de: 'adapter', ru: 'Драйвер'}
@@ -559,53 +561,56 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.installedVersion   - (mandatory) installed version
 * common.enabled            - (mandatory) [true/false] value should be false so new instances are disabled by default
 * common.platform           - (mandatory) possible values: Javascript/Node.js, more coming
-* common.webservers         - (optional) array of web server's instances that should serve content from the adapters www folder
-* common.noRepository       - (optional) [true/false] if adapter delivered with initial installation or has own repository
-* common.messagebox         - (optional)  true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
-* common.subscribe          - (optional) name of variable, that is subscribed automatically
-* common.subscribable       - (optional) variables of this adapter must be subscribed with sendTo to enable updates
-* common.wakeup             - (optional)  
-* common.availableModes     - (optional) values for common.mode if more than one mode is possible
-* common.localLink          - (optional) link to the web service of this adapter. E.g to http://localhost:5984/_utils for futon from admin
-* common.logTransporter     - (optional) if this adapter receives logs from other hosts and adapters (e.g. to strore them somewhere)
-* common.nondeletable       - (optional) [true/false] this adapter cannot be deleted or updated. It will be updated together with controller.
-* common.icon               - (optional) name of the local icon (should be located in subdirectory "admin")
-* common.extIcon            - (optional) link to external icon for uninstalled adapters. Normally on github.
-* common.logLevel           - (optional) debug, info, warn or error
-* common.supportStopInstance- (optional) [true/false] if adapter supports signal stopInstance (**messagebox** required). The signal will be sent before stop to the adapter. (used if the problems occured with SIGTERM)
-* common.allowInit          - (optional) [true/false] allow for "scheduled" adapter to be called "not in the time schedule", if settings changed or adapter started.
-* common.onlyWWW            - (optional) [true/false] say to controller, that adapter has only html files and no main.js, like rickshaw
-* common.singleton          - (optional) adapter can be installed only once in whole system
-* common.singletonHost      - (optional) adapter can be installed only once on one host
-* common.allowInit          - (optional) [true/false] allow scheduled adapter start once after configuration changed and then by schedule
-* common.config.width       - (optional) default width for configuration dialog
-* common.config.height      - (optional) default height for configuration dialog
-* common.config.minWidth    - (optional) minimal width for configuration dialog
-* common.config.minHeight   - (optional) minimal height for configuration dialog
-* common.os                 - (optional) string or array of supported operation systems, e.g ["linux", "darwin"]
-* common.stopBeforeUpdate   - (optional) [true/false] if adapter must be stopped before update
-* common.adminTab.singleton - (optional) [true/false] if adapter has TAB for admin. Only one TAB for all instances will be shown.
-* common.adminTab.name      - (optional) name of TAB in admin
-* common.adminTab.link      - (optional) link for iframe in the TAB. You can use parameters replacement like this: "http://%ip%:%port%". IP will be replaced with host IP. "port" will be extracted from native.port.
-* common.adminTab.ignoreConfigUpdate - (optional) do not update config TAB if configuration changed (to enable configure settings in TAB)
-* common.restartAdapters    - (optional) array with names of adapter that must be restarted after this adapter is installed, e.g. ["vis"]
-* common.preserveSettings   - (optional) string (or array) with names of attributes in common of instance, which will not be deleted. E.g. "history", so by setState('system.adapter.mqtt.0", {..}) the field common.history will not be deleted even if new object does not have this field. To delete the attribute it must be explicitly done with ```common:{history: null}```.  
-* common.noConfig           - (optional) [true/false] do not show configuration dialog for instance
-* common.stopTimeout        - (optional) timeout in ms to wait, till adapter shut down. Default 500ms.
-* common.unsafePerm         - (optional) [true/false] if the package must be installed with "npm --unsafe-perm" parameter
-* common.supportCustoms     - (optional) [true/false] if the adapter support settings for every state. It has to have custom.html file in admin. Sample can be found in ioBroker.history
-* common.getHistory         - (optional) [true/false] if adapter supports getHistory message
-* common.blockly            - (optional) [true/false] if adapter has custom blocks for blockly. (admin/blockly.js required) 
-* common.webExtendable      - (optional) [true/false] if web server in this adapter can be extended with plugin/extensions like proxy, simple-api
-* common.webExtension       - (optional) relative filename to connect the web extension. E.g. in simple-api "lib/simpleapi.js" relative to the adapter root directory. Additionally is native.webInstance required to say where this extension will be included. Empty means, it must run as own web service. "*" means every web server must include it. 
-* common.welcomeScreen      - (optional) array of pages, that should be shown on the "web" index.html page. ["vis/edit.html", "vis/index.html"] or [{"link": "vis/edit.html", "name": "Vis editor", "img": "vis/img/edit.png", "color": "blue"}, "vis/index.html"]
+* common.webservers         - array of web server's instances that should serve content from the adapters www folder
+* common.noRepository       - [true/false] if adapter delivered with initial installation or has own repository
+* common.messagebox         - true if message box supported. If yes, the object system.adapter.&lt;adapter.name&gt&lt;adapter.instance&gt.messagebox will be created to send messges to adapter (used for email, pushover,...;
+* common.subscribe          - name of variable, that is subscribed automatically
+* common.subscribable       - variables of this adapter must be subscribed with sendTo to enable updates
+* common.wakeup             -
+* common.availableModes     - values for common.mode if more than one mode is possible
+* common.localLink          - link to the web service of this adapter. E.g to http://localhost:5984/_utils for futon from admin
+* common.logTransporter     - if this adapter receives logs from other hosts and adapters (e.g. to strore them somewhere)
+* common.nondeletable       - [true/false] this adapter cannot be deleted or updated. It will be updated together with controller.
+* common.icon               - name of the local icon (should be located in subdirectory "admin")
+* common.extIcon            - link to external icon for uninstalled adapters. Normally on github.
+* common.logLevel           - debug, info, warn or error
+* common.supportStopInstance- [true/false] if adapter supports signal stopInstance (**messagebox** required). The signal will be sent before stop to the adapter. (used if the problems occured with SIGTERM)
+* common.allowInit          - [true/false] allow for "scheduled" adapter to be called "not in the time schedule", if settings changed or adapter started.
+* common.onlyWWW            - [true/false] say to controller, that adapter has only html files and no main.js, like rickshaw
+* common.singleton          - adapter can be installed only once in whole system
+* common.singletonHost      - adapter can be installed only once on one host
+* common.allowInit          - [true/false] allow scheduled adapter start once after configuration changed and then by schedule
+* common.config.width       - default width for configuration dialog
+* common.config.height      - default height for configuration dialog
+* common.config.minWidth    - minimal width for configuration dialog
+* common.config.minHeight   - minimal height for configuration dialog
+* common.os                 - string or array of supported operation systems, e.g ["linux", "darwin"]
+* common.stopBeforeUpdate   - [true/false] if adapter must be stopped before update
+* common.adminTab.singleton - [true/false] if adapter has TAB for admin. Only one TAB for all instances will be shown.
+* common.adminTab.name      - name of TAB in admin
+* common.adminTab.link      - link for iframe in the TAB. You can use parameters replacement like this: "http://%ip%:%port%". IP will be replaced with host IP. "port" will be extracted from native.port.
+* common.adminTab.ignoreConfigUpdate - do not update config TAB if configuration changed (to enable configure settings in TAB)
+* common.restartAdapters    - array with names of adapter that must be restarted after this adapter is installed, e.g. ["vis"]
+* common.preserveSettings   - string (or array) with names of attributes in common of instance, which will not be deleted. E.g. "history", so by setState('system.adapter.mqtt.0", {..}) the field common.history will not be deleted even if new object does not have this field. To delete the attribute it must be explicitly done with ```common:{history: null}```.
+* common.noConfig           - [true/false] do not show configuration dialog for instance
+* common.stopTimeout        - timeout in ms to wait, till adapter shut down. Default 500ms.
+* common.unsafePerm         - [true/false] if the package must be installed with "npm --unsafe-perm" parameter
+* common.supportCustoms     - [true/false] if the adapter support settings for every state. It has to have custom.html file in admin. Sample can be found in ioBroker.history
+* common.getHistory         - [true/false] if adapter supports getHistory message
+* common.blockly            - [true/false] if adapter has custom blocks for blockly. (admin/blockly.js required)
+* common.webExtendable      - [true/false] if web server in this adapter can be extended with plugin/extensions like proxy, simple-api
+* common.webExtension       - relative filename to connect the web extension. E.g. in simple-api "lib/simpleapi.js" relative to the adapter root directory. Additionally is native.webInstance required to say where this extension will be included. Empty means, it must run as own web service. "*" means every web server must include it.
+* common.welcomeScreen      - array of pages, that should be shown on the "web" index.html page. ["vis/edit.html", "vis/index.html"] or [{"link": "vis/edit.html", "name": "Vis editor", "img": "vis/img/edit.png", "color": "blue"}, "vis/index.html"]
 * common.unchanged          - (system) please do not use this flag. It is a flag to inform the system, that configuration dialog must be shown in admin.
-* common.serviceStates      - (optional) [true/false or path] if adapter can deliver additional states. If yes, the path adapter/lib/states.js will be called and it give following parameters function (objects, states, instance, config, callback). The function must deliver the array of points with values like function (err, result) { result = [{id: 'id1', val: 1}, {id: 'id2', val: 2}]}
-* common.nogit              - (optional) if true, no install from github directly is possible
-* common.materialize        - (optional) if adapter supports > admin3 (materialize style)
-* common.materializeTab     - (optional) if adapter supports > admin3  for tab (materialize style)
-* common.dataFolder         - (optional) folder relative to iobroker-data where the adapter stores the data. This folder will be backed up and restored automatically. You can use variable '%INSTANCE%' in it.
-* common.webPreSettings     - (optional) list of parameters that must be included into info.js by webServer adapter. (Example material)
+* common.serviceStates      - [true/false or path] if adapter can deliver additional states. If yes, the path adapter/lib/states.js will be called and it give following parameters function (objects, states, instance, config, callback). The function must deliver the array of points with values like function (err, result) { result = [{id: 'id1', val: 1}, {id: 'id2', val: 2}]}
+* common.nogit              - if true, no install from github directly is possible
+* common.materialize        - if adapter supports > admin3 (materialize style)
+* common.materializeTab     - if adapter supports > admin3  for tab (materialize style)
+* common.dataFolder         - folder relative to iobroker-data where the adapter stores the data. This folder will be backed up and restored automatically. You can use variable '%INSTANCE%' in it.
+* common.webPreSettings     - list of parameters that must be included into info.js by webServer adapter. (Example material)
+* common.apt-get            - list of debian packages, that required for this adapter (of course only debian)
+* common.eraseOnUpload      - erase all previous data in the directory before upload
+* common.webByVersion       - show version as prefix in web adapter (usually - ip:port/material, webByVersion - ip:port/1.2.3/material)
 
 #### instance
 
