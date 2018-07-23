@@ -94,8 +94,8 @@ So the indicator may not be alone in the channel. It must be some other main sta
 
 * indicator
 * indicator.working     - indicates that the target systems is executing something, like blinds or lock opening.
-* indicator.reachable
-* indicator.connected
+* indicator.reachable   - If device is online
+* indicator.connected   - used only for instances. Use indicator.reachable for devices
 * indicator.maintenance - indicates system warnings/errors, alarms, service messages, battery empty or stuff like that
 * indicator.maintenance.lowbat
 * indicator.maintenance.unreach
