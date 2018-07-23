@@ -127,6 +127,8 @@ With **levels** you can control or set some number value.
 * level.color.rgb
 * level.color.luminance
 * level.color.temperature
+* level.timer
+* level.timer.sleep    - sleep timer. 0 - off, or in minutes
 * ...
 * level.volume         - (min=0, max=100) - sound volume, but min, max can differ. min < max
 * level.volume.group   - (min=0, max=100) - sound volume, for the group of devices
@@ -146,6 +148,8 @@ Switch controls boolean device (true = ON, false = OFF)
 * switch.boost          - start/stop boost mode of thermostat
 * switch.light
 * switch.comfort        - comfort mode
+* switch.enable
+* switch.power          - power on/off
 
 
 ## Media
@@ -157,14 +161,17 @@ Special roles for media players
 * button.next
 * button.prev
 * button.pause
+* switch.pause
 * button.forward
 * button.reverse
 * button.fastforward
 * button.fastreverse
+* button.volume.up
+* button.volume.down
 * media.seek            - (common.type=number) %
 * media.mode.shuffle    - (common.type=number) 0 - none, 1 - all, 2 - one
 * media.mode.repeat     - (common.type=boolean)
-* media.state           - [play,stop,pause] or [true/false]
+* media.state           - [play,stop,pause] or [0 - pause, 1 - play, 2 - stop] or [true/false]
 * media.artist
 * media.album
 * media.title
@@ -185,6 +192,15 @@ Special roles for media players
 * media.add             - add current playlist
 * media.clear           - clear current playlist (write-only)
 * media.playlist        - json array like
+* media.url             - url to play or current url
+* media.url.announcement - URL to play announcement
+* media.jump            - Number of items to jump in the playlist (it can be negative)
+* media.content         - Type of media being played such as audio/mp3
+* media.link            - State with the current file
+* media.input           - number or string of input (AUX, AV, TV, SAT, ...)
+* level.bass            - Bass level
+* level.treble          - Treble level
+* switch.power.zone     - power zone
 
 ```
 [
@@ -228,6 +244,15 @@ Special roles for media players
     }
 ]
 ```
+## Info
+* info.ip        - ip of device
+* info.mac       - mac of device
+* info.name      - name of device
+* info.address   - some other address (e.g. KNX)
+* info.port      - tcp port
+* info.standby   - true if device in standby mode
+* info.status    - status of device
+* info.display   - information shown on device display
 
 ## Others
 
@@ -236,6 +261,7 @@ Special roles for media players
 * url.cam                - web camera url
 * url.blank              - open URL in new window
 * url.same               - open URL in this window
+* url.audio              - URL for audio file
 * text.phone             - phone number
 
 * adapter.messagebox     (common.type=object, common.write=true) used to send messages to email, pushover and other adapters
