@@ -171,12 +171,13 @@ Special roles for media players
 * media.seek            - (common.type=number) %
 * media.mode.shuffle    - (common.type=number) 0 - none, 1 - all, 2 - one
 * media.mode.repeat     - (common.type=boolean)
-* media.state           - [play,stop,pause] or [0 - pause, 1 - play, 2 - stop] or [true/false]
+* media.state           - ['play','stop','pause'] or [0 - pause, 1 - play, 2 - stop] or [true - playing/false - pause]
 * media.artist
 * media.album
 * media.title
 * media.title.next
 * media.cover           - cover url
+* media.cover.big       - big cover url
 * media.duration.text   - e.g "2:35"
 * media.duration        - (common.type=number) seconds
 * media.elapsed.text    - e.g "1:30"
