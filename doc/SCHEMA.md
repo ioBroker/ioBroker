@@ -611,6 +611,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.apt-get            - list of debian packages, that required for this adapter (of course only debian)
 * common.eraseOnUpload      - erase all previous data in the directory before upload
 * common.webByVersion       - show version as prefix in web adapter (usually - ip:port/material, webByVersion - ip:port/1.2.3/material)
+* common.noIntro            - never show instances of this adapter on Intro/Overview screen in admin (like icons, widgets)
 
 #### instance
 
