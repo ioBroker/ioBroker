@@ -7,6 +7,7 @@
 * html              (common.type = string)
 * json              (common.type = string)
 * list              (common.type = array)
+* date              (common.type = string)
 
 
 ## Sensor (booleans, read-only)
@@ -59,31 +60,15 @@
 * value.gps.elevation   - gps elevation
 * value.gps             - longitude and latitude together like '5.56;43.45'
 * value.power.consumption (unit=Wh or KWh)
-* value.direction   (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
+* value.direction       - (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
 * value.curtain         - actual position of curtain
 * value.blind           - actual position of blind
 * value.tilt            - actual tilt position
 * value.lock            - actual position of lock
-* value.wind.speed      - wind speed
-* value.wind.speed.max  - maximal wind speed in last 24h
-* value.wind.speed.min  - minimal wind speed in last 24h
-* value.wind.direction  - wind direction
-* value.wind.gust
+* value.speed           - wind speed
 * value.pressure        - (unit: mbar)
-* value.temperature.windchill -
-* value.temperature.dewpoint -
-* value.temperature.feelslike -
 * value.distance
 * value.distance.visibility
-* value.radiation
-* value.uv
-* value.rain.hour
-* value.rain.today
-* value.snow.hour
-* value.snow.today
-* value.precipitation.hour
-* value.precipitation.today
-
 
 ## Indicators (boolean, read-only)
 
@@ -183,13 +168,16 @@ Special roles for media players
 * media.duration        - (common.type=number) seconds
 * media.elapsed.text    - e.g "1:30"
 * media.elapsed         - (common.type=number) seconds
+* media.broadcastDate   - (common.type=string) Broadcast date
 * media.mute            - (common.type=boolean) true is muted
+* media.season          - (common.type=string) season number (important the type is really "string" to be able to indicate absence of season with "")
+* media.episode         - (common.type=string) episode number (important the type is really "string" to be able to indicate absence of episode with "")
 * media.mute.group      - (common.type=boolean) mute of group of devices
 * media.tts             - text to speech
 * media.bitrate         - kbps
 * media.genre           - genre song
 * media.date            - year song
-* media.track           - current play track id [0 - ~]
+* media.track           - (common.type=string) current play track id [0 - ~] (important the type is really "string" to be able to indicate absence of track with "")
 * media.playid          - media player track id
 * media.add             - add current playlist
 * media.clear           - clear current playlist (write-only)
@@ -246,6 +234,57 @@ Special roles for media players
     }
 ]
 ```
+
+## Wether
+* value.temperature           - Actual temperature
+* value.temperature.windchill - Actual wind chill
+* value.temperature.dewpoint  - Actual dewpoint
+* value.temperature.feelslike - Actual temperature "feels like"
+* value.temperature.min       - Minimal temperature in last 24h
+* value.temperature.max       - Maximal temperature in last 24h
+* value.humidity              - actual humidity
+* value.speed.wind            - actual wind speed
+* value.speed.max.wind        - maximal wind speed in last 24h
+* value.speed.min.wind        - minimal wind speed in last 24h
+* value.speed.wind.gust       - actual wind gust speed
+* value.direction.wind        - actual wind direction
+* date                        - actual date or date of last read information
+* weather.icon                - Actual state icon for now
+* weather.state               - Actual weather description
+* value.precipitation         - (type: number, unit: mm) precipitation for last 24 hours rain/snow (Niederschlag heute für Schnee oder Regen / осадки сегодня снега или дождя)
+* value.precipitation.hour    - Actual precipitation level in last hour
+* value.precipitation.today   - Actual precipitation level for today (till 0:00)
+* value.radiation             - Actual sun radiation level
+* value.uv                    - Actual UV level
+* value.rain                  - Actual snow level in last 24 hours
+* value.rain.hour             - Actual snow level in last hour
+* value.rain.today            - Actual snow level for today (till 0:00)
+* value.snow                  - Actual snow level in last 24 hours
+* value.snow.hour             - Actual snow level in last hour
+* value.snow.today            - Actual snow level for today (till 0:00)
+* weather.chart.url           - URL to chart for weather
+* weather.html                - HTML object with weather description
+
+* value.speed.wind.forecast.0     - wind speed forecast for today
+* weather.state.forecast.0        - Weather description for today
+* value.direction.wind.forecast.0 - wind direction forecast for today
+* value.pressure.forecast.0       - forecast for pressure for today
+* value.temperature.min.forecast.0  - Min temperature forecast for today
+* value.temperature.max.forecast.0  - Max temperature forecast for today
+* value.precipitation.forecast.0  - (type: number, unit: %) Forecast of precipitation chance for today
+* value.precipitation.forecast.0  - (type: number, unit: mm) Forecast of precipitation level for today
+
+* date.forecast.1                 - tomorrow date
+* weather.icon.forecast.1         - tomorrow icon
+* weather.state.forecast.1        - tomorrow weather state
+* value.temperature.min.forecast.1
+* value.temperature.max.forecast.1
+* value.precipitation.forecast.1  - (type: number, unit: %) Forecast of precipitation chance for tomorrow
+* value.precipitation.forecast.1  - (type: number, unit: mm) Forecast of precipitation level for tomorrow
+* value.direction.wind.forecast.1
+* value.speed.wind.forecast.1
+* value.pressure.forecast.1
+
 ## Info
 * info.ip        - ip of device
 * info.mac       - mac of device
