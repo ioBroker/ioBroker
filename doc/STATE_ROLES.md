@@ -59,6 +59,7 @@
 * value.gps.latitude    - gps latitude
 * value.gps.elevation   - gps elevation
 * value.gps             - longitude and latitude together like '5.56;43.45'
+* value.location        - Text description of location (e.g. address)
 * value.power.consumption (unit=Wh or KWh)
 * value.direction       - (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
 * value.curtain         - actual position of curtain
@@ -242,14 +243,19 @@ Special roles for media players
 * value.temperature.feelslike - Actual temperature "feels like"
 * value.temperature.min       - Minimal temperature in last 24h
 * value.temperature.max       - Maximal temperature in last 24h
-* value.humidity              - actual humidity
-* value.speed.wind            - actual wind speed
+* value.humidity              - actual or average humidity
+* value.humidity.min          - actual humidity
+* value.humidity.max          - actual humidity
+* value.speed.wind            - actual or average wind speed
 * value.speed.max.wind        - maximal wind speed in last 24h
 * value.speed.min.wind        - minimal wind speed in last 24h
 * value.speed.wind.gust       - actual wind gust speed
-* value.direction.wind        - actual wind direction
+* value.direction.wind        - actual or average wind direction
+* value.direction.max.wind    - actual wind direction
+* value.direction.min.wind    - actual wind direction
 * date                        - actual date or date of last read information
-* weather.icon                - Actual state icon for now
+* weather.icon                - Actual state icon URL for now
+* weather.icon.name           - Actual state icon name for now
 * weather.state               - Actual weather description
 * value.precipitation         - (type: number, unit: mm) precipitation for last 24 hours rain/snow (Niederschlag heute für Schnee oder Regen / осадки сегодня снега или дождя)
 * value.precipitation.hour    - Actual precipitation level in last hour
@@ -262,8 +268,10 @@ Special roles for media players
 * value.snow                  - Actual snow level in last 24 hours
 * value.snow.hour             - Actual snow level in last hour
 * value.snow.today            - Actual snow level for today (till 0:00)
-* weather.chart.url           - URL to chart for weather
+* weather.chart.url           - URL to chart for weather history
+* weather.chart.url.forecast  - URL to chart for weather forecast
 * weather.html                - HTML object with weather description
+* weather.title               - Very short description
 
 * value.speed.wind.forecast.0     - wind speed forecast for today
 * weather.state.forecast.0        - Weather description for today
@@ -273,6 +281,9 @@ Special roles for media players
 * value.temperature.max.forecast.0  - Max temperature forecast for today
 * value.precipitation.forecast.0  - (type: number, unit: %) Forecast of precipitation chance for today
 * value.precipitation.forecast.0  - (type: number, unit: mm) Forecast of precipitation level for today
+* weather.title.forecast.0        - Very short description for tomorrow
+* value.precipitation.day.forecast.0     - Forecast for precipitation for day time
+* value.precipitation.night.forecast.0   - Forecast for precipitation for night time
 
 * date.forecast.1                 - tomorrow date
 * weather.icon.forecast.1         - tomorrow icon
