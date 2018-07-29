@@ -276,7 +276,6 @@ Special roles for media players
 * weather.chart.url.forecast  - URL to chart for weather forecast
 * weather.html                - HTML object with weather description
 * weather.title               - Very short description
-
 * value.speed.wind.forecast.0     - wind speed forecast for today
 * weather.state.forecast.0        - Weather description for today
 * value.direction.wind.forecast.0 - wind direction forecast for today in degrees
