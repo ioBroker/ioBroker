@@ -7,7 +7,8 @@
 * html              (common.type = string)
 * json              (common.type = string)
 * list              (common.type = array)
-* date              (common.type = string)
+* date              (common.type = string - parsable by "new Date(ddd)" string
+* date              (common.type = number - epoch seconds * 1000
 
 
 ## Sensor (booleans, read-only)
@@ -59,7 +60,6 @@
 * value.gps.latitude    - gps latitude
 * value.gps.elevation   - gps elevation
 * value.gps             - longitude and latitude together like '5.56;43.45'
-* value.location        - Text description of location (e.g. address)
 * value.power.consumption (unit=Wh or KWh)
 * value.direction       - (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
 * value.curtain         - actual position of curtain
@@ -236,7 +236,7 @@ Special roles for media players
 ]
 ```
 
-## Wether
+## Weather
 * value.temperature           - Actual temperature
 * value.temperature.windchill - Actual wind chill
 * value.temperature.dewpoint  - Actual dewpoint
@@ -250,11 +250,14 @@ Special roles for media players
 * value.speed.max.wind        - maximal wind speed in last 24h
 * value.speed.min.wind        - minimal wind speed in last 24h
 * value.speed.wind.gust       - actual wind gust speed
-* value.direction.wind        - actual or average wind direction
-* value.direction.max.wind    - actual wind direction
-* value.direction.min.wind    - actual wind direction
+* value.direction.wind        - actual or average wind direction in degrees
+* value.direction.max.wind    - actual wind direction in degrees
+* value.direction.min.wind    - actual wind direction in degrees
+* weather.direction.wind      - actual or average wind direction as text, e.g. NNW
 * date                        - actual date or date of last read information
+* location                    - Text description of location (e.g. address)
 * weather.icon                - Actual state icon URL for now
+* weather.icon.wind           - Actual wind icon URL for now
 * weather.icon.name           - Actual state icon name for now
 * weather.state               - Actual weather description
 * value.precipitation         - (type: number, unit: mm) precipitation for last 24 hours rain/snow (Niederschlag heute für Schnee oder Regen / осадки сегодня снега или дождя)
@@ -268,6 +271,7 @@ Special roles for media players
 * value.snow                  - Actual snow level in last 24 hours
 * value.snow.hour             - Actual snow level in last hour
 * value.snow.today            - Actual snow level for today (till 0:00)
+* value.snowline              - Actual snow line in meters
 * weather.chart.url           - URL to chart for weather history
 * weather.chart.url.forecast  - URL to chart for weather forecast
 * weather.html                - HTML object with weather description
@@ -275,7 +279,8 @@ Special roles for media players
 
 * value.speed.wind.forecast.0     - wind speed forecast for today
 * weather.state.forecast.0        - Weather description for today
-* value.direction.wind.forecast.0 - wind direction forecast for today
+* value.direction.wind.forecast.0 - wind direction forecast for today in degrees
+* weather.direction.wind.forecast.0 - wind direction forecast for today as text
 * value.pressure.forecast.0       - forecast for pressure for today
 * value.temperature.min.forecast.0  - Min temperature forecast for today
 * value.temperature.max.forecast.0  - Max temperature forecast for today
