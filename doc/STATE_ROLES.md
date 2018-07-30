@@ -70,6 +70,8 @@
 * value.pressure        - (unit: mbar)
 * value.distance
 * value.distance.visibility
+* value.severity        - some severity (states can be provided), Higher is more important
+* value.warning         - some warning (states can be provided), Higher is more important
 
 ## Indicators (boolean, read-only)
 
@@ -255,6 +257,7 @@ Special roles for media players
 * value.direction.min.wind    - actual wind direction in degrees
 * weather.direction.wind      - actual or average wind direction as text, e.g. NNW
 * date                        - actual date or date of last read information
+* dayofweek                   - day of week as text
 * location                    - Text description of location (e.g. address)
 * weather.icon                - Actual state icon URL for now
 * weather.icon.wind           - Actual wind icon URL for now
@@ -276,6 +279,9 @@ Special roles for media players
 * weather.chart.url.forecast  - URL to chart for weather forecast
 * weather.html                - HTML object with weather description
 * weather.title               - Very short description
+* weather.title.short         - Very very short description (One word)
+* weather.type                - Type of weather information
+* weather.json                - JSON object with specific data
 * value.speed.wind.forecast.0     - wind speed forecast for today
 * weather.state.forecast.0        - Weather description for today
 * value.direction.wind.forecast.0 - wind direction forecast for today in degrees
@@ -309,6 +315,8 @@ Special roles for media players
 * info.standby   - true if device in standby mode
 * info.status    - status of device
 * info.display   - information shown on device display
+* date.start     - string or number
+* date.end       - string or number
 
 ## Others
 
