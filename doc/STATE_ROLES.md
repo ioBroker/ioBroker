@@ -257,6 +257,8 @@ Special roles for media players
 * value.direction.min.wind    - actual wind direction in degrees
 * weather.direction.wind      - actual or average wind direction as text, e.g. NNW
 * date                        - actual date or date of last read information
+* date.sunrise                - Sunrise for today
+* date.sunset                 - Sunset for today
 * dayofweek                   - day of week as text
 * location                    - Text description of location (e.g. address)
 * weather.icon                - Actual state icon URL for now
@@ -268,6 +270,7 @@ Special roles for media players
 * value.precipitation.today   - Actual precipitation level for today (till 0:00)
 * value.radiation             - Actual sun radiation level
 * value.uv                    - Actual UV level
+* value.clouds                - Clouds on the sky. 0% - no clouds, 100% - many clouds.
 * value.rain                  - Actual snow level in last 24 hours
 * value.rain.hour             - Actual snow level in last hour
 * value.rain.today            - Actual snow level for today (till 0:00)
