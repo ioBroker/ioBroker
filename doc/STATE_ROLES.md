@@ -54,14 +54,14 @@
 * value.valve           - valve level
 * value.time            - getTime() of Date() object
 * value.interval    (common.unit='sec') - Interval in seconds (can be 0.1 or less)
-* value.date        (common.type=string) - Date in form 2015.01.01 (without time)
-* value.datetime    (common.type=string) - Date and time in system format
+* ~~value.date        (common.type=string) - Date in form 2015.01.01 (without time)~~
+* ~~value.datetime    (common.type=string) - Date and time in system format~~
 * value.gps.longitude   - gps longitude coordinates
 * value.gps.latitude    - gps latitude
 * value.gps.elevation   - gps elevation
 * value.gps             - longitude and latitude together like '5.56;43.45'
 * value.power.consumption (unit=Wh or KWh)
-* value.direction       - (common.type=number or string, indicates up/down, left/right, 4-way switches, wind-direction, ... )
+* value.direction       - (common.type=number ~~or string~~, indicates up/down, left/right, 4-way switches, wind-direction, ... )
 * value.curtain         - actual position of curtain
 * value.blind           - actual position of blind
 * value.tilt            - actual tilt position
