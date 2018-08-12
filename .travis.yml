@@ -23,8 +23,6 @@ include: &osx
 matrix:
   include:
     - <<: *linux
-      node_js: 0.12
-    - <<: *linux
       node_js: 4
     - <<: *linux
       node_js: 6
@@ -41,8 +39,6 @@ matrix:
       env:
         - NPM_VER=5.7.1
 
-    - <<: *osx
-      node_js: 0.12
     - <<: *osx
       node_js: 4
     - <<: *osx
