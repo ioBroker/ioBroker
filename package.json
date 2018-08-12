@@ -7,7 +7,7 @@
   "optionalDependencies": {},
   "dependencies": {
     "semver": "^5.5.0",
-    "yargs": "^12.0.1"
+    "yargs": "^7.0.2"
   },
   "homepage": "http://iobroker.net",
   "description": "automate your life - platfom",
