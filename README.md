@@ -1,5 +1,5 @@
-# ioBroker
 ![Logo](img/ioBrokerLogoSmall.png)
+# ioBroker
 =====================
 [![NPM version](http://img.shields.io/npm/v/iobroker.svg)](https://www.npmjs.com/package/iobroker)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.svg)](https://www.npmjs.com/package/iobroker)
