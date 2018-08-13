@@ -110,11 +110,11 @@ With **levels** you can control or set some number value.
 * level.color.green
 * level.color.blue
 * level.color.white     - rgbW
-* level.color.hue
+* level.color.hue       - color in ° 0-360; 0=red, 120=green, 240=blue, 360=red(cyclic)
 * level.color.saturation
-* level.color.rgb
+* level.color.rgb       - hex color like '#rrggbb'
 * level.color.luminance
-* level.color.temperature
+* level.color.temperature - color temperature in K° 2200 warm-white, 6500° cold white
 * level.timer
 * level.timer.sleep    - sleep timer. 0 - off, or in minutes
 * ...
