@@ -13,12 +13,12 @@ sudo apt-get install -y apt-transport-https curl
 
 
 # add repos for node_4.x for Raspbian 8/Debian Jessie
-echo "###############  add repos for node_4.x for Raspbian 8/Debian Jessie ###############"
+echo "###############  add repos for node_6.x for Raspbian 8/Debian Jessie ###############"
 curl --silent https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
 
 sudo cat <<- EOF > /etc/apt/sources.list.d/nodesource.list
-deb https://deb.nodesource.com/node_4.x jessie main
-deb-src https://deb.nodesource.com/node_4.x jessie main
+deb https://deb.nodesource.com/node_6.x jessie main
+deb-src https://deb.nodesource.com/node_6.x jessie main
 
 EOF
 
