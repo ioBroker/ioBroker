@@ -1,28 +1,12 @@
 #!/usr/bin/env bash
-# install ioBroker on Raspbian 8/Debian Jessie with SystemD
+# install ioBroker on Raspbian 9/Debian stretch with SystemD
 # Copyright (c) 2017, keynight iobroker.net/forum
 
 # install tools for nodels install
-sudo apt-get install -y apt-transport-https curl build-essential
-
-# install NodeJS for non Raspbian 8/Debian Jessie
-#curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+sudo apt-get install -y apt-transport-https curl
 
 # install NodeJS 8.x
-#curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-
-
-# add repos for node_8.x for Raspbian 8/Debian Jessie
-echo "###############  add repos for node_8.x for Raspbian 8/Debian Jessie ###############"
-curl --silent https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo apt-key add -
-
-sudo cat <<- EOF > /etc/apt/sources.list.d/nodesource.list
-deb https://deb.nodesource.com/node_8.x jessie main
-deb-src https://deb.nodesource.com/node_8.x jessie main
-
-EOF
-
-
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 
 # add start script /etc/init.d/iobroker
 echo "############### add start script /etc/init.d/iobroker  ###############"
@@ -79,8 +63,7 @@ Requires=network.target
 
 [Service]
 
-#User=roker
-User=root
+User=iobroker
 
 Type=forking
 RemainAfterExit=yes
@@ -97,10 +80,9 @@ EOF
 
 
 # add user for ioBroker
-#echo "###############  Add user roker with sudo permisions for ioBroker ###############"
-#sudo useradd roker -G sudo -d /opt/iobroker
-#sudo sh -c "echo 'roker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
-
+echo "###############  Add user roker with sudo permisions for ioBroker ###############"
+sudo useradd iobroker -G sudo -d /opt/iobroker
+sudo sh -c "echo 'roker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
 
 # fix permisions
 sudo chmod 755  /etc/init.d/iobroker
@@ -115,26 +97,26 @@ sudo apt-get --purge remove node -y
 sudo apt-get --purge remove nodejs -y
 sudo apt-get autoremove
 sudo apt-get install -y build-essential nodejs
+
 # install another tools
-#sudo apt-get install -y redis-server redis-tools mosquitto mosquitto-clients python-rpi.gpio
-
-
+sudo apt-get install -y redis-server redis-tools
+# update npm
+sudo npm i npm@6 -g
 
 # install ioBroker
 echo "###############  install ioBroker ###############"
 sudo mkdir /opt/iobroker
-#sudo chown -R roker.roker /opt/iobroker
-sudo chmod 777 /opt/iobroker
+sudo chown -R iobroker.iobroker /opt/iobroker
+sudo chmod 740 /opt/iobroker
 cd /opt/iobroker
 sudo npm install iobroker --unsafe-perm
-#sudo chown -R roker.roker /opt/iobroker
+sudo chown -R iobroker.iobroker /opt/iobroker
 sudo ln -s /opt/iobroker/iobroker /usr/sbin/iobroker
 
 echo "###############  start ioBroker ###############"
 sudo systemctl daemon-reload
 sudo systemctl enable iobroker.service
 sudo systemctl start iobroker.service
-
 
 echo "###############  status ioBroker ###############"
 sudo systemctl status iobroker.service
