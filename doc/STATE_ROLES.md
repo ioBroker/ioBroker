@@ -26,6 +26,7 @@
 * sensor.lock           - actual position of lock
 * sensor.motion         - motion sensor
 * sensor.rain           - rain detected
+* sensor.noise          - noise detected
 
 ## Buttons (booleans, write-only)
 
@@ -46,7 +47,7 @@
 * value.window      (common.states={"0": "CLOSED", "1": "TILTED", "2": "OPEN"}) It is important to have (CLOSED/TILTED/OPEN). Values can differ.
 * value.temperature (common.unit='°C' or '°F' or 'K')
 * value.humidity
-* value.brightness     - luminance level (unit: lux, )
+* value.brightness      - luminance level (unit: lux, )
 * value.min
 * value.max
 * value.default
@@ -102,6 +103,7 @@ With **levels** you can control or set some number value.
 *common.type=number, common.write=true*
 
 * level
+* level.co2             - 0-100% ait quality
 * level.dimmer          - brightness is dimmer too
 * level.blind           - set blind position
 * level.temperature     - set desired temperature
