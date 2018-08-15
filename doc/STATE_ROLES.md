@@ -273,9 +273,9 @@ Special roles for media players
 * value.radiation             - Actual sun radiation level
 * value.uv                    - Actual UV level
 * value.clouds                - Clouds on the sky. 0% - no clouds, 100% - many clouds.
-* value.rain                  - Actual snow level in last 24 hours
-* value.rain.hour             - Actual snow level in last hour
-* value.rain.today            - Actual snow level for today (till 0:00)
+* value.rain                  - Actual rain level in last 24 hours
+* value.rain.hour             - Actual rain level in last hour
+* value.rain.today            - Actual rain level for today (till 0:00)
 * value.snow                  - Actual snow level in last 24 hours
 * value.snow.hour             - Actual snow level in last hour
 * value.snow.today            - Actual snow level for today (till 0:00)
