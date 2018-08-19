@@ -3,7 +3,7 @@
 # Copyright (c) 2017, keynight iobroker.net/forum
 
 # install tools for nodels install
-sudo apt-get install -y apt-transport-https curl
+sudo apt install -y apt-transport-https curl
 
 # install NodeJS 8.x
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
@@ -91,14 +91,14 @@ sudo chmod 755  /etc/systemd/system/iobroker.service
 # install nodejs and another tools
 echo "###############  install NodeJs and another tools ###############"
 # install nodejs
-sudo apt-get update -y
-sudo apt-get --purge remove node -y
-sudo apt-get --purge remove nodejs -y
-sudo apt-get autoremove
-sudo apt-get install -y build-essential nodejs
+sudo apt update -y
+sudo apt --purge remove node -y
+sudo apt --purge remove nodejs -y
+sudo apt autoremove
+sudo apt install -y build-essential nodejs
 
 # install another tools
-sudo apt-get install -y redis-server redis-tools
+sudo apt install -y redis-server redis-tools
 # update npm
 sudo npm i npm@6 -g
 
