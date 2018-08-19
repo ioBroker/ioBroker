@@ -34,8 +34,7 @@ PIDF=/opt/iobroker/node_modules/iobroker.js-controller/lib/iobroker.pid
 NODECMD=/usr/bin/node
 IOBROKERCMD=/opt/iobroker/node_modules/iobroker.js-controller/iobroker.js
 RETVAL=0
-IOBROKERUSER=root
-#IOBROKERUSER=roker
+IOBROKERUSER=iobroker
 
 # Starting ioBroker
 export IOBROKER_HOME=/opt/iobroker
