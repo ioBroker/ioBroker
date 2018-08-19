@@ -79,9 +79,9 @@ EOF
 
 
 # add user for ioBroker
-echo "###############  Add user roker with sudo permisions for ioBroker ###############"
+echo "###############  Add user iobroker with sudo permisions for ioBroker ###############"
 sudo useradd iobroker -G sudo -d /opt/iobroker
-sudo sh -c "echo 'roker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+sudo sh -c "echo 'iobroker ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
 
 # fix permisions
 sudo chmod 755  /etc/init.d/iobroker
