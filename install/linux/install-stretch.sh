@@ -104,7 +104,7 @@ sudo npm i npm@6 -g
 
 # install ioBroker
 echo "###############  install ioBroker ###############"
-sudo mkdir /opt/iobroker
+sudo mkdir -p /opt/iobroker
 sudo chown -R iobroker.iobroker /opt/iobroker
 sudo chmod 740 /opt/iobroker
 cd /opt/iobroker
