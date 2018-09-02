@@ -1,0 +1,12 @@
+Installation procedure:
+
+preinstall:
+* [ALWAYS] check versions
+
+install:
+* [IF INSIDE node_modules] => copy files one directory upwards
+* [IF NOT INSIDE node_modules] => install stuff as usual
+
+postinstall:
+* [IF INSIDE node_modules] => write message
+* [IF NOT INSIDE node_modules] => do nothing
