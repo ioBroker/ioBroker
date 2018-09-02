@@ -4,6 +4,9 @@ sudo mkdir -p /opt/iobroker
 sudo chown $USER -R /opt/iobroker
 cd /opt/iobroker
 
+# suppress messages with manual installation steps
+export AUTOMATED_INSTALLER="true"
+
 # download the installer files and run them
 npm i https://github.com/AlCalzone/ioBroker/tarball/install-v2
 # TODO: GH#48 Make sure we don't need sudo, so we can remove that and --unsafe-perm
