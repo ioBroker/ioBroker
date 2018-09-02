@@ -6,6 +6,7 @@
   },
   "optionalDependencies": {},
   "dependencies": {
+    "colors": "^1.3.2",
     "semver": "^5.5.0",
     "yargs": "^7.0.2"
   },
@@ -51,10 +52,12 @@
   },
   "scripts": {
     "preinstall": "node lib/checkVersions.js",
-    "install": "node lib/prepareSetup.js && node lib/setup.js",
+    "install": "node lib/install.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "main": "lib/setup.js",
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {
+    "eslint": "^5.5.0"
+  }
 }

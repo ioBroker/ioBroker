@@ -8,3 +8,6 @@ adapterlist
 .travis.yml
 appveyor.yml
 test
+
+# We never add this to npm, so every install gets a fresh dependency tree
+package-lock.json
