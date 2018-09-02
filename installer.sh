@@ -20,7 +20,7 @@ if test -t 1; then # if terminal
     fi
 fi
 
-HLINE="================================================================"
+HLINE="=========================================================================="
 
 print_step() {
 	stepname="$1"
@@ -64,7 +64,7 @@ sudo chown $USER -R /opt/iobroker
 cd /opt/iobroker
 
 # suppress messages with manual installation steps
-export AUTOMATED_INSTALLER="true"
+touch AUTOMATED_INSTALLER
 
 print_step "Downloading installation files" 2 "$NUM_STEPS"
 
@@ -92,4 +92,7 @@ then
 	echo "Autostart enabled!"
 fi
 
-print_bold "${green}ioBroker was installed successfully${normal}"
+# Remove the file we used to suppress messages during installation
+rm AUTOMATED_INSTALLER
+
+print_bold "${green}ioBroker was installed successfully${normal}" "Open http://localhost:8081 in a browser and start configuring!"
