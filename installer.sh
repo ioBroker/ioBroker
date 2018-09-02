@@ -92,4 +92,4 @@ then
 	echo "Autostart enabled!"
 fi
 
-print_msg "ioBroker was installed successfully"
+print_bold "${green}ioBroker was installed successfully${normal}"
