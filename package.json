@@ -50,6 +50,7 @@
     "unsafe-perm": true
   },
   "scripts": {
+    "preinstall": "node lib/checkVersions.js",
     "install": "node lib/prepareSetup.js && node lib/setup.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
