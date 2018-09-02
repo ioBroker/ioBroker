@@ -52,7 +52,7 @@
   },
   "scripts": {
     "preinstall": "node lib/checkVersions.js",
-    "install": "node lib/install.js",
+    "postinstall": "node lib/install.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "main": "lib/setup.js",
