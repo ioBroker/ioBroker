@@ -53,6 +53,14 @@ print_msg() {
 	echo
 }
 
+# Test if this script is being run as root or not
+# TODO: To resolve #48, running this as root should be prohibited
+if [[ $EUID -eq 0 ]]; then
+	IS_ROOT=true
+else
+	IS_ROOT=false
+fi
+
 print_bold "Welcome to the ioBroker installer!" "You might need to enter your password a couple of times."
 
 NUM_STEPS=4
@@ -69,27 +77,38 @@ touch AUTOMATED_INSTALLER
 print_step "Downloading installation files" 2 "$NUM_STEPS"
 
 # download the installer files and run them
-npm i https://github.com/AlCalzone/ioBroker/tarball/install-v2
+# If this script is run as root, we need the --unsafe-perm option
+if [[ IS_ROOT -eq true ]]; then
+	npm i https://github.com/AlCalzone/ioBroker/tarball/install-v2 --unsafe-perm
+else
+	npm i https://github.com/AlCalzone/ioBroker/tarball/install-v2
+fi
 
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
 
 # TODO: GH#48 Make sure we don't need sudo, so we can remove that and --unsafe-perm
 sudo npm i --production --unsafe-perm
 # npm i --production # this is how it should be
-# Because we used sudo, we now need to take control again
-sudo chown $USER -R /opt/iobroker
 
 print_step "Finalizing installation" 4 "$NUM_STEPS"
 
 # If we want to autostart ioBroker with systemd, enable that
-if [ -f /lib/systemd/system/iobroker.service ];
-then
-	# We cannot use sudo here because it will fail silently otherwise
+if [ -f /lib/systemd/system/iobroker.service ]; then
 	echo "Enabling autostart..."
-	systemctl daemon-reload
-	systemctl enable iobroker
-	systemctl start iobroker
+
+	# systemd executes js-controller as the user "iobroker", 
+	# so we need to give it the ownershop of /opt/iobroker
+	sudo chown iobroker -R /opt/iobroker
+
+	sudo systemctl daemon-reload
+	sudo systemctl enable iobroker
+	sudo systemctl start iobroker
 	echo "Autostart enabled!"
+else
+	# After sudo npm i, this directory now belongs to root. 
+	# Give it back to the current user
+	# TODO: remove this step when GH#48 is resolved
+	sudo chown $USER -R /opt/iobroker
 fi
 
 # Remove the file we used to suppress messages during installation
