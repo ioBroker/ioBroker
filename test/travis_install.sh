@@ -12,7 +12,7 @@ export NODE_BUILD=$($NODE -v | cut -d. -f3)
 # try to install ioBroker and capture the response code to test its behavior
 sudo env "PATH=$PATH" $NPM install --unsafe-perm --prefix "node_modules/iobroker"; export EXIT_CODE=$?
 # node version too old, the script should exit with code 2
-if [[ $NODE_MAJOR -lt 4 ]]
+if [[ $NODE_MAJOR -lt 6 ]]
 then
 	if [[ ($EXIT_CODE -eq 2) || ($EXIT_CODE -eq 1) ]]
 	then
@@ -30,6 +30,8 @@ fi
 # npm version != 5 definitely supported
 if [[ $NPM_MAJOR -ne 5 ]]
 then 
+	# Do the 2nd step of the installation
+	sudo env "PATH=$PATH" $NPM install --unsafe-perm; export EXIT_CODE=$?
 	echo "npm version != 5.x, returning exit code $EXIT_CODE"
 	exit $EXIT_CODE
 fi
@@ -52,5 +54,7 @@ then
 fi
 
 # default: just return the exit code
+# Do the 2nd step of the installation
+sudo env "PATH=$PATH" $NPM install --unsafe-perm; export EXIT_CODE=$?
 echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE

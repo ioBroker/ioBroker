@@ -23,7 +23,7 @@ npm install "$tgz" --no-optional
 $EXIT_CODE = $LASTEXITCODE
 
 # node version too old, the script should exit with code 2
-if ($NodeVersion -lt [System.Version]"4.0.0") {
+if ($NodeVersion -lt [System.Version]"6.0.0") {
 	if (($EXIT_CODE -eq 2) -or ($EXIT_CODE -eq 1)) {
 		# it should return 2, but apparently, npm@2 just returns 1 on error
 		echo "old node version, correct exit code. stopping installation"
@@ -38,6 +38,9 @@ if ($NodeVersion -lt [System.Version]"4.0.0") {
 
 # npm version != 5 definitely supported
 if ($NpmVersion.Major -ne 5) {
+	# Do the 2nd part of the installation
+	npm install --production --no-optional
+	$EXIT_CODE = $LASTEXITCODE
 	echo "npm version < 5, returning exit code $EXIT_CODE"
 	exit $EXIT_CODE
 }
@@ -58,5 +61,8 @@ if (($NpmVersion -ge [System.Version]"5.0.0") -and ($NpmVersion -lt [System.Vers
 }
 
 # default: just return the exit code
+# Do the 2nd part of the installation
+npm install --production --no-optional
+$EXIT_CODE = $LASTEXITCODE
 echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE
