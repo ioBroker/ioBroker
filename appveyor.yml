@@ -1,16 +1,21 @@
 version: 'test-{build}'
 
 # Test against this version of Node.js
+# See https://nodejs.org/en/download/releases/ for a table of node and bundled npm versions
+
 environment:
   matrix:
-    - nodejs_version: "6"
-    - nodejs_version: "8"
-    - nodejs_version: "8"
-      npm_version: "5.7.1"
-    - nodejs_version: "10"
-    - nodejs_version: "10"
-      npm_version: "5.7.1"
-
+    # These tests should fail:
+    - nodejs_version: "4" # old Node
+    - nodejs_version: "6" # old Node
+    - nodejs_version: "8.11" # modern Node, but comes with old NPM
+    - nodejs_version: "8.12" # modern node, old NPM manually installed
+      npm_version: "5.6.0"
+    - nodejs_version: "10.2" # modern Node, but comes with old NPM
+    - nodejs_version: "10" # modern node, old NPM manually installed
+      npm_version: "5.6.0"
+    - nodejs_version: "8.12" # finally comes with npm 6
+    - nodejs_version: "10" # # Comes with npm 6, starting with 10.3
 
 platform:
   - x86

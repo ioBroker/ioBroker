@@ -6,6 +6,12 @@ if ($env:npm_version -ne $null) { npm i -g npm@$env:npm_version }
 node -v
 npm -v
 
+$MIN_NODE_VERSION = [System.Version]"8.12.0"
+# The maximum supported pre-npm5 npm version
+$MAX_NPM_VERSION_LEGACY_EXCLUSIVE = [System.Version]"5.0.0" #Cut this when we're completely dropping old npm versions
+# The minimum supported new npm version
+$MIN_NPM_VERSION = [System.Version]"5.7.1"
+
 $NodeVersion = [System.Version](node -v).Substring(1)
 $NpmVersion = [System.Version](npm -v)
 
@@ -23,7 +29,7 @@ npm install "$tgz" --no-optional
 $EXIT_CODE = $LASTEXITCODE
 
 # node version too old, the script should exit with code 2
-if ($NodeVersion -lt [System.Version]"6.0.0") {
+if ($NodeVersion -lt $MIN_NODE_VERSION) {
 	if (($EXIT_CODE -eq 2) -or ($EXIT_CODE -eq 1)) {
 		# it should return 2, but apparently, npm@2 just returns 1 on error
 		echo "old node version, correct exit code. stopping installation"
@@ -36,17 +42,8 @@ if ($NodeVersion -lt [System.Version]"6.0.0") {
 	}
 }
 
-# npm version != 5 definitely supported
-if ($NpmVersion.Major -ne 5) {
-	# Do the 2nd part of the installation
-	npm install --production --no-optional
-	$EXIT_CODE = $LASTEXITCODE
-	echo "npm version < 5, returning exit code $EXIT_CODE"
-	exit $EXIT_CODE
-}
-
 # npm@5, check the version range
-if (($NpmVersion -ge [System.Version]"5.0.0") -and ($NpmVersion -lt [System.Version]"5.7.1")) {
+if (($NpmVersion -ge $MAX_NPM_VERSION_LEGACY_EXCLUSIVE) -and ($NpmVersion -lt $MIN_NPM_VERSION)) {
 	# unsupported version (between 5.0.0 and 5.7.0)
 	# the script should return with exit code 4
 	if ( $EXIT_CODE -eq 4 ) {
@@ -60,7 +57,7 @@ if (($NpmVersion -ge [System.Version]"5.0.0") -and ($NpmVersion -lt [System.Vers
 	}
 }
 
-# default: just return the exit code
+# NPM version supported
 # Do the 2nd part of the installation
 npm install --production --no-optional
 $EXIT_CODE = $LASTEXITCODE
