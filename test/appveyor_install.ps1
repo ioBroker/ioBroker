@@ -7,10 +7,8 @@ node -v
 npm -v
 
 $MIN_NODE_VERSION = [System.Version]"8.12.0"
-# The maximum supported pre-npm5 npm version
-$MAX_NPM_VERSION_LEGACY_EXCLUSIVE = [System.Version]"5.0.0" #Cut this when we're completely dropping old npm versions
-# The minimum supported new npm version
-$MIN_NPM_VERSION = [System.Version]"5.7.1"
+# The minimum supported npm version
+$MIN_NPM_VERSION = [System.Version]"6.0.0"
 
 $NodeVersion = [System.Version](node -v).Substring(1)
 $NpmVersion = [System.Version](npm -v)
@@ -42,9 +40,9 @@ if ($NodeVersion -lt $MIN_NODE_VERSION) {
 	}
 }
 
-# npm@5, check the version range
-if (($NpmVersion -ge $MAX_NPM_VERSION_LEGACY_EXCLUSIVE) -and ($NpmVersion -lt $MIN_NPM_VERSION)) {
-	# unsupported version (between 5.0.0 and 5.7.0)
+# Check the version range of npm
+if ($NpmVersion -lt $MIN_NPM_VERSION) {
+	# unsupported npm version
 	# the script should return with exit code 4
 	if ( $EXIT_CODE -eq 4 ) {
 		echo "unsupported npm version $NpmVersion, correct exit code. stopping installation"

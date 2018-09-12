@@ -34,7 +34,7 @@ matrix:
     - <<: *linux
       node_js: 8.12 # correct node, old NPM manually installed
       env:
-        - NPM_VER=5.6.0
+        - NPM_VER=5.7.1
     - <<: *linux
       node_js: 10.2 # comes with old NPM
     - <<: *linux
@@ -50,7 +50,7 @@ matrix:
     - <<: *osx
       node_js: 8.12 # correct node, old NPM manually installed
       env:
-        - NPM_VER=5.6.0
+        - NPM_VER=5.7.1
     - <<: *osx
       node_js: 10.2 # comes with old NPM
     - <<: *osx
@@ -60,11 +60,11 @@ matrix:
 
     # These tests should succeed
     - <<: *linux
-      node_js: 8.12 # finally comes with npm 6
+      node_js: 8.12 # Comes with 6.4.1
     - <<: *linux
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
-      node_js: 8.12 # finally comes with npm 6
+      node_js: 8.12 # Comes with 6.4.1
     - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
 

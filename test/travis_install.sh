@@ -27,19 +27,12 @@ then
 	fi
 fi
 
-# npm version != 5 definitely supported
-if [[ $NPM_MAJOR -ne 5 ]]
-then 
-	# Do the 2nd step of the installation
-	sudo env "PATH=$PATH" $NPM install --unsafe-perm; export EXIT_CODE=$?
-	echo "npm version != 5.x, returning exit code $EXIT_CODE"
-	exit $EXIT_CODE
-fi
-
-# npm@5, check the version range
-if [[ ($NPM_MINOR -lt 7) || (($NPM_MINOR -eq 7) && ($NPM_BUILD -lt 1)) ]]
+# Check the version range of npm
+# >= 6 should be supported
+# if [[ ($NPM_MINOR -lt 7) || (($NPM_MINOR -eq 7) && ($NPM_BUILD -lt 1)) ]]
+if [[ $NPM_MAJOR -lt 6 ]]
 then
-	# unsupported version (between 5.0.0 and 5.7.0)
+	# unsupported npm version (< 6.x)
 	# the script should return with exit code 4
 	if [[ $EXIT_CODE -eq 4 ]]
 	then
