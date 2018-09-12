@@ -20,41 +20,54 @@ include: &osx
   <<: *all
   os: osx
 
+# See https://nodejs.org/en/download/releases/ for a table of node and bundled npm versions
+
 matrix:
   include:
+    # These tests should fail:
     - <<: *linux
-      node_js: 4
+      node_js: 4 # old Node
     - <<: *linux
-      node_js: 6
+      node_js: 6 # old Node
     - <<: *linux
-      node_js: 8
+      node_js: 8.11 # old Node, also comes with old NPM
     - <<: *linux
-      node_js: 8
+      node_js: 8.12 # correct node, old NPM manually installed
       env:
         - NPM_VER=5.7.1
     - <<: *linux
-      node_js: 10
+      node_js: 10.2 # comes with old NPM
     - <<: *linux
-      node_js: 10
+      node_js: 10 # correct node, old NPM manually installed
+      env:
+        - NPM_VER=5.7.1
+    - <<: *osx
+      node_js: 4 # old Node
+    - <<: *osx
+      node_js: 6 # old Node
+    - <<: *osx
+      node_js: 8.11 # old Node, also comes with old NPM
+    - <<: *osx
+      node_js: 8.12 # correct node, old NPM manually installed
+      env:
+        - NPM_VER=5.7.1
+    - <<: *osx
+      node_js: 10.2 # comes with old NPM
+    - <<: *osx
+      node_js: 10 # correct node, old NPM manually installed
       env:
         - NPM_VER=5.7.1
 
+    # These tests should succeed
+    - <<: *linux
+      node_js: 8.12 # Comes with 6.4.1
+    - <<: *linux
+      node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
-      node_js: 4
+      node_js: 8.12 # Comes with 6.4.1
     - <<: *osx
-      node_js: 6
-    - <<: *osx
-      node_js: 8
-    - <<: *osx
-      node_js: 8
-      env:
-        - NPM_VER=5.7.1
-    - <<: *osx
-      node_js: 10
-    - <<: *osx
-      node_js: 10
-      env:
-        - NPM_VER=5.7.1
+      node_js: 10 # Comes with npm 6, starting with 10.3
+
 
 before_install:
   # if we have defined a specific npm version, use that one
