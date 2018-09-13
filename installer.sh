@@ -79,9 +79,9 @@ print_step "Downloading installation files" 2 "$NUM_STEPS"
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
 if [[ IS_ROOT -eq true ]]; then
-	npm i iobroker --unsafe-perm
+	npm i iobroker@beta --unsafe-perm
 else
-	npm i iobroker
+	npm i iobroker@beta
 fi
 
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
