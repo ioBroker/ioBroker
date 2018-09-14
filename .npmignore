@@ -9,5 +9,13 @@ adapterlist
 appveyor.yml
 test
 
+.eslintrc.json
+.gitmodules
+installer.sh
+.vscode/
+doc/
+img/
+wiki/
+
 # We never add this to npm, so every install gets a fresh dependency tree
 package-lock.json
