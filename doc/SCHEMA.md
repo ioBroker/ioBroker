@@ -224,7 +224,7 @@ attributes:
 * common.max    (optional)
 * common.unit   (optional)
 * common.def    (optional - the default value)
-* common.defAck (optional - if common.def is set this value is used as ack flag)
+* common.defAck (optional - if common.def is set this value is used as ack flag, js-controller 2.0.0+)
 * common.desc   (optional, string)
 * common.read   (boolean, mandatory) - true if state is readable
 * common.write  (boolean, mandatory) - true if state is writable
