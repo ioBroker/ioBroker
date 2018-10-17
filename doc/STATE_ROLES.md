@@ -38,6 +38,10 @@
 * button.start
 * button.open.door
 * button.open.window
+* button.mode.*
+* button.mode.auto
+* button.mode.manual
+* button.mode.silent
 
 ## Values (numbers, read-only)
 
@@ -140,7 +144,12 @@ Switch controls boolean device (true = ON, false = OFF)
 * switch.comfort        - comfort mode
 * switch.enable
 * switch.power          - power on/off
-
+* switch.mode.*
+* switch.mode.auto      - auto mode on/off
+* switch.mode.manual    - manual mode on/off
+* switch.mode.silent    - silent mode on/off
+* switch.mode.moonlight - moon light mode on/off
+* switch.mode.color     - color mode on/off
 
 ## Media
 
