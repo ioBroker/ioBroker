@@ -77,6 +77,8 @@
 * value.distance.visibility
 * value.severity        - some severity (states can be provided), Higher is more important
 * value.warning         - some warning (states can be provided), Higher is more important
+* value.sun.elevation   - sun elevation in °
+* value.sun.azimuth     - sun azimuth in °
 
 ## Indicators (boolean, read-only)
 
