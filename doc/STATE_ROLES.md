@@ -79,6 +79,8 @@
 * value.warning         - some warning (states can be provided), Higher is more important
 * value.sun.elevation   - sun elevation in °
 * value.sun.azimuth     - sun azimuth in °
+* value.voltage         - Voltage in Volt, unit=V
+* value.current         - Current in Amper, unit=A
 
 ## Indicators (boolean, read-only)
 
