@@ -622,6 +622,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.webByVersion       - show version as prefix in web adapter (usually - ip:port/material, webByVersion - ip:port/1.2.3/material)
 * common.noIntro            - never show instances of this adapter on Intro/Overview screen in admin (like icons, widgets)
 * common.expert             - show this object only in expert mode in admin
+* common.compact            - says to controller that this adapter can be started in the same process if desired
 
 #### instance
 
