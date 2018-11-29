@@ -1,6 +1,6 @@
 {
   "name": "iobroker",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "engines": {
     "node": ">=6.0"
   },
@@ -42,7 +42,7 @@
     "bluefox <dogafox@gmail.com>",
     "hobbyquaker",
     "AlCalzone <d.griesel@gmx.net>",
-    "Apollon77 <ingo@fischer-ka.de>"
+    "Apollon77 <iobroker@fischer-ka.de>"
   ],
   "repository": {
     "type": "git",
