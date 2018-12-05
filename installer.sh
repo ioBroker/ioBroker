@@ -87,7 +87,7 @@ fi
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
 
 # TODO: GH#48 Make sure we don't need sudo, so we can remove that and --unsafe-perm
-sudo npm i --production --unsafe-perm
+sudo -H npm i --production --unsafe-perm
 # npm i --production # this is how it should be
 
 print_step "Finalizing installation" 4 "$NUM_STEPS"
