@@ -92,6 +92,10 @@ sudo npm i --production --unsafe-perm
 
 print_step "Finalizing installation" 4 "$NUM_STEPS"
 
+# Remove the file we used to suppress messages during installation
+# This should be done here, or we won't be allowed to delete it
+rm AUTOMATED_INSTALLER
+
 # If we want to autostart ioBroker with systemd, enable that
 if [ -f /lib/systemd/system/iobroker.service ]; then
 	echo "Enabling autostart..."
@@ -110,8 +114,5 @@ else
 	# TODO: remove this step when GH#48 is resolved
 	sudo chown $USER -R /opt/iobroker
 fi
-
-# Remove the file we used to suppress messages during installation
-rm AUTOMATED_INSTALLER
 
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://localhost:8081 in a browser and start configuring!"
