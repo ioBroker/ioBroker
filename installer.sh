@@ -67,8 +67,12 @@ NUM_STEPS=4
 
 print_step "Creating ioBroker directory" 1 "$NUM_STEPS"
 # ensure the directory exists and take control of it
-sudo mkdir -p /opt/iobroker
-sudo chown $USER -R /opt/iobroker
+if [ "$IS_ROOT" = true ]; then
+	mkdir -p /opt/iobroker
+else
+	sudo mkdir -p /opt/iobroker
+	sudo chown $USER -R /opt/iobroker
+fi
 cd /opt/iobroker
 
 # suppress messages with manual installation steps
@@ -78,7 +82,7 @@ print_step "Downloading installation files" 2 "$NUM_STEPS"
 
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
-if [[ IS_ROOT -eq true ]]; then
+if [ "$IS_ROOT" = true ]; then
 	npm i iobroker --loglevel error --unsafe-perm
 else
 	npm i iobroker --loglevel error
@@ -86,15 +90,16 @@ fi
 
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
 
-# TODO: GH#48 Make sure we don't need sudo, so we can remove that and --unsafe-perm
-sudo -H npm i --production --unsafe-perm
+# TODO: GH#48 Make sure we don't need sudo/root, so we can remove that and --unsafe-perm
+# For now we need to run the 2nd part of the installation as root
+if [ "$IS_ROOT" = true ]; then
+	npm i --production --unsafe-perm
+else
+	sudo -H npm i --production --unsafe-perm
+fi
 # npm i --production # this is how it should be
 
 print_step "Finalizing installation" 4 "$NUM_STEPS"
-
-# Remove the file we used to suppress messages during installation
-# This should be done here, or we won't be allowed to delete it
-rm AUTOMATED_INSTALLER
 
 # If we want to autostart ioBroker with systemd, enable that
 if [ -f /lib/systemd/system/iobroker.service ]; then
@@ -102,11 +107,24 @@ if [ -f /lib/systemd/system/iobroker.service ]; then
 
 	# systemd executes js-controller as the user "iobroker", 
 	# so we need to give it the ownershop of /opt/iobroker
-	sudo chown iobroker -R /opt/iobroker
+	if [ "$IS_ROOT" = true ]; then
+		chown iobroker -R /opt/iobroker
+	else
+		sudo chown iobroker -R /opt/iobroker
+		# To allow the current user to install adapters via the shell,
+		# We need to give it access rights to the directory aswell
+		sudo useradd -G iobroker $USER
+	fi
 
-	sudo systemctl daemon-reload
-	sudo systemctl enable iobroker
-	sudo systemctl start iobroker
+	if [ "$IS_ROOT" = true ]; then
+		systemctl daemon-reload
+		systemctl enable iobroker
+		systemctl start iobroker
+	else
+		sudo systemctl daemon-reload
+		sudo systemctl enable iobroker
+		sudo systemctl start iobroker
+	fi
 	echo "Autostart enabled!"
 else
 	# After sudo npm i, this directory now belongs to root. 
@@ -114,5 +132,8 @@ else
 	# TODO: remove this step when GH#48 is resolved
 	sudo chown $USER -R /opt/iobroker
 fi
+
+# Remove the file we used to suppress messages during installation
+rm AUTOMATED_INSTALLER
 
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://localhost:8081 in a browser and start configuring!"
