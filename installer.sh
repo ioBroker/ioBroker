@@ -71,7 +71,7 @@ if [ "$IS_ROOT" = true ]; then
 	mkdir -p /opt/iobroker
 else
 	sudo mkdir -p /opt/iobroker
-	sudo chown $USER -R /opt/iobroker
+	sudo chown $USER:$USER -R /opt/iobroker
 fi
 cd /opt/iobroker
 
@@ -101,6 +101,9 @@ fi
 
 print_step "Finalizing installation" 4 "$NUM_STEPS"
 
+# Remove the file we used to suppress messages during installation
+rm AUTOMATED_INSTALLER
+
 # If we want to autostart ioBroker with systemd, enable that
 if [ -f /lib/systemd/system/iobroker.service ]; then
 	echo "Enabling autostart..."
@@ -108,12 +111,13 @@ if [ -f /lib/systemd/system/iobroker.service ]; then
 	# systemd executes js-controller as the user "iobroker", 
 	# so we need to give it the ownershop of /opt/iobroker
 	if [ "$IS_ROOT" = true ]; then
-		chown iobroker -R /opt/iobroker
+		chown iobroker:iobroker -R /opt/iobroker
 	else
-		sudo chown iobroker -R /opt/iobroker
+		sudo chown iobroker:iobroker -R /opt/iobroker
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
-		sudo useradd -G iobroker $USER
+		sudo usermod -a -G iobroker $USER
+		sudo chmod g+w /opt/iobroker
 	fi
 
 	if [ "$IS_ROOT" = true ]; then
@@ -130,10 +134,7 @@ else
 	# After sudo npm i, this directory now belongs to root. 
 	# Give it back to the current user
 	# TODO: remove this step when GH#48 is resolved
-	sudo chown $USER -R /opt/iobroker
+	sudo chown $USER:$USER -R /opt/iobroker
 fi
-
-# Remove the file we used to suppress messages during installation
-rm AUTOMATED_INSTALLER
 
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://localhost:8081 in a browser and start configuring!"
