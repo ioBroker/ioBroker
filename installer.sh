@@ -117,7 +117,7 @@ if [ -f /lib/systemd/system/iobroker.service ]; then
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G iobroker $USER
-		sudo chmod g+w /opt/iobroker
+		sudo chmod -R g+w /opt/iobroker
 	fi
 
 	if [ "$IS_ROOT" = true ]; then
