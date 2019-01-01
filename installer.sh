@@ -158,3 +158,5 @@ else
 fi
 
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://localhost:8081 in a browser and start configuring!"
+
+print_msg "${yellow}You need to re-login before doing anything else on the console!"
