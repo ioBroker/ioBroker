@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Increase this version number whenever you update the installer
+INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
+
 # Enable colored output
 if test -t 1; then # if terminal
 	ncolors=$(which tput > /dev/null && tput colors) # supports color
@@ -33,18 +36,21 @@ print_step() {
 	echo "${bold}${HLINE}${normal}"
 	echo
 }
+
 print_bold() {
-	title="$1"
-	text="$2"
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
-	echo "    ${bold}${title}${normal}"
-	echo "    ${text}"
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
+        title="$1"
+        echo
+        echo "${bold}${HLINE}${normal}"
+        echo
+        echo "    ${bold}${title}${normal}"
+        for text in "${@:2}"; do
+                echo "    ${text}"
+        done
+        echo
+        echo "${bold}${HLINE}${normal}"
+        echo
 }
+
 
 print_msg() {
 	text="$1"
@@ -61,7 +67,7 @@ else
 	IS_ROOT=false
 fi
 
-print_bold "Welcome to the ioBroker installer!" "You might need to enter your password a couple of times."
+print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
 NUM_STEPS=5
 
@@ -87,6 +93,10 @@ else
 fi
 cd /opt/iobroker
 
+# Log some information about the installer
+echo "Installer version: $INSTALLER_VERSION" >> INSTALLER_INFO.txt
+echo "Installation date $(date +%F)" >> INSTALLER_INFO.txt
+
 # suppress messages with manual installation steps
 touch AUTOMATED_INSTALLER
 
@@ -95,8 +105,10 @@ print_step "Downloading installation files" 3 "$NUM_STEPS"
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then
+	echo "Installed as root" >> INSTALLER_INFO.txt
 	npm i iobroker --loglevel error --unsafe-perm
 else
+	echo "Installed as non-root user $USER" >> INSTALLER_INFO.txt
 	npm i iobroker --loglevel error
 fi
 
@@ -135,7 +147,7 @@ if [ -f /lib/systemd/system/iobroker.service ]; then
 			# We cannot rely on default permissions on this system
 			echo "${yellow}This system does not support setting default permissions."
 			echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!"
-			touch DO_NOT_USE_NPM_MANUALLY
+			echo "ACL enabled: false" >> INSTALLER_INFO.txt
 		fi
 	fi
 
