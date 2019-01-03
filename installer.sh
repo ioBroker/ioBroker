@@ -36,18 +36,21 @@ print_step() {
 	echo "${bold}${HLINE}${normal}"
 	echo
 }
+
 print_bold() {
-	title="$1"
-	text="$2"
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
-	echo "    ${bold}${title}${normal}"
-	echo "    ${text}"
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
+        title="$1"
+        echo
+        echo "${bold}${HLINE}${normal}"
+        echo
+        echo "    ${bold}${title}${normal}"
+        for text in "${@:2}"; do
+                echo "    ${text}"
+        done
+        echo
+        echo "${bold}${HLINE}${normal}"
+        echo
 }
+
 
 print_msg() {
 	text="$1"
@@ -64,7 +67,7 @@ else
 	IS_ROOT=false
 fi
 
-print_bold "Welcome to the ioBroker installer!" "You might need to enter your password a couple of times."
+print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
 NUM_STEPS=5
 
