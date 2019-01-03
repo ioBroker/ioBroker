@@ -10,10 +10,20 @@
 ### END INIT INFO
 (( EUID )) && echo .You need to have root privileges.. && exit 1
 PIDF=@@PATH@@lib/iobroker.pid
-NODECMD=@@node
 IOBROKERCMD=@@PATH@@iobroker.js
 RETVAL=0
 IOBROKERUSER=@@user
+HOMEDIR=`getent passwd ${IOBROKERUSER} | cut -d\: -f 6`
+NVM_DIR="${HOMEDIR}/.nvm"
+if [ -d "${NVM_DIR}" ]; then
+            export NVM_DIR
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            NODECMD=`nvm which node`
+            echo "NVM detected."
+            echo "Use ${NODECMD} to start IOBroker."
+else
+            NODECMD=@@node
+fi
 
 start() {
             export IOBROKER_HOME=@@HOME@@

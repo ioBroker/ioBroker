@@ -53,7 +53,7 @@ chmod 755 /usr/bin/iob
 #Replace user pi with current user
 sed -i -e "s/IOBROKERUSER=.*/IOBROKERUSER=$IO_USER/" /etc/init.d/iobroker.sh
 NODE=${NODE//\//\\/}
-sed -i -e s/NODECMD=.*/NODECMD=$NODE/ /etc/init.d/iobroker.sh
+sed -i -e s/NODECMD=@@.*/NODECMD=$NODE/ /etc/init.d/iobroker.sh
 chown root:root /etc/init.d/iobroker.sh
 update-rc.d iobroker.sh defaults
 
