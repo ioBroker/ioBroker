@@ -3,6 +3,14 @@
 # Increase this version number whenever you update the installer
 INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
 
+# Test if this script is being run as root or not
+# TODO: To resolve #48, running this as root should be prohibited
+if [[ $EUID -eq 0 ]]; then
+	IS_ROOT=true
+else
+	IS_ROOT=false
+fi
+
 # Enable colored output
 if test -t 1; then # if terminal
 	ncolors=$(which tput > /dev/null && tput colors) # supports color
@@ -38,17 +46,17 @@ print_step() {
 }
 
 print_bold() {
-        title="$1"
-        echo
-        echo "${bold}${HLINE}${normal}"
-        echo
-        echo "    ${bold}${title}${normal}"
-        for text in "${@:2}"; do
-                echo "    ${text}"
-        done
-        echo
-        echo "${bold}${HLINE}${normal}"
-        echo
+	title="$1"
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo
+	echo "    ${bold}${title}${normal}"
+	for text in "${@:2}"; do
+		echo "    ${text}"
+	done
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo
 }
 
 
@@ -59,31 +67,55 @@ print_msg() {
 	echo
 }
 
-# Test if this script is being run as root or not
-# TODO: To resolve #48, running this as root should be prohibited
-if [[ $EUID -eq 0 ]]; then
-	IS_ROOT=true
-else
-	IS_ROOT=false
-fi
+create_user() {
+	username="$1"
+	id "$username" &> /dev/null;
+	if [ $? -ne 0 ]; then
+		# User does not exist
+		if [ "$IS_ROOT" = true ]; then
+			useradd -m -s /usr/sbin/nologin "$username"
+		else
+			sudo useradd -m -s /usr/sbin/nologin "$username"
+		fi
+	fi
+	# Add the user to all groups we need
+	# and give him passwordless sudo privileges
+	# TODO: replace NOPASSWD:ALL with a list of commands iobroker may execute
+	if [ "$IS_ROOT" = true ]; then
+		usermod -a -G bluetooth,dialout,gpio,tty "$username"
+		echo "$username ALL=(ALL) NOPASSWD:ALL" | (EDITOR="tee" visudo -f /etc/sudoers.d/iobroker)
+	else
+		sudo usermod -a -G bluetooth,dialout,gpio,tty "$username"
+		echo "$username ALL=(ALL) NOPASSWD:ALL" | (sudo su -c 'EDITOR="tee" visudo -f /etc/sudoers.d/iobroker')
+	fi
+}
+
+install_package() {
+	package="$1"
+	# Test if the package is installed
+	dpkg -s "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Install it
+		if [ "$IS_ROOT" = true ]; then
+			apt install -y package
+		else
+			sudo apt install -y package
+		fi
+	fi
+}
 
 print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
 NUM_STEPS=5
 
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
-# Test if acl is installed, so we can use setfacl
-dpkg -s acl &> /dev/null
-if [ $? -ne 0 ]; then
-	# Install acl, so we can use setfacl
-	if [ "$IS_ROOT" = true ]; then
-		apt install -y acl
-	else
-		sudo apt install -y acl
-	fi
-fi
+install_package "acl"  # To use setfacl
+install_package "sudo" # To use sudo (obviously)
+# TODO: Which other packages do we need by default?
 
 print_step "Creating ioBroker directory" 2 "$NUM_STEPS"
+# Ensure the user "iobroker" exists and is in the correct groups
+create_user "iobroker"
 # ensure the directory exists and take control of it
 if [ "$IS_ROOT" = true ]; then
 	mkdir -p /opt/iobroker
