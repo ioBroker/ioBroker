@@ -169,10 +169,21 @@ print_step "Finalizing installation" 5 "$NUM_STEPS"
 # Remove the file we used to suppress messages during installation
 rm AUTOMATED_INSTALLER
 
-# If we want to autostart ioBroker with systemd, enable that
-if [ -f /lib/systemd/system/iobroker.service ]; then
-	# systemd executes js-controller as the user "iobroker", 
-	# so we need to give it the ownershop of /opt/iobroker
+# From https://unix.stackexchange.com/questions/18209/detect-init-system-using-the-shell/326213
+	# if [[ `/sbin/init --version` =~ upstart ]]; then echo using upstart;
+	# elif [[ `systemctl` =~ -\.mount ]]; then echo using systemd;
+	# elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then echo using sysv-init;
+	# else echo cannot tell; fi
+
+# Test which init system is used:
+if [[ `systemctl` =~ -\.mount ]]; then 
+	INITSYSTEM="systemd"
+elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
+	INITSYSTEM="init.d"
+fi
+
+fix_dir_permissions() {
+	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
 	echo "Fixing directory permissions..."
 	if [ "$IS_ROOT" = true ]; then
 		chown iobroker:iobroker -R /opt/iobroker
@@ -191,8 +202,29 @@ if [ -f /lib/systemd/system/iobroker.service ]; then
 			echo "ACL enabled: false" >> INSTALLER_INFO.txt
 		fi
 	fi
+}
 
+# Enable autostart
+if [ "$INITSYSTEM" = "systemd" ]; then
+	fix_dir_permissions
 	echo "Enabling autostart..."
+	# Write an systemd service that automatically detects the correct node executable and runs ioBroker
+	sudo cat <<- EOF > /lib/systemd/system/iobroker.service
+		[Unit]
+		Description=ioBroker Server
+		Documentation=http://iobroker.net
+		After=network.target
+		
+		[Service]
+		Type=simple
+		User=iobroker
+		ExecStart=/bin/sh -c "$(which node) /opt/iobroker/node_modules/iobroker.js-controller/controller.js"
+		Restart=on-failure
+		
+		[Install]
+		WantedBy=multi-user.tar
+		EOF
+
 	if [ "$IS_ROOT" = true ]; then
 		systemctl daemon-reload
 		systemctl enable iobroker
@@ -203,13 +235,21 @@ if [ -f /lib/systemd/system/iobroker.service ]; then
 		sudo systemctl start iobroker
 	fi
 	echo "Autostart enabled!"
+	echo "Autostart: systemd" >> INSTALLER_INFO.txt
+elif [ "$INITSYSTEM" = "init.d"]; then
+	fix_dir_permissions
+	# TODO
+	echo "Autostart: init.d" >> INSTALLER_INFO.txt
 else
+	echo "Unsupported init system, cannot enable autostart"
+	echo "Autostart: false" >> INSTALLER_INFO.txt
 	# After sudo npm i, this directory now belongs to root. 
 	# Give it back to the current user
 	# TODO: remove this step when GH#48 is resolved
 	sudo chown $USER:$USER -R /opt/iobroker
 fi
 
-print_bold "${green}ioBroker was installed successfully${normal}" "Open http://localhost:8081 in a browser and start configuring!"
+IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!"
