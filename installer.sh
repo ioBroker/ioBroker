@@ -111,6 +111,15 @@ NUM_STEPS=5
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 install_package "acl"  # To use setfacl
 install_package "sudo" # To use sudo (obviously)
+# These are used by a couple of adapters and should therefore exist:
+install_package "build-essential"
+install_package "libavahi-compat-libdnssd-dev"
+install_package "libudev-dev"
+install_package "libpam0g-dev"
+install_package "pkg-config"
+install_package "git"
+install_package "curl"
+install_package "unzip"
 # TODO: Which other packages do we need by default?
 
 print_step "Creating ioBroker directory" 2 "$NUM_STEPS"
@@ -149,9 +158,9 @@ print_step "Installing ioBroker" 4 "$NUM_STEPS"
 # TODO: GH#48 Make sure we don't need sudo/root, so we can remove that and --unsafe-perm
 # For now we need to run the 2nd part of the installation as root
 if [ "$IS_ROOT" = true ]; then
-	npm i --production --unsafe-perm
+	npm i --production --loglevel error --unsafe-perm
 else
-	sudo -H npm i --production --unsafe-perm
+	sudo -H npm i --production --loglevel error --unsafe-perm
 fi
 # npm i --production # this is how it should be
 
