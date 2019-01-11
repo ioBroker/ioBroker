@@ -197,8 +197,8 @@ fix_dir_permissions() {
 		sudo setfacl -Rdm g:iobroker:rwx /opt/iobroker &> /dev/null && sudo setfacl -Rm g:iobroker:rwx /opt/iobroker &> /dev/null
 		if [ $? -ne 0 ]; then
 			# We cannot rely on default permissions on this system
-			echo "${yellow}This system does not support setting default permissions."
-			echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!"
+			echo "${yellow}This system does not support setting default permissions.${normal}"
+			echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
 			echo "ACL enabled: false" >> INSTALLER_INFO.txt
 		fi
 	fi
@@ -241,7 +241,7 @@ elif [ "$INITSYSTEM" = "init.d"]; then
 	# TODO
 	echo "Autostart: init.d" >> INSTALLER_INFO.txt
 else
-	echo "Unsupported init system, cannot enable autostart"
+	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
 	echo "Autostart: false" >> INSTALLER_INFO.txt
 	# After sudo npm i, this directory now belongs to root. 
 	# Give it back to the current user
@@ -252,4 +252,4 @@ fi
 IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
-print_msg "${yellow}You need to re-login before doing anything else on the console!"
+print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
