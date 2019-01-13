@@ -54,6 +54,6 @@ fi
 
 # Now test the actual installation using the installer script
 sudo chmod +x node_modules/iobroker/installer.sh
-node_modules/iobroker/installer.sh; export EXIT_CODE=$?
+bash node_modules/iobroker/installer.sh; export EXIT_CODE=$?
 echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE

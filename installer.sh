@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -ex
 
 # Increase this version number whenever you update the installer
 INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
@@ -116,21 +115,30 @@ create_user_linux() {
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands may be executed as sudo without password
 	# TODO: Do we need others?
-	IFS='' read -r -d '' SUDOERS_CONTENT << EOF
-$username ALL=(ALL) ALL
-$username ALL=(ALL) NOPASSWD: /usr/bin/shutdown -h now, /usr/bin/halt, /usr/bin/poweroff, /usr/bin/reboot
-$username ALL=(ALL) NOPASSWD: /usr/bin/mount -o nosuid\,nodev\,noexec, /usr/bin/umount
-$username ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg, /usr/bin/make
-$username ALL=(ALL) NOPASSWD: /usr/bin/ping, /usr/sbin/ping, /usr/bin/fping, /usr/sbin/fping, /usr/bin/arp-scan
-$username ALL=(ALL) NOPASSWD: /usr/bin/setcap
-EOF
+	SUDOERS_CONTENT=$(cat <<- EOF
+		$username	ALL=(ALL)	ALL
+		$username	ALL=(ALL)	NOPASSWD: /usr/bin/shutdown -h now, /usr/bin/halt, /usr/bin/poweroff, /usr/bin/reboot
+		$username	ALL=(ALL)	NOPASSWD: /usr/bin/mount -o nosuid\,nodev\,noexec, /usr/bin/umount
+		$username	ALL=(ALL)	NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg, /usr/bin/make
+		$username	ALL=(ALL)	NOPASSWD: /usr/bin/ping, /usr/sbin/ping, /usr/bin/fping, /usr/sbin/fping, /usr/bin/arp-scan
+		$username	ALL=(ALL)	NOPASSWD: /usr/bin/setcap
+		EOF
+	)
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
 		usermod -a -G bluetooth,dialout,gpio,tty "$username"
-		echo "$SUDOERS_CONTENT" | (EDITOR="tee" visudo -f $SUDOERS_FILE)
+		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
+		visudo -c -q -f ./temp_sudo_file && \
+			chown root:root ./temp_sudo_file &&
+			chmod 440 ./temp_sudo_file &&
+			mv ./temp_sudo_file $SUDOERS_FILE
 	else
 		sudo usermod -a -G bluetooth,dialout,gpio,tty "$username"
-		echo "$SUDOERS_CONTENT" | (sudo su -c 'EDITOR="tee" visudo -f $SUDOERS_FILE')
+		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
+		sudo visudo -c -q -f ./temp_sudo_file && \
+			sudo chown root:root ./temp_sudo_file &&
+			sudo chmod 440 ./temp_sudo_file &&
+			sudo mv ./temp_sudo_file $SUDOERS_FILE
 	fi
 }
 create_user_freebsd() {
@@ -194,7 +202,7 @@ print_step "Creating ioBroker user and directory" 2 "$NUM_STEPS"
 # Ensure the user "iobroker" exists and is in the correct groups
 if [ "$platform" = "linux" ]; then
 	create_user_linux $IOB_USER
-else if [ "$platform" = "freebsd" ]; then
+elif [ "$platform" = "freebsd" ]; then
 	create_user_freebsd $IOB_USER
 fi
 
@@ -239,24 +247,26 @@ print_step "Finalizing installation" 5 "$NUM_STEPS"
 # #############################
 # Create "iob" and "iobroker" executables
 if [ "$platform" = "linux" ]; then
-	IFS='' read -r -d '' IOB_EXECUTABLE << EOF
-#!/bin/bash
-node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
-EOF
+	IOB_EXECUTABLE=$(cat <<- EOF
+		#!/bin/bash
+		node $CONTROLLER_DIR/iobroker.js $1 $2 $3 $4 $5
+		EOF
+	)
 	IOB_BIN_PATH=/usr/bin
 elif [ "$platform" = "freebsd" ] ; then
 	# TODO: Hashbang?
-	IFS='' read -r -d '' IOB_EXECUTABLE << EOF
-node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
-EOF
+	IOB_EXECUTABLE=$(cat <<- EOF
+		node $CONTROLLER_DIR/iobroker.js $1 $2 $3 $4 $5
+		EOF
+	)
 	IOB_BIN_PATH=/usr/local/bin
 fi
 if [ "$IS_ROOT" = true ]; then
 	echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iobroker
 	echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iob
 else
-	sudo echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iobroker
-	sudo echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iob
+	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iobroker
+	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iob
 fi
 set_root_permissions "$IOB_BIN_PATH/iobroker"
 set_root_permissions "$IOB_BIN_PATH/iob"
@@ -309,50 +319,51 @@ if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
 	echo "Enabling autostart..."
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
-	IFS='' read -r -d '' INITD_FILE << EOF
-#!/bin/bash
-### BEGIN INIT INFO
-# Provides:          iobroker.sh
-# Required-Start:    \$network \$local_fs \$remote_fs
-# Required-Stop::    \$network \$local_fs \$remote_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: starts ioBroker
-# Description:       starts ioBroker
-### END INIT INFO
-PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-NODECMD=\$(which node)
-RETVAL=0
+	INITD_FILE=$(cat <<- EOF
+		#!/bin/bash
+		### BEGIN INIT INFO
+		# Provides:          iobroker.sh
+		# Required-Start:    \$network \$local_fs \$remote_fs
+		# Required-Stop::    \$network \$local_fs \$remote_fs
+		# Default-Start:     2 3 4 5
+		# Default-Stop:      0 1 6
+		# Short-Description: starts ioBroker
+		# Description:       starts ioBroker
+		### END INIT INFO
+		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
+		NODECMD=\$(which node)
+		RETVAL=0
 
-start() {
-	echo -n "Starting ioBroker"
-	su - \$IOB_USER -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
-	RETVAL=\$?
-}
+		start() {
+		  echo -n "Starting ioBroker"
+		  su - $IOB_USER -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
+		  RETVAL=\$?
+		}
 
-stop() {
-	echo -n "Stopping ioBroker"
-	su - \$IOB_USER -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
-	RETVAL=$?
-}
-case "\$1" in
-start)
-	start
-	;;
-stop)
-	stop
-	;;
-restart)
-	stop
-	start
-	;;
-*)
-	echo "Usage: iobroker {start|stop|restart}"
-	exit 1
-	;;
-esac
-exit \$RETVAL
-EOF
+		stop() {
+		  echo -n "Stopping ioBroker"
+		  su - $IOB_USER -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
+		  RETVAL=$?
+		}
+		case "\$1" in
+		start)
+			start
+		;;
+		stop)
+			stop
+		;;
+		restart)
+			stop
+			start
+		;;
+		*)
+			echo "Usage: iobroker {start|stop|restart}"
+			exit 1
+		;;
+		esac
+		exit \$RETVAL
+		EOF
+	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
 	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
@@ -361,7 +372,7 @@ EOF
 		set_root_permissions $SERVICE_FILENAME
 		sh $SERVICE_FILENAME
 	else
-		sudo echo $INITD_FILE > $SERVICE_FILENAME
+		echo $INITD_FILE | sudo tee $SERVICE_FILENAME
 		set_root_permissions $SERVICE_FILENAME
 		sudo sh $SERVICE_FILENAME
 	fi
@@ -376,21 +387,22 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 	echo "Enabling autostart..."
 
 	# Write an systemd service that automatically detects the correct node executable and runs ioBroker
-	IFS='' read -r -d '' SYSTEMD_FILE << EOF
-[Unit]
-Description=ioBroker Server
-Documentation=http://iobroker.net
-After=network.target
-
-[Service]
-Type=simple
-User=$IOB_USER
-ExecStart=/bin/sh -c "\$(which node) $CONTROLLER_DIR/controller.js"
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.tar
-EOF
+	SYSTEMD_FILE=$(cat <<- EOF
+		[Unit]
+		Description=ioBroker Server
+		Documentation=http://iobroker.net
+		After=network.target
+		
+		[Service]
+		Type=simple
+		User=$IOB_USER
+		ExecStart=/bin/sh -c "\$(which node) $CONTROLLER_DIR/controller.js"
+		Restart=on-failure
+		
+		[Install]
+		WantedBy=multi-user.tar
+		EOF
+	)
 
 	# Create the startup file and give it the correct permissions
 	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
@@ -402,7 +414,7 @@ EOF
 		systemctl enable iobroker
 		systemctl start iobroker
 	else
-		sudo echo $SYSTEMD_FILE > $SERVICE_FILENAME
+		echo $SYSTEMD_FILE | sudo tee $SERVICE_FILENAME
 		sudo chown root:root $SERVICE_FILENAME
 		sudo chmod 644 $SERVICE_FILENAME
 
@@ -417,57 +429,58 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	echo "Enabling autostart..."
 
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
-	IFS='' read -r -d '' RCD_FILE << EOF
-#!/bin/sh
-#
-# PROVIDE: iobroker
-# REQUIRE: DAEMON
-# KEYWORD: shutdown
+	RCD_FILE=$(cat <<- EOF
+		#!/bin/sh
+		#
+		# PROVIDE: iobroker
+		# REQUIRE: DAEMON
+		# KEYWORD: shutdown
 
-. /etc/rc.subr
+		. /etc/rc.subr
 
-name="iobroker"
-rcvar="iobroker_enable"
+		name="iobroker"
+		rcvar="iobroker_enable"
 
-load_rc_config \$name
+		load_rc_config $name
 
-iobroker_enable=\${iobroker_enable-"NO"}
-iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
+		iobroker_enable=${iobroker_enable-"NO"}
+		iobroker_pidfile=${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
-PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-NODECMD=\$(which node)
+		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
+		NODECMD=\$(which node)
 
-iobroker_start ()
-{
-	su -m iobroker -c "\${NODECMD} $CONTROLLER_DIR/iobroker.js start"
-}
+		iobroker_start ()
+		{
+			su -m iobroker -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+		}
 
-iobroker_stop ()
-{
-	su -m iobroker -c "\${NODECMD} $CONTROLLER_DIR/iobroker.js stop"
-}
+		iobroker_stop ()
+		{
+			su -m iobroker -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+		}
 
-iobroker_status ()
-{
-	su -m iobroker -c "\${NODECMD} $CONTROLLER_DIR/iobroker.js status"
-}
+		iobroker_status ()
+		{
+			su -m iobroker -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+		}
 
-PATH="\${PATH}:/usr/local/bin"
-pidfile="\${iobroker_pidfile}"
+		PATH="${PATH}:/usr/local/bin"
+		pidfile="${iobroker_pidfile}"
 
-start_cmd=iobroker_start
-stop_cmd=iobroker_stop
-status_cmd=iobroker_status
+		start_cmd=iobroker_start
+		stop_cmd=iobroker_stop
+		status_cmd=iobroker_status
 
-run_rc_command "\$1"
-EOF
+		run_rc_command "$1"
+		EOF
+	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
 		echo $RCD_FILE > $SERVICE_FILENAME
 	else
-		sudo echo $RCD_FILE > $SERVICE_FILENAME
+		echo $RCD_FILE | sudo tee $SERVICE_FILENAME
 	fi
 	set_root_permissions $SERVICE_FILENAME
 

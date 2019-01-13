@@ -81,7 +81,7 @@ install:
   - sudo chmod +x test/travis_install.sh
   # make sure the iob_not_installed file can be created
   - sudo chmod 777 .
-  - bash test/travis_install.sh
+  - test/travis_install.sh
   - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
   # only continue tests if ioBroker was actually installed
@@ -89,7 +89,7 @@ before_script:
     if [ ! -e iob_not_installed ]
     then
       sudo chmod +x test/travis_prepareTest.sh
-      bash test/travis_prepareTest.sh
+      test/travis_prepareTest.sh
     fi
 script:
   # only continue tests if ioBroker was actually installed
