@@ -232,15 +232,7 @@ else
 fi
 
 print_step "Installing ioBroker" 4 "$NUM_STEPS"
-
-# TODO: GH#48 Make sure we don't need sudo/root, so we can remove that and --unsafe-perm
-# For now we need to run the 2nd part of the installation as root
-if [ "$IS_ROOT" = true ]; then
-	npm i --production --loglevel error --unsafe-perm
-else
-	sudo -H npm i --production --loglevel error --unsafe-perm
-fi
-# npm i --production # this is how it should be
+npm i --production --loglevel error --unsafe-perm
 
 print_step "Finalizing installation" 5 "$NUM_STEPS"
 
@@ -270,6 +262,8 @@ else
 fi
 set_root_permissions "$IOB_BIN_PATH/iobroker"
 set_root_permissions "$IOB_BIN_PATH/iob"
+echo $IOB_EXECUTABLE > ./iobroker
+echo $IOB_EXECUTABLE > ./iob
 
 # #############################
 # Enable autostart
@@ -370,11 +364,11 @@ if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
 	if [ "$IS_ROOT" = true ]; then
 		echo $INITD_FILE > $SERVICE_FILENAME
 		set_root_permissions $SERVICE_FILENAME
-		sh $SERVICE_FILENAME
+		bash $SERVICE_FILENAME
 	else
 		echo $INITD_FILE | sudo tee $SERVICE_FILENAME
 		set_root_permissions $SERVICE_FILENAME
-		sudo sh $SERVICE_FILENAME
+		sudo bash $SERVICE_FILENAME
 	fi
 	# Remember what we did
 	if [ -z ${IOB_FORCE_INITD+x} ]; then
