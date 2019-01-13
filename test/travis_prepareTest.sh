@@ -1,8 +1,10 @@
 #!/bin/bash
 
-sudo chmod -R 777 *
+# We don't care about permissions now :D
+sudo chmod -R 777 /opt/iobroker
+
 ps auxww|grep io
-./iobroker start
+/opt/iobroker/iobroker start
 
 npm install request mocha chai --save
 

@@ -72,8 +72,7 @@ matrix:
 before_install:
   # if we have defined a specific npm version, use that one
   - if [[ "$NPM_VER" != "" ]]; then npm i -g npm@$NPM_VER; fi
-  - mkdir node_modules
-  - mkdir node_modules/iobroker
+  - mkdir -p node_modules/iobroker
   - mv !(node_modules|test) node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'

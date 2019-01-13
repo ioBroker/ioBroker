@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 
 # Increase this version number whenever you update the installer
 INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
@@ -7,6 +8,9 @@ INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
+
+# Which npm package should be installed (default "iobroker")
+INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
 
 # The user to run ioBroker as
 IOB_USER="iobroker"
@@ -101,6 +105,15 @@ set_root_permissions() {
 	fi
 }
 
+make_executable() {
+	file="$1"
+	if [ "$IS_ROOT" = true ]; then
+		chmod 755 $file
+	else
+		sudo chmod 755 $file
+	fi
+}
+
 create_user_linux() {
 	username="$1"
 	id "$username" &> /dev/null;
@@ -143,7 +156,7 @@ create_user_linux() {
 }
 create_user_freebsd() {
 	username="$1"
-	id "$username" &> /dev/null;
+	id "$username" &> /dev/null
 	if [ $? -ne 0 ]; then
 		# User does not exist
 		if [ "$IS_ROOT" = true ]; then
@@ -184,6 +197,7 @@ print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_V
 export AUTOMATED_INSTALLER="true"
 NUM_STEPS=5
 
+# ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 install_package "acl"  # To use setfacl
 install_package "sudo" # To use sudo (obviously)
@@ -198,6 +212,7 @@ install_package "curl"
 install_package "unzip"
 # TODO: Which other packages do we need by default?
 
+# ########################################################
 print_step "Creating ioBroker user and directory" 2 "$NUM_STEPS"
 # Ensure the user "iobroker" exists and is in the correct groups
 if [ "$platform" = "linux" ]; then
@@ -211,28 +226,35 @@ if [ "$IS_ROOT" = true ]; then
 	mkdir -p $IOB_DIR
 else
 	sudo mkdir -p $IOB_DIR
-	sudo chown $USER:$USER -R $IOB_DIR
 fi
 cd $IOB_DIR
 
 # Log some information about the installer
+touch INSTALLER_INFO.txt
+chmod 777 INSTALLER_INFO.txt
 echo "Installer version: $INSTALLER_VERSION" >> INSTALLER_INFO.txt
 echo "Installation date $(date +%F)" >> INSTALLER_INFO.txt
 
+
+# ########################################################
 print_step "Downloading installation files" 3 "$NUM_STEPS"
 
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then
 	echo "Installed as root" >> INSTALLER_INFO.txt
-	npm i iobroker --loglevel error --unsafe-perm
+	npm i $INSTALL_TARGET --loglevel error --unsafe-perm
 else
 	echo "Installed as non-root user $USER" >> INSTALLER_INFO.txt
-	npm i iobroker --loglevel error
+	npm i $INSTALL_TARGET --loglevel error
 fi
 
+
+# ########################################################
 print_step "Installing ioBroker" 4 "$NUM_STEPS"
 npm i --production --loglevel error --unsafe-perm
+
+
 
 print_step "Finalizing installation" 5 "$NUM_STEPS"
 
@@ -257,13 +279,15 @@ if [ "$IS_ROOT" = true ]; then
 	echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iobroker
 	echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iob
 else
-	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iobroker
-	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iob
+	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iobroker &> /dev/null
+	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iob &> /dev/null
 fi
 set_root_permissions "$IOB_BIN_PATH/iobroker"
 set_root_permissions "$IOB_BIN_PATH/iob"
-echo $IOB_EXECUTABLE > ./iobroker
-echo $IOB_EXECUTABLE > ./iob
+echo $IOB_EXECUTABLE > $IOB_DIR/iobroker
+make_executable "$IOB_DIR/iobroker"
+echo $IOB_EXECUTABLE > $IOB_DIR/iob
+make_executable "$IOB_DIR/iob"
 
 # #############################
 # Enable autostart
@@ -309,7 +333,6 @@ fix_dir_permissions() {
 
 # Enable autostart
 if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
-	fix_dir_permissions
 	echo "Enabling autostart..."
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
@@ -366,7 +389,7 @@ if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
 		set_root_permissions $SERVICE_FILENAME
 		bash $SERVICE_FILENAME
 	else
-		echo $INITD_FILE | sudo tee $SERVICE_FILENAME
+		echo $INITD_FILE | sudo tee $SERVICE_FILENAME &> /dev/null
 		set_root_permissions $SERVICE_FILENAME
 		sudo bash $SERVICE_FILENAME
 	fi
@@ -377,7 +400,6 @@ if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
 		echo "Autostart: init.d" >> INSTALLER_INFO.txt
 	fi
 elif [ "$INITSYSTEM" = "systemd" ]; then
-	fix_dir_permissions
 	echo "Enabling autostart..."
 
 	# Write an systemd service that automatically detects the correct node executable and runs ioBroker
@@ -408,7 +430,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		systemctl enable iobroker
 		systemctl start iobroker
 	else
-		echo $SYSTEMD_FILE | sudo tee $SERVICE_FILENAME
+		echo $SYSTEMD_FILE | sudo tee $SERVICE_FILENAME &> /dev/null
 		sudo chown root:root $SERVICE_FILENAME
 		sudo chmod 644 $SERVICE_FILENAME
 
@@ -474,7 +496,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	if [ "$IS_ROOT" = true ]; then
 		echo $RCD_FILE > $SERVICE_FILENAME
 	else
-		echo $RCD_FILE | sudo tee $SERVICE_FILENAME
+		echo $RCD_FILE | sudo tee $SERVICE_FILENAME &> /dev/null
 	fi
 	set_root_permissions $SERVICE_FILENAME
 
@@ -485,11 +507,10 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
 	echo "Autostart: false" >> INSTALLER_INFO.txt
-	# After sudo npm i, this directory now belongs to root. 
-	# Give it back to the current user
-	# TODO: remove this step when GH#48 is resolved
-	sudo chown $USER:$USER -R $IOB_DIR
 fi
+
+# Make sure that the app dir belongs to the correct user
+fix_dir_permissions
 
 unset AUTOMATED_INSTALLER
 
