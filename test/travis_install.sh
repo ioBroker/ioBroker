@@ -46,8 +46,14 @@ then
 	fi
 fi
 
-# default: just return the exit code
-# Do the 2nd step of the installation
-sudo env "PATH=$PATH" $NPM install --unsafe-perm; export EXIT_CODE=$?
+# Manual installations should be forbidden (this is Linux!)
+if [[ $EXIT_CODE -ne 100 ]]; then
+	echo "Manual installation should be forbidden, but isn't!"
+	exit 1
+fi
+
+# Now test the actual installation using the installer script
+sudo chmod +x node_modules/iobroker/installer.sh
+node_modules/iobroker/installer.sh; export EXIT_CODE=$?
 echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE
