@@ -226,6 +226,9 @@ if [ "$IS_ROOT" = true ]; then
 	mkdir -p $IOB_DIR
 else
 	sudo mkdir -p $IOB_DIR
+	# During the installation we need to give the current user access to the install dir
+	# We'll fix this at the end
+	sudo chown $USER:$USER -R $IOB_DIR
 fi
 cd $IOB_DIR
 
@@ -255,7 +258,6 @@ print_step "Installing ioBroker" 4 "$NUM_STEPS"
 npm i --production --loglevel error --unsafe-perm
 
 
-
 print_step "Finalizing installation" 5 "$NUM_STEPS"
 
 # #############################
@@ -263,14 +265,16 @@ print_step "Finalizing installation" 5 "$NUM_STEPS"
 if [ "$platform" = "linux" ]; then
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
-		node $CONTROLLER_DIR/iobroker.js $1 $2 $3 $4 $5
+		echo "$(which node)"
+		echo "$(ls -la $CONTROLLER_DIR/iobroker.js)"
+		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
 		EOF
 	)
 	IOB_BIN_PATH=/usr/bin
 elif [ "$platform" = "freebsd" ] ; then
 	# TODO: Hashbang?
 	IOB_EXECUTABLE=$(cat <<- EOF
-		node $CONTROLLER_DIR/iobroker.js $1 $2 $3 $4 $5
+		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
 		EOF
 	)
 	IOB_BIN_PATH=/usr/local/bin
@@ -288,6 +292,7 @@ echo $IOB_EXECUTABLE > $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
 echo $IOB_EXECUTABLE > $IOB_DIR/iob
 make_executable "$IOB_DIR/iob"
+
 
 # #############################
 # Enable autostart

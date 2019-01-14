@@ -52,13 +52,17 @@ if [[ $EXIT_CODE -ne 100 ]]; then
 	exit 1
 fi
 
+set -x
+
 # Now test the actual installation using the installer script
 # Therefore pack the local copy of the package
-TARBALL=$(npm pack --prefix "$PWD/node_modules/iobroker")
+TARBALL=$(cd node_modules/iobroker && npm pack --loglevel error)
 sudo chmod +x node_modules/iobroker/installer.sh
 # and install that
 env "PATH=$PATH:$NPM" "INSTALL_TARGET=$PWD/node_modules/iobroker/$TARBALL" node_modules/iobroker/installer.sh; export EXIT_CODE=$?
 echo "installation exit code was $EXIT_CODE"
+echo ""
 echo "Installer info:"
 cat /opt/iobroker/INSTALLER_INFO.txt
+echo ""
 exit $EXIT_CODE

@@ -1,10 +1,17 @@
 #!/bin/bash
 
+set -x
+
+export NPM=$(which npm)
+export NODE=$(which node)
+
 # We don't care about permissions now :D
+cd /opt/iobroker
 sudo chmod -R 777 /opt/iobroker
 
 ps auxww|grep io
-/opt/iobroker/iobroker start
+cat -A ./iobroker
+env "PATH=$PATH:$NPM:$NODE" ./iobroker start
 
 npm install request mocha chai --save
 

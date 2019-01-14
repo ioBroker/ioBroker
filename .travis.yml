@@ -92,4 +92,8 @@ before_script:
     fi
 script:
   # only continue tests if ioBroker was actually installed
-  - if [ ! -e iob_not_installed ]; then node_modules/mocha/bin/mocha --exit; fi
+  - |
+    if [ ! -e iob_not_installed ]; then 
+      cd /opt/iobroker
+      node_modules/mocha/bin/mocha --exit
+    fi
