@@ -426,7 +426,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Restart=on-failure
 		
 		[Install]
-		WantedBy=multi-user.tar
+		WantedBy=multi-user.target
 		EOF
 	)
 
