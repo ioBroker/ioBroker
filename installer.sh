@@ -144,14 +144,14 @@ create_user_linux() {
 		usermod -a -G bluetooth,dialout,gpio,tty "$username"
 		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
 		visudo -c -q -f ./temp_sudo_file && \
-			chown root:root ./temp_sudo_file &&
+			chown root:$ROOT_GROUP ./temp_sudo_file &&
 			chmod 440 ./temp_sudo_file &&
 			mv ./temp_sudo_file $SUDOERS_FILE
 	else
 		sudo usermod -a -G bluetooth,dialout,gpio,tty "$username"
 		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
 		sudo visudo -c -q -f ./temp_sudo_file && \
-			sudo chown root:root ./temp_sudo_file &&
+			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
 			sudo chmod 440 ./temp_sudo_file &&
 			sudo mv ./temp_sudo_file $SUDOERS_FILE
 	fi
@@ -229,8 +229,12 @@ if [ "$IS_ROOT" = true ]; then
 else
 	sudo mkdir -p $IOB_DIR
 	# During the installation we need to give the current user access to the install dir
-	# We'll fix this at the end
-	sudo chown $USER:$USER -R $IOB_DIR
+	# On Linux, we'll fix this at the end. On OSX this is okay
+	if [ "$platform" = "osx" ]; then
+		sudo chown $USER -R $IOB_DIR
+	else
+		sudo chown $USER:$USER -R $IOB_DIR
+	fi
 fi
 cd $IOB_DIR
 
@@ -437,7 +441,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		systemctl start iobroker
 	else
 		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-		sudo chown root:root $SERVICE_FILENAME
+		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
 		sudo chmod 644 $SERVICE_FILENAME
 
 		sudo systemctl daemon-reload
