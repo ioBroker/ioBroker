@@ -93,7 +93,10 @@ before_script:
 script:
   # only continue tests if ioBroker was actually installed
   - |
-    if [ ! -e iob_not_installed ]; then 
+    if [ ! -e iob_not_installed ]; then
+      # Move the test files to the correct location
+      mv test /opt/iobroker/test
+      # And perform the tests
       cd /opt/iobroker
       node_modules/mocha/bin/mocha --exit
     fi

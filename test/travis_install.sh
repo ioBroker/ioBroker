@@ -52,8 +52,6 @@ if [[ $EXIT_CODE -ne 100 ]]; then
 	exit 1
 fi
 
-set -x
-
 # Now test the actual installation using the installer script
 # Therefore pack the local copy of the package
 TARBALL=$(cd node_modules/iobroker && npm pack --loglevel error)

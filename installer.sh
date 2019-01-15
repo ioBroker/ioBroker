@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 # Increase this version number whenever you update the installer
 INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
 
@@ -265,8 +263,6 @@ print_step "Finalizing installation" 5 "$NUM_STEPS"
 if [ "$platform" = "linux" ]; then
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
-		echo "$(which node)"
-		echo "$(ls -la $CONTROLLER_DIR/iobroker.js)"
 		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
 		EOF
 	)
@@ -280,17 +276,17 @@ elif [ "$platform" = "freebsd" ] ; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
 if [ "$IS_ROOT" = true ]; then
-	echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iobroker
-	echo $IOB_EXECUTABLE > $IOB_BIN_PATH/iob
+	echo "$IOB_EXECUTABLE" > $IOB_BIN_PATH/iobroker
+	echo "$IOB_EXECUTABLE" > $IOB_BIN_PATH/iob
 else
-	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iobroker &> /dev/null
-	echo $IOB_EXECUTABLE | sudo tee $IOB_BIN_PATH/iob &> /dev/null
+	echo "$IOB_EXECUTABLE" | sudo tee $IOB_BIN_PATH/iobroker &> /dev/null
+	echo "$IOB_EXECUTABLE" | sudo tee $IOB_BIN_PATH/iob &> /dev/null
 fi
 set_root_permissions "$IOB_BIN_PATH/iobroker"
 set_root_permissions "$IOB_BIN_PATH/iob"
-echo $IOB_EXECUTABLE > $IOB_DIR/iobroker
+echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
-echo $IOB_EXECUTABLE > $IOB_DIR/iob
+echo "$IOB_EXECUTABLE" > $IOB_DIR/iob
 make_executable "$IOB_DIR/iob"
 
 
@@ -390,11 +386,11 @@ if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
 	# Create the startup file, give it the correct permissions and start ioBroker
 	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
 	if [ "$IS_ROOT" = true ]; then
-		echo $INITD_FILE > $SERVICE_FILENAME
+		echo "$INITD_FILE" > $SERVICE_FILENAME
 		set_root_permissions $SERVICE_FILENAME
 		bash $SERVICE_FILENAME
 	else
-		echo $INITD_FILE | sudo tee $SERVICE_FILENAME &> /dev/null
+		echo "$INITD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
 		set_root_permissions $SERVICE_FILENAME
 		sudo bash $SERVICE_FILENAME
 	fi
@@ -428,14 +424,14 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 	# Create the startup file and give it the correct permissions
 	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
 	if [ "$IS_ROOT" = true ]; then
-		echo $SYSTEMD_FILE > $SERVICE_FILENAME
+		echo "$SYSTEMD_FILE" > $SERVICE_FILENAME
 		chmod 644 $SERVICE_FILENAME
 
 		systemctl daemon-reload
 		systemctl enable iobroker
 		systemctl start iobroker
 	else
-		echo $SYSTEMD_FILE | sudo tee $SERVICE_FILENAME &> /dev/null
+		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
 		sudo chown root:root $SERVICE_FILENAME
 		sudo chmod 644 $SERVICE_FILENAME
 
@@ -499,9 +495,9 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	# Create the startup file, give it the correct permissions and start ioBroker
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
-		echo $RCD_FILE > $SERVICE_FILENAME
+		echo "$RCD_FILE" > $SERVICE_FILENAME
 	else
-		echo $RCD_FILE | sudo tee $SERVICE_FILENAME &> /dev/null
+		echo "$RCD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
 	fi
 	set_root_permissions $SERVICE_FILENAME
 
