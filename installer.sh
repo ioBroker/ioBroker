@@ -1,17 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-02" # format YYYY-MM-DD
-
-# Directory where iobroker should be installed
-IOB_DIR="/opt/iobroker"
-CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
-
-# Which npm package should be installed (default "iobroker")
-INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
-
-# The user to run ioBroker as
-IOB_USER="iobroker"
+INSTALLER_VERSION="2019-01-15" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -27,13 +17,27 @@ if [ "$unamestr" = "Linux" ]; then
 	platform="linux"
 elif [ "$unamestr" = "Darwin" ]; then
 	# OSX and Linux are the same in terms of install procedure
-	platform="linux"
+	platform="osx"
+	ROOT_GROUP="wheel"
 elif [ "$unamestr" = "FreeBSD" ]; then
 	platform="freebsd"
 	ROOT_GROUP="wheel"
 else
 	echo "Unsupported platform!"
 	exit 1
+fi
+
+# Directory where iobroker should be installed
+IOB_DIR="/opt/iobroker"
+CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
+
+# Which npm package should be installed (default "iobroker")
+INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
+
+# The user to run ioBroker as
+IOB_USER="iobroker"
+if [ "$platform" = "osx" ]; then
+	IOB_USER="$USER"
 fi
 
 # Enable colored output
@@ -307,6 +311,7 @@ elif [[ `systemctl` =~ -\.mount ]]; then
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
 fi
+echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 
 fix_dir_permissions() {
 	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
@@ -333,7 +338,7 @@ fix_dir_permissions() {
 }
 
 # Enable autostart
-if [ -z ${IOB_FORCE_INITD+x} ] || [ "$INITSYSTEM" = "init.d"]; then
+if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; then
 	echo "Enabling autostart..."
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
@@ -511,7 +516,10 @@ else
 fi
 
 # Make sure that the app dir belongs to the correct user
-fix_dir_permissions
+# Don't do it on OSX, because we'll install as the current user anyways
+if [ "$platform" != "osx" ]; then
+	fix_dir_permissions
+fi
 
 unset AUTOMATED_INSTALLER
 
