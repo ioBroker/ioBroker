@@ -359,13 +359,13 @@ if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; t
 
 		start() {
 		  echo -n "Starting ioBroker"
-		  su - $IOB_USER -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
+		  su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
 		  RETVAL=\$?
 		}
 
 		stop() {
 		  echo -n "Stopping ioBroker"
-		  su - $IOB_USER -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
+		  su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
 		  RETVAL=$?
 		}
 		case "\$1" in
@@ -473,17 +473,17 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 		iobroker_start ()
 		{
-			su -m iobroker -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			su -m $IOB_USER -s "/bin/bash" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
 		}
 
 		iobroker_stop ()
 		{
-			su -m iobroker -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			su -m $IOB_USER -s "/bin/bash" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
 		}
 
 		iobroker_status ()
 		{
-			su -m iobroker -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			su -m $IOB_USER -s "/bin/bash" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
 		}
 
 		PATH="${PATH}:/usr/local/bin"
