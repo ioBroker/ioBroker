@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# We don't care about permissions now :D
+set -x
+
 IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
 cd $IOB_DIR
+
+# We don't care about permissions now :D
 sudo chmod -R 777 .
 
 npm install request mocha chai --save

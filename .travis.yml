@@ -95,8 +95,9 @@ script:
   - |
     if [ ! -e iob_not_installed ]; then
       # Move the test files to the correct location
-      mv test /opt/iobroker/test
+      IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
+      mv test $IOB_DIR/test
       # And perform the tests
-      cd /opt/iobroker
+      cd $IOB_DIR
       node_modules/mocha/bin/mocha --exit
     fi
