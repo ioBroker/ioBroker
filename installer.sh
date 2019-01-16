@@ -29,6 +29,9 @@ fi
 
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
+if [ "$platform" = "osx" ]; then
+	IOB_DIR="/usr/local/iobroker"
+fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
 
 # Which npm package should be installed (default "iobroker")
@@ -201,17 +204,19 @@ NUM_STEPS=5
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
-install_package "acl"  # To use setfacl
-install_package "sudo" # To use sudo (obviously)
-# These are used by a couple of adapters and should therefore exist:
-install_package "build-essential"
-install_package "libavahi-compat-libdnssd-dev"
-install_package "libudev-dev"
-install_package "libpam0g-dev"
-install_package "pkg-config"
-install_package "git"
-install_package "curl"
-install_package "unzip"
+if [ "$platform" != "osx" ]; then
+	install_package "acl"  # To use setfacl
+	install_package "sudo" # To use sudo (obviously)
+	# These are used by a couple of adapters and should therefore exist:
+	install_package "build-essential"
+	install_package "libavahi-compat-libdnssd-dev"
+	install_package "libudev-dev"
+	install_package "libpam0g-dev"
+	install_package "pkg-config"
+	install_package "git"
+	install_package "curl"
+	install_package "unzip"
+fi
 # TODO: Which other packages do we need by default?
 
 # ########################################################
@@ -307,7 +312,7 @@ make_executable "$IOB_DIR/iob"
 	# else echo cannot tell; fi
 
 # Test which init system is used:
-
+INITSYSTEM="unknown"
 if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
 elif [[ `systemctl` =~ -\.mount ]]; then 
