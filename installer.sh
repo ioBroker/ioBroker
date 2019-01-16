@@ -273,34 +273,29 @@ print_step "Finalizing installation" 5 "$NUM_STEPS"
 
 # #############################
 # Create "iob" and "iobroker" executables
+IOB_EXECUTABLE=$(cat <<- EOF
+	#!/bin/bash
+	node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+	EOF
+)
 if [ "$platform" = "linux" ]; then
-	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
-		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
-		EOF
-	)
 	IOB_BIN_PATH=/usr/bin
-elif [ "$platform" = "freebsd" ] ; then
-	# TODO: Hashbang?
-	IOB_EXECUTABLE=$(cat <<- EOF
-		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
-		EOF
-	)
+elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
-if [ "$IS_ROOT" = true ]; then
-	echo "$IOB_EXECUTABLE" > $IOB_BIN_PATH/iobroker
-	echo "$IOB_EXECUTABLE" > $IOB_BIN_PATH/iob
-else
-	echo "$IOB_EXECUTABLE" | sudo tee $IOB_BIN_PATH/iobroker &> /dev/null
-	echo "$IOB_EXECUTABLE" | sudo tee $IOB_BIN_PATH/iob &> /dev/null
-fi
-set_root_permissions "$IOB_BIN_PATH/iobroker"
-set_root_permissions "$IOB_BIN_PATH/iob"
+# Create executables in the ioBroker directory
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iob
 make_executable "$IOB_DIR/iob"
+# Symlink the binaries there
+if [ "$IS_ROOT" = true ]; then
+	ln -s $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
+	ln -s $IOB_DIR/iob $IOB_BIN_PATH/iob
+else
+	sudo ln -s $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
+	sudo ln -s $IOB_DIR/iob $IOB_BIN_PATH/iob
+fi
 
 
 # #############################
