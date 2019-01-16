@@ -140,5 +140,6 @@ echo "###############  status ioBroker ###############"
 sudo systemctl status iobroker.service
 
 echo "###############  You can login in ioBroker ###############"
-IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+ETH=$(ip link | awk -F: '$0 !~ "lo|vir|wl|^[^0-9]"{print $2;getline}')
+IP=$(ip addr show $ETH | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
 echo "###############  http://$IP:8081/  ###############"
