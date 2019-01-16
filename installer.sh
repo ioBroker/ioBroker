@@ -439,7 +439,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		[Service]
 		Type=simple
 		User=$IOB_USER
-		ExecStart=/bin/sh -c "\$(which node) $CONTROLLER_DIR/controller.js"
+		Environment="NODE=\$(which node)"
+		ExecStart=/bin/bash -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
 		
 		[Install]
@@ -544,8 +545,9 @@ fi
 
 unset AUTOMATED_INSTALLER
 
-# Detect IP address (https://stackoverflow.com/a/13322549)
-IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
+# Detect IP address
+IP_COMMAND=$(type "ip" 2> /dev/null && echo "ip addr show" || echo "ifconfig")
+IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | cut -d " " -f2 | cut -d "/" -f1)
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
