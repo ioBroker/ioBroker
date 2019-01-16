@@ -59,10 +59,10 @@ matrix:
     #    - NPM_VER=5.7.1
 
     # These tests should succeed
-    #- <<: *linux
-    #  node_js: 8.12 # Comes with 6.4.1
-    #- <<: *linux
-    #  node_js: 10 # Comes with npm 6, starting with 10.3
+    - <<: *linux
+      node_js: 8.12 # Comes with 6.4.1
+    - <<: *linux
+      node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
       node_js: 8.12 # Comes with 6.4.1
     - <<: *osx

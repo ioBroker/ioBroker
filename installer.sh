@@ -144,20 +144,32 @@ create_user_linux() {
 	)
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
-		usermod -a -G bluetooth,dialout,gpio,tty "$username"
 		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
 		visudo -c -q -f ./temp_sudo_file && \
 			chown root:$ROOT_GROUP ./temp_sudo_file &&
 			chmod 440 ./temp_sudo_file &&
 			mv ./temp_sudo_file $SUDOERS_FILE
 	else
-		sudo usermod -a -G bluetooth,dialout,gpio,tty "$username"
 		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
 		sudo visudo -c -q -f ./temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
 			sudo chmod 440 ./temp_sudo_file &&
 			sudo mv ./temp_sudo_file $SUDOERS_FILE
 	fi
+	# Add the user to all groups if they exist
+	declare -a groups=(
+		bluetooth
+		dialout
+		gpio
+		tty
+	)
+	for grp in "${groups[@]}"; do
+		if [ "$IS_ROOT" = true ]; then
+			getent group $grp && usermod -a -G $grp $username
+		else
+			getent group $grp && sudo usermod -a -G $grp $username
+		fi
+	done
 }
 create_user_freebsd() {
 	username="$1"
@@ -174,13 +186,21 @@ create_user_freebsd() {
 	# Define which commands may be executed as sudo without password
 	# TODO: Find out the correct paths on FreeBSD
 	# SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
-	if [ "$IS_ROOT" = true ]; then
-		pw usermod -a -G bluetooth,dialout,gpio,tty "$username"
-		# echo "$SUDOERS_CONTENT" | (EDITOR="tee" visudo -f $SUDOERS_FILE)
-	else
-		sudo pw usermod -a -G bluetooth,dialout,gpio,tty "$username"
-		# echo "$SUDOERS_CONTENT" | (sudo su -c 'EDITOR="tee" visudo -f $SUDOERS_FILE')
-	fi
+
+	# Add the user to all groups if they exist
+	declare -a groups=(
+		bluetooth
+		dialout
+		gpio
+		tty
+	)
+	for grp in "${groups[@]}"; do
+		if [ "$IS_ROOT" = true ]; then
+			getent group $grp && pw usermod -a -G $grp $username
+		else
+			getent group $grp && sudo pw usermod -a -G $grp $username
+		fi
+	done
 }
 
 install_package() {
@@ -310,7 +330,7 @@ fi
 INITSYSTEM="unknown"
 if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
-elif [[ `systemctl` =~ -\.mount ]]; then 
+elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
