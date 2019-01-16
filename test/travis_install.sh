@@ -61,6 +61,6 @@ env "PATH=$PATH:$NPM" "INSTALL_TARGET=$PWD/node_modules/iobroker/$TARBALL" node_
 echo "installation exit code was $EXIT_CODE"
 echo ""
 echo "Installer info:"
-cat /opt/iobroker/INSTALLER_INFO.txt
+cat "$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")/INSTALLER_INFO.txt"
 echo ""
 exit $EXIT_CODE

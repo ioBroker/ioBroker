@@ -367,15 +367,15 @@ if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; t
 		RETVAL=0
 
 		start() {
-		  echo -n "Starting ioBroker"
-		  su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
-		  RETVAL=\$?
+			echo -n "Starting ioBroker"
+			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
+			RETVAL=\$?
 		}
 
 		stop() {
-		  echo -n "Stopping ioBroker"
-		  su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
-		  RETVAL=$?
+			echo -n "Stopping ioBroker"
+			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
+			RETVAL=\$?
 		}
 		case \$1 in
 		start)
