@@ -378,15 +378,15 @@ if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; t
 			RETVAL=\$?
 		}
 		case \$1 in
-		start)
+		start^\)
 			start \;\;
-		stop)
+		stop\)
 			stop \;\;
-		restart)
+		restart\)
 			stop
 			start \;\;
-		*)
-			echo "Usage: iobroker {start|stop|restart}"
+		*\)
+			echo "Usage: iobroker \{start\|stop\|restart\}"
 			exit 1 \;\;
 		esac
 		exit \$RETVAL
@@ -468,37 +468,37 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		name="iobroker"
 		rcvar="iobroker_enable"
 
-		load_rc_config $name
+		load_rc_config \$name
 
-		iobroker_enable=${iobroker_enable-"NO"}
-		iobroker_pidfile=${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
+		iobroker_enable=\${iobroker_enable-"NO"}
+		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
 		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
 		NODECMD=\$(which node)
 
 		iobroker_start ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
 		}
 
 		iobroker_stop ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
 		}
 
 		iobroker_status ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
 		}
 
-		PATH="${PATH}:/usr/local/bin"
-		pidfile="${iobroker_pidfile}"
+		PATH="\${PATH}:/usr/local/bin"
+		pidfile="\${iobroker_pidfile}"
 
 		start_cmd=iobroker_start
 		stop_cmd=iobroker_stop
 		status_cmd=iobroker_status
 
-		run_rc_command "$1"
+		run_rc_command "\$1"
 		EOF
 	)
 
