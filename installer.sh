@@ -377,21 +377,17 @@ if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; t
 		  su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
 		  RETVAL=$?
 		}
-		case "\$1" in
+		case \$1 in
 		start)
-			start
-		;;
+			start ;;
 		stop)
-			stop
-		;;
+			stop ;;
 		restart)
 			stop
-			start
-		;;
+			start ;;
 		*)
 			echo "Usage: iobroker {start|stop|restart}"
-			exit 1
-		;;
+			exit 1 ;;
 		esac
 		exit \$RETVAL
 		EOF
