@@ -236,9 +236,9 @@ else
 	# During the installation we need to give the current user access to the install dir
 	# On Linux, we'll fix this at the end. On OSX this is okay
 	if [ "$platform" = "osx" ]; then
-		sudo chown $USER -R $IOB_DIR
+		sudo chown -R $USER $IOB_DIR
 	else
-		sudo chown $USER:$USER -R $IOB_DIR
+		sudo chown -R $USER:$USER $IOB_DIR
 	fi
 fi
 cd $IOB_DIR
@@ -326,10 +326,10 @@ fix_dir_permissions() {
 	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
 	echo "Fixing directory permissions..."
 	if [ "$IS_ROOT" = true ]; then
-		chown $IOB_USER:$IOB_USER -R $IOB_DIR
+		chown -R $IOB_USER:$IOB_USER $IOB_DIR
 		# No need to give special permissions, root has access anyways
 	else
-		sudo chown $IOB_USER:$IOB_USER -R $IOB_DIR
+		sudo chown -R $IOB_USER:$IOB_USER $IOB_DIR
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G $IOB_USER $USER
