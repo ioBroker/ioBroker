@@ -136,6 +136,7 @@ create_user_linux() {
 	SUDOERS_CONTENT=$(cat <<- EOF
 		$username	ALL=(ALL)	ALL
 		$username	ALL=(ALL)	NOPASSWD: /usr/bin/shutdown -h now, /usr/bin/halt, /usr/bin/poweroff, /usr/bin/reboot
+		$username	ALL=(ALL)	NOPASSWD: /usr/bin/systemctl start, /usr/bin/systemctl stop
 		$username	ALL=(ALL)	NOPASSWD: /usr/bin/mount -o nosuid\,nodev\,noexec, /usr/bin/umount
 		$username	ALL=(ALL)	NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg, /usr/bin/make
 		$username	ALL=(ALL)	NOPASSWD: /usr/bin/ping, /usr/sbin/ping, /usr/bin/fping, /usr/sbin/fping, /usr/bin/arp-scan
