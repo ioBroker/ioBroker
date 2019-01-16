@@ -543,7 +543,8 @@ fi
 
 unset AUTOMATED_INSTALLER
 
-IP=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+# Detect IP address (https://stackoverflow.com/a/13322549)
+IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
