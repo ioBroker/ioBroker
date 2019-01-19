@@ -135,12 +135,12 @@ create_user_linux() {
 	# TODO: Do we need others?
 	SUDOERS_CONTENT=$(cat <<- EOF
 		$username	ALL=(ALL)	ALL
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/shutdown -h now, /usr/bin/halt, /usr/bin/poweroff, /usr/bin/reboot
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/systemctl start, /usr/bin/systemctl stop
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/mount -o nosuid\,nodev\,noexec, /usr/bin/umount
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg, /usr/bin/make
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/ping, /usr/sbin/ping, /usr/bin/fping, /usr/sbin/fping, /usr/bin/arp-scan
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/setcap
+		$username	ALL=(ALL)	NOPASSWD: `which shutdown` -h now, `which halt`, `which poweroff`, `which reboot`
+		$username	ALL=(ALL)	NOPASSWD: `which systemctl` start, `which systemctl` stop
+		$username	ALL=(ALL)	NOPASSWD: `which mount` -o nosuid\,nodev\,noexec, `which umount`, `which mount`
+		$username	ALL=(ALL)	NOPASSWD: `which apt-get`, `which apt`, `which dpkg`, `which make`
+		$username	ALL=(ALL)	NOPASSWD: `which ping`, `which fping`, `which arp-scan`
+		$username	ALL=(ALL)	NOPASSWD: `which setcap`
 		EOF
 	)
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
