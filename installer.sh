@@ -132,8 +132,8 @@ create_user_linux() {
 		echo "User $username created"
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
-	# Define which commands may be executed as sudo without password
-	declare -a commands=(
+	# Define which commands iobroker may execute as sudo without password
+	declare -a iob_commands=(
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
 		"mount" "umount"
@@ -144,7 +144,7 @@ create_user_linux() {
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
-	for cmd in "${commands[@]}"; do
+	for cmd in "${iob_commands[@]}"; do
 		# Test each command if and where it is installed
 		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
 		cmd_path=$(which $cmd_bin 2> /dev/null)
@@ -152,6 +152,23 @@ create_user_linux() {
 			# Then add the command to SUDOERS_CONTENT
 			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
 			SUDOERS_CONTENT+="$username ALL=(ALL) NOPASSWD: $full_cmd\n"
+		fi
+	done
+
+	# Additionally, define which iobroker-related commands may be executed by every user
+	declare -a all_user_commands=(
+		"systemctl start iobroker"
+		"systemctl stop iobroker"
+		"systemctl restart iobroker"
+	)
+	for cmd in "${all_user_commands[@]}"; do
+		# Test each command if and where it is installed
+		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
+		cmd_path=$(which $cmd_bin 2> /dev/null)
+		if [ $? -eq 0 ]; then
+			# Then add the command to SUDOERS_CONTENT
+			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
+			SUDOERS_CONTENT+="ALL ALL=NOPASSWD: $full_cmd\n"
 		fi
 	done
 
