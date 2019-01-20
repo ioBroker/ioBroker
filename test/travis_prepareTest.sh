@@ -11,7 +11,7 @@ sudo chmod -R 777 .
 npm install request mocha chai --save
 
 ps auxww|grep io
-./iobroker start
+node node_modules/iobroker.js-controller/iobroker.js start
 
 sleep 60
 ps auxww|grep io
