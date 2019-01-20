@@ -238,6 +238,11 @@ print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_V
 export AUTOMATED_INSTALLER="true"
 NUM_STEPS=5
 
+# Ask for the password as early as possible
+if [ "$IS_ROOT" != true ]; then
+	sudo -v
+fi
+
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 if [ "$platform" != "osx" ]; then
