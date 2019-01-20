@@ -129,6 +129,7 @@ create_user_linux() {
 		else
 			sudo useradd -m -s /usr/sbin/nologin "$username"
 		fi
+		echo "User $username created"
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands may be executed as sudo without password
@@ -153,6 +154,8 @@ create_user_linux() {
 			SUDOERS_CONTENT+="$username ALL=(ALL) NOPASSWD: $full_cmd\n"
 		fi
 	done
+	echo "SUDOERS_CONTENT = "
+	echo -e $SUDOERS_CONTENT
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
@@ -160,13 +163,15 @@ create_user_linux() {
 		visudo -c -q -f ./temp_sudo_file && \
 			chown root:$ROOT_GROUP ./temp_sudo_file &&
 			chmod 440 ./temp_sudo_file &&
-			mv ./temp_sudo_file $SUDOERS_FILE
+			cp ./temp_sudo_file $SUDOERS_FILE &&
+			echo "sudoers file created"
 	else
 		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
 		sudo visudo -c -q -f ./temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
 			sudo chmod 440 ./temp_sudo_file &&
-			sudo mv ./temp_sudo_file $SUDOERS_FILE
+			sudo cp ./temp_sudo_file $SUDOERS_FILE &&
+			echo "sudoers file created"
 	fi
 	# Add the user to all groups if they exist
 	declare -a groups=(
@@ -237,17 +242,22 @@ NUM_STEPS=5
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 if [ "$platform" != "osx" ]; then
-	install_package "acl"  # To use setfacl
-	install_package "sudo" # To use sudo (obviously)
-	# These are used by a couple of adapters and should therefore exist:
-	install_package "build-essential"
-	install_package "libavahi-compat-libdnssd-dev"
-	install_package "libudev-dev"
-	install_package "libpam0g-dev"
-	install_package "pkg-config"
-	install_package "git"
-	install_package "curl"
-	install_package "unzip"
+	declare -a packages=(
+		"acl" # To use setfacl
+		"sudo" # To use sudo (obviously)
+		# These are used by a couple of adapters and should therefore exist:
+		"build-essential"
+		"libavahi-compat-libdnssd-dev"
+		"libudev-dev"
+		"libpam0g-dev"
+		"pkg-config"
+		"git"
+		"curl"
+		"unzip"
+	)
+	for pkg in "${packages[@]}"; do
+		install_package $pkg
+	done
 fi
 # TODO: Which other packages do we need by default?
 
@@ -274,12 +284,14 @@ else
 	fi
 fi
 cd $IOB_DIR
+echo "Directory $IOB_DIR created"
 
 # Log some information about the installer
 touch INSTALLER_INFO.txt
 chmod 777 INSTALLER_INFO.txt
 echo "Installer version: $INSTALLER_VERSION" >> INSTALLER_INFO.txt
 echo "Installation date $(date +%F)" >> INSTALLER_INFO.txt
+echo "Platform: $platform" >> INSTALLER_INFO.txt
 
 
 # ########################################################
@@ -302,6 +314,17 @@ npm i --production --loglevel error --unsafe-perm
 
 
 print_step "Finalizing installation" 5 "$NUM_STEPS"
+
+# Test which init system is used:
+INITSYSTEM="unknown"
+if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
+	INITSYSTEM="rc.d"
+elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
+	INITSYSTEM="systemd"
+elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
+	INITSYSTEM="init.d"
+fi
+echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 
 # #############################
 # Create "iob" and "iobroker" executables
@@ -337,17 +360,6 @@ fi
 	# elif [[ `systemctl` =~ -\.mount ]]; then echo using systemd;
 	# elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then echo using sysv-init;
 	# else echo cannot tell; fi
-
-# Test which init system is used:
-INITSYSTEM="unknown"
-if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
-	INITSYSTEM="rc.d"
-elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
-	INITSYSTEM="systemd"
-elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
-	INITSYSTEM="init.d"
-fi
-echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 
 fix_dir_permissions() {
 	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
