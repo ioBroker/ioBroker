@@ -72,8 +72,7 @@ matrix:
 before_install:
   # if we have defined a specific npm version, use that one
   - if [[ "$NPM_VER" != "" ]]; then npm i -g npm@$NPM_VER; fi
-  - mkdir node_modules
-  - mkdir node_modules/iobroker
+  - mkdir -p node_modules/iobroker
   - mv !(node_modules|test) node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
@@ -93,4 +92,12 @@ before_script:
     fi
 script:
   # only continue tests if ioBroker was actually installed
-  - if [ ! -e iob_not_installed ]; then node_modules/mocha/bin/mocha --exit; fi
+  - |
+    if [ ! -e iob_not_installed ]; then
+      # Move the test files to the correct location
+      IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
+      mv test $IOB_DIR/test
+      # And perform the tests
+      cd $IOB_DIR
+      node_modules/mocha/bin/mocha --exit
+    fi

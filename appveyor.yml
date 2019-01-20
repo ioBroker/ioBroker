@@ -36,7 +36,7 @@ install:
 # Post-install test scripts.
 test_script:
   - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
-  - ps: npm install request mocha chai --no-optional --save
+  - npm install request mocha chai --no-optional --save & exit 0
   - ps: Start-Sleep -s 15
   - ps: tasklist
   - serviceIoBroker stop & exit 0
