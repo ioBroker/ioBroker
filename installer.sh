@@ -366,7 +366,7 @@ echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
 if [ "$IOB_USER" != "$USER" ]; then
-	IOB_NODE_CMDLINE="sudo -u $IOB_USER"
+	IOB_NODE_CMDLINE="sudo -u $IOB_USER node"
 fi
 if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
