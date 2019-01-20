@@ -334,10 +334,10 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
 		case \$1 in
-		start | stop | restart \)
-			systemctl \$1 iobroker \;\;
-		*\)
-			node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5 \;\;
+		start | stop | restart )
+			systemctl \$1 iobroker ;;
+		*)
+			node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5 ;;
 		esac
 		EOF
 	)
@@ -435,16 +435,16 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 			RETVAL=\$?
 		}
 		case \$1 in
-		start\)
-			start \;\;
-		stop\)
-			stop \;\;
-		restart\)
+		start)
+			start ;;
+		stop)
+			stop ;;
+		restart)
 			stop
-			start \;\;
-		*\)
+			start ;;
+		*)
 			echo "Usage: iobroker \{start\|stop\|restart\}"
-			exit 1 \;\;
+			exit 1 ;;
 		esac
 		exit \$RETVAL
 		EOF
