@@ -587,7 +587,7 @@ fi
 unset AUTOMATED_INSTALLER
 
 # Detect IP address
-IP_COMMAND=$(type "ip" 2> /dev/null && echo "ip addr show" || echo "ifconfig")
+IP_COMMAND=$(type "ip" &> /dev/null && echo "ip addr show" || echo "ifconfig")
 IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | cut -d " " -f2 | cut -d "/" -f1)
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
