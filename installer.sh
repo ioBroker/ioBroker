@@ -236,7 +236,7 @@ install_package() {
 print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
 export AUTOMATED_INSTALLER="true"
-NUM_STEPS=5
+NUM_STEPS=4
 
 # Ask for the password as early as possible
 if [ "$IS_ROOT" != true ]; then
@@ -299,7 +299,7 @@ echo "Platform: $platform" >> INSTALLER_INFO.txt
 
 
 # ########################################################
-print_step "Downloading installation files" 3 "$NUM_STEPS"
+print_step "Installing ioBroker" 3 "$NUM_STEPS"
 
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
@@ -311,13 +311,11 @@ else
 	npm i $INSTALL_TARGET --loglevel error > /dev/null
 fi
 
-
-# ########################################################
-print_step "Installing ioBroker" 4 "$NUM_STEPS"
 npm i --production --loglevel error --unsafe-perm > /dev/null
 
 
-print_step "Finalizing installation" 5 "$NUM_STEPS"
+# ########################################################
+print_step "Finalizing installation" 4 "$NUM_STEPS"
 
 # Test which init system is used:
 INITSYSTEM="unknown"
