@@ -154,8 +154,6 @@ create_user_linux() {
 			SUDOERS_CONTENT+="$username ALL=(ALL) NOPASSWD: $full_cmd\n"
 		fi
 	done
-	echo "SUDOERS_CONTENT = "
-	echo -e $SUDOERS_CONTENT
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
@@ -182,9 +180,9 @@ create_user_linux() {
 	)
 	for grp in "${groups[@]}"; do
 		if [ "$IS_ROOT" = true ]; then
-			getent group $grp && usermod -a -G $grp $username
+			getent group $grp &> /dev/null && usermod -a -G $grp $username
 		else
-			getent group $grp && sudo usermod -a -G $grp $username
+			getent group $grp &> /dev/null && sudo usermod -a -G $grp $username
 		fi
 	done
 }
