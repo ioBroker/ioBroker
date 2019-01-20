@@ -225,9 +225,9 @@ install_package() {
 	if [ $? -ne 0 ]; then
 		# Install it
 		if [ "$IS_ROOT" = true ]; then
-			apt install -y $package
+			apt install -yq --no-install-recommends $package
 		else
-			sudo apt install -y $package
+			sudo apt install -yq --no-install-recommends $package
 		fi
 	fi
 }
@@ -299,16 +299,16 @@ print_step "Downloading installation files" 3 "$NUM_STEPS"
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then
 	echo "Installed as root" >> INSTALLER_INFO.txt
-	npm i $INSTALL_TARGET --loglevel error --unsafe-perm
+	npm i $INSTALL_TARGET --loglevel error --unsafe-perm > /dev/null
 else
 	echo "Installed as non-root user $USER" >> INSTALLER_INFO.txt
-	npm i $INSTALL_TARGET --loglevel error
+	npm i $INSTALL_TARGET --loglevel error > /dev/null
 fi
 
 
 # ########################################################
 print_step "Installing ioBroker" 4 "$NUM_STEPS"
-npm i --production --loglevel error --unsafe-perm
+npm i --production --loglevel error --unsafe-perm > /dev/null
 
 
 print_step "Finalizing installation" 5 "$NUM_STEPS"
