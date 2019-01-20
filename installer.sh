@@ -132,17 +132,28 @@ create_user_linux() {
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands may be executed as sudo without password
-	# TODO: Do we need others?
-	SUDOERS_CONTENT=$(cat <<- EOF
-		$username	ALL=(ALL)	ALL
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/shutdown -h now, /usr/bin/halt, /usr/bin/poweroff, /usr/bin/reboot
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/systemctl start, /usr/bin/systemctl stop
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/mount -o nosuid\,nodev\,noexec, /usr/bin/umount
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg, /usr/bin/make
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/ping, /usr/sbin/ping, /usr/bin/fping, /usr/sbin/fping, /usr/bin/arp-scan
-		$username	ALL=(ALL)	NOPASSWD: /usr/bin/setcap
-		EOF
+	declare -a commands=(
+		"shutdown -h now" "halt" "poweroff" "reboot"
+		"systemctl start" "systemctl stop"
+		"mount -o nosuid\,nodev\,noexec" "umount"
+		"apt-get" "apt" "dpkg" "make"
+		"ping" "fping"
+		"arp-scan"
+		"setcap"
 	)
+
+	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
+	for cmd in "${commands[@]}"; do
+		# Test each command if and where it is installed
+		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
+		cmd_path=$(which $cmd_bin 2> /dev/null)
+		if [ $? -eq 0 ]; then
+			# Then add the command to SUDOERS_CONTENT
+			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
+			SUDOERS_CONTENT+="$username ALL=(ALL) NOPASSWD: $full_cmd\n"
+		fi
+	done
+
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
 		echo "$SUDOERS_CONTENT" > ./temp_sudo_file
