@@ -336,12 +336,7 @@ if [ "$platform" = "linux" ]; then
 elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
-# Create executables in the ioBroker directory
-echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
-make_executable "$IOB_DIR/iobroker"
-echo "$IOB_EXECUTABLE" > $IOB_DIR/iob
-make_executable "$IOB_DIR/iob"
-# Symlink the binaries there
+# Symlink the binaries iob and iobroker
 if [ "$IS_ROOT" = true ]; then
 	ln -s $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
 	ln -s $IOB_DIR/iob $IOB_BIN_PATH/iob
@@ -349,6 +344,11 @@ else
 	sudo ln -s $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
 	sudo ln -s $IOB_DIR/iob $IOB_BIN_PATH/iob
 fi
+# Create executables in the ioBroker directory
+echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
+make_executable "$IOB_DIR/iobroker"
+echo "$IOB_EXECUTABLE" > $IOB_DIR/iob
+make_executable "$IOB_DIR/iob"
 
 
 # #############################
