@@ -136,7 +136,7 @@ create_user_linux() {
 	declare -a commands=(
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
-		"mount -o nosuid\,nodev\,noexec" "umount"
+		"mount" "umount"
 		"apt-get" "apt" "dpkg" "make"
 		"ping" "fping"
 		"arp-scan"
