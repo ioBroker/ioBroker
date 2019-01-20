@@ -367,12 +367,11 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
-		case \$1 in
-		start | stop | restart )
-			sudo systemctl \$1 iobroker ;;
-		*)
-			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5 ;;
-		esac
+		if [ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]; then
+			sudo systemctl \$1 iobroker
+		else
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+		fi
 		EOF
 	)
 else
@@ -468,18 +467,17 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
 			RETVAL=\$?
 		}
-		case \$1 in
-		start)
-			start ;;
-		stop)
-			stop ;;
-		restart)
+		if [ "\$1" = "start" ]; then
+			start
+		elif [ "\$1" = "stop" ]; then
 			stop
-			start ;;
-		*)
+		elif [ "\$1" = "restart" ]; then
+			stop
+			start
+		else
 			echo "Usage: iobroker \{start\|stop\|restart\}"
-			exit 1 ;;
-		esac
+			exit 1
+		fi
 		exit \$RETVAL
 		EOF
 	)
