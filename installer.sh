@@ -162,14 +162,14 @@ create_user_linux() {
 			chown root:$ROOT_GROUP ./temp_sudo_file &&
 			chmod 440 ./temp_sudo_file &&
 			cp ./temp_sudo_file $SUDOERS_FILE &&
-			echo "sudoers file created"
+			echo "Created $SUDOERS_FILE"
 	else
 		echo -e "$SUDOERS_CONTENT" > ./temp_sudo_file
 		sudo visudo -c -q -f ./temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
 			sudo chmod 440 ./temp_sudo_file &&
 			sudo cp ./temp_sudo_file $SUDOERS_FILE &&
-			echo "sudoers file created"
+			echo "Created $SUDOERS_FILE"
 	fi
 	# Add the user to all groups if they exist
 	declare -a groups=(
@@ -329,7 +329,7 @@ echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 
 # #############################
 # Create "iob" and "iobroker" executables
-if [ "$INITSYTEM" = "systemd" ]; then
+if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
