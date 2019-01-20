@@ -225,10 +225,11 @@ install_package() {
 	if [ $? -ne 0 ]; then
 		# Install it
 		if [ "$IS_ROOT" = true ]; then
-			apt install -yq --no-install-recommends $package
+			apt install -yq --no-install-recommends $package > /dev/null
 		else
-			sudo apt install -yq --no-install-recommends $package
+			sudo apt install -yq --no-install-recommends $package > /dev/null
 		fi
+		echo "Installed $package"
 	fi
 }
 
