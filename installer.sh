@@ -322,34 +322,54 @@ elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
 fi
+if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
+	INITSYSTEM="init.d"
+fi
 echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 
 # #############################
 # Create "iob" and "iobroker" executables
-IOB_EXECUTABLE=$(cat <<- EOF
-	#!/bin/bash
-	node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
-	EOF
-)
+if [ "$INITSYTEM" = "systemd" ]; then
+	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
+	IOB_EXECUTABLE=$(cat <<- EOF
+		#!/bin/bash
+		case \$1 in
+		start | stop | restart \)
+			systemctl \$1 iobroker \;\;
+		*\)
+			node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5 \;\;
+		esac
+		EOF
+	)
+else
+	IOB_EXECUTABLE=$(cat <<- EOF
+		#!/bin/bash
+		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+		EOF
+	)
+fi
 if [ "$platform" = "linux" ]; then
 	IOB_BIN_PATH=/usr/bin
 elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
-# Symlink the binaries iob and iobroker
+# Symlink the global binaries iob and iobroker
 if [ "$IS_ROOT" = true ]; then
-	ln -s $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-	ln -s $IOB_DIR/iob $IOB_BIN_PATH/iob
+	ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
+	ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
 else
-	sudo ln -s $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-	sudo ln -s $IOB_DIR/iob $IOB_BIN_PATH/iob
+	sudo ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
+	sudo ln -sfn $IOB_DIR/iob $IOB_BIN_PATH/iob
+fi
+# Symlink the local binary iob
+if [ "$IS_ROOT" = true ]; then
+	ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
+else
+	sudo ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 fi
 # Create executables in the ioBroker directory
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
-echo "$IOB_EXECUTABLE" > $IOB_DIR/iob
-make_executable "$IOB_DIR/iob"
-
 
 # #############################
 # Enable autostart
@@ -384,7 +404,7 @@ fix_dir_permissions() {
 }
 
 # Enable autostart
-if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; then
+if [[ "$INITSYSTEM" = "init.d" ]]; then
 	echo "Enabling autostart..."
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
@@ -415,7 +435,7 @@ if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; t
 			RETVAL=\$?
 		}
 		case \$1 in
-		start^\)
+		start\)
 			start \;\;
 		stop\)
 			stop \;\;
@@ -442,7 +462,7 @@ if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} || "$INITSYSTEM" = "init.d" ]]; t
 		sudo bash $SERVICE_FILENAME
 	fi
 	# Remember what we did
-	if [ -z ${IOB_FORCE_INITD+x} ]; then
+	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 		echo "Autostart: init.d (forced)" >> INSTALLER_INFO.txt
 	else
 		echo "Autostart: init.d" >> INSTALLER_INFO.txt
