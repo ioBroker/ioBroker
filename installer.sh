@@ -172,6 +172,19 @@ create_user_linux() {
 		fi
 	done
 
+	# Furthermore, allow all users to execute node iobroker.js as iobroker
+	if [ "$IOB_USER" != "$USER" ]; then
+		cmd="node $CONTROLLER_DIR/iobroker.js"
+		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
+		cmd_path=$(which $cmd_bin 2> /dev/null)
+		if [ $? -eq 0 ]; then
+			# Then add the command to SUDOERS_CONTENT
+			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
+			SUDOERS_CONTENT+="ALL ALL=($IOB_USER) NOPASSWD: $full_cmd\n"
+		fi
+	fi
+	# TODO: ^ Can we reduce code repetition in these 3 blocks? ^
+
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
 		echo -e "$SUDOERS_CONTENT" > ./temp_sudo_file
@@ -350,22 +363,27 @@ echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
 
 # #############################
 # Create "iob" and "iobroker" executables
+# If possible, try to always execute the iobroker CLI as the correct user
+IOB_NODE_CMDLINE="node"
+if [ "$IOB_USER" != "$USER" ]; then
+	IOB_NODE_CMDLINE="sudo -u $IOB_USER"
+fi
 if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
 		case \$1 in
 		start | stop | restart )
-			systemctl \$1 iobroker ;;
+			sudo systemctl \$1 iobroker ;;
 		*)
-			node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5 ;;
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5 ;;
 		esac
 		EOF
 	)
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
-		node $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+		$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
 		EOF
 	)
 fi
