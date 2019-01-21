@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-20" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-01-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -131,6 +131,11 @@ create_user_linux() {
 		fi
 		echo "User $username created"
 	fi
+	# Add the current non-root user to the iobroker group so he can access the iobroker dir
+	if [ "$username" != "$USER" ] && [ "$IS_ROOT" = false ]; then
+		sudo usermod -a -G $username $USER
+	fi
+
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands iobroker may execute as sudo without password
 	declare -a iob_commands=(
@@ -191,14 +196,14 @@ create_user_linux() {
 		visudo -c -q -f ./temp_sudo_file && \
 			chown root:$ROOT_GROUP ./temp_sudo_file &&
 			chmod 440 ./temp_sudo_file &&
-			cp ./temp_sudo_file $SUDOERS_FILE &&
+			mv ./temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	else
 		echo -e "$SUDOERS_CONTENT" > ./temp_sudo_file
 		sudo visudo -c -q -f ./temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
 			sudo chmod 440 ./temp_sudo_file &&
-			sudo cp ./temp_sudo_file $SUDOERS_FILE &&
+			sudo mv ./temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	fi
 	# Add the user to all groups if they exist
