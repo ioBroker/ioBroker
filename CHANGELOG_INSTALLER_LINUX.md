@@ -1,6 +1,11 @@
 # Changelog for Linux-Installer-Script
 
-## 2019-01-20 (https://github.com/ioBroker/ioBroker/pull/99)
+## 2019-01-21 (fixes #106, #107)
+* Move temp_sudo_file instead of copying
+* Add current user to iobroker group
+
+
+## 2019-01-20 (see #99)
 * User creation and specifying which commands may be executed as sudo without password
 * Creation of the startup files for /etc/init.d, systemd (Linux/OSX) and rc.d (FreeBSD), including detection of the node executable on startup
 * Creation of the executables iob and iobroker
