@@ -18,7 +18,7 @@
 * Run all iobroker commands as the iobroker user if possible
 * Fix iobroker start/stop/restart/status when systemd is used
 
-**Note:** Since so much is now being done in the installer script, manual installations on Linux/OSX/FreeBSD using `npm` are now forbidden.
+**Note:** Since so much is now being done in the installer script, manual installations on Linux/OSX/FreeBSD using `npm` are forbidden since `v2.0.0`, which was released on 2019-01-21.
 
 
 ## 2019-01-02 (and earlier)
