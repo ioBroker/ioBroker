@@ -520,6 +520,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Environment="NODE=\$(which node)"
 		ExecStart=/bin/bash -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
+		KillMode=process
 		
 		[Install]
 		WantedBy=multi-user.target

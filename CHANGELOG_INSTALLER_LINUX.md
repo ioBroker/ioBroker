@@ -1,9 +1,11 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-01-22
+* Use `KillMode=process` in `systemd` to prevent detached processes from being killed aswell
+
 ## 2019-01-21 (fixes #106, #107)
 * Move temp_sudo_file instead of copying
 * Add current user to iobroker group
-
 
 ## 2019-01-20 (see #99)
 * User creation and specifying which commands may be executed as sudo without password
@@ -12,9 +14,11 @@
 * Automated installation of commonly used packages
 * More logs into INSTALLER_INFO.txt
 * Automatic IP address detection for the final message
-* Detection if the installer script is being run as a result of npm install or some other command. - This should fix failures during execution of npm rebuild
+* Detection if the installer script is being run as a result of npm install or some other command. _This should fix failures during execution of npm rebuild._
 * Run all iobroker commands as the iobroker user if possible
 * Fix iobroker start/stop/restart/status when systemd is used
+
+**Note:** Since so much is now being done in the installer script, manual installations on Linux/OSX/FreeBSD using `npm` are now forbidden.
 
 
 ## 2019-01-02 (and earlier)
