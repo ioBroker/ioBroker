@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-21" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-01-22" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
