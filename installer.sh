@@ -141,7 +141,7 @@ create_user_linux() {
 	declare -a iob_commands=(
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
-		"mount" "umount"
+		"mount" "umount" "systemd-run"
 		"apt-get" "apt" "dpkg" "make"
 		"ping" "fping"
 		"arp-scan"
@@ -520,7 +520,6 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Environment="NODE=\$(which node)"
 		ExecStart=/bin/bash -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
-		KillMode=process
 		
 		[Install]
 		WantedBy=multi-user.target
