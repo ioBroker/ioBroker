@@ -2,7 +2,21 @@
 
 ## 2019-01-23
 * Revert the `KillMode` change
-* Redirect `iobroker {start,stop,restart} adaptername` to `node` when using `systemd`
+* Redirect `iobroker {start,stop,restart} adaptername` to `node` when using `systemd`.  
+**Note:** If you cannot start/stop adapters using the command line, you have to edit the iobroker binary:
+  ```
+  sudo nano $(which iob)
+  ```
+  and change
+  ```
+  if [ "$1" = "start" ] || [ "$1" = "stop" ] || [ "$1" = "restart" ]; then
+  ```
+  to
+  ```
+  if (( $# == 1 )) && ([ "$1" = "start" ] || [ "$1" = "stop" ] || [ "$1" = "restart" ]); then
+  ```
+  Then exit and save.
+
 
 ## 2019-01-22
 * Use `KillMode=process` in `systemd` to prevent detached processes from being killed aswell
