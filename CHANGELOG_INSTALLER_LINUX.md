@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-01-23
+* Revert the `KillMode` change
+* Redirect `iobroker {start,stop,restart} adaptername` to `node` when using `systemd`
+
 ## 2019-01-22
 * Use `KillMode=process` in `systemd` to prevent detached processes from being killed aswell
 
