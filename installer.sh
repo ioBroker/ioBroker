@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-23" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-01-25" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -325,14 +325,22 @@ case "$platform" in
 		)
 		for pkg in "${packages[@]}"; do
 			install_packages_freebsd $pkg
-			# we need to do some settting up things after installing the packages
-			# ensure dns_sd.h is where node-gyp expect it 
-			ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
-		    # enable dbus in the avahi configuration
-		    sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
-			# enable mdns usage for host resolution
-			sed -i -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
 		done
+		# we need to do some settting up things after installing the packages
+		# ensure dns_sd.h is where node-gyp expect it 
+		ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
+		# enable dbus in the avahi configuration
+		sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
+		# enable mdns usage for host resolution
+		sed -i -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
+		
+		# enable services avahi/dbus
+		sysrc -f /etc/rc.conf dbus_enable="YES"
+		sysrc -f /etc/rc.conf avahi_daemon_enable="YES"
+		
+		# start services
+		service dbus start
+		service avahi-daemon start
 		;;
 	*)
 		;;
