@@ -1,5 +1,11 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-01-25
+
+* (FreeBSD) Added added a procedure to handle the freebsd package installation (there is no apt on BSD). `install_package_freebsd()`
+* (FreeBSD) Added a rough list of packages for iobroker to run on FreeBSD (subject to further improvement).
+* (FreeBSD) Added config patches for the zero conf daemon processes, add them to rc startup and start them.
+
 ## 2019-01-23
 * Revert the `KillMode` change
 * Redirect `iobroker {start,stop,restart} adaptername` to `node` when using `systemd`.  
