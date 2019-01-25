@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-23" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-01-25" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -253,7 +253,7 @@ create_user_freebsd() {
 	done
 }
 
-install_package() {
+install_package_linux() {
 	package="$1"
 	# Test if the package is installed
 	dpkg -s "$package" &> /dev/null
@@ -268,6 +268,21 @@ install_package() {
 	fi
 }
 
+install_package_freebsd() {
+	package="$1"
+	# check if package is installed (pkg is nice enough to provide us with a exitcode)
+	if ! pkg info "$1" >/dev/null 2>&1; then
+		# Install it
+		if [ "$IS_ROOT" = true ]; then
+			pkg install --yes --quiet "$1" > /dev/null
+		else
+			sudo pkg install --yes --quiet "$1" > /dev/null
+		fi
+		echo "Installed $package"
+	fi
+}
+
+
 print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
 export AUTOMATED_INSTALLER="true"
@@ -275,24 +290,61 @@ NUM_STEPS=4
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
-if [ "$platform" != "osx" ]; then
-	declare -a packages=(
-		"acl" # To use setfacl
-		"sudo" # To use sudo (obviously)
-		# These are used by a couple of adapters and should therefore exist:
-		"build-essential"
-		"libavahi-compat-libdnssd-dev"
-		"libudev-dev"
-		"libpam0g-dev"
-		"pkg-config"
-		"git"
-		"curl"
-		"unzip"
-	)
-	for pkg in "${packages[@]}"; do
-		install_package $pkg
-	done
-fi
+
+# Determine the platform we operate on and select the installation routine/packages accordingly 
+case "$platform" in
+	"linux")
+		declare -a packages=(
+			"acl" # To use setfacl
+			"sudo" # To use sudo (obviously)
+			# These are used by a couple of adapters and should therefore exist:
+			"build-essential"
+			"libavahi-compat-libdnssd-dev"
+			"libudev-dev"
+			"libpam0g-dev"
+			"pkg-config"
+			"git"
+			"curl"
+			"unzip"
+		)
+		for pkg in "${packages[@]}"; do
+			install_package_linux $pkg
+		done
+		;;
+	"freebsd")
+		declare -a packages=(
+			"sudo"
+			"git"
+			"curl"
+			"bash"
+			"unzip"
+			"avahi-libdns" # avahi gets installed along with this
+			"dbus"
+			"nss_mdns" # needed for the mdns host resolution 
+			"gcc"
+		)
+		for pkg in "${packages[@]}"; do
+			install_packages_freebsd $pkg
+		done
+		# we need to do some settting up things after installing the packages
+		# ensure dns_sd.h is where node-gyp expect it 
+		ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
+		# enable dbus in the avahi configuration
+		sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
+		# enable mdns usage for host resolution
+		sed -i -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
+		
+		# enable services avahi/dbus
+		sysrc -f /etc/rc.conf dbus_enable="YES"
+		sysrc -f /etc/rc.conf avahi_daemon_enable="YES"
+		
+		# start services
+		service dbus start
+		service avahi-daemon start
+		;;
+	*)
+		;;
+esac
 # TODO: Which other packages do we need by default?
 
 # ########################################################
