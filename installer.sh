@@ -433,6 +433,10 @@ elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
+elif [[ "$platform" = "osx" ]]; then
+	INITSYSTEM="launchctl"
+	PLIST_FILE_LABEL="org.ioBroker.LaunchAtLogin"
+	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 fi
 if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 	INITSYSTEM="init.d"
@@ -453,6 +457,20 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		#!/bin/bash
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
+		else
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+		fi
+		EOF
+	)
+elif [ "$INITSYSTEM" = "launchctl" ]; then
+	# launchctl needs unload service to stop iobroker
+	IOB_EXECUTABLE=$(cat <<- EOF
+		#!/bin/bash
+		if (( \$# == 1 )) && ([ "\$1" = "start" ]); then
+			launchctl load -w $SERVICE_FILENAME
+		elif (( \$# == 1 )) && ([ "\$1" = "stop" ]); then
+			launchctl unload -w $SERVICE_FILENAME
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
 		fi
@@ -688,6 +706,46 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	# Enable startup and start the service
 	sysrc iobroker_enable=YES
 	service iobroker start
+
+elif [ "$INITSYSTEM" = "launchctl" ]; then
+	echo "Enabling autostart..."
+
+	NODECMD=$(which node)
+	# osx use launchd.plist init system.
+	PLIST_FILE=$(cat <<- EOF
+		<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+		<plist version="1.0">
+		<dict>
+			<key>Label</key>
+			<string>${PLIST_FILE_LABEL}</string>
+			<key>ProgramArguments</key>
+			<array>
+				<string>${NODECMD}</string>
+				<string>${CONTROLLER_DIR}/iobroker.js</string>
+				<string>start</string>
+			</array>
+			<key>KeepAlive</key>
+			<true/>
+			<key>RunAtLoad</key>
+			<true/>
+		</dict>
+		</plist>
+
+		EOF
+	)
+
+	# Create the startup file, give it the correct permissions and start ioBroker
+	echo "$PLIST_FILE" > $SERVICE_FILENAME
+
+	# Enable startup and start the service
+	launchctl list ${PLIST_FILE_LABEL} &> /dev/null
+	if [ $? -eq 0 ]; then
+		echo "Reload service ${PLIST_FILE_LABEL}"
+		launchctl unload -w $SERVICE_FILENAME
+	fi
+	launchctl load -w $SERVICE_FILENAME
 
 else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
