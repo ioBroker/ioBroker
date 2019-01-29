@@ -762,7 +762,11 @@ unset AUTOMATED_INSTALLER
 
 # Detect IP address
 IP_COMMAND=$(type "ip" &> /dev/null && echo "ip addr show" || echo "ifconfig")
-IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
+if [ "$platform" = "osx" ]; then
+	IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+" | head -1)
+else
+	IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
+fi
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
