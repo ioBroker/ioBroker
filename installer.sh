@@ -282,6 +282,20 @@ install_package_freebsd() {
 	fi
 }
 
+install_package_macos() {
+	package="$1"
+	# Test if the package is installed (Use brew to install essential tools)
+	brew list | grep "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Install it
+		brew install $package &> /dev/null
+		if [ $? -eq 0 ]; then
+			echo "Installed $package"
+		else
+			echo "$package is not installed"
+		fi
+	fi
+}
 
 print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
@@ -341,6 +355,18 @@ case "$platform" in
 		# start services
 		service dbus start
 		service avahi-daemon start
+		;;
+	"osx")
+		declare -a packages=(
+			# These are used by a couple of adapters and should therefore exist:
+			"pkg-config"
+			"git"
+			"curl"
+			"unzip"
+		)
+		for pkg in "${packages[@]}"; do
+			install_package_macos $pkg
+		done
 		;;
 	*)
 		;;
