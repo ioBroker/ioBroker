@@ -357,16 +357,24 @@ case "$platform" in
 		service avahi-daemon start
 		;;
 	"osx")
-		declare -a packages=(
-			# These are used by a couple of adapters and should therefore exist:
-			"pkg-config"
-			"git"
-			"curl"
-			"unzip"
-		)
-		for pkg in "${packages[@]}"; do
-			install_package_macos $pkg
-		done
+		# Use brew to install tools may needed, if user's osx not installed brew before, skip this check
+		brew -v &> /dev/null
+		if [ $? -eq 0 ]; then
+			declare -a packages=(
+				# These are used by a couple of adapters and should therefore exist:
+				"pkg-config"
+				"git"
+				"curl"
+				"unzip"
+			)
+			for pkg in "${packages[@]}"; do
+				install_package_macos $pkg
+			done
+		else
+			echo "${yellow}Some dependency utils need installed though brew, which is not installed."
+			echo "If the installation is failed due to dependedncy utils not found."
+			echo "Please install it manually.${normal}"
+		fi
 		;;
 	*)
 		;;
