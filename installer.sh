@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-29" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-01-30" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -221,6 +221,7 @@ create_user_linux() {
 		fi
 	done
 }
+
 create_user_freebsd() {
 	username="$1"
 	id "$username" &> /dev/null
@@ -292,7 +293,7 @@ install_package_macos() {
 		if [ $? -eq 0 ]; then
 			echo "Installed $package"
 		else
-			echo "$package is not installed"
+			echo "$package was not installed"
 		fi
 	fi
 }
@@ -357,7 +358,7 @@ case "$platform" in
 		service avahi-daemon start
 		;;
 	"osx")
-		# Use brew to install tools may needed, if user's osx not installed brew before, skip this check
+		# Test if brew is installed. If it is, install some packages that are often used.
 		brew -v &> /dev/null
 		if [ $? -eq 0 ]; then
 			declare -a packages=(
@@ -371,9 +372,9 @@ case "$platform" in
 				install_package_macos $pkg
 			done
 		else
-			echo "${yellow}Some dependency utils need installed though brew, which is not installed."
-			echo "If the installation is failed due to dependedncy utils not found."
-			echo "Please install it manually.${normal}"
+			echo "${yellow}Since brew is not installed, frequently-used dependencies could not be installed."
+			echo "Before installing some adapters, you might have to install some packages yourself."
+			echo "Please check the adapter manuals before installing them.${normal}"
 		fi
 		;;
 	*)
@@ -603,6 +604,8 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 		set_root_permissions $SERVICE_FILENAME
 		sudo bash $SERVICE_FILENAME
 	fi
+	
+	echo "Autostart enabled!"
 	# Remember what we did
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 		echo "Autostart: init.d (forced)" >> INSTALLER_INFO.txt
@@ -649,6 +652,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		sudo systemctl enable iobroker
 		sudo systemctl start iobroker
 	fi
+
 	echo "Autostart enabled!"
 	echo "Autostart: systemd" >> INSTALLER_INFO.txt
 
@@ -714,6 +718,9 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	# Enable startup and start the service
 	sysrc iobroker_enable=YES
 	service iobroker start
+	
+	echo "Autostart enabled!"
+	echo "Autostart: rc.d" >> INSTALLER_INFO.txt
 
 elif [ "$INITSYSTEM" = "launchctl" ]; then
 	echo "Enabling autostart..."
@@ -750,10 +757,13 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 	# Enable startup and start the service
 	launchctl list ${PLIST_FILE_LABEL} &> /dev/null
 	if [ $? -eq 0 ]; then
-		echo "Reload service ${PLIST_FILE_LABEL}"
+		echo "Reloading service ${PLIST_FILE_LABEL}"
 		launchctl unload -w $SERVICE_FILENAME
 	fi
 	launchctl load -w $SERVICE_FILENAME
+
+	echo "Autostart enabled!"
+	echo "Autostart: launchctl" >> INSTALLER_INFO.txt
 
 else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
