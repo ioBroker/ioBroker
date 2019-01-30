@@ -1,7 +1,9 @@
 # Changelog for Linux-Installer-Script
 
-## 2019-01-25
+## 2019-01-30
+* Give NodeJS access to privileged ports (<1024 and Bluetooth)
 
+## 2019-01-25
 * (FreeBSD) Added added a procedure to handle the freebsd package installation (there is no apt on BSD). `install_package_freebsd()`
 * (FreeBSD) Added a rough list of packages for iobroker to run on FreeBSD (subject to further improvement).
 * (FreeBSD) Added config patches for the zero conf daemon processes, add them to rc startup and start them.
