@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-01-25" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-01-30" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -297,6 +297,7 @@ case "$platform" in
 		declare -a packages=(
 			"acl" # To use setfacl
 			"sudo" # To use sudo (obviously)
+			"libcap2-bin" # To give nodejs access to protected ports
 			# These are used by a couple of adapters and should therefore exist:
 			"build-essential"
 			"libavahi-compat-libdnssd-dev"
@@ -310,6 +311,12 @@ case "$platform" in
 		for pkg in "${packages[@]}"; do
 			install_package_linux $pkg
 		done
+
+		# ==================
+		# Configure packages
+
+		# Give nodejs access to protected ports
+		sudo setcap cap_net_bind_service=+eip $(eval readlink -f `which node`)
 		;;
 	"freebsd")
 		declare -a packages=(
