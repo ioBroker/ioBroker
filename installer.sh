@@ -221,6 +221,7 @@ create_user_linux() {
 		fi
 	done
 }
+
 create_user_freebsd() {
 	username="$1"
 	id "$username" &> /dev/null
@@ -282,6 +283,20 @@ install_package_freebsd() {
 	fi
 }
 
+install_package_macos() {
+	package="$1"
+	# Test if the package is installed (Use brew to install essential tools)
+	brew list | grep "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Install it
+		brew install $package &> /dev/null
+		if [ $? -eq 0 ]; then
+			echo "Installed $package"
+		else
+			echo "$package was not installed"
+		fi
+	fi
+}
 
 print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
@@ -349,6 +364,26 @@ case "$platform" in
 		service dbus start
 		service avahi-daemon start
 		;;
+	"osx")
+		# Test if brew is installed. If it is, install some packages that are often used.
+		brew -v &> /dev/null
+		if [ $? -eq 0 ]; then
+			declare -a packages=(
+				# These are used by a couple of adapters and should therefore exist:
+				"pkg-config"
+				"git"
+				"curl"
+				"unzip"
+			)
+			for pkg in "${packages[@]}"; do
+				install_package_macos $pkg
+			done
+		else
+			echo "${yellow}Since brew is not installed, frequently-used dependencies could not be installed."
+			echo "Before installing some adapters, you might have to install some packages yourself."
+			echo "Please check the adapter manuals before installing them.${normal}"
+		fi
+		;;
 	*)
 		;;
 esac
@@ -414,6 +449,10 @@ elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
+elif [[ "$platform" = "osx" ]]; then
+	INITSYSTEM="launchctl"
+	PLIST_FILE_LABEL="org.ioBroker.LaunchAtLogin"
+	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 fi
 if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 	INITSYSTEM="init.d"
@@ -434,6 +473,20 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		#!/bin/bash
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
+		else
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+		fi
+		EOF
+	)
+elif [ "$INITSYSTEM" = "launchctl" ]; then
+	# launchctl needs unload service to stop iobroker
+	IOB_EXECUTABLE=$(cat <<- EOF
+		#!/bin/bash
+		if (( \$# == 1 )) && ([ "\$1" = "start" ]); then
+			launchctl load -w $SERVICE_FILENAME
+		elif (( \$# == 1 )) && ([ "\$1" = "stop" ]); then
+			launchctl unload -w $SERVICE_FILENAME
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
 		fi
@@ -558,6 +611,8 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 		set_root_permissions $SERVICE_FILENAME
 		sudo bash $SERVICE_FILENAME
 	fi
+	
+	echo "Autostart enabled!"
 	# Remember what we did
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 		echo "Autostart: init.d (forced)" >> INSTALLER_INFO.txt
@@ -604,6 +659,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		sudo systemctl enable iobroker
 		sudo systemctl start iobroker
 	fi
+
 	echo "Autostart enabled!"
 	echo "Autostart: systemd" >> INSTALLER_INFO.txt
 
@@ -669,6 +725,52 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	# Enable startup and start the service
 	sysrc iobroker_enable=YES
 	service iobroker start
+	
+	echo "Autostart enabled!"
+	echo "Autostart: rc.d" >> INSTALLER_INFO.txt
+
+elif [ "$INITSYSTEM" = "launchctl" ]; then
+	echo "Enabling autostart..."
+
+	NODECMD=$(which node)
+	# osx use launchd.plist init system.
+	PLIST_FILE=$(cat <<- EOF
+		<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+		<plist version="1.0">
+		<dict>
+			<key>Label</key>
+			<string>${PLIST_FILE_LABEL}</string>
+			<key>ProgramArguments</key>
+			<array>
+				<string>${NODECMD}</string>
+				<string>${CONTROLLER_DIR}/iobroker.js</string>
+				<string>start</string>
+			</array>
+			<key>KeepAlive</key>
+			<true/>
+			<key>RunAtLoad</key>
+			<true/>
+		</dict>
+		</plist>
+
+		EOF
+	)
+
+	# Create the startup file, give it the correct permissions and start ioBroker
+	echo "$PLIST_FILE" > $SERVICE_FILENAME
+
+	# Enable startup and start the service
+	launchctl list ${PLIST_FILE_LABEL} &> /dev/null
+	if [ $? -eq 0 ]; then
+		echo "Reloading service ${PLIST_FILE_LABEL}"
+		launchctl unload -w $SERVICE_FILENAME
+	fi
+	launchctl load -w $SERVICE_FILENAME
+
+	echo "Autostart enabled!"
+	echo "Autostart: launchctl" >> INSTALLER_INFO.txt
 
 else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
@@ -685,7 +787,11 @@ unset AUTOMATED_INSTALLER
 
 # Detect IP address
 IP_COMMAND=$(type "ip" &> /dev/null && echo "ip addr show" || echo "ifconfig")
-IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
+if [ "$platform" = "osx" ]; then
+	IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+" | head -1)
+else
+	IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
+fi
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
