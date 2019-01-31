@@ -1,7 +1,8 @@
 # Changelog for Linux-Installer-Script
 
 ## 2019-01-30
-* Give NodeJS access to privileged ports (<1024 and Bluetooth)
+* (Linux) Give NodeJS access to privileged ports (<1024 and Bluetooth)
+* (MacOS) Add package installing support (brew) and autostart support for 
 
 ## 2019-01-25
 * (FreeBSD) Added added a procedure to handle the freebsd package installation (there is no apt on BSD). `install_package_freebsd()`
