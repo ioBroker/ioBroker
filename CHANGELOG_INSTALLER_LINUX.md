@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-02-03
+* (Linux) Add iobroker user to the i2c group
+
 ## 2019-01-30
 * (Linux) Give NodeJS access to privileged ports (<1024 and Bluetooth)
 * (MacOS) Add package installing support (brew) and autostart support for 
