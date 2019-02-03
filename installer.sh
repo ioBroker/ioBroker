@@ -211,6 +211,7 @@ create_user_linux() {
 		bluetooth
 		dialout
 		gpio
+		i2c
 		tty
 	)
 	for grp in "${groups[@]}"; do
@@ -243,6 +244,7 @@ create_user_freebsd() {
 		bluetooth
 		dialout
 		gpio
+		i2c
 		tty
 	)
 	for grp in "${groups[@]}"; do
