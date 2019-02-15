@@ -212,6 +212,7 @@ create_user_linux() {
 		dialout
 		gpio
 		i2c
+		redis
 		tty
 	)
 	for grp in "${groups[@]}"; do
@@ -245,6 +246,7 @@ create_user_freebsd() {
 		dialout
 		gpio
 		i2c
+		redis
 		tty
 	)
 	for grp in "${groups[@]}"; do
