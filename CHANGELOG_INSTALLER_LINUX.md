@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-02-15
+* (Linux) Add iobroker user to the redis group
+
 ## 2019-02-03
 * (Linux) Add iobroker user to the i2c group
 

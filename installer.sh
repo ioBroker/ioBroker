@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-02-03" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-02-15" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -212,6 +212,7 @@ create_user_linux() {
 		dialout
 		gpio
 		i2c
+		redis
 		tty
 	)
 	for grp in "${groups[@]}"; do
@@ -245,6 +246,7 @@ create_user_freebsd() {
 		dialout
 		gpio
 		i2c
+		redis
 		tty
 	)
 	for grp in "${groups[@]}"; do
