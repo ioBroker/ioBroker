@@ -209,7 +209,7 @@ create_user_linux() {
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
-		rm SUDOERS_FILE
+		rm $SUDOERS_FILE
 		echo -e "$SUDOERS_CONTENT" > ./temp_sudo_file
 		visudo -c -q -f ./temp_sudo_file && \
 			chown root:$ROOT_GROUP ./temp_sudo_file &&
@@ -217,7 +217,7 @@ create_user_linux() {
 			mv ./temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	else
-		sudo rm SUDOERS_FILE
+		sudo rm $SUDOERS_FILE
 		echo -e "$SUDOERS_CONTENT" > ./temp_sudo_file
 		sudo visudo -c -q -f ./temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
@@ -352,7 +352,7 @@ fix_dir_permissions() {
 	fi
 }
 
-print_bold "Welcome to the ioBroker installation fixer!" "Script version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 
 NUM_STEPS=4
 
