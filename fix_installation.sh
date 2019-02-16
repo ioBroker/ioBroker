@@ -36,7 +36,7 @@ INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
 
 # Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
-	echo "ioBroker is not installed! Cannot fix anything..."
+	echo "ioBroker is not installed in $IOB_DIR! Cannot fix anything..."
 	exit 1
 fi
 
