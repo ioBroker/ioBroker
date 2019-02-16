@@ -209,7 +209,7 @@ create_user_linux() {
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
-		rm $SUDOERS_FILE
+		rm $SUDOERS_FILE &> /dev/null
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		visudo -c -q -f ~/temp_sudo_file && \
 			chown root:$ROOT_GROUP ~/temp_sudo_file &&
@@ -217,7 +217,7 @@ create_user_linux() {
 			mv ~/temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	else
-		sudo rm $SUDOERS_FILE
+		sudo rm $SUDOERS_FILE &> /dev/null
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		sudo visudo -c -q -f ~/temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ~/temp_sudo_file &&
