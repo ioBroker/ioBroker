@@ -337,7 +337,9 @@ fix_dir_permissions() {
 		# ioBroker install dir
 		sudo chown -R $IOB_USER:$IOB_USER $IOB_DIR
 		# and the npm cache dir
-		sudo chown -R $IOB_USER:$IOB_USER "/home/$IOB_USER/.npm"
+		if [ -d "/home/$IOB_USER/.npm" ]; then
+			sudo chown -R $IOB_USER:$IOB_USER "/home/$IOB_USER/.npm"
+		fi
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G $IOB_USER $USER
