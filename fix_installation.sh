@@ -34,8 +34,17 @@ fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
 INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
 
+# Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
 	echo "ioBroker is not installed! Cannot fix anything..."
+	exit 1
+fi
+
+# Test if ioBroker is running
+if ps aux | grep "io\." &> /dev/null ; then
+	echo "ioBroker or some processes are still running:"
+	ps aux | grep -o "io\.\w*\.[0-9]*"
+	echo "Please stop them first and try again!"
 	exit 1
 fi
 
