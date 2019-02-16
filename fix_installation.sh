@@ -354,7 +354,7 @@ fix_dir_permissions() {
 
 print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 
-NUM_STEPS=4
+NUM_STEPS=3
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
