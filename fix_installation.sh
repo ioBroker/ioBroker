@@ -329,7 +329,9 @@ fix_dir_permissions() {
 		# ioBroker install dir
 		chown -R $IOB_USER:$IOB_USER $IOB_DIR
 		# and the npm cache dir
-		chown -R $IOB_USER:$IOB_USER "/home/$IOB_USER/.npm"
+		if [ -d "/home/$IOB_USER/.npm" ]; then
+			chown -R $IOB_USER:$IOB_USER "/home/$IOB_USER/.npm"
+		fi
 		# No need to give special permissions, root has access anyways
 	else
 		# ioBroker install dir
@@ -474,9 +476,11 @@ SYSTEMD_FILE="/lib/systemd/system/iobroker.service"
 if [ -f "$SYSTEMD_FILE" ]; then
 	if [ "$IS_ROOT" = true ]; then
 		rm "$SYSTEMD_FILE"
+		systemctl stop iobroker &> /dev/null
 		systemctl daemon-reload
 	else
 		sudo rm "$SYSTEMD_FILE"
+		systemctl stop iobroker &> /dev/null
 		sudo systemctl daemon-reload
 	fi
 fi
