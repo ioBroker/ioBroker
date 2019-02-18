@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-01-20" # format YYYY-MM-DD
+FIXER_VERSION="2019-02-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -53,6 +53,8 @@ if [ ! -f "$INSTALLER_INFO_FILE" ]; then
 	touch $INSTALLER_INFO_FILE
 	chmod 777 $INSTALLER_INFO_FILE
 fi
+echo "Fixer version: $FIXER_VERSION" >> $INSTALLER_INFO_FILE
+echo "Fix date $(date +%F)" >> $INSTALLER_INFO_FILE
 
 # The user to run ioBroker as
 IOB_USER="iobroker"
