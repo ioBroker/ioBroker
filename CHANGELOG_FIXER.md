@@ -1,4 +1,4 @@
 # Changelog for Linux-Fixer-Script
 
-## 2019-02-18
+## 2019-02-21
 * Brings existing installations up to par with installer version 2019-02-15
