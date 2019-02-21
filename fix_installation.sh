@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-02-18" # format YYYY-MM-DD
+FIXER_VERSION="2019-02-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -138,6 +138,29 @@ make_executable() {
 	fi
 }
 
+change_owner() {
+	user="$1"
+	file="$2"
+	if [ "$platform" == "osx" ]; then
+		owner="$user"
+	else
+		owner="$user:$user"
+	fi
+	cmdline="chown"
+	if [ "$IS_ROOT" != true ]; then
+		# use sudo as non-root
+		cmdline="sudo $cmdline"
+	fi
+	if [ -d $file ]; then
+		# recursively chown directories
+		cmdline="$cmdline -R"
+	elif [ -L $file ]; then
+		# change ownership of symbolic links
+		cmdline="$cmdline -h"
+	fi
+	$cmdline $owner $file
+}
+
 create_user_linux() {
 	username="$1"
 	id "$username" &> /dev/null;
@@ -211,7 +234,7 @@ create_user_linux() {
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	if [ "$IS_ROOT" = true ]; then
-		rm $SUDOERS_FILE &> /dev/null
+		rm -f $SUDOERS_FILE
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		visudo -c -q -f ~/temp_sudo_file && \
 			chown root:$ROOT_GROUP ~/temp_sudo_file &&
@@ -219,7 +242,7 @@ create_user_linux() {
 			mv ~/temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	else
-		sudo rm $SUDOERS_FILE &> /dev/null
+		sudo rm -f $SUDOERS_FILE
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		sudo visudo -c -q -f ~/temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ~/temp_sudo_file &&
@@ -327,21 +350,13 @@ install_package_macos() {
 fix_dir_permissions() {
 	# Give the user access to all necessary directories
 	echo "Fixing directory permissions..."
-	if [ "$IS_ROOT" = true ]; then
-		# ioBroker install dir
-		chown -R $IOB_USER:$IOB_USER $IOB_DIR
-		# and the npm cache dir
-		if [ -d "/home/$IOB_USER/.npm" ]; then
-			chown -R $IOB_USER:$IOB_USER "/home/$IOB_USER/.npm"
-		fi
-		# No need to give special permissions, root has access anyways
-	else
-		# ioBroker install dir
-		sudo chown -R $IOB_USER:$IOB_USER $IOB_DIR
-		# and the npm cache dir
-		if [ -d "/home/$IOB_USER/.npm" ]; then
-			sudo chown -R $IOB_USER:$IOB_USER "/home/$IOB_USER/.npm"
-		fi
+	# ioBroker install dir
+	change_owner $IOB_USER $IOB_DIR
+	# and the npm cache dir
+	if [ -d "/home/$IOB_USER/.npm" ]; then
+		change_owner $IOB_USER "/home/$IOB_USER/.npm"
+	fi
+	if [ "$IS_ROOT" != true ]; then
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G $IOB_USER $USER
@@ -577,15 +592,15 @@ elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
 fi
 # First remove the old binaries and symlinks
 if [ "$IS_ROOT" = true ]; then
-	rm $IOB_DIR/iobroker 
-	rm $IOB_BIN_PATH/iobroker
-	rm $IOB_DIR/iob
-	rm $IOB_BIN_PATH/iob
+	rm -f $IOB_DIR/iobroker 
+	rm -f $IOB_BIN_PATH/iobroker
+	rm -f $IOB_DIR/iob
+	rm -f $IOB_BIN_PATH/iob
 else
-	sudo rm $IOB_DIR/iobroker 
-	sudo rm $IOB_BIN_PATH/iobroker
-	sudo rm $IOB_DIR/iob
-	sudo rm $IOB_BIN_PATH/iob
+	sudo rm -f $IOB_DIR/iobroker 
+	sudo rm -f $IOB_BIN_PATH/iobroker
+	sudo rm -f $IOB_DIR/iob
+	sudo rm -f $IOB_BIN_PATH/iob
 fi
 
 # Symlink the global binaries iob and iobroker
@@ -605,6 +620,9 @@ fi
 # Create executables in the ioBroker directory
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
+# and give them the correct ownership
+change_owner $IOB_USER "$IOB_DIR/iobroker"
+change_owner $IOB_USER "$IOB_DIR/iob"
 
 # Enable autostart
 if [[ "$INITSYSTEM" = "init.d" ]]; then
@@ -656,11 +674,9 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 	if [ "$IS_ROOT" = true ]; then
 		echo "$INITD_FILE" > $SERVICE_FILENAME
 		set_root_permissions $SERVICE_FILENAME
-		bash $SERVICE_FILENAME
 	else
 		echo "$INITD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
 		set_root_permissions $SERVICE_FILENAME
-		sudo bash $SERVICE_FILENAME
 	fi
 	# Remember what we did
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
@@ -697,7 +713,6 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 
 		systemctl daemon-reload
 		systemctl enable iobroker
-		systemctl start iobroker
 	else
 		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
 		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
@@ -705,7 +720,6 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 
 		sudo systemctl daemon-reload
 		sudo systemctl enable iobroker
-		sudo systemctl start iobroker
 	fi
 	echo "Autostart enabled!"
 	echo "Autostart: systemd" >> "$INSTALLER_INFO_FILE"
@@ -768,9 +782,8 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	fi
 	set_root_permissions $SERVICE_FILENAME
 
-	# Enable startup and start the service
+	# Enable startup
 	sysrc iobroker_enable=YES
-	service iobroker start
 
 	echo "Autostart enabled!"
 	echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
@@ -819,3 +832,5 @@ else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
 	echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
 fi
+
+print_bold "${green}Your installation was fixed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker again!"
