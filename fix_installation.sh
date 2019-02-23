@@ -41,9 +41,9 @@ if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
 fi
 
 # Test if ioBroker is running
-if ps aux | grep "io\." &> /dev/null ; then
+if ps aux | grep " io\." &> /dev/null ; then
 	echo "ioBroker or some processes are still running:"
-	ps aux | grep -o "io\.\w*\.[0-9]*"
+	ps aux | grep -o " io\.\w*\.[0-9]*"
 	echo "Please stop them first and try again!"
 	exit 1
 fi
