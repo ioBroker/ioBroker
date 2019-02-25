@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-02-25
+* fix setcap and include all in one command
+
 ## 2019-02-23
 * Give nodejs access to raw devices like ble
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-02-23" # format YYYY-MM-DD
+FIXER_VERSION="2019-02-25" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -403,10 +403,8 @@ case "$platform" in
 		# ==================
 		# Configure packages
 
-		# Give nodejs access to protected ports
-		sudo setcap cap_net_bind_service+eip $(eval readlink -f `which node`)
-		# Give nodejs access to raw devices like ble
-		sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which node`)
+		# Give nodejs access to protected ports and raw devices like ble
+		sudo setcap 'cap_net_bind_service+eip cap_net_raw,cap_net_admin+eip' $(eval readlink -f `which node`)
 		;;
 	"freebsd")
 		declare -a packages=(
