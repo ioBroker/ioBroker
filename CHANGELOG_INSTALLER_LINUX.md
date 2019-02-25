@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-02-23
+* Give nodejs access to raw devices like ble
+
 ## 2019-02-15
 * (Linux) Add iobroker user to the redis group
 

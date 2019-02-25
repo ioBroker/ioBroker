@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-02-15" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-02-23" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -335,7 +335,9 @@ case "$platform" in
 		# Configure packages
 
 		# Give nodejs access to protected ports
-		sudo setcap cap_net_bind_service=+eip $(eval readlink -f `which node`)
+		sudo setcap cap_net_bind_service+eip $(eval readlink -f `which node`)
+		# Give nodejs access to raw devices like ble
+		sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which node`)
 		;;
 	"freebsd")
 		declare -a packages=(

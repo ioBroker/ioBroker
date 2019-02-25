@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-02-21" # format YYYY-MM-DD
+FIXER_VERSION="2019-02-23" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -41,9 +41,9 @@ if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
 fi
 
 # Test if ioBroker is running
-if ps aux | grep "io\." &> /dev/null ; then
+if ps aux | grep " io\." &> /dev/null ; then
 	echo "ioBroker or some processes are still running:"
-	ps aux | grep -o "io\.\w*\.[0-9]*"
+	ps aux | grep -o " io\.\w*\.[0-9]*"
 	echo "Please stop them first and try again!"
 	exit 1
 fi
@@ -404,7 +404,9 @@ case "$platform" in
 		# Configure packages
 
 		# Give nodejs access to protected ports
-		sudo setcap cap_net_bind_service=+eip $(eval readlink -f `which node`)
+		sudo setcap cap_net_bind_service+eip $(eval readlink -f `which node`)
+		# Give nodejs access to raw devices like ble
+		sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which node`)
 		;;
 	"freebsd")
 		declare -a packages=(
