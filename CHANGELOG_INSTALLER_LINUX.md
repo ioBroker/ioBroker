@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-02-27
+* Add redis as a dependency to the systemd unit to avoid deadlocks on shutdown
+
 ## 2019-02-25
 * fix setcap and include all in one command
 

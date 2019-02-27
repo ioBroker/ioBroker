@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-02-25" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-02-27" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -631,7 +631,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		[Unit]
 		Description=ioBroker Server
 		Documentation=http://iobroker.net
-		After=network.target
+		After=network.target redis.service
+		Wants=redis.service
 		
 		[Service]
 		Type=simple
