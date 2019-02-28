@@ -478,7 +478,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		else
-			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
 		EOF
 	)
@@ -492,14 +492,14 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		else
-			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
 		EOF
 	)
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!/bin/bash
-		$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$1 \$2 \$3 \$4 \$5
+		$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		EOF
 	)
 fi
