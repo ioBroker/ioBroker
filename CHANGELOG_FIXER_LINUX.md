@@ -2,6 +2,7 @@
 
 ## 2019-03-01
 * Add redis as a dependency to the `systemd` unit and `init.d` script to avoid deadlocks on shutdown
+* Removed limitation for number of arguments for iobroker
 
 ## 2019-02-25
 * Fix setcap and include all in one command
