@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-02-25" # format YYYY-MM-DD
+FIXER_VERSION="2019-03-01" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -634,7 +634,9 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 		### BEGIN INIT INFO
 		# Provides:          iobroker.sh
 		# Required-Start:    \$network \$local_fs \$remote_fs
-		# Required-Stop::    \$network \$local_fs \$remote_fs
+		# Required-Stop:     \$network \$local_fs \$remote_fs
+		# Should-Start:      redis-server
+		# Should-Stop:       redis-server
 		# Default-Start:     2 3 4 5
 		# Default-Stop:      0 1 6
 		# Short-Description: starts ioBroker
@@ -692,7 +694,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		[Unit]
 		Description=ioBroker Server
 		Documentation=http://iobroker.net
-		After=network.target
+		After=network.target redis.service
+		Wants=redis.service
 		
 		[Service]
 		Type=simple
