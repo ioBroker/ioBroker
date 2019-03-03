@@ -1,31 +1,41 @@
 version: 'test-{build}'
+
+# Test against this version of Node.js
+# See https://nodejs.org/en/download/releases/ for a table of node and bundled npm versions
+
 environment:
   matrix:
-    - nodejs_version: '6'
-    - nodejs_version: '8.11'
-    - nodejs_version: '8.12'
-      npm_version: 5.7.1
-    - nodejs_version: '10.2'
-    - nodejs_version: '10'
-      npm_version: 5.7.1
-    - nodejs_version: '8.12'
-    - nodejs_version: '10'
-    - nodejs_version: '8'
+    # These tests should fail:
+    - nodejs_version: "4" # old Node
+    - nodejs_version: "6" # old Node
+    - nodejs_version: "8.11" # modern Node, but comes with old NPM
+    - nodejs_version: "8.12" # modern Node, old NPM manually installed
+      npm_version: "5.7.1"
+    - nodejs_version: "10.2" # modern Node, but comes with old NPM
+    - nodejs_version: "10" # modern Node, old NPM manually installed
+      npm_version: "5.7.1"
+    - nodejs_version: "8.12" # Comes with 6.4.1
+    - nodejs_version: "10" # Comes with npm 6, starting with 10.3
+
 platform:
   - x86
   - x64
-clone_folder: 'c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker'
+
+clone_folder: c:\projects\%APPVEYOR_PROJECT_NAME%\node_modules\iobroker
+# Install scripts. (runs after repo cloning)
 install:
-  - ps: 'cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"'
+  - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
+  # Move test dir to install root, because it will be deleted
   - ps: Move-Item -Path node_modules\iobroker\test -Destination .
   - ps: .\test\appveyor_install.ps1
   - ps: |
-      if ($env:iob_not_installed -eq "true") {
-        echo "ioBroker was not installed (this was expected). Skipping next steps..."
-        Exit-AppVeyorBuild
-      }
+        if ($env:iob_not_installed -eq "true") {
+          echo "ioBroker was not installed (this was expected). Skipping next steps..."
+          Exit-AppVeyorBuild
+        }
+# Post-install test scripts.
 test_script:
-  - ps: 'cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"'
+  - ps: cd "c:\projects\$env:APPVEYOR_PROJECT_NAME"
   - npm install request mocha chai --no-optional --save & exit 0
   - ps: Start-Sleep -s 15
   - ps: tasklist
@@ -38,4 +48,6 @@ test_script:
   - dir .\log\
   - type .\log\iobroker*.log & exit 0
   - node node_modules\mocha\bin\mocha --exit
-build: 'off'
+
+# Don't actually build.
+build: off
