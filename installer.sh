@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-01" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-03-03" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -146,6 +146,9 @@ create_user_linux() {
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
+		"vcgencmd"
+		"cat"
+		"df"
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"

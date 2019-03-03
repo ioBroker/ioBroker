@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-03-03
+* Allow the commands needed by RPI2
+
 ## 2019-03-01
 * Add redis as a dependency to the `systemd` unit and `init.d` script to avoid deadlocks on shutdown
 * Removed limitation for number of arguments for iobroker
