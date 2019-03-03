@@ -148,6 +148,7 @@ create_user_linux() {
 		"setcap"
 		"vcgencmd"
 		"cat"
+		"df"
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
