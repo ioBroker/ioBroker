@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-03-01" # format YYYY-MM-DD
+FIXER_VERSION="2019-03-03" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -188,6 +188,8 @@ create_user_linux() {
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
+		"vcgencmd"
+		"cat"
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
