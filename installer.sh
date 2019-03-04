@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-03" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-03-04" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -33,6 +33,7 @@ if [ "$platform" = "osx" ]; then
 	IOB_DIR="/usr/local/iobroker"
 fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
+INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
 
 # Which npm package should be installed (default "iobroker")
 INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
@@ -422,11 +423,11 @@ cd $IOB_DIR
 echo "Directory $IOB_DIR created"
 
 # Log some information about the installer
-touch INSTALLER_INFO.txt
-chmod 777 INSTALLER_INFO.txt
-echo "Installer version: $INSTALLER_VERSION" >> INSTALLER_INFO.txt
-echo "Installation date $(date +%F)" >> INSTALLER_INFO.txt
-echo "Platform: $platform" >> INSTALLER_INFO.txt
+touch $INSTALLER_INFO_FILE
+chmod 777 $INSTALLER_INFO_FILE
+echo "Installer version: $INSTALLER_VERSION" >> $INSTALLER_INFO_FILE
+echo "Installation date $(date +%F)" >> $INSTALLER_INFO_FILE
+echo "Platform: $platform" >> $INSTALLER_INFO_FILE
 
 
 # ########################################################
@@ -435,10 +436,10 @@ print_step "Installing ioBroker" 3 "$NUM_STEPS"
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then
-	echo "Installed as root" >> INSTALLER_INFO.txt
+	echo "Installed as root" >> $INSTALLER_INFO_FILE
 	npm i $INSTALL_TARGET --loglevel error --unsafe-perm > /dev/null
 else
-	echo "Installed as non-root user $USER" >> INSTALLER_INFO.txt
+	echo "Installed as non-root user $USER" >> $INSTALLER_INFO_FILE
 	npm i $INSTALL_TARGET --loglevel error > /dev/null
 fi
 
@@ -464,7 +465,7 @@ fi
 if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 	INITSYSTEM="init.d"
 fi
-echo "init system: $INITSYSTEM" >> INSTALLER_INFO.txt
+echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 
 # #############################
 # Create "iob" and "iobroker" executables
@@ -542,22 +543,25 @@ fix_dir_permissions() {
 	echo "Fixing directory permissions..."
 	if [ "$IS_ROOT" = true ]; then
 		chown -R $IOB_USER:$IOB_USER $IOB_DIR
-		# No need to give special permissions, root has access anyways
 	else
 		sudo chown -R $IOB_USER:$IOB_USER $IOB_DIR
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G $IOB_USER $USER
-		# Give the iobroker group write access to all files by setting the default ACL
+	fi
+	# Give the iobroker group write access to all files by setting the default ACL
+	if [ "$IS_ROOT" = true ]; then
+		setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
+	else
 		sudo setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && sudo setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
-		if [ $? -ne 0 ]; then
-			# We cannot rely on default permissions on this system
-			echo "${yellow}This system does not support setting default permissions.${normal}"
-			echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
-			echo "ACL enabled: false" >> INSTALLER_INFO.txt
-		else
-			echo "ACL enabled: true" >> INSTALLER_INFO.txt
-		fi
+	fi
+	if [ $? -ne 0 ]; then
+		# We cannot rely on default permissions on this system
+		echo "${yellow}This system does not support setting default permissions.${normal}"
+		echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
+		echo "ACL enabled: false" >> $INSTALLER_INFO_FILE
+	else
+		echo "ACL enabled: true" >> $INSTALLER_INFO_FILE
 	fi
 }
 
@@ -624,9 +628,9 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 	echo "Autostart enabled!"
 	# Remember what we did
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
-		echo "Autostart: init.d (forced)" >> INSTALLER_INFO.txt
+		echo "Autostart: init.d (forced)" >> $INSTALLER_INFO_FILE
 	else
-		echo "Autostart: init.d" >> INSTALLER_INFO.txt
+		echo "Autostart: init.d" >> $INSTALLER_INFO_FILE
 	fi
 elif [ "$INITSYSTEM" = "systemd" ]; then
 	echo "Enabling autostart..."
@@ -671,7 +675,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 	fi
 
 	echo "Autostart enabled!"
-	echo "Autostart: systemd" >> INSTALLER_INFO.txt
+	echo "Autostart: systemd" >> $INSTALLER_INFO_FILE
 
 elif [ "$INITSYSTEM" = "rc.d" ]; then
 	echo "Enabling autostart..."
@@ -737,7 +741,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	service iobroker start
 	
 	echo "Autostart enabled!"
-	echo "Autostart: rc.d" >> INSTALLER_INFO.txt
+	echo "Autostart: rc.d" >> $INSTALLER_INFO_FILE
 
 elif [ "$INITSYSTEM" = "launchctl" ]; then
 	echo "Enabling autostart..."
@@ -780,11 +784,11 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 	launchctl load -w $SERVICE_FILENAME
 
 	echo "Autostart enabled!"
-	echo "Autostart: launchctl" >> INSTALLER_INFO.txt
+	echo "Autostart: launchctl" >> $INSTALLER_INFO_FILE
 
 else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
-	echo "Autostart: false" >> INSTALLER_INFO.txt
+	echo "Autostart: false" >> $INSTALLER_INFO_FILE
 fi
 
 # Make sure that the app dir belongs to the correct user
