@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-03-03" # format YYYY-MM-DD
+FIXER_VERSION="2019-03-04" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -363,16 +363,20 @@ fix_dir_permissions() {
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G $IOB_USER $USER
-		# Give the iobroker group write access to all files by setting the default ACL
+	fi
+	# Give the iobroker group write access to all files by setting the default ACL
+	if [ "$IS_ROOT" = true ]; then
+		setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
+	else
 		sudo setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && sudo setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
-		if [ $? -ne 0 ]; then
-			# We cannot rely on default permissions on this system
-			echo "${yellow}This system does not support setting default permissions.${normal}"
-			echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
-			echo "ACL enabled: false" >> $INSTALLER_INFO_FILE
-		else
-			echo "ACL enabled: true" >> $INSTALLER_INFO_FILE
-		fi
+	fi
+	if [ $? -ne 0 ]; then
+		# We cannot rely on default permissions on this system
+		echo "${yellow}This system does not support setting default permissions.${normal}"
+		echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
+		echo "ACL enabled: false" >> $INSTALLER_INFO_FILE
+	else
+		echo "ACL enabled: true" >> $INSTALLER_INFO_FILE
 	fi
 }
 

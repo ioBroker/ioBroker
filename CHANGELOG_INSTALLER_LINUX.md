@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-03-04
+* Also set the correct ACLs when running the script as root
+
 ## 2019-03-03
 * Allow the commands needed by RPI2
 
