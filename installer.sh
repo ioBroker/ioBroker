@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-04" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-03-05" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -354,7 +354,7 @@ case "$platform" in
 			"gcc"
 		)
 		for pkg in "${packages[@]}"; do
-			install_packages_freebsd $pkg
+			install_package_freebsd $pkg
 		done
 		# we need to do some settting up things after installing the packages
 		# ensure dns_sd.h is where node-gyp expect it 

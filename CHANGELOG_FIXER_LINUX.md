@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-03-05
+* Fixed typo in FreeBSD installation routine
+
 ## 2019-03-04
 * Also set the correct ACLs when running the script as root
 
