@@ -411,7 +411,7 @@ case "$platform" in
 		# Configure packages
 
 		# Give nodejs access to protected ports and raw devices like ble
-		sudo setcap 'cap_net_bind_service+eip cap_net_raw,cap_net_admin+eip' $(eval readlink -f `which node`)
+		sudo setcap 'cap_net_admin+eip cap_net_bind_service+eip cap_net_raw+eip' $(eval readlink -f `which node`)
 		;;
 	"freebsd")
 		declare -a packages=(
