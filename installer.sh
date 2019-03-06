@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-05" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-03-06" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -234,9 +234,9 @@ create_user_freebsd() {
 	if [ $? -ne 0 ]; then
 		# User does not exist
 		if [ "$IS_ROOT" = true ]; then
-			pw useradd -m -s /usr/sbin/nologin "$username"
+			pw useradd -m -s /usr/sbin/nologin -n "$username"
 		else
-			sudo pw useradd -m -s /usr/sbin/nologin "$username"
+			sudo pw useradd -m -s /usr/sbin/nologin -n "$username"
 		fi
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
@@ -352,6 +352,7 @@ case "$platform" in
 			"dbus"
 			"nss_mdns" # needed for the mdns host resolution 
 			"gcc"
+			"python" # Required for node-gyp compilation
 		)
 		for pkg in "${packages[@]}"; do
 			install_package_freebsd $pkg
