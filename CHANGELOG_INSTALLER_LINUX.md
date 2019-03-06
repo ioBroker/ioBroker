@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-03-06
+* Fixed another typo in FreeBSD installation routine
+
 ## 2019-03-05
 * Fixed typo in FreeBSD installation routine
 
