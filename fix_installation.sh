@@ -424,6 +424,7 @@ case "$platform" in
 			"dbus"
 			"nss_mdns" # needed for the mdns host resolution 
 			"gcc"
+			"python" # Required for node-gyp compilation
 		)
 		for pkg in "${packages[@]}"; do
 			install_package_freebsd $pkg
