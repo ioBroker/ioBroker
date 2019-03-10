@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-06" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-03-10" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -43,6 +43,10 @@ IOB_USER="iobroker"
 if [ "$platform" = "osx" ]; then
 	IOB_USER="$USER"
 fi
+
+running_in_docker() {
+  awk -F/ '$2 == "docker"' /proc/self/cgroup | read
+}
 
 # Enable colored output
 if test -t 1; then # if terminal
@@ -339,7 +343,21 @@ case "$platform" in
 		# Configure packages
 
 		# Give nodejs access to protected ports and raw devices like ble
-		sudo setcap 'cap_net_admin+eip cap_net_bind_service+eip cap_net_raw+eip' $(eval readlink -f `which node`)
+		cmdline="setcap"
+		if [ "$IS_ROOT" != true ]; then
+			# use sudo as non-root
+			cmdline="sudo $cmdline"
+		fi
+	
+		if running_in_docker; then
+			$cmdline 'cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+			echo "${yellow}Docker detected!"
+			echo "If you have any adapters that need the CAP_NET_ADMIN capability,"
+			echo "you need to start the docker container with the option --cap-add=NET_ADMIN"
+			echo "and manually add that capability to node${normal}"
+		else
+			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+		fi
 		;;
 	"freebsd")
 		declare -a packages=(
