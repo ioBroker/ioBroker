@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-03-06" # format YYYY-MM-DD
+FIXER_VERSION="2019-03-10" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -298,9 +298,9 @@ create_user_freebsd() {
 	)
 	for grp in "${groups[@]}"; do
 		if [ "$IS_ROOT" = true ]; then
-			getent group $grp && pw usermod -a -G $grp $username
+			getent group $grp && pw group mod $grp -m $username
 		else
-			getent group $grp && sudo pw usermod -a -G $grp $username
+			getent group $grp && sudo pw group mod $grp -m $username
 		fi
 	done
 }
