@@ -259,9 +259,9 @@ create_user_freebsd() {
 	)
 	for grp in "${groups[@]}"; do
 		if [ "$IS_ROOT" = true ]; then
-			getent group $grp && pw usermod -a -G $grp $username
+			getent group $grp && pw group mod $grp -m $username
 		else
-			getent group $grp && sudo pw usermod -a -G $grp $username
+			getent group $grp && sudo pw group mod $grp -m $username
 		fi
 	done
 }

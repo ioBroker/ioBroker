@@ -2,6 +2,7 @@
 
 ## 2019-03-10
 * Don't set CAP_NET_ADMIN in Docker
+* Fixed the group add command in FreeBSD
 
 ## 2019-03-06
 * Fixed the setcap command so it works in Docker
