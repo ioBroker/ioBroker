@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-10" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-03-15" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -491,7 +491,7 @@ echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
 if [ "$IOB_USER" != "$USER" ]; then
-	IOB_NODE_CMDLINE="sudo -u $IOB_USER node"
+	IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
 fi
 if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl

@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-03-15
+* Add `-H` flag to `sudo -u iobroker` to fix EACCES errors when using the `iobroker` commands to install stuff.
+
 ## 2019-03-10
 * Don't set CAP_NET_ADMIN in Docker
 * Fixed the group add command in FreeBSD
