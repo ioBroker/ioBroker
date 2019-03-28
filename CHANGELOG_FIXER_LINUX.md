@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-03-28
+* Improved the check for running processes to match adapters with `-` in the name
+
 ## 2019-03-15
 * Add `-H` flag to `sudo -u iobroker` to fix EACCES errors when using the `iobroker` commands to install stuff.
 

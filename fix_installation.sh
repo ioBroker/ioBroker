@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-03-15" # format YYYY-MM-DD
+FIXER_VERSION="2019-03-28" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -41,9 +41,10 @@ if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
 fi
 
 # Test if ioBroker is running
-if ps aux | grep " io\." &> /dev/null ; then
+still_running=$(ps aux | grep -P -o "(?<= )io\.[0-9a-zA-Z\-]+(\.[0-9]+)?"))
+if [ $? -eq 0 ]; then
 	echo "ioBroker or some processes are still running:"
-	ps aux | grep -o " io\.\w*\.[0-9]*"
+	echo "$still_running"
 	echo "Please stop them first and try again!"
 	exit 1
 fi
