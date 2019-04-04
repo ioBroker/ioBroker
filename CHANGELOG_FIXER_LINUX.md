@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-04-04
+* Docker: Auto-detect if the container has `CAP_NET_ADMIN` and give it to `node` if possible
+
 ## 2019-03-15
 * Add `-H` flag to `sudo -u iobroker` to fix EACCES errors when using the `iobroker` commands to install stuff.
 
