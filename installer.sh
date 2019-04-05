@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-03-15" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-04-04" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -350,11 +350,16 @@ case "$platform" in
 		fi
 	
 		if running_in_docker; then
-			$cmdline 'cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
-			echo "${yellow}Docker detected!"
-			echo "If you have any adapters that need the CAP_NET_ADMIN capability,"
-			echo "you need to start the docker container with the option --cap-add=NET_ADMIN"
-			echo "and manually add that capability to node${normal}"
+			capabilities=$(grep ^CapBnd /proc/$$/status)
+			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
+				$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+			else
+				$cmdline 'cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+				echo "${yellow}Docker detected!"
+				echo "If you have any adapters that need the CAP_NET_ADMIN capability,"
+				echo "you need to start the docker container with the option --cap-add=NET_ADMIN"
+				echo "and manually add that capability to node${normal}"
+			fi
 		else
 			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
 		fi
