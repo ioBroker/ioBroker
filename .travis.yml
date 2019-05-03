@@ -10,7 +10,7 @@ include: &all
       sources:
       - ubuntu-toolchain-r-test
       packages:
-      - g++-4.9
+      - g++-4.8
 
 include: &linux
   <<: *all
@@ -63,14 +63,10 @@ matrix:
       node_js: 8.12 # Comes with 6.4.1
     - <<: *linux
       node_js: 10 # Comes with npm 6, starting with 10.3
-    - <<: *linux
-      node_js: 12
     - <<: *osx
       node_js: 8.12 # Comes with 6.4.1
     - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
-    - <<: *osx
-      node_js: 12
 
 
 before_install:
@@ -79,7 +75,7 @@ before_install:
   - mkdir -p node_modules/iobroker
   - mv !(node_modules|test) node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
-  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.9; fi'
+  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
 install:
   - sudo chmod +x test/travis_install.sh
   # make sure the iob_not_installed file can be created
