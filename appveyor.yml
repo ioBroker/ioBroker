@@ -16,6 +16,7 @@ environment:
       npm_version: "5.7.1"
     - nodejs_version: "8.12" # Comes with 6.4.1
     - nodejs_version: "10" # Comes with npm 6, starting with 10.3
+    - nodejs_version: "12" # Comes with npm 6
 
 platform:
   - x86
