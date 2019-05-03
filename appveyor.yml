@@ -14,9 +14,11 @@ environment:
     - nodejs_version: "10.2" # modern Node, but comes with old NPM
     - nodejs_version: "10" # modern Node, old NPM manually installed
       npm_version: "5.7.1"
+    # These should succeed
     - nodejs_version: "8.12" # Comes with 6.4.1
     - nodejs_version: "10" # Comes with npm 6, starting with 10.3
     - nodejs_version: "12" # Comes with npm 6
+    - nodejs_verion: "" # use latest nodejs
 
 platform:
   - x86
