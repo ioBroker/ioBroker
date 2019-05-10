@@ -10,7 +10,7 @@ include: &all
       sources:
       - ubuntu-toolchain-r-test
       packages:
-      - g++-4.9
+      - g++-6
 
 include: &linux
   <<: *all
@@ -93,7 +93,7 @@ before_install:
   - mkdir -p node_modules/iobroker
   - mv !(node_modules|test) node_modules/iobroker/
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
-  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.9; fi'
+  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-6; fi'
 install:
   - sudo chmod +x test/travis_install.sh
   # make sure the iob_not_installed file can be created
