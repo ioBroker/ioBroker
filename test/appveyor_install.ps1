@@ -1,5 +1,5 @@
 # Get the latest stable version of Node.js or io.js
-Install-Product node $env:nodejs_version $env:platform
+Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:platform
 # if we have defined a specific npm version, use that one
 if ($env:npm_version -ne $null) { npm i -g npm@$env:npm_version }
 
