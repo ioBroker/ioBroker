@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-04-04" # format YYYY-MM-DD
+FIXER_VERSION="2019-05-14" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -259,6 +259,7 @@ create_user_linux() {
 	fi
 	# Add the user to all groups if they exist
 	declare -a groups=(
+		audio
 		bluetooth
 		dialout
 		gpio
@@ -293,6 +294,7 @@ create_user_freebsd() {
 
 	# Add the user to all groups if they exist
 	declare -a groups=(
+		audio
 		bluetooth
 		dialout
 		gpio

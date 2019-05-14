@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-05-14
+* (Linux) Add iobroker user to the `audio` group
+
 ## 2019-04-04
 * Docker: Auto-detect if the container has `CAP_NET_ADMIN` and give it to `node` if possible
 
