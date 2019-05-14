@@ -8,6 +8,10 @@ cd $IOB_DIR
 # We don't care about permissions now :D
 sudo chmod -R 777 .
 
+# What are the permissions here?
+ls -la .
+id
+
 npm install request mocha chai --save
 
 ps auxww|grep io
