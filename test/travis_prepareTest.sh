@@ -9,10 +9,7 @@ cd $IOB_DIR
 cat INSTALLER_INFO.txt
 
 id
-ls -la .
-ls -la /home/travis
-ls -la /home/travis/.npm/
-ls -la /home/travis/.npm/_cacache
+ls -la /home/travis/.npm/_cacache/index-v5/**/*
 
 npm install request mocha chai --save
 
