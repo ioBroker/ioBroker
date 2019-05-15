@@ -5,8 +5,7 @@ set -x
 IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
 cd $IOB_DIR
 
-sudo chmod -R 777 /home/travis/.npm
-sudo chmod -R 777 "$IOB_DIR"
+sudo chmod -R 777 .
 sudo usermod -a -G iobroker travis
 
 ls -la node_modules

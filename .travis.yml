@@ -98,6 +98,8 @@ install:
   - sudo chmod +x test/travis_install.sh
   # make sure the iob_not_installed file can be created
   - sudo chmod 777 .
+  # Avoid npm cache access errors on Node 12+
+  - sudo chmod -R 777 /home/travis/.npm
   - test/travis_install.sh
   - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
