@@ -5,14 +5,12 @@ set -x
 IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
 cd $IOB_DIR
 
-ls -la node_modules
-npm ls
-npm install request mocha chai
-ls -la node_modules
-npm ls
+# We don't care about permissions now :D
+sudo chmod -R 777 .
+
+npm install request mocha chai --save
 
 ps auxww|grep io
-ls -la node_modules/iobroker.js-controller
 node node_modules/iobroker.js-controller/iobroker.js start
 
 sleep 60
