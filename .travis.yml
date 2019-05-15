@@ -76,16 +76,16 @@ matrix:
     - <<: *osx
       node_js: node
 
-  # Do not fail the build on newer Node versions we do not officially support yet
-  allow_failures:
-    - os: osx
-      node_js: 12
-    - os: osx
-      node_js: node
-    - os: linux
-      node_js: 12
-    - os: linux
-      node_js: node
+  # # Do not fail the build on newer Node versions we do not officially support yet
+  # allow_failures:
+  #   - os: osx
+  #     node_js: 12
+  #   - os: osx
+  #     node_js: node
+  #   - os: linux
+  #     node_js: 12
+  #   - os: linux
+  #     node_js: node
 
 before_install:
   # if we have defined a specific npm version, use that one
