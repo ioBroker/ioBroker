@@ -5,13 +5,14 @@ set -x
 IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
 cd $IOB_DIR
 
-# sudo chown -R travis:travis /home/travis/.npm
-# sudo chmod -R 777 /home/travis/.npm
+sudo chmod -R 777 /home/travis/.npm
+sudo chmod -R 777 "$IOB_DIR"
+sudo usermod -a -G iobroker travis
 
-sudo -H -u iobroker "npm install request mocha chai --save"
+npm install request mocha chai
 
 ps auxww|grep io
-sudo -H -u iobroker "node node_modules/iobroker.js-controller/iobroker.js start"
+node node_modules/iobroker.js-controller/iobroker.js start
 
 sleep 60
 ps auxww|grep io
