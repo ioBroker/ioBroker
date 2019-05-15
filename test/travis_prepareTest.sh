@@ -9,9 +9,14 @@ sudo chmod -R 777 /home/travis/.npm
 sudo chmod -R 777 "$IOB_DIR"
 sudo usermod -a -G iobroker travis
 
+ls -la node_modules
+npm ls
 npm install request mocha chai
+ls -la node_modules
+npm ls
 
 ps auxww|grep io
+ls -la node_modules/iobroker.js-controller
 node node_modules/iobroker.js-controller/iobroker.js start
 
 sleep 60
