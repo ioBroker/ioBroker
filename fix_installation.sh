@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-05-14" # format YYYY-MM-DD
+FIXER_VERSION="2019-05-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -582,6 +582,7 @@ echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 # Create "iob" and "iobroker" executables
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
+BASH_CMDLINE=$(which bash)
 if [ "$IOB_USER" != "$USER" ]; then
 	IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
 fi
@@ -589,7 +590,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		else
@@ -600,7 +601,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 elif [ "$INITSYSTEM" = "launchctl" ]; then
 	# launchctl needs unload service to stop iobroker
 	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		if (( \$# == 1 )) && ([ "\$1" = "start" ]); then
 			launchctl load -w $SERVICE_FILENAME
 		elif (( \$# == 1 )) && ([ "\$1" = "stop" ]); then
@@ -613,7 +614,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 	)
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		EOF
 	)
@@ -663,7 +664,7 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
 	INITD_FILE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		### BEGIN INIT INFO
 		# Provides:          iobroker.sh
 		# Required-Start:    \$network \$local_fs \$remote_fs
@@ -681,13 +682,13 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 
 		start() {
 			echo -n "Starting ioBroker"
-			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
+			su - $IOB_USER -s "$BASH_CMDLINE" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
 			RETVAL=\$?
 		}
 
 		stop() {
 			echo -n "Stopping ioBroker"
-			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
+			su - $IOB_USER -s "$BASH_CMDLINE" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
 			RETVAL=\$?
 		}
 		if [ "\$1" = "start" ]; then
@@ -734,7 +735,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Type=simple
 		User=$IOB_USER
 		Environment="NODE=\$(which node)"
-		ExecStart=/bin/bash -c '\${NODE} $CONTROLLER_DIR/controller.js'
+		ExecStart=$BASH_CMDLINE -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
 		
 		[Install]
@@ -786,17 +787,17 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 		iobroker_start ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
 		}
 
 		iobroker_stop ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
 		}
 
 		iobroker_status ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
 		}
 
 		PATH="\${PATH}:/usr/local/bin"

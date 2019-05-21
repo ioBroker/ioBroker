@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-05-21
+* Autodetect `bash` path to fix `command not found` on FreeBSD
+
 ## 2019-05-14
 * (Linux) Add iobroker user to the `audio` group
 
