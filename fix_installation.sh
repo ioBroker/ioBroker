@@ -13,13 +13,13 @@ ROOT_GROUP="root"
 # Test which platform this script is being run on
 unamestr=$(uname)
 if [ "$unamestr" = "Linux" ]; then
-	platform="linux"
+	HOST_PLATFORM="linux"
 elif [ "$unamestr" = "Darwin" ]; then
 	# OSX and Linux are the same in terms of install procedure
-	platform="osx"
+	HOST_PLATFORM="osx"
 	ROOT_GROUP="wheel"
 elif [ "$unamestr" = "FreeBSD" ]; then
-	platform="freebsd"
+	HOST_PLATFORM="freebsd"
 	ROOT_GROUP="wheel"
 else
 	echo "Unsupported platform!"
@@ -28,7 +28,7 @@ fi
 
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_DIR="/usr/local/iobroker"
 fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
@@ -58,7 +58,7 @@ echo "Fix date $(date +%F)" >> $INSTALLER_INFO_FILE
 
 # The user to run ioBroker as
 IOB_USER="iobroker"
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_USER="$USER"
 fi
 
@@ -145,7 +145,7 @@ make_executable() {
 change_owner() {
 	user="$1"
 	file="$2"
-	if [ "$platform" == "osx" ]; then
+	if [ "$HOST_PLATFORM" == "osx" ]; then
 		owner="$user"
 	else
 		owner="$user:$user"
@@ -393,7 +393,7 @@ NUM_STEPS=3
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 # Determine the platform we operate on and select the installation routine/packages accordingly 
-case "$platform" in
+case "$HOST_PLATFORM" in
 	"linux")
 		declare -a packages=(
 			"acl" # To use setfacl
@@ -498,16 +498,16 @@ esac
 print_step "Checking ioBroker user and directory permissions" 2 "$NUM_STEPS"
 if [ "$USER" != "$IOB_USER" ]; then
 	# Ensure the user "iobroker" exists and is in the correct groups
-	if [ "$platform" = "linux" ]; then
+	if [ "$HOST_PLATFORM" = "linux" ]; then
 		create_user_linux $IOB_USER
-	elif [ "$platform" = "freebsd" ]; then
+	elif [ "$HOST_PLATFORM" = "freebsd" ]; then
 		create_user_freebsd $IOB_USER
 	fi
 fi
 
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
-if [ "$platform" != "osx" ]; then
+if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
 
@@ -560,7 +560,7 @@ fi
 
 # Test which init system is used:
 INITSYSTEM="unknown"
-if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
+if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
 elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
@@ -569,7 +569,7 @@ elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
 	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
-elif [[ "$platform" = "osx" ]]; then
+elif [[ "$HOST_PLATFORM" = "osx" ]]; then
 	INITSYSTEM="launchctl"
 	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 fi
@@ -619,9 +619,9 @@ else
 		EOF
 	)
 fi
-if [ "$platform" = "linux" ]; then
+if [ "$HOST_PLATFORM" = "linux" ]; then
 	IOB_BIN_PATH=/usr/bin
-elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
+elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
 # First remove the old binaries and symlinks

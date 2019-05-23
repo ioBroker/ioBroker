@@ -16,13 +16,13 @@ ROOT_GROUP="root"
 # Test which platform this script is being run on
 unamestr=$(uname)
 if [ "$unamestr" = "Linux" ]; then
-	platform="linux"
+	HOST_PLATFORM="linux"
 elif [ "$unamestr" = "Darwin" ]; then
 	# OSX and Linux are the same in terms of install procedure
-	platform="osx"
+	HOST_PLATFORM="osx"
 	ROOT_GROUP="wheel"
 elif [ "$unamestr" = "FreeBSD" ]; then
-	platform="freebsd"
+	HOST_PLATFORM="freebsd"
 	ROOT_GROUP="wheel"
 else
 	echo "Unsupported platform!"
@@ -31,7 +31,7 @@ fi
 
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_DIR="/usr/local/iobroker"
 fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
@@ -42,7 +42,7 @@ INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
 
 # The user to run ioBroker as
 IOB_USER="iobroker"
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_USER="$USER"
 fi
 
@@ -323,7 +323,7 @@ NUM_STEPS=4
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
-case "$platform" in
+case "$HOST_PLATFORM" in
 	"linux")
 		declare -a packages=(
 			"acl" # To use setfacl
@@ -428,9 +428,9 @@ esac
 # ########################################################
 print_step "Creating ioBroker user and directory" 2 "$NUM_STEPS"
 # Ensure the user "iobroker" exists and is in the correct groups
-if [ "$platform" = "linux" ]; then
+if [ "$HOST_PLATFORM" = "linux" ]; then
 	create_user_linux $IOB_USER
-elif [ "$platform" = "freebsd" ]; then
+elif [ "$HOST_PLATFORM" = "freebsd" ]; then
 	create_user_freebsd $IOB_USER
 fi
 
@@ -441,7 +441,7 @@ else
 	sudo mkdir -p $IOB_DIR
 	# During the installation we need to give the current user access to the install dir
 	# On Linux, we'll fix this at the end. On OSX this is okay
-	if [ "$platform" = "osx" ]; then
+	if [ "$HOST_PLATFORM" = "osx" ]; then
 		sudo chown -R $USER $IOB_DIR
 	else
 		sudo chown -R $USER:$USER $IOB_DIR
@@ -455,7 +455,7 @@ touch $INSTALLER_INFO_FILE
 chmod 777 $INSTALLER_INFO_FILE
 echo "Installer version: $INSTALLER_VERSION" >> $INSTALLER_INFO_FILE
 echo "Installation date $(date +%F)" >> $INSTALLER_INFO_FILE
-echo "Platform: $platform" >> $INSTALLER_INFO_FILE
+echo "Platform: $HOST_PLATFORM" >> $INSTALLER_INFO_FILE
 
 
 # ########################################################
@@ -479,13 +479,13 @@ print_step "Finalizing installation" 4 "$NUM_STEPS"
 
 # Test which init system is used:
 INITSYSTEM="unknown"
-if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
+if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
 elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
-elif [[ "$platform" = "osx" ]]; then
+elif [[ "$HOST_PLATFORM" = "osx" ]]; then
 	INITSYSTEM="launchctl"
 	PLIST_FILE_LABEL="org.ioBroker.LaunchAtLogin"
 	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
@@ -536,9 +536,9 @@ else
 		EOF
 	)
 fi
-if [ "$platform" = "linux" ]; then
+if [ "$HOST_PLATFORM" = "linux" ]; then
 	IOB_BIN_PATH=/usr/bin
-elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
+elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
 # Symlink the global binaries iob and iobroker
@@ -823,8 +823,8 @@ fi
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
 echo "Before fixing dir permissions..."
-echo "platform = $platform"
-if [ "$platform" != "osx" ]; then
+echo "platform = $HOST_PLATFORM"
+if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
 echo "After fixing dir permissions..."
@@ -833,7 +833,7 @@ unset AUTOMATED_INSTALLER
 
 # Detect IP address
 IP_COMMAND=$(type "ip" &> /dev/null && echo "ip addr show" || echo "ifconfig")
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+" | head -1)
 else
 	IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
