@@ -14,23 +14,17 @@ else
 fi
 ROOT_GROUP="root"
 # Test which platform this script is being run on
-get_platform() {
-	unamestr=$(uname)
-	local platform=""
-	if [ "$unamestr" = "Linux" ]; then
-		platform="linux"
-	elif [ "$unamestr" = "Darwin" ]; then
-		# OSX and Linux are the same in terms of install procedure
-		platform="osx"
-		ROOT_GROUP="wheel"
-	elif [ "$unamestr" = "FreeBSD" ]; then
-		platform="freebsd"
-		ROOT_GROUP="wheel"
-	fi
-	echo "$platform"
-}
-platform=$(get_platform)
-if [ "$platform" = "" ]; then
+unamestr=$(uname)
+if [ "$unamestr" = "Linux" ]; then
+	platform="linux"
+elif [ "$unamestr" = "Darwin" ]; then
+	# OSX and Linux are the same in terms of install procedure
+	platform="osx"
+	ROOT_GROUP="wheel"
+elif [ "$unamestr" = "FreeBSD" ]; then
+	platform="freebsd"
+	ROOT_GROUP="wheel"
+else
 	echo "Unsupported platform!"
 	exit 1
 fi
@@ -774,7 +768,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	# Enable startup and start the service
 	sysrc iobroker_enable=YES
 	service iobroker start
-
+	
 	echo "Autostart enabled!"
 	echo "Autostart: rc.d" >> $INSTALLER_INFO_FILE
 
@@ -825,10 +819,6 @@ else
 	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
 	echo "Autostart: false" >> $INSTALLER_INFO_FILE
 fi
-
-# FreeBSD seems to reset this variable somehow
-# There must be a better way, but I don't know how
-platform=$(get_platform)
 
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
