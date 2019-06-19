@@ -507,8 +507,8 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		#!/bin/bash
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
-		elif [ "\$1" == "fix" ]; then
-                        curl -sL https://iobroker.net/fix.sh | bash -
+		elif [ "\$1" = "fix" ]; then
+            curl -sL https://iobroker.net/fix.sh | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
@@ -523,8 +523,8 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 		elif (( \$# == 1 )) && ([ "\$1" = "stop" ]); then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
-		elif [ "\$1" == "fix" ]; then
-                        curl -sL https://iobroker.net/fix.sh | bash -
+		elif [ "\$1" = "fix" ]; then
+            curl -sL https://iobroker.net/fix.sh | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
@@ -532,13 +532,14 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 	)
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
-		if [ "\$1" == "fix" ]; then
-                        curl -sL https://iobroker.net/fix.sh | bash -
+	    #!/bin/bash
+		if [ "\$1" = "fix" ]; then
+            curl -sL https://iobroker.net/fix.sh | bash -
 		else
-			#!/bin/bash
+
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
-			EOF
 		fi
+		EOF
 	)
 fi
 if [ "$platform" = "linux" ]; then

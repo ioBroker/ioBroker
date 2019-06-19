@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-06-20
+* Add install fixer as iobroker shortcut via "iobroker fix"
+
 ## 2019-05-14
 * (Linux) Add iobroker user to the `audio` group
 
