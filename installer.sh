@@ -820,6 +820,17 @@ else
 	echo "Autostart: false" >> $INSTALLER_INFO_FILE
 fi
 
+# Test again which platform this script is being run on
+# This is necessary because FreeBSD does crazy stuff
+unamestr=$(uname)
+if [ "$unamestr" = "Linux" ]; then
+	HOST_PLATFORM="linux"
+elif [ "$unamestr" = "Darwin" ]; then
+	HOST_PLATFORM="osx"
+elif [ "$unamestr" = "FreeBSD" ]; then
+	HOST_PLATFORM="freebsd"
+fi
+
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
 echo "Before fixing dir permissions..."
