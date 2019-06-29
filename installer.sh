@@ -44,8 +44,12 @@ if [ "$platform" = "osx" ]; then
 	IOB_USER="$USER"
 fi
 
+# Where the fixer script is located
+FIXER_URL="https://iobroker.net/fix.sh"
+
+# Test if we're running inside a docker container
 running_in_docker() {
-  awk -F/ '$2 == "docker"' /proc/self/cgroup | read
+	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
 
 # Enable colored output
@@ -508,7 +512,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
-            		curl -sL https://iobroker.net/fix.sh | bash -
+			curl -sL $FIXER_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
@@ -524,7 +528,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		elif [ "\$1" = "fix" ]; then
-            		curl -sL https://iobroker.net/fix.sh | bash -
+			curl -sL $FIXER_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
@@ -532,9 +536,9 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 	)
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
-	    #!/bin/bash
+		#!/bin/bash
 		if [ "\$1" = "fix" ]; then
-            		curl -sL https://iobroker.net/fix.sh | bash -
+			curl -sL $FIXER_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
