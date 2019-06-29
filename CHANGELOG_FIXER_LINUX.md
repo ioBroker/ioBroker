@@ -1,6 +1,6 @@
 # Changelog for Linux-Fixer-Script
 
-## 2019-06-21
+## 2019-06-29
 * Add install fixer as iobroker shortcut via "iobroker fix"
 
 ## 2019-05-14
