@@ -727,6 +727,8 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		# REQUIRE: DAEMON
 		# KEYWORD: shutdown
 
+		set -x
+
 		. /etc/rc.subr
 
 		name="iobroker"
