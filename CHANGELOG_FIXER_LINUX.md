@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-07-03
+* Include `PATH` environment variable in OSX startup script
+
 ## 2019-06-29
 * Add install fixer as iobroker shortcut via "iobroker fix"
 
