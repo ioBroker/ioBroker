@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 # Increase this version number whenever you update the installer
 INSTALLER_VERSION="2019-05-21" # format YYYY-MM-DD
 
