@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-05-14" # format YYYY-MM-DD
+FIXER_VERSION="2019-07-03" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -13,13 +13,13 @@ ROOT_GROUP="root"
 # Test which platform this script is being run on
 unamestr=$(uname)
 if [ "$unamestr" = "Linux" ]; then
-	platform="linux"
+	HOST_PLATFORM="linux"
 elif [ "$unamestr" = "Darwin" ]; then
 	# OSX and Linux are the same in terms of install procedure
-	platform="osx"
+	HOST_PLATFORM="osx"
 	ROOT_GROUP="wheel"
 elif [ "$unamestr" = "FreeBSD" ]; then
-	platform="freebsd"
+	HOST_PLATFORM="freebsd"
 	ROOT_GROUP="wheel"
 else
 	echo "Unsupported platform!"
@@ -28,7 +28,7 @@ fi
 
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_DIR="/usr/local/iobroker"
 fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
@@ -58,12 +58,16 @@ echo "Fix date $(date +%F)" >> $INSTALLER_INFO_FILE
 
 # The user to run ioBroker as
 IOB_USER="iobroker"
-if [ "$platform" = "osx" ]; then
+if [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_USER="$USER"
 fi
 
+# Where the fixer script is located
+FIXER_URL="https://iobroker.net/fix.sh"
+
+# Test if we're running inside a docker container
 running_in_docker() {
-  awk -F/ '$2 == "docker"' /proc/self/cgroup | read
+	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
 
 # Enable colored output
@@ -145,7 +149,7 @@ make_executable() {
 change_owner() {
 	user="$1"
 	file="$2"
-	if [ "$platform" == "osx" ]; then
+	if [ "$HOST_PLATFORM" == "osx" ]; then
 		owner="$user"
 	else
 		owner="$user:$user"
@@ -393,7 +397,7 @@ NUM_STEPS=3
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 # Determine the platform we operate on and select the installation routine/packages accordingly 
-case "$platform" in
+case "$HOST_PLATFORM" in
 	"linux")
 		declare -a packages=(
 			"acl" # To use setfacl
@@ -498,16 +502,16 @@ esac
 print_step "Checking ioBroker user and directory permissions" 2 "$NUM_STEPS"
 if [ "$USER" != "$IOB_USER" ]; then
 	# Ensure the user "iobroker" exists and is in the correct groups
-	if [ "$platform" = "linux" ]; then
+	if [ "$HOST_PLATFORM" = "linux" ]; then
 		create_user_linux $IOB_USER
-	elif [ "$platform" = "freebsd" ]; then
+	elif [ "$HOST_PLATFORM" = "freebsd" ]; then
 		create_user_freebsd $IOB_USER
 	fi
 fi
 
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
-if [ "$platform" != "osx" ]; then
+if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
 
@@ -560,7 +564,7 @@ fi
 
 # Test which init system is used:
 INITSYSTEM="unknown"
-if [[ "$platform" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
+if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
 elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
@@ -569,7 +573,7 @@ elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
 	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
-elif [[ "$platform" = "osx" ]]; then
+elif [[ "$HOST_PLATFORM" = "osx" ]]; then
 	INITSYSTEM="launchctl"
 	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 fi
@@ -582,6 +586,7 @@ echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 # Create "iob" and "iobroker" executables
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
+BASH_CMDLINE=$(which bash)
 if [ "$IOB_USER" != "$USER" ]; then
 	IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
 fi
@@ -589,9 +594,11 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
+		elif [ "\$1" = "fix" ]; then
+			curl -sL $FIXER_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
@@ -600,12 +607,14 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 elif [ "$INITSYSTEM" = "launchctl" ]; then
 	# launchctl needs unload service to stop iobroker
 	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		if (( \$# == 1 )) && ([ "\$1" = "start" ]); then
 			launchctl load -w $SERVICE_FILENAME
 		elif (( \$# == 1 )) && ([ "\$1" = "stop" ]); then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
+		elif [ "\$1" = "fix" ]; then
+			curl -sL $FIXER_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
 		fi
@@ -613,14 +622,18 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 	)
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
-		#!/bin/bash
-		$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
+		#!$BASH_CMDLINE
+		if [ "\$1" = "fix" ]; then
+			curl -sL $FIXER_URL | bash -
+		else
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
+		fi
 		EOF
 	)
 fi
-if [ "$platform" = "linux" ]; then
+if [ "$HOST_PLATFORM" = "linux" ]; then
 	IOB_BIN_PATH=/usr/bin
-elif [ "$platform" = "freebsd" ] || [ "$platform" = "osx" ]; then
+elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
 # First remove the old binaries and symlinks
@@ -663,7 +676,7 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
 	INITD_FILE=$(cat <<- EOF
-		#!/bin/bash
+		#!$BASH_CMDLINE
 		### BEGIN INIT INFO
 		# Provides:          iobroker.sh
 		# Required-Start:    \$network \$local_fs \$remote_fs
@@ -681,13 +694,13 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 
 		start() {
 			echo -n "Starting ioBroker"
-			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
+			su - $IOB_USER -s "$BASH_CMDLINE" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js start"
 			RETVAL=\$?
 		}
 
 		stop() {
 			echo -n "Stopping ioBroker"
-			su - $IOB_USER -s "/bin/bash" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
+			su - $IOB_USER -s "$BASH_CMDLINE" -c "\$NODECMD $CONTROLLER_DIR/iobroker.js stop"
 			RETVAL=\$?
 		}
 		if [ "\$1" = "start" ]; then
@@ -734,7 +747,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Type=simple
 		User=$IOB_USER
 		Environment="NODE=\$(which node)"
-		ExecStart=/bin/bash -c '\${NODE} $CONTROLLER_DIR/controller.js'
+		ExecStart=$BASH_CMDLINE -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
 		
 		[Install]
@@ -782,21 +795,21 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
 		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-		NODECMD=\$(which node)
+		NODECMD=\`which node\`
 
 		iobroker_start ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
 		}
 
 		iobroker_stop ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
 		}
 
 		iobroker_status ()
 		{
-			su -m $IOB_USER -s "/bin/bash" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
 		}
 
 		PATH="\${PATH}:/usr/local/bin"
@@ -845,6 +858,10 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			<true/>
 			<key>RunAtLoad</key>
 			<true/>
+			<dict>
+				<key>PATH</key>
+				<string>/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+			</dict>
 		</dict>
 		</plist>
 		EOF
