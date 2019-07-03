@@ -728,7 +728,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
 		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-		NODECMD=\$(which node)
+		NODECMD=\`which node\`
 
 		iobroker_start ()
 		{
