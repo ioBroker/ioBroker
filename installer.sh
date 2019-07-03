@@ -831,12 +831,9 @@ fi
 
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
-echo "Before fixing dir permissions..."
-echo "platform = $HOST_PLATFORM"
 if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
-echo "After fixing dir permissions..."
 
 unset AUTOMATED_INSTALLER
 
