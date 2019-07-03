@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-06-29" # format YYYY-MM-DD
+FIXER_VERSION="2019-07-03" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -858,6 +858,10 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			<true/>
 			<key>RunAtLoad</key>
 			<true/>
+			<dict>
+				<key>PATH</key>
+				<string>/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+			</dict>
 		</dict>
 		</plist>
 		EOF

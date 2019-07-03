@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-06-29" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-07-03" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 # TODO: To resolve #48, running this as root should be prohibited
@@ -805,6 +805,11 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			<true/>
 			<key>RunAtLoad</key>
 			<true/>
+			<key>EnvironmentVariables</key>
+			<dict>
+				<key>PATH</key>
+				<string>/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+			</dict>
 		</dict>
 		</plist>
 
