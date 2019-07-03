@@ -2,6 +2,7 @@
 
 ## 2019-06-29
 * Add install fixer as iobroker shortcut via "iobroker fix"
+* Autodetect `bash` path to fix `command not found` on FreeBSD
 
 ## 2019-05-14
 * (Linux) Add iobroker user to the `audio` group
