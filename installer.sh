@@ -719,6 +719,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 elif [ "$INITSYSTEM" = "rc.d" ]; then
 	echo "Enabling autostart..."
 
+	NODECMD=$(which node)
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
 		#!$BASH_CMDLINE
@@ -740,21 +741,20 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
 		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-		NODECMD=\`which node\`
 
 		iobroker_start ()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			su -m "$IOB_USER" -s "$BASH_CMDLINE" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
 		}
 
 		iobroker_stop ()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			su -m "$IOB_USER" -s "$BASH_CMDLINE" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
 		}
 
 		iobroker_status ()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			su -m "$IOB_USER" -s "$BASH_CMDLINE" -c "${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
 		}
 
 		PATH="\${PATH}:/usr/local/bin"
