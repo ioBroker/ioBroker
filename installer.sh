@@ -721,7 +721,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
-		#!/bin/sh
+		#!$BASH_CMDLINE
 		#
 		# PROVIDE: iobroker
 		# REQUIRE: DAEMON
