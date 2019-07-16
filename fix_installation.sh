@@ -858,6 +858,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			<true/>
 			<key>RunAtLoad</key>
 			<true/>
+			<key>EnvironmentVariables</key>
 			<dict>
 				<key>PATH</key>
 				<string>/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin</string>
