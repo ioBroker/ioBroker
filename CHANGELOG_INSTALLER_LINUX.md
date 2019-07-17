@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-07-17
+* Fix for Debian 10: Add `/sbin` and similar directories to `PATH` at the start of the script
+
 ## 2019-07-03
 * Include `PATH` environment variable in OSX startup script
 
