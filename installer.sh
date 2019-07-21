@@ -467,10 +467,10 @@ print_step "Installing ioBroker" 3 "$NUM_STEPS"
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then
 	echo "Installed as root" >> $INSTALLER_INFO_FILE
-	npm i $INSTALL_TARGET --loglevel error --unsafe-perm > /dev/null
+	npm i $INSTALL_TARGET --production --loglevel error --unsafe-perm > /dev/null
 else
 	echo "Installed as non-root user $USER" >> $INSTALLER_INFO_FILE
-	npm i $INSTALL_TARGET --loglevel error > /dev/null
+	npm i $INSTALL_TARGET --production --loglevel error > /dev/null
 fi
 
 npm i --production --loglevel error --unsafe-perm > /dev/null
