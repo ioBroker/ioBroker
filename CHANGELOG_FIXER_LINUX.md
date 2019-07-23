@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-07-21
+* suppress warnings
+
 ## 2019-07-03
 * Include `PATH` environment variable in OSX startup script
 
