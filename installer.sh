@@ -4,7 +4,6 @@
 INSTALLER_VERSION="2019-07-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
-# TODO: To resolve #48, running this as root should be prohibited
 if [[ $EUID -eq 0 ]]; then
 	IS_ROOT=true
 else
@@ -26,6 +25,19 @@ else
 	echo "Unsupported platform!"
 	exit 1
 fi
+
+# Adds dirs to the PATH variable without duplicating entries
+add_to_path() {
+	case ":$PATH:" in
+		*":$1:"*) :;; # already there
+		*) PATH="$1:$PATH";;
+	esac
+}
+# Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
+# directories to PATH for non-root users
+if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
+if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
+if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
 
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
@@ -467,10 +479,10 @@ print_step "Installing ioBroker" 3 "$NUM_STEPS"
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then
 	echo "Installed as root" >> $INSTALLER_INFO_FILE
-	npm i $INSTALL_TARGET --production --loglevel error --unsafe-perm > /dev/null
+	npm i $INSTALL_TARGET --loglevel error --unsafe-perm > /dev/null
 else
 	echo "Installed as non-root user $USER" >> $INSTALLER_INFO_FILE
-	npm i $INSTALL_TARGET --production --loglevel error > /dev/null
+	npm i $INSTALL_TARGET --loglevel error > /dev/null
 fi
 
 npm i --production --loglevel error --unsafe-perm > /dev/null
