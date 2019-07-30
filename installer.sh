@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-07-17" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-07-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then

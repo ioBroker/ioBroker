@@ -34,7 +34,7 @@
     ```git clone https://github.com/ioBroker/ioBroker.nodejs /opt/iobroker/```
 * Node Module installieren
 
-    ```npm install --production```
+    ```npm install --production --loglevel error --unsafe-perm```
 * Das Kommandozeilen-Tool ausführbar machen 
 
     ```chmod +x iobroker```

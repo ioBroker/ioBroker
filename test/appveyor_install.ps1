@@ -57,7 +57,7 @@ if ($NpmVersion -lt $MIN_NPM_VERSION) {
 
 # NPM version supported
 # Do the 2nd part of the installation
-npm install --production --no-optional
+npm install --production --loglevel error
 $EXIT_CODE = $LASTEXITCODE
 echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE
