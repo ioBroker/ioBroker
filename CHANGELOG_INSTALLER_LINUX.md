@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-08-07
+* Test if ports 9000 and 9001 are free before attempting the installation
+
 ## 2019-07-21
 * suppress warnings during npm install
 

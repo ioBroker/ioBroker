@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-07-21" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-08-07" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -328,7 +328,18 @@ install_package_macos() {
 	fi
 }
 
+# Tests if the given port is in use
+is_port_in_use() {
+	lsof -Pi :"$1" -sTCP:LISTEN -t > /dev/null
+}
+
 print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+
+if [ is_port_in_use 9000 ] || [ is_port_in_use 9001 ]; then
+	echo "${yellow}Port 9000 or 9001 is in use. This could mean that ioBroker is already running."
+	echo "Please make sure these ports are not in use before installing ioBroker!${normal}"
+	exit 1
+fi
 
 export AUTOMATED_INSTALLER="true"
 NUM_STEPS=4
