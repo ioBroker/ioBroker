@@ -55,9 +55,9 @@ fi
 
 # update repos
 if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update
+	$INSTALL_CMD update -y
 else
-    sudo $INSTALL_CMD update
+    sudo $INSTALL_CMD update -y
 fi
 
 # Adds dirs to the PATH variable without duplicating entries

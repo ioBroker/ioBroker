@@ -49,9 +49,9 @@ esac
 
 # update repos
 if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update
+	$INSTALL_CMD update -y
 else
-    sudo $INSTALL_CMD update
+    sudo $INSTALL_CMD update -y
 fi
 
 install_package_linux() {
@@ -173,20 +173,36 @@ install_nodejs() {
     install_package make
     install_package build-essential
     install_package curl
-    if [ "$IS_ROOT" = true ]; then
-        curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+
+
+    if [ "$INSTALL_CMD" = "yum" ]; then
+        if [ "$IS_ROOT" = true ]; then
+            curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+        else
+            curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+        fi
+    elif [ "$INSTALL_CMD" = "pkg" ]; then
+        if [ "$IS_ROOT" = true ]; then
+            pkg install node-10.11.0
+        else
+            sudo pkg install node-10.11.0
+        fi
+    elif [ "$INSTALL_CMD" = "brew" ]; then
+        echo "Please download node.js from https://nodejs.org/dist/v10.16.3/node-v10.16.3.pkg"
+        exit 1
     else
-        curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+        if [ "$IS_ROOT" = true ]; then
+            curl -sL https://deb.nodesource.com/setup_10.x | bash -
+        else
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+        fi
     fi
     install_package nodejs
 
     # Check if nodejs is now installed
     if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-        # last attempt
-        install_package nodejs
-        if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-            exit 1
-        fi
+        echo "Cannot install node.js! Please install manually"
+        exit 1
     else
         echo "${bold}Node.js Installed successfully!${normal}"
     fi
@@ -212,8 +228,11 @@ fi
 
 # Check if npm is installed
 if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-    echo "Please install npm first"
-    exit 1
+    install_package npm
+    if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+        echo "Please install npm first"
+        exit 1
+    fi
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
