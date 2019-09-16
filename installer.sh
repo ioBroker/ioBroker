@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-07-21" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-09-16" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -12,6 +12,7 @@ fi
 ROOT_GROUP="root"
 # Test which platform this script is being run on
 unamestr=$(uname)
+
 if [ "$unamestr" = "Linux" ]; then
 	HOST_PLATFORM="linux"
 elif [ "$unamestr" = "Darwin" ]; then
@@ -24,6 +25,172 @@ elif [ "$unamestr" = "FreeBSD" ]; then
 else
 	echo "Unsupported platform!"
 	exit 1
+fi
+
+install_package_linux() {
+	package="$1"
+	# Test if the package is installed
+	dpkg -s "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+	    if [ "$INSTALL_CMD" = "yum" ]; then
+	        # Install it
+            if [ "$IS_ROOT" = true ]; then
+                yum install -q -y $package > /dev/null
+            else
+                sudo yum install -q -y $package > /dev/null
+            fi
+	    else
+            # Install it
+            if [ "$IS_ROOT" = true ]; then
+                $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null
+            else
+                sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null
+            fi
+		fi
+		echo "Installed $package"
+	fi
+}
+
+install_package_freebsd() {
+	package="$1"
+	# check if package is installed (pkg is nice enough to provide us with a exitcode)
+	if ! pkg info "$1" >/dev/null 2>&1; then
+		# Install it
+		if [ "$IS_ROOT" = true ]; then
+			pkg install --yes --quiet "$1" > /dev/null
+		else
+			sudo pkg install --yes --quiet "$1" > /dev/null
+		fi
+		echo "Installed $package"
+	fi
+}
+
+install_package_macos() {
+	package="$1"
+	# Test if the package is installed (Use brew to install essential tools)
+	brew list | grep "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Install it
+		brew install $package &> /dev/null
+		if [ $? -eq 0 ]; then
+			echo "Installed $package"
+		else
+			echo "$package was not installed"
+		fi
+	fi
+}
+
+install_package() {
+    case "$HOST_PLATFORM" in
+	    "linux")
+	        install_package_linux $1
+	    ;;
+	    "osx")
+	        install_package_macos $1
+	    ;;
+	    "freebsd")
+	        install_package_freebsd $1
+	    ;;
+	    *)
+	    echo "Unsupported platform $HOST_PLATFORM"
+		;;
+	esac
+}
+
+# Detect install command
+case "$HOST_PLATFORM" in
+    "linux")
+        if [[ $(which "yum") == *"/yum" ]]; then
+            INSTALL_CMD="yum"
+        else
+            INSTALL_CMD="apt-get"
+        fi
+    ;;
+    "osx")
+        INSTALL_CMD="brew"
+    ;;
+    "freebsd")
+        INSTALL_CMD="pkg"
+    ;;
+    *)
+    echo "Unsupported platform $HOST_PLATFORM"
+    ;;
+esac
+
+# Enable colored output
+if test -t 1; then # if terminal
+	ncolors=$(which tput > /dev/null && tput colors) # supports color
+	if test -n "$ncolors" && test $ncolors -ge 8; then
+		termcols=$(tput cols)
+		bold="$(tput bold)"
+		underline="$(tput smul)"
+		standout="$(tput smso)"
+		normal="$(tput sgr0)"
+		black="$(tput setaf 0)"
+		red="$(tput setaf 1)"
+		green="$(tput setaf 2)"
+		yellow="$(tput setaf 3)"
+		blue="$(tput setaf 4)"
+		magenta="$(tput setaf 5)"
+		cyan="$(tput setaf 6)"
+		white="$(tput setaf 7)"
+	fi
+fi
+
+HLINE="=========================================================================="
+
+print_bold() {
+	title="$1"
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo
+	echo "    ${bold}${title}${normal}"
+	for text in "${@:2}"; do
+		echo "    ${text}"
+	done
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo
+}
+
+install_nodejs() {
+    print_bold "Node.js not found. Installing..."
+    install_package gcc-c++
+    install_package make
+    install_package build-essential
+    install_package curl
+    if [ "$IS_ROOT" = true ]; then
+        curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+    else
+        curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+    fi
+    install_package nodejs
+
+    echo "${bold}Node.js Installed successfully!${normal}"
+}
+
+# Check if "sudo" command available
+if [ "$IS_ROOT" != true ]; then
+    if [[ $(which "sudo") != *"/sudo" ]]; then
+        echo "Please install \"sudo\" command first. \"$INSTALL_CMD install sudo\""
+    fi
+fi
+
+if [ "$IS_ROOT" = true ]; then
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+else
+    print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+fi
+
+# Check if nodejs is installed
+if [[ $(which "node") != *"/node" ]]; then
+    install_nodejs
+fi
+
+# Check if npm is installed
+if [[ $(which "npm") != *"/npm" ]]; then
+    echo "Please install npm first"
+    exit 1
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -64,28 +231,6 @@ running_in_docker() {
 	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
 
-# Enable colored output
-if test -t 1; then # if terminal
-	ncolors=$(which tput > /dev/null && tput colors) # supports color
-	if test -n "$ncolors" && test $ncolors -ge 8; then
-		termcols=$(tput cols)
-		bold="$(tput bold)"
-		underline="$(tput smul)"
-		standout="$(tput smso)"
-		normal="$(tput sgr0)"
-		black="$(tput setaf 0)"
-		red="$(tput setaf 1)"
-		green="$(tput setaf 2)"
-		yellow="$(tput setaf 3)"
-		blue="$(tput setaf 4)"
-		magenta="$(tput setaf 5)"
-		cyan="$(tput setaf 6)"
-		white="$(tput setaf 7)"
-	fi
-fi
-
-HLINE="=========================================================================="
-
 print_step() {
 	stepname="$1"
 	stepnr="$2"
@@ -97,21 +242,6 @@ print_step() {
 	echo "${bold}${HLINE}${normal}"
 	echo
 }
-
-print_bold() {
-	title="$1"
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
-	echo "    ${bold}${title}${normal}"
-	for text in "${@:2}"; do
-		echo "    ${text}"
-	done
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
-}
-
 
 print_msg() {
 	text="$1"
@@ -163,7 +293,7 @@ create_user_linux() {
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
 		"mount" "umount" "systemd-run"
-		"apt-get" "apt" "dpkg" "make"
+		"$INSTALL_CMD" "apt" "dpkg" "make"
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
@@ -223,11 +353,11 @@ create_user_linux() {
 			mv ./temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	else
-		echo -e "$SUDOERS_CONTENT" > ./temp_sudo_file
-		sudo visudo -c -q -f ./temp_sudo_file && \
-			sudo chown root:$ROOT_GROUP ./temp_sudo_file &&
-			sudo chmod 440 ./temp_sudo_file &&
-			sudo mv ./temp_sudo_file $SUDOERS_FILE &&
+		sudo echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
+		sudo visudo -c -q -f ~/temp_sudo_file && \
+			sudo chown root:$ROOT_GROUP ~/temp_sudo_file &&
+			sudo chmod 440 ~/temp_sudo_file &&
+			sudo mv ~/temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	fi
 	# Add the user to all groups if they exist
@@ -283,52 +413,6 @@ create_user_freebsd() {
 		fi
 	done
 }
-
-install_package_linux() {
-	package="$1"
-	# Test if the package is installed
-	dpkg -s "$package" &> /dev/null
-	if [ $? -ne 0 ]; then
-		# Install it
-		if [ "$IS_ROOT" = true ]; then
-			apt-get install -yq --no-install-recommends $package > /dev/null
-		else
-			sudo apt-get install -yq --no-install-recommends $package > /dev/null
-		fi
-		echo "Installed $package"
-	fi
-}
-
-install_package_freebsd() {
-	package="$1"
-	# check if package is installed (pkg is nice enough to provide us with a exitcode)
-	if ! pkg info "$1" >/dev/null 2>&1; then
-		# Install it
-		if [ "$IS_ROOT" = true ]; then
-			pkg install --yes --quiet "$1" > /dev/null
-		else
-			sudo pkg install --yes --quiet "$1" > /dev/null
-		fi
-		echo "Installed $package"
-	fi
-}
-
-install_package_macos() {
-	package="$1"
-	# Test if the package is installed (Use brew to install essential tools)
-	brew list | grep "$package" &> /dev/null
-	if [ $? -ne 0 ]; then
-		# Install it
-		brew install $package &> /dev/null
-		if [ $? -eq 0 ]; then
-			echo "Installed $package"
-		else
-			echo "$package was not installed"
-		fi
-	fi
-}
-
-print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 
 export AUTOMATED_INSTALLER="true"
 NUM_STEPS=4
