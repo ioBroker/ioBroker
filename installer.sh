@@ -100,7 +100,7 @@ install_package() {
 # Detect install command
 case "$HOST_PLATFORM" in
     "linux")
-        if [[ $(which "yum") == *"/yum" ]]; then
+        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
             INSTALL_CMD="yum"
         else
             INSTALL_CMD="apt-get"
@@ -166,12 +166,17 @@ install_nodejs() {
     fi
     install_package nodejs
 
-    echo "${bold}Node.js Installed successfully!${normal}"
+    # Check if nodejs is installed
+    if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+        echo "Cannot install node.js!. Please install it manually"
+    else
+        echo "${bold}Node.js Installed successfully!${normal}"
+    fi
 }
 
 # Check if "sudo" command available
 if [ "$IS_ROOT" != true ]; then
-    if [[ $(which "sudo") != *"/sudo" ]]; then
+    if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
         echo "Please install \"sudo\" command first. \"$INSTALL_CMD install sudo\""
     fi
 fi
@@ -183,12 +188,12 @@ else
 fi
 
 # Check if nodejs is installed
-if [[ $(which "node") != *"/node" ]]; then
+if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
     install_nodejs
 fi
 
 # Check if npm is installed
-if [[ $(which "npm") != *"/npm" ]]; then
+if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
     echo "Please install npm first"
     exit 1
 fi
