@@ -183,9 +183,9 @@ install_nodejs() {
         fi
     elif [ "$INSTALL_CMD" = "pkg" ]; then
         if [ "$IS_ROOT" = true ]; then
-            pkg install node-10.11.0
+            pkg install -y node
         else
-            sudo pkg install node-10.11.0
+            sudo pkg install -y node
         fi
     elif [ "$INSTALL_CMD" = "brew" ]; then
         echo "Please download node.js from https://nodejs.org/dist/v10.16.3/node-v10.16.3.pkg"
