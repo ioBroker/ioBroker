@@ -53,6 +53,13 @@ if [ "$IS_ROOT" != true ]; then
     fi
 fi
 
+# update repos
+if [ "$IS_ROOT" = true ]; then
+	$INSTALL_CMD update
+else
+    sudo $INSTALL_CMD update
+fi
+
 # Adds dirs to the PATH variable without duplicating entries
 add_to_path() {
 	case ":$PATH:" in

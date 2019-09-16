@@ -47,6 +47,13 @@ case "$HOST_PLATFORM" in
     ;;
 esac
 
+# update repos
+if [ "$IS_ROOT" = true ]; then
+	$INSTALL_CMD update
+else
+    sudo $INSTALL_CMD update
+fi
+
 install_package_linux() {
 	package="$1"
 	# Test if the package is installed
@@ -173,10 +180,13 @@ install_nodejs() {
     fi
     install_package nodejs
 
-    # Check if nodejs is installed
+    # Check if nodejs is now installed
     if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-        echo "Cannot install node.js!. Please install it manually"
-        exit 1
+        # last attempt
+        install_package nodejs
+        if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+            exit 1
+        fi
     else
         echo "${bold}Node.js Installed successfully!${normal}"
     fi
