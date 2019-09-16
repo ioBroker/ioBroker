@@ -27,6 +27,26 @@ else
 	exit 1
 fi
 
+# Detect install command
+case "$HOST_PLATFORM" in
+    "linux")
+        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
+            INSTALL_CMD="yum"
+        else
+            INSTALL_CMD="apt-get"
+        fi
+    ;;
+    "osx")
+        INSTALL_CMD="brew"
+    ;;
+    "freebsd")
+        INSTALL_CMD="pkg"
+    ;;
+    *)
+    echo "Unsupported platform $HOST_PLATFORM"
+    ;;
+esac
+
 install_package_linux() {
 	package="$1"
 	# Test if the package is installed
@@ -103,26 +123,6 @@ install_package() {
 		;;
 	esac
 }
-
-# Detect install command
-case "$HOST_PLATFORM" in
-    "linux")
-        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
-            INSTALL_CMD="yum"
-        else
-            INSTALL_CMD="apt-get"
-        fi
-    ;;
-    "osx")
-        INSTALL_CMD="brew"
-    ;;
-    "freebsd")
-        INSTALL_CMD="pkg"
-    ;;
-    *)
-    echo "Unsupported platform $HOST_PLATFORM"
-    ;;
-esac
 
 # Enable colored output
 if test -t 1; then # if terminal

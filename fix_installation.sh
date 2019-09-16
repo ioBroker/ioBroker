@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-07-21" # format YYYY-MM-DD
+FIXER_VERSION="2019-09-16" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -26,6 +26,33 @@ else
 	exit 1
 fi
 
+# Detect install command
+case "$HOST_PLATFORM" in
+    "linux")
+        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
+            INSTALL_CMD="yum"
+        else
+            INSTALL_CMD="apt-get"
+        fi
+    ;;
+    "osx")
+        INSTALL_CMD="brew"
+    ;;
+    "freebsd")
+        INSTALL_CMD="pkg"
+    ;;
+    *)
+    echo "Unsupported platform $HOST_PLATFORM"
+    ;;
+esac
+
+# Check if "sudo" command available
+if [ "$IS_ROOT" != true ]; then
+    if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
+        echo "Please install \"sudo\" command first. \"$INSTALL_CMD install sudo\""
+    fi
+fi
+
 # Adds dirs to the PATH variable without duplicating entries
 add_to_path() {
 	case ":$PATH:" in
@@ -38,7 +65,6 @@ add_to_path() {
 if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
 if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
 if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
-
 
 # Directory where iobroker should be installed
 IOB_DIR="/opt/iobroker"
@@ -132,7 +158,6 @@ print_bold() {
 	echo
 }
 
-
 print_msg() {
 	text="$1"
 	echo
@@ -206,7 +231,7 @@ create_user_linux() {
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
 		"mount" "umount" "systemd-run"
-		"apt-get" "apt" "dpkg" "make"
+		"$INSTALL_CMD" "apt" "dpkg" "make"
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
@@ -334,13 +359,29 @@ install_package_linux() {
 	# Test if the package is installed
 	dpkg -s "$package" &> /dev/null
 	if [ $? -ne 0 ]; then
-		# Install it
-		if [ "$IS_ROOT" = true ]; then
-			apt-get install -yq --no-install-recommends $package > /dev/null
-		else
-			sudo apt-get install -yq --no-install-recommends $package > /dev/null
+	    if [ "$INSTALL_CMD" = "yum" ]; then
+	        # Install it
+            if [ "$IS_ROOT" = true ]; then
+                errormessage=$( yum install -q -y $package > /dev/null 2>&1)
+            else
+                errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
+            fi
+	    else
+            # Install it
+            if [ "$IS_ROOT" = true ]; then
+                errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+            else
+                errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+            fi
 		fi
-		echo "Installed $package"
+
+		# Hide "Error: Nothing to do"
+		if [ "$errormessage" != "Error: Nothing to do" ]; then
+		    if [ "$errormessage" != "" ]; then
+		        echo $errormessage
+    	    fi
+       		echo "Installed $package"
+		fi
 	fi
 }
 
@@ -373,6 +414,22 @@ install_package_macos() {
 	fi
 }
 
+install_package() {
+    case "$HOST_PLATFORM" in
+	    "linux")
+	        install_package_linux $1
+	    ;;
+	    "osx")
+	        install_package_macos $1
+	    ;;
+	    "freebsd")
+	        install_package_freebsd $1
+	    ;;
+	    *)
+	    echo "Unsupported platform $HOST_PLATFORM"
+		;;
+	esac
+}
 
 fix_dir_permissions() {
 	# Give the user access to all necessary directories
@@ -404,7 +461,11 @@ fix_dir_permissions() {
 	fi
 }
 
-print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
+if [ "$IS_ROOT" = true ]; then
+    print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
+else
+    print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
+fi
 
 NUM_STEPS=3
 
