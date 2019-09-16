@@ -50,10 +50,11 @@ install_package_linux() {
 
 		# Hide "Error: Nothing to do"
 		if [ "$errormessage" != "Error: Nothing to do" ]; then
-		    echo $errormessage
+		    if [ "$errormessage" != "" ]; then
+		        echo $errormessage
+    	    fi
+       		echo "Installed $package"
 		fi
-
-		echo "Installed $package"
 	fi
 }
 
