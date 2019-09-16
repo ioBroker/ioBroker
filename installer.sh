@@ -35,18 +35,24 @@ install_package_linux() {
 	    if [ "$INSTALL_CMD" = "yum" ]; then
 	        # Install it
             if [ "$IS_ROOT" = true ]; then
-                yum install -q -y $package > /dev/null
+                errormessage=$( yum install -q -y $package > /dev/null 2>&1)
             else
-                sudo yum install -q -y $package > /dev/null
+                errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
             fi
 	    else
             # Install it
             if [ "$IS_ROOT" = true ]; then
-                $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null
+                errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
             else
-                sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null
+                errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
             fi
 		fi
+
+		# Hide "Error: Nothing to do"
+		if [ "$errormessage" != "Error: Nothing to do" ]; then
+		    echo $errormessage
+		fi
+
 		echo "Installed $package"
 	fi
 }
@@ -169,6 +175,7 @@ install_nodejs() {
     # Check if nodejs is installed
     if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
         echo "Cannot install node.js!. Please install it manually"
+        exit 1
     else
         echo "${bold}Node.js Installed successfully!${normal}"
     fi
