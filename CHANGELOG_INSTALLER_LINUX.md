@@ -1,5 +1,10 @@
 # Changelog for Linux-Installer-Script
 
+
+## 2019-09-16
+* Install node.js 
+* Support of CentOS and AWS AMI
+
 ## 2019-07-21
 * suppress warnings during npm install
 
