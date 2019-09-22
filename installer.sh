@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-09-16" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-09-22" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -53,6 +53,30 @@ if [ "$IS_ROOT" = true ]; then
 else
     sudo $INSTALL_CMD update -y
 fi
+
+# npm mirror, copy https://raw.githubusercontent.com/docker/docker-install/master/install.sh
+REGISTRY_URL="https://registry.npmjs.org"
+mirror=''
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--mirror)
+			mirror="$2"
+			shift
+			;;
+		--*)
+			echo "Illegal option $1"
+			;;
+	esac
+	shift $(( $# > 0 ? 1 : 0 ))
+done
+
+case "$mirror" in
+	Taobao)
+		REGISTRY_URL="https://registry.npm.taobao.org"
+		;;
+esac
+
+echo "current registry is $REGISTRY_URL"
 
 install_package_linux() {
 	package="$1"
@@ -233,6 +257,9 @@ if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
         echo "Please install npm first"
         exit 1
     fi
+	# change registry
+	npm config set registry $REGISTRY_URL
+	echo "current system registry was: $(npm config get registry)"
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
