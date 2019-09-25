@@ -10,9 +10,10 @@ else
 	IS_ROOT=false
 fi
 ROOT_GROUP="root"
+
 # Test which platform this script is being run on
 unamestr=$(uname)
-
+# When adding another supported platform, also add detection for the install command
 if [ "$unamestr" = "Linux" ]; then
 	HOST_PLATFORM="linux"
 elif [ "$unamestr" = "Darwin" ]; then
@@ -29,29 +30,30 @@ fi
 
 # Detect install command
 case "$HOST_PLATFORM" in
-    "linux")
-        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
-            INSTALL_CMD="yum"
-        else
-            INSTALL_CMD="apt-get"
-        fi
-    ;;
-    "osx")
-        INSTALL_CMD="brew"
-    ;;
-    "freebsd")
-        INSTALL_CMD="pkg"
-    ;;
-    *)
-    echo "Unsupported platform $HOST_PLATFORM"
-    ;;
+	"linux")
+		if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
+			INSTALL_CMD="yum"
+		else
+			INSTALL_CMD="apt-get"
+		fi
+	;;
+	"osx")
+		INSTALL_CMD="brew"
+	;;
+	"freebsd")
+		INSTALL_CMD="pkg"
+	;;
+	# The following should never happen, but better be safe than sorry
+	*)
+		echo "Unsupported platform $HOST_PLATFORM"
+	;;
 esac
 
 # update repos
 if [ "$IS_ROOT" = true ]; then
 	$INSTALL_CMD update -y
 else
-    sudo $INSTALL_CMD update -y
+	sudo $INSTALL_CMD update -y
 fi
 
 install_package_linux() {
@@ -59,28 +61,28 @@ install_package_linux() {
 	# Test if the package is installed
 	dpkg -s "$package" &> /dev/null
 	if [ $? -ne 0 ]; then
-	    if [ "$INSTALL_CMD" = "yum" ]; then
-	        # Install it
-            if [ "$IS_ROOT" = true ]; then
-                errormessage=$( yum install -q -y $package > /dev/null 2>&1)
-            else
-                errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
-            fi
-	    else
-            # Install it
-            if [ "$IS_ROOT" = true ]; then
-                errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
-            else
-                errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
-            fi
+		if [ "$INSTALL_CMD" = "yum" ]; then
+			# Install it
+			if [ "$IS_ROOT" = true ]; then
+				errormessage=$( yum install -q -y $package > /dev/null 2>&1)
+			else
+				errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
+			fi
+		else
+			# Install it
+			if [ "$IS_ROOT" = true ]; then
+				errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+			else
+				errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+			fi
 		fi
 
 		# Hide "Error: Nothing to do"
 		if [ "$errormessage" != "Error: Nothing to do" ]; then
-		    if [ "$errormessage" != "" ]; then
-		        echo $errormessage
-    	    fi
-       		echo "Installed $package"
+			if [ "$errormessage" != "" ]; then
+				echo $errormessage
+			fi
+			echo "Installed $package"
 		fi
 	fi
 }
@@ -115,18 +117,19 @@ install_package_macos() {
 }
 
 install_package() {
-    case "$HOST_PLATFORM" in
-	    "linux")
-	        install_package_linux $1
-	    ;;
-	    "osx")
-	        install_package_macos $1
-	    ;;
-	    "freebsd")
-	        install_package_freebsd $1
-	    ;;
-	    *)
-	    echo "Unsupported platform $HOST_PLATFORM"
+	case "$HOST_PLATFORM" in
+		"linux")
+			install_package_linux $1
+		;;
+		"osx")
+			install_package_macos $1
+		;;
+		"freebsd")
+			install_package_freebsd $1
+		;;
+		# The following should never happen, but better be safe than sorry
+		*)
+			echo "Unsupported platform $HOST_PLATFORM"
 		;;
 	esac
 }
@@ -168,71 +171,75 @@ print_bold() {
 }
 
 install_nodejs() {
-    print_bold "Node.js not found. Installing..."
-    install_package gcc-c++
-    install_package make
-    install_package build-essential
-    install_package curl
+	print_bold "Node.js not found. Installing..."
+	install_package gcc-c++
+	install_package make
+	install_package build-essential
+	install_package curl
 
+	if [ "$INSTALL_CMD" = "yum" ]; then
+		if [ "$IS_ROOT" = true ]; then
+			curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+		else
+			curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+		fi
+	elif [ "$INSTALL_CMD" = "pkg" ]; then
+		if [ "$IS_ROOT" = true ]; then
+			pkg install -y node
+		else
+			sudo pkg install -y node
+		fi
+	elif [ "$INSTALL_CMD" = "brew" ]; then
+		echo "${red}Cannot install Node.js using brew.${normal}"
+		echo "Please download Node.js from https://nodejs.org/dist/v10.16.3/node-v10.16.3.pkg"
+		echo "Then try to install ioBroker again!"
+		exit 1
+	else
+		if [ "$IS_ROOT" = true ]; then
+			curl -sL https://deb.nodesource.com/setup_10.x | bash -
+		else
+			curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+		fi
+	fi
+	install_package nodejs
 
-    if [ "$INSTALL_CMD" = "yum" ]; then
-        if [ "$IS_ROOT" = true ]; then
-            curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-        else
-            curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
-        fi
-    elif [ "$INSTALL_CMD" = "pkg" ]; then
-        if [ "$IS_ROOT" = true ]; then
-            pkg install -y node
-        else
-            sudo pkg install -y node
-        fi
-    elif [ "$INSTALL_CMD" = "brew" ]; then
-        echo "Please download node.js from https://nodejs.org/dist/v10.16.3/node-v10.16.3.pkg"
-        exit 1
-    else
-        if [ "$IS_ROOT" = true ]; then
-            curl -sL https://deb.nodesource.com/setup_10.x | bash -
-        else
-            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-        fi
-    fi
-    install_package nodejs
-
-    # Check if nodejs is now installed
-    if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-        echo "Cannot install node.js! Please install manually"
-        exit 1
-    else
-        echo "${bold}Node.js Installed successfully!${normal}"
-    fi
+	# Check if nodejs is now installed
+	if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+		echo "${red}Cannot install Node.js! Please install it manually.${normal}"
+		exit 1
+	else
+		echo "${bold}Node.js Installed successfully!${normal}"
+	fi
 }
 
-# Check if "sudo" command available
+# Check if "sudo" command is available
 if [ "$IS_ROOT" != true ]; then
-    if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
-        echo "Please install \"sudo\" command first. \"$INSTALL_CMD install sudo\""
-    fi
+	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
+		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
+		echo "Please install it first using \"$INSTALL_CMD install sudo\""
+		exit 1
+	fi
 fi
 
 if [ "$IS_ROOT" = true ]; then
 	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
 else
-    print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
-# Check if nodejs is installed
+# Install Node.js if it is not installed
 if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-    install_nodejs
+	install_nodejs
 fi
 
 # Check if npm is installed
 if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-    install_package npm
-    if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-        echo "Please install npm first"
-        exit 1
-    fi
+	# If not, try to install it
+	install_package npm
+	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
+		exit 1
+	fi
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
