@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-09-25
+* Always run `npm` as iobroker when inside installation dir
+
 ## 2019-09-16
 * Support of CentOS and AWS AMI
 
