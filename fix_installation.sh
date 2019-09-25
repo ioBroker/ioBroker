@@ -669,10 +669,12 @@ if [ "$HOST_PLATFORM" != "osx" ]; then
 fi
 
 # Force npm to run as iobroker when inside IOB_DIR
-if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
-	change_npm_command_user
+if [[ "$CI" != true ]]; then # don't do it on TRAVIS
+	if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
+		change_npm_command_user
+	fi
+	change_npm_command_root
 fi
-change_npm_command_root
 
 # ########################################################
 print_step "Checking autostart" 3 "$NUM_STEPS"
