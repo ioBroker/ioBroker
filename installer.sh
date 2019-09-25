@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-09-16" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-09-25" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -134,6 +134,22 @@ install_package() {
 	esac
 }
 
+disable_npm_audit() {
+	# Make sure the npmrc file exists
+	touch .npmrc
+	# If .npmrc does not contain "audit=false", we need to change it
+	grep -q -E "^audit=false" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		# And write it back
+		echo "$NPMRC_FILE" > .npmrc
+		# Append the line to disable audit
+		echo "# disable npm audit warnings" >> .npmrc
+		echo "audit=false" >> .npmrc
+	fi
+}
+
 # Enable colored output
 if test -t 1; then # if terminal
 	ncolors=$(which tput > /dev/null && tput colors) # supports color
@@ -212,6 +228,12 @@ install_nodejs() {
 	fi
 }
 
+if [ "$IS_ROOT" = true ]; then
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+fi
+
 # Check if "sudo" command is available
 if [ "$IS_ROOT" != true ]; then
 	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
@@ -219,12 +241,6 @@ if [ "$IS_ROOT" != true ]; then
 		echo "Please install it first using \"$INSTALL_CMD install sudo\""
 		exit 1
 	fi
-fi
-
-if [ "$IS_ROOT" = true ]; then
-	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
-else
-	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 # Install Node.js if it is not installed
@@ -607,6 +623,9 @@ echo "Platform: $HOST_PLATFORM" >> $INSTALLER_INFO_FILE
 
 # ########################################################
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
+
+# Disable any warnings related to "npm audit fix"
+disable_npm_audit
 
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
