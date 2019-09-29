@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-09-25" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-09-29" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -662,14 +662,6 @@ fi
 cd $IOB_DIR
 echo "Directory $IOB_DIR created"
 
-# Force npm to run as iobroker when inside IOB_DIR
-if [[ "$CI" != true ]]; then # don't do it on TRAVIS
-	if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
-		change_npm_command_user
-	fi
-	change_npm_command_root
-fi
-
 # Log some information about the installer
 touch $INSTALLER_INFO_FILE
 chmod 777 $INSTALLER_INFO_FILE
@@ -1068,6 +1060,11 @@ fi
 if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
+# Force npm to run as iobroker when inside IOB_DIR
+if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
+	change_npm_command_user
+fi
+change_npm_command_root
 
 unset AUTOMATED_INSTALLER
 

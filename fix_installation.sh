@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-09-25" # format YYYY-MM-DD
+FIXER_VERSION="2019-09-29" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -669,12 +669,10 @@ if [ "$HOST_PLATFORM" != "osx" ]; then
 fi
 
 # Force npm to run as iobroker when inside IOB_DIR
-if [[ "$CI" != true ]]; then # don't do it on TRAVIS
-	if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
-		change_npm_command_user
-	fi
-	change_npm_command_root
+if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
+	change_npm_command_user
 fi
+change_npm_command_root
 
 # ########################################################
 print_step "Checking autostart" 3 "$NUM_STEPS"

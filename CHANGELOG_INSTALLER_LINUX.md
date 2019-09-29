@@ -1,6 +1,6 @@
 # Changelog for Linux-Installer-Script
 
-## 2019-09-25
+## 2019-09-29
 * Always run `npm` as iobroker when inside installation dir
 
 ## 2019-09-16
