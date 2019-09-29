@@ -49,13 +49,6 @@ case "$HOST_PLATFORM" in
 	;;
 esac
 
-# update repos
-if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update -y
-else
-	sudo $INSTALL_CMD update -y
-fi
-
 install_package_linux() {
 	package="$1"
 	# Test if the package is installed
@@ -212,7 +205,8 @@ install_nodejs() {
 	fi
 }
 
-# Check if "sudo" command is available
+# Check if "sudo" command is available (in case we're not root)
+# If we're root, sudo is going to be installed later
 if [ "$IS_ROOT" != true ]; then
 	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
 		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
@@ -225,6 +219,13 @@ if [ "$IS_ROOT" = true ]; then
 	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
 else
 	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+fi
+
+# update repos
+if [ "$IS_ROOT" = true ]; then
+	$INSTALL_CMD update -y
+else
+	sudo $INSTALL_CMD update -y
 fi
 
 # Install Node.js if it is not installed

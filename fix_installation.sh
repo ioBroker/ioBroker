@@ -49,20 +49,14 @@ case "$HOST_PLATFORM" in
 	;;
 esac
 
-# Check if "sudo" command is available
+# Check if "sudo" command is available (in case we're not root)
+# If we're root, sudo is going to be installed later
 if [ "$IS_ROOT" != true ]; then
 	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
 		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
 		echo "Please install it first using \"$INSTALL_CMD install sudo\""
 		exit 1
 	fi
-fi
-
-# update repos
-if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update -y
-else
-	sudo $INSTALL_CMD update -y
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -549,6 +543,14 @@ NUM_STEPS=3
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
+
+# update repos
+if [ "$IS_ROOT" = true ]; then
+	$INSTALL_CMD update -y
+else
+	sudo $INSTALL_CMD update -y
+fi
+
 # Determine the platform we operate on and select the installation routine/packages accordingly 
 case "$HOST_PLATFORM" in
 	"linux")
