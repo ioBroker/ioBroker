@@ -221,28 +221,6 @@ else
 	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
-# update repos
-if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update -y
-else
-	sudo $INSTALL_CMD update -y
-fi
-
-# Install Node.js if it is not installed
-if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-	install_nodejs
-fi
-
-# Check if npm is installed
-if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-	# If not, try to install it
-	install_package npm
-	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
-		exit 1
-	fi
-fi
-
 # Adds dirs to the PATH variable without duplicating entries
 add_to_path() {
 	case ":$PATH:" in
@@ -534,6 +512,28 @@ NUM_STEPS=4
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
+
+# update repos
+if [ "$IS_ROOT" = true ]; then
+	$INSTALL_CMD update -y
+else
+	sudo $INSTALL_CMD update -y
+fi
+
+# Install Node.js if it is not installed
+if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+	install_nodejs
+fi
+
+# Check if npm is installed
+if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+	# If not, try to install it
+	install_package npm
+	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
+		exit 1
+	fi
+fi
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
 case "$HOST_PLATFORM" in
