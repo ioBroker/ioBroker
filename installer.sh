@@ -365,6 +365,7 @@ create_user_linux() {
 		"vcgencmd"
 		"cat"
 		"df"
+		"mysqldump"
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
