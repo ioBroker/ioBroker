@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-09-25" # format YYYY-MM-DD
+FIXER_VERSION="2019-09-30" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -250,6 +250,8 @@ create_user_linux() {
 		"vcgencmd"
 		"cat"
 		"df"
+		"mysqldump"
+		"ldconfig"
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"

@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-09-30
+* Allow passwordless sudo for `mysqldump`
+* Allow passwordless sudo for `ldconfig`
+
 ## 2019-09-25
 * Disable any warnings related to `npm audit fix`
 
