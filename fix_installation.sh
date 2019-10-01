@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-09-16" # format YYYY-MM-DD
+FIXER_VERSION="2019-09-30" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -10,8 +10,10 @@ else
 	IS_ROOT=false
 fi
 ROOT_GROUP="root"
+
 # Test which platform this script is being run on
 unamestr=$(uname)
+# When adding another supported platform, also add detection for the install command
 if [ "$unamestr" = "Linux" ]; then
 	HOST_PLATFORM="linux"
 elif [ "$unamestr" = "Darwin" ]; then
@@ -28,36 +30,39 @@ fi
 
 # Detect install command
 case "$HOST_PLATFORM" in
-    "linux")
-        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
-            INSTALL_CMD="yum"
-        else
-            INSTALL_CMD="apt-get"
-        fi
-    ;;
-    "osx")
-        INSTALL_CMD="brew"
-    ;;
-    "freebsd")
-        INSTALL_CMD="pkg"
-    ;;
-    *)
-    echo "Unsupported platform $HOST_PLATFORM"
-    ;;
+	"linux")
+		if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
+			INSTALL_CMD="yum"
+		else
+			INSTALL_CMD="apt-get"
+		fi
+	;;
+	"osx")
+		INSTALL_CMD="brew"
+	;;
+	"freebsd")
+		INSTALL_CMD="pkg"
+	;;
+	# The following should never happen, but better be safe than sorry
+	*)
+		echo "Unsupported platform $HOST_PLATFORM"
+	;;
 esac
 
-# Check if "sudo" command available
+# Check if "sudo" command is available
 if [ "$IS_ROOT" != true ]; then
-    if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
-        echo "Please install \"sudo\" command first. \"$INSTALL_CMD install sudo\""
-    fi
+	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
+		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
+		echo "Please install it first using \"$INSTALL_CMD install sudo\""
+		exit 1
+	fi
 fi
 
 # update repos
 if [ "$IS_ROOT" = true ]; then
 	$INSTALL_CMD update -y
 else
-    sudo $INSTALL_CMD update -y
+	sudo $INSTALL_CMD update -y
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -245,6 +250,8 @@ create_user_linux() {
 		"vcgencmd"
 		"cat"
 		"df"
+		"mysqldump"
+		"ldconfig"
 	)
 
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
@@ -366,28 +373,28 @@ install_package_linux() {
 	# Test if the package is installed
 	dpkg -s "$package" &> /dev/null
 	if [ $? -ne 0 ]; then
-	    if [ "$INSTALL_CMD" = "yum" ]; then
-	        # Install it
-            if [ "$IS_ROOT" = true ]; then
-                errormessage=$( yum install -q -y $package > /dev/null 2>&1)
-            else
-                errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
-            fi
-	    else
-            # Install it
-            if [ "$IS_ROOT" = true ]; then
-                errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
-            else
-                errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
-            fi
+		if [ "$INSTALL_CMD" = "yum" ]; then
+			# Install it
+			if [ "$IS_ROOT" = true ]; then
+				errormessage=$( yum install -q -y $package > /dev/null 2>&1)
+			else
+				errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
+			fi
+		else
+			# Install it
+			if [ "$IS_ROOT" = true ]; then
+				errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+			else
+				errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+			fi
 		fi
 
 		# Hide "Error: Nothing to do"
 		if [ "$errormessage" != "Error: Nothing to do" ]; then
-		    if [ "$errormessage" != "" ]; then
-		        echo $errormessage
-    	    fi
-       		echo "Installed $package"
+			if [ "$errormessage" != "" ]; then
+				echo $errormessage
+			fi
+			echo "Installed $package"
 		fi
 	fi
 }
@@ -422,18 +429,19 @@ install_package_macos() {
 }
 
 install_package() {
-    case "$HOST_PLATFORM" in
-	    "linux")
-	        install_package_linux $1
-	    ;;
-	    "osx")
-	        install_package_macos $1
-	    ;;
-	    "freebsd")
-	        install_package_freebsd $1
-	    ;;
-	    *)
-	    echo "Unsupported platform $HOST_PLATFORM"
+	case "$HOST_PLATFORM" in
+		"linux")
+			install_package_linux $1
+		;;
+		"osx")
+			install_package_macos $1
+		;;
+		"freebsd")
+			install_package_freebsd $1
+		;;
+		# The following should never happen, but better be safe than sorry
+		*)
+			echo "Unsupported platform $HOST_PLATFORM"
 		;;
 	esac
 }
@@ -468,10 +476,26 @@ fix_dir_permissions() {
 	fi
 }
 
+disable_npm_audit() {
+	# Make sure the npmrc file exists
+	touch .npmrc
+	# If .npmrc does not contain "audit=false", we need to change it
+	grep -q -E "^audit=false" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		# And write it back
+		echo "$NPMRC_FILE" > .npmrc
+		# Append the line to disable audit
+		echo "# disable npm audit warnings" >> .npmrc
+		echo "audit=false" >> .npmrc
+	fi
+}
+
 if [ "$IS_ROOT" = true ]; then
-    print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
+	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
 else
-    print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
+	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 NUM_STEPS=3
@@ -596,6 +620,10 @@ fi
 if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
+
+# Disable any warnings related to "npm audit fix"
+cd $IOB_DIR
+disable_npm_audit
 
 # ########################################################
 print_step "Checking autostart" 3 "$NUM_STEPS"
