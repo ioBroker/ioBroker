@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-10-02
+* add nodejs mirror
+
 ## 2019-09-30
 * Allow passwordless sudo for `mysqldump`
 * Allow passwordless sudo for `ldconfig`
