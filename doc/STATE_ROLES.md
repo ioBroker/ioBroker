@@ -68,7 +68,9 @@
 * value.lock            - actual position of lock
 * value.max
 * value.min
-* value.power.consumption (unit=Wh or KWh)
+* value.power.consumption   (unit=Wh or KWh)
+* value.power.current       (unit=W or KW)
+* value.power.delivery      (unit=Wh or KWh)
 * value.pressure        - (unit: mbar)
 * value.severity        - some severity (states can be provided), Higher is more important
 * value.speed           - wind speed
