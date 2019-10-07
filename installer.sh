@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-02" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-07" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -56,23 +56,10 @@ else
 	sudo $INSTALL_CMD update -y
 fi
 
-# npm mirror, copy https://raw.githubusercontent.com/docker/docker-install/master/install.sh
+# npm mirror, default use npmjs.org
 REGISTRY_URL="https://registry.npmjs.org"
-mirror=''
-while [ $# -gt 0 ]; do
-	case "$1" in
-		--mirror)
-			mirror="$2"
-			shift
-			;;
-		--*)
-			echo "Illegal option $1"
-			;;
-	esac
-	shift $(( $# > 0 ? 1 : 0 ))
-done
 
-case "$mirror" in
+case "$MIRROR" in
 	Taobao)
 		REGISTRY_URL="https://registry.npm.taobao.org"
 		;;

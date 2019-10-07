@@ -1,6 +1,6 @@
 # Changelog for Linux-Installer-Script
 
-## 2019-10-02
+## 2019-10-07
 * add nodejs mirror
 
 ## 2019-09-30
