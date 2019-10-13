@@ -265,7 +265,7 @@ running_in_docker() {
 # Changes the user's npm command so it is always executed as `iobroker`
 # when inside the iobroker directory
 change_npm_command_user() {
-	NPM_COMMAND_FIX_PATH="~/.iobroker/npm_command_fix"
+	NPM_COMMAND_FIX_PATH=~/.iobroker/npm_command_fix
 	NPM_COMMAND_FIX=$(cat <<- EOF
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
@@ -278,7 +278,14 @@ change_npm_command_user() {
 		}
 		EOF
 	)
-	mkdir ~/.iobroker
+	BASHRC_LINES=$(cat <<- EOF
+
+		# Forces npm to run as $IOB_USER when inside the iobroker installation dir
+		source ~/.iobroker/npm_command_fix
+		EOF
+	)
+
+	mkdir -p ~/.iobroker
 	echo "$NPM_COMMAND_FIX" > "$NPM_COMMAND_FIX_PATH"
 	# Activate the change
 	source "$NPM_COMMAND_FIX_PATH"
@@ -288,12 +295,6 @@ change_npm_command_user() {
 	# If .bashrc does not contain the source command, we need to add it
 	sudo grep -q -E "^source ~/\.iobroker/npm_command_fix" ~/.bashrc &> /dev/null
 	if [ $? -ne 0 ]; then
-		BASHRC_LINES=$(cat <<- EOF
-
-			# Forces npm to run as $IOB_USER when inside the iobroker installation dir
-			source $NPM_COMMAND_FIX_PATH
-			EOF
-		)
 		echo "$BASHRC_LINES" >> ~/.bashrc
 	fi
 }
@@ -314,7 +315,14 @@ change_npm_command_root() {
 		}
 		EOF
 	)
-	sudo mkdir /root/.iobroker
+	BASHRC_LINES=$(cat <<- EOF
+
+		# Forces npm to run as $IOB_USER when inside the iobroker installation dir
+		source /root/.iobroker/npm_command_fix
+		EOF
+	)
+
+	sudo mkdir -p /root/.iobroker
 	echo "$NPM_COMMAND_FIX" | sudo tee "$NPM_COMMAND_FIX_PATH" &> /dev/null
 	# Activate the change
 	if [ "$IS_ROOT" = "true" ]; then
@@ -326,12 +334,6 @@ change_npm_command_root() {
 	# If .bashrc does not contain the source command, we need to add it
 	sudo grep -q -E "^source /root/\.iobroker/npm_command_fix" /root/.bashrc &> /dev/null
 	if [ $? -ne 0 ]; then
-		BASHRC_LINES=$(cat <<- EOF
-
-			# Forces npm to run as $IOB_USER when inside the iobroker installation dir
-			source $NPM_COMMAND_FIX_PATH
-			EOF
-		)
 		echo "$BASHRC_LINES" | sudo tee -a /root/.bashrc &> /dev/null
 	fi
 }
