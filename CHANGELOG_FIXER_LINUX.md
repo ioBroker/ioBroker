@@ -3,6 +3,9 @@
 ## 2019-10-13
 * Always run `npm` as iobroker when inside installation dir
 
+## 2019-09-25
+* Disable any warnings related to `npm audit fix`
+
 ## 2019-09-16
 * Support of CentOS and AWS AMI
 

@@ -127,6 +127,22 @@ install_package() {
 	esac
 }
 
+disable_npm_audit() {
+	# Make sure the npmrc file exists
+	touch .npmrc
+	# If .npmrc does not contain "audit=false", we need to change it
+	grep -q -E "^audit=false" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		# And write it back
+		echo "$NPMRC_FILE" > .npmrc
+		# Append the line to disable audit
+		echo "# disable npm audit warnings" >> .npmrc
+		echo "audit=false" >> .npmrc
+	fi
+}
+
 # Enable colored output
 if test -t 1; then # if terminal
 	ncolors=$(which tput > /dev/null && tput colors) # supports color
@@ -205,8 +221,13 @@ install_nodejs() {
 	fi
 }
 
-# Check if "sudo" command is available (in case we're not root)
-# If we're root, sudo is going to be installed later
+if [ "$IS_ROOT" = true ]; then
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+fi
+
+# Check if "sudo" command is available
 if [ "$IS_ROOT" != true ]; then
 	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
 		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
@@ -215,10 +236,19 @@ if [ "$IS_ROOT" != true ]; then
 	fi
 fi
 
-if [ "$IS_ROOT" = true ]; then
-	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
-else
-	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+# Install Node.js if it is not installed
+if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+	install_nodejs
+fi
+
+# Check if npm is installed
+if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+	# If not, try to install it
+	install_package npm
+	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
+		exit 1
+	fi
 fi
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -687,6 +717,9 @@ echo "Platform: $HOST_PLATFORM" >> $INSTALLER_INFO_FILE
 
 # ########################################################
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
+
+# Disable any warnings related to "npm audit fix"
+disable_npm_audit
 
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
