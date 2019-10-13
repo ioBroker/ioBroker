@@ -1,10 +1,10 @@
 # Changelog for Linux-Installer-Script
 
-## 2019-09-29
+## 2019-10-13
 * Always run `npm` as iobroker when inside installation dir
 
 ## 2019-09-16
-* Install node.js 
+* Install Node.js if it is not installed
 * Support of CentOS and AWS AMI
 
 ## 2019-07-21

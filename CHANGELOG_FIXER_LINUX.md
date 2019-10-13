@@ -1,6 +1,6 @@
 # Changelog for Linux-Fixer-Script
 
-## 2019-09-29
+## 2019-10-13
 * Always run `npm` as iobroker when inside installation dir
 
 ## 2019-09-16
