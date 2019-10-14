@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-09-30" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-13" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -48,13 +48,6 @@ case "$HOST_PLATFORM" in
 		echo "Unsupported platform $HOST_PLATFORM"
 	;;
 esac
-
-# update repos
-if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update -y
-else
-	sudo $INSTALL_CMD update -y
-fi
 
 install_package_linux() {
 	package="$1"
@@ -291,9 +284,88 @@ fi
 # Where the fixer script is located
 FIXER_URL="https://iobroker.net/fix.sh"
 
+# Remember the full path of bash
+BASH_CMDLINE=$(which bash)
+
 # Test if we're running inside a docker container
 running_in_docker() {
 	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
+}
+
+# Changes the user's npm command so it is always executed as `iobroker`
+# when inside the iobroker directory
+change_npm_command_user() {
+	NPM_COMMAND_FIX_PATH=~/.iobroker/npm_command_fix
+	NPM_COMMAND_FIX=$(cat <<- EOF
+		# While inside the iobroker directory, execute npm as iobroker
+		function npm() {
+			__real_npm=\$(which npm)
+			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+				sudo -H -u $IOB_USER \$__real_npm \$*
+			else
+				eval \$__real_npm \$*
+			fi
+		}
+		EOF
+	)
+	BASHRC_LINES=$(cat <<- EOF
+
+		# Forces npm to run as $IOB_USER when inside the iobroker installation dir
+		source ~/.iobroker/npm_command_fix
+		EOF
+	)
+
+	mkdir -p ~/.iobroker
+	echo "$NPM_COMMAND_FIX" > "$NPM_COMMAND_FIX_PATH"
+	# Activate the change
+	source "$NPM_COMMAND_FIX_PATH"
+
+	# Make sure the bashrc file exists - it should, but you never know...
+	touch ~/.bashrc
+	# If .bashrc does not contain the source command, we need to add it
+	sudo grep -q -E "^source ~/\.iobroker/npm_command_fix" ~/.bashrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		echo "$BASHRC_LINES" >> ~/.bashrc
+	fi
+}
+
+# Changes the root's npm command so it is always executed as `iobroker`
+# when inside the iobroker directory
+change_npm_command_root() {
+	NPM_COMMAND_FIX_PATH=/root/.iobroker/npm_command_fix
+	NPM_COMMAND_FIX=$(cat <<- EOF
+		# While inside the iobroker directory, execute npm as iobroker
+		function npm() {
+			__real_npm=\$(which npm)
+			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+				sudo -H -u $IOB_USER \$__real_npm \$*
+			else
+				eval \$__real_npm \$*
+			fi
+		}
+		EOF
+	)
+	BASHRC_LINES=$(cat <<- EOF
+
+		# Forces npm to run as $IOB_USER when inside the iobroker installation dir
+		source /root/.iobroker/npm_command_fix
+		EOF
+	)
+
+	sudo mkdir -p /root/.iobroker
+	echo "$NPM_COMMAND_FIX" | sudo tee "$NPM_COMMAND_FIX_PATH" &> /dev/null
+	# Activate the change
+	if [ "$IS_ROOT" = "true" ]; then
+		source "$NPM_COMMAND_FIX_PATH"
+	fi
+
+	# Make sure the bashrc file exists - it should, but you never know...
+	sudo touch /root/.bashrc
+	# If .bashrc does not contain the source command, we need to add it
+	sudo grep -q -E "^source /root/\.iobroker/npm_command_fix" /root/.bashrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		echo "$BASHRC_LINES" | sudo tee -a /root/.bashrc &> /dev/null
+	fi
 }
 
 print_step() {
@@ -487,6 +559,28 @@ NUM_STEPS=4
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
+# update repos
+if [ "$IS_ROOT" = true ]; then
+	$INSTALL_CMD update -y
+else
+	sudo $INSTALL_CMD update -y
+fi
+
+# Install Node.js if it is not installed
+if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+	install_nodejs
+fi
+
+# Check if npm is installed
+if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+	# If not, try to install it
+	install_package npm
+	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
+		exit 1
+	fi
+fi
+
 # Determine the platform we operate on and select the installation routine/packages accordingly 
 case "$HOST_PLATFORM" in
 	"linux")
@@ -667,7 +761,6 @@ echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 # Create "iob" and "iobroker" executables
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
-BASH_CMDLINE=$(which bash)
 if [ "$IOB_USER" != "$USER" ]; then
 	IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
 fi
@@ -1017,6 +1110,11 @@ fi
 if [ "$HOST_PLATFORM" != "osx" ]; then
 	fix_dir_permissions
 fi
+# Force npm to run as iobroker when inside IOB_DIR
+if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
+	change_npm_command_user
+fi
+change_npm_command_root
 
 unset AUTOMATED_INSTALLER
 
