@@ -1,3 +1,8 @@
+
+# ADOE/20191018
+# Changelog for Library
+#	* Fixed #212   escape `$` in `$(pwd)`
+
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
@@ -266,7 +271,7 @@ change_npm_command_user() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*
@@ -303,7 +308,7 @@ change_npm_command_root() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*
