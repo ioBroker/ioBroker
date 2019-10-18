@@ -24,12 +24,19 @@
 #
 #	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
 #	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
-#
+
+
+# ADOE/20191018
+# Changelog for Installer
+#	* moved most functions to library-file
+#	* loaded this libfile via curl, executed it and checked if working
+#	* Dont forget to adapt repository in $LIB_URL
+
 
 
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-13" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -40,10 +47,8 @@ ROOT_GROUP="root"
 
 LIB_NAME="instfixlib.sh"
 LIB_URL="https://raw.githubusercontent.com/ArneDoe/ioBroker/libload/$LIB_NAME"
-echo "curl -sL $LIB_URL"						#test
-#curl -sL $LIB_URL > ~/$LIB_NAME
-curl -L $LIB_URL > ~/$LIB_NAME					#test
-if test -f ~/$LIB_NAME; then echo "library found"; else echo "Inst/Fix: library not found"; exit -2; fi					#test
+echo "curl -sL $LIB_URL"																	#test
+curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Inst/Fix: library not found"; exit -2; fi
 # test one function of the library
 RET=$(libloaded)
