@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-13" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -127,7 +127,7 @@ change_npm_command_user() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*

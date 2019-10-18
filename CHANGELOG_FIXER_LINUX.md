@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-10-18
+* Emergency fix to last change: escape `$` in `$(pwd)`
+
 ## 2019-10-13
 * Always run `npm` as iobroker when inside installation dir
 
