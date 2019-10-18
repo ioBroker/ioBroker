@@ -1,53 +1,228 @@
 #!/bin/bash
 
+# ADOE/20191016
+# Changelog for Fixer
+#	* moved some functions to fit order in INSTALLER
+#	* refactored 3 repeated execution blocks into function "add2sudoers()"
+# From here, same changes as in INSTALLER
+#	* introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
+#	  and changed several findings
+#	* refactored detection of HOST_PLATFORM into function get_platform_params()
+#	* extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD,IOB_DIR,IOB_USER
+#	* changed "brew" and "pkg" to "$INSTALL_CMD"
+#	* refactored "Enable colored output" into function "enable_colored_output()"
+#	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
+#	* refactored "Determine the platform..." to function  "install_necessary_packages()"
+#	* calling "install_package()" instead of "install_package_*"
+#	* 
+
+# Please revise possible problems/simplifications:
+#	* Search for: "$SUDOERS_CONTENT". See comments "ADOE":
+#	  1) for ROOT, "./temp_sudo_file" is used instead of "~/temp_sudo_file"
+#	  2) IF: can "~/" be used also for root? ==> THEN: we can change the whole block to use $SUDOX
+#
+#	* Search for "ADOE: probably wrong? (iob   vs   iobroker)"
+#	  Root uses "$IOB_DIR/iobroker" and nonRoot uses "$IOB_DIR/iob" as source
+#	  Is that correct?
+#
+#	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
+#	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
+#
+
+
+
 # Increase this version number whenever you update the fixer
 FIXER_VERSION="2019-10-13" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
-if [[ $EUID -eq 0 ]]; then
-	IS_ROOT=true
-else
-	IS_ROOT=false
-fi
+if [[ $EUID -eq 0 ]];
+then IS_ROOT=true;  SUDOX=""
+else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 
-# Test which platform this script is being run on
-unamestr=$(uname)
-# When adding another supported platform, also add detection for the install command
-if [ "$unamestr" = "Linux" ]; then
-	HOST_PLATFORM="linux"
-elif [ "$unamestr" = "Darwin" ]; then
-	# OSX and Linux are the same in terms of install procedure
-	HOST_PLATFORM="osx"
-	ROOT_GROUP="wheel"
-elif [ "$unamestr" = "FreeBSD" ]; then
-	HOST_PLATFORM="freebsd"
-	ROOT_GROUP="wheel"
-else
-	echo "Unsupported platform!"
-	exit 1
-fi
-
-# Detect install command
-case "$HOST_PLATFORM" in
-	"linux")
+get_platform_params() {
+	# Test which platform this script is being run on
+	# When adding another supported platform, also add detection for the install command
+	# HOST_PLATFORM:  Name of the platform
+	# INSTALL_CMD:	  comand for package installation
+	# IOB_DIR:	  Directory where iobroker should be installed
+	# IOB_USER:	  The user to run ioBroker as
+	unamestr=$(uname)
+	case "$unamestr" in
+	"Linux")
+		HOST_PLATFORM="linux"
+		INSTALL_CMD="apt-get"
 		if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
 			INSTALL_CMD="yum"
-		else
-			INSTALL_CMD="apt-get"
 		fi
-	;;
-	"osx")
+		IOB_DIR="/opt/iobroker"
+		IOB_USER="iobroker"
+		;;
+	"Darwin")
+		# OSX and Linux are the same in terms of install procedure
+		HOST_PLATFORM="osx"
+		ROOT_GROUP="wheel"
 		INSTALL_CMD="brew"
-	;;
-	"freebsd")
+		IOB_DIR="/usr/local/iobroker"
+		IOB_USER="$USER"
+		;;
+	"FreeBSD")
+		HOST_PLATFORM="freebsd"
+		ROOT_GROUP="wheel"
 		INSTALL_CMD="pkg"
-	;;
-	# The following should never happen, but better be safe than sorry
+		IOB_DIR="/opt/iobroker"
+		IOB_USER="iobroker"
+		;;
 	*)
-		echo "Unsupported platform $HOST_PLATFORM"
-	;;
-esac
+		# The following should never happen, but better be safe than sorry
+		echo "Unsupported platform $unamestr"
+		exit 1
+		;;
+	esac
+}
+
+install_package_linux() {
+	package="$1"
+	# Test if the package is installed
+	dpkg -s "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+		if [ "$INSTALL_CMD" = "yum" ]; then
+			# Install it
+			errormessage=$( $SUDOX yum install -q -y $package > /dev/null 2>&1)
+		else
+			# Install it
+			errormessage=$( $SUDOX $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+		fi
+
+		# Hide "Error: Nothing to do"
+		if [ "$errormessage" != "Error: Nothing to do" ]; then
+			if [ "$errormessage" != "" ]; then
+				echo $errormessage
+			fi
+			echo "Installed $package"
+		fi
+	fi
+}
+
+install_package_freebsd() {
+	package="$1"
+	# check if package is installed (pkg is nice enough to provide us with a exitcode)
+	if ! $INSTALL_CMD info "$1" >/dev/null 2>&1; then
+		# Install it
+		$SUDOX $INSTALL_CMD install --yes --quiet "$1" > /dev/null
+		echo "Installed $package"
+	fi
+}
+
+install_package_macos() {
+	package="$1"
+	# Test if the package is installed (Use brew to install essential tools)
+	$INSTALL_CMD list | grep "$package" &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Install it
+		$INSTALL_CMD install $package &> /dev/null
+		if [ $? -eq 0 ]; then
+			echo "Installed $package"
+		else
+			echo "$package was not installed"
+		fi
+	fi
+}
+
+install_package() {
+	case "$HOST_PLATFORM" in
+		"linux")
+			install_package_linux $1
+		;;
+		"osx")
+			install_package_macos $1
+		;;
+		"freebsd")
+			install_package_freebsd $1
+		;;
+		# The following should never happen, but better be safe than sorry
+		*)
+			echo "Unsupported platform $HOST_PLATFORM"
+		;;
+	esac
+}
+
+disable_npm_audit() {
+	# Make sure the npmrc file exists
+	touch .npmrc
+	# If .npmrc does not contain "audit=false", we need to change it
+	grep -q -E "^audit=false" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		# And write it back
+		echo "$NPMRC_FILE" > .npmrc
+		# Append the line to disable audit
+		echo "# disable npm audit warnings" >> .npmrc
+		echo "audit=false" >> .npmrc
+	fi
+}
+
+enable_colored_output() {
+	# Enable colored output
+	if test -t 1; then # if terminal
+		ncolors=$(which tput > /dev/null && tput colors) # supports color
+		if test -n "$ncolors" && test $ncolors -ge 8; then
+			termcols=$(tput cols)
+			bold="$(tput bold)"
+			underline="$(tput smul)"
+			standout="$(tput smso)"
+			normal="$(tput sgr0)"
+			black="$(tput setaf 0)"
+			red="$(tput setaf 1)"
+			green="$(tput setaf 2)"
+			yellow="$(tput setaf 3)"
+			blue="$(tput setaf 4)"
+			magenta="$(tput setaf 5)"
+			cyan="$(tput setaf 6)"
+			white="$(tput setaf 7)"
+		fi
+	fi
+}
+
+HLINE="=========================================================================="
+enable_colored_output
+
+print_step() {
+	stepname="$1"
+	stepnr="$2"
+	steptotal="$3"
+
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo "${bold}    ${stepname} ${blue}(${stepnr}/${steptotal})${normal}"
+	echo "${bold}${HLINE}${normal}"
+	echo
+}
+
+print_bold() {
+	title="$1"
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo
+	echo "    ${bold}${title}${normal}"
+	for text in "${@:2}"; do
+		echo "    ${text}"
+	done
+	echo
+	echo "${bold}${HLINE}${normal}"
+	echo
+}
+
+print_msg() {
+	text="$1"
+	echo
+	echo -e "${text}"
+	echo
+}
+
+# Test which platform this script is being run on
+get_platform_params
 
 # Check if "sudo" command is available (in case we're not root)
 # If we're root, sudo is going to be installed later
@@ -66,17 +241,13 @@ add_to_path() {
 		*) PATH="$1:$PATH";;
 	esac
 }
+
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
 # directories to PATH for non-root users
 if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
 if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
 if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
 
-# Directory where iobroker should be installed
-IOB_DIR="/opt/iobroker"
-if [ "$HOST_PLATFORM" = "osx" ]; then
-	IOB_DIR="/usr/local/iobroker"
-fi
 CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
 INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
 
@@ -101,12 +272,6 @@ if [ ! -f "$INSTALLER_INFO_FILE" ]; then
 fi
 echo "Fixer version: $FIXER_VERSION" >> $INSTALLER_INFO_FILE
 echo "Fix date $(date +%F)" >> $INSTALLER_INFO_FILE
-
-# The user to run ioBroker as
-IOB_USER="iobroker"
-if [ "$HOST_PLATFORM" = "osx" ]; then
-	IOB_USER="$USER"
-fi
 
 # Where the fixer script is located
 FIXER_URL="https://iobroker.net/fix.sh"
@@ -195,79 +360,15 @@ change_npm_command_root() {
 	fi
 }
 
-# Enable colored output
-if test -t 1; then # if terminal
-	ncolors=$(which tput > /dev/null && tput colors) # supports color
-	if test -n "$ncolors" && test $ncolors -ge 8; then
-		termcols=$(tput cols)
-		bold="$(tput bold)"
-		underline="$(tput smul)"
-		standout="$(tput smso)"
-		normal="$(tput sgr0)"
-		black="$(tput setaf 0)"
-		red="$(tput setaf 1)"
-		green="$(tput setaf 2)"
-		yellow="$(tput setaf 3)"
-		blue="$(tput setaf 4)"
-		magenta="$(tput setaf 5)"
-		cyan="$(tput setaf 6)"
-		white="$(tput setaf 7)"
-	fi
-fi
-
-HLINE="=========================================================================="
-
-print_step() {
-	stepname="$1"
-	stepnr="$2"
-	steptotal="$3"
-
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo "${bold}    ${stepname} ${blue}(${stepnr}/${steptotal})${normal}"
-	echo "${bold}${HLINE}${normal}"
-	echo
-}
-
-print_bold() {
-	title="$1"
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
-	echo "    ${bold}${title}${normal}"
-	for text in "${@:2}"; do
-		echo "    ${text}"
-	done
-	echo
-	echo "${bold}${HLINE}${normal}"
-	echo
-}
-
-print_msg() {
-	text="$1"
-	echo
-	echo -e "${text}"
-	echo
-}
-
 set_root_permissions() {
 	file="$1"
-	if [ "$IS_ROOT" = true ]; then
-		chown root:$ROOT_GROUP $file
-		chmod 755 $file
-	else
-		sudo chown root:$ROOT_GROUP $file
-		sudo chmod 755 $file
-	fi
+	$SUDOX chown root:$ROOT_GROUP $file
+	$SUDOX chmod 755 $file
 }
 
 make_executable() {
 	file="$1"
-	if [ "$IS_ROOT" = true ]; then
-		chmod 755 $file
-	else
-		sudo chmod 755 $file
-	fi
+	$SUDOX chmod 755 $file
 }
 
 change_owner() {
@@ -278,11 +379,7 @@ change_owner() {
 	else
 		owner="$user:$user"
 	fi
-	cmdline="chown"
-	if [ "$IS_ROOT" != true ]; then
-		# use sudo as non-root
-		cmdline="sudo $cmdline"
-	fi
+	cmdline="$SUDOX chown"
 	if [ -d $file ]; then
 		# recursively chown directories
 		cmdline="$cmdline -R"
@@ -293,16 +390,29 @@ change_owner() {
 	$cmdline $owner $file
 }
 
+# 3 blocks code repetition reduced
+function add2sudoers() {
+	local xsudoers=$1
+	shift
+	xarry=("$@")
+	for cmd in "${xarry[@]}"; do
+		# Test each command if and where it is installed
+		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
+		cmd_path=$(which $cmd_bin 2> /dev/null)
+		if [ $? -eq 0 ]; then
+			# Then add the command to SUDOERS_CONTENT
+			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
+			SUDOERS_CONTENT+=$xsudoers"NOPASSWD: $full_cmd\n"
+		fi
+	done
+}
+
 create_user_linux() {
 	username="$1"
 	id "$username" &> /dev/null;
 	if [ $? -ne 0 ]; then
 		# User does not exist
-		if [ "$IS_ROOT" = true ]; then
-			useradd -m -s /usr/sbin/nologin "$username"
-		else
-			sudo useradd -m -s /usr/sbin/nologin "$username"
-		fi
+		$SUDOX useradd -m -s /usr/sbin/nologin "$username"
 		echo "User $username created"
 	fi
 	# Add the current non-root user to the iobroker group so he can access the iobroker dir
@@ -310,68 +420,40 @@ create_user_linux() {
 		sudo usermod -a -G $username $USER
 	fi
 
+
+	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands iobroker may execute as sudo without password
 	declare -a iob_commands=(
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
 		"mount" "umount" "systemd-run"
-		"$INSTALL_CMD" "apt" "dpkg" "make"
-		"ping" "fping"
-		"arp-scan"
-		"setcap"
-		"vcgencmd"
-		"cat"
-		"df"
-		"mysqldump"
-		"ldconfig"
+		"apt-get" "apt" "dpkg" "make"
+		"ping" "fping" "arp-scan"
+		"setcap" "vcgencmd" "cat" "df"
+		"mysqldump" "ldconfig"
 	)
-
-	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
-	for cmd in "${iob_commands[@]}"; do
-		# Test each command if and where it is installed
-		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
-		cmd_path=$(which $cmd_bin 2> /dev/null)
-		if [ $? -eq 0 ]; then
-			# Then add the command to SUDOERS_CONTENT
-			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
-			SUDOERS_CONTENT+="$username ALL=(ALL) NOPASSWD: $full_cmd\n"
-		fi
-	done
+	add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
 
 	# Additionally, define which iobroker-related commands may be executed by every user
 	declare -a all_user_commands=(
-		"systemctl start iobroker"
-		"systemctl stop iobroker"
-		"systemctl restart iobroker"
+			"systemctl start iobroker"
+			"systemctl stop iobroker"
+			"systemctl restart iobroker"
 	)
-	for cmd in "${all_user_commands[@]}"; do
-		# Test each command if and where it is installed
-		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
-		cmd_path=$(which $cmd_bin 2> /dev/null)
-		if [ $? -eq 0 ]; then
-			# Then add the command to SUDOERS_CONTENT
-			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
-			SUDOERS_CONTENT+="ALL ALL=NOPASSWD: $full_cmd\n"
-		fi
-	done
+	add2sudoers "ALL ALL=" "${all_user_commands[@]}"
 
 	# Furthermore, allow all users to execute node iobroker.js as iobroker
 	if [ "$IOB_USER" != "$USER" ]; then
-		cmd="node $CONTROLLER_DIR/iobroker.js"
-		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
-		cmd_path=$(which $cmd_bin 2> /dev/null)
-		if [ $? -eq 0 ]; then
-			# Then add the command to SUDOERS_CONTENT
-			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
-			SUDOERS_CONTENT+="ALL ALL=($IOB_USER) NOPASSWD: $full_cmd\n"
-		fi
+		add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js"
 	fi
-	# TODO: ^ Can we reduce code repetition in these 3 blocks? ^
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
+	$SUDOX rm -f $SUDOERS_FILE
+# ADOE: ./temp_sudo_file   vs.   ~/temp_sudo_file
+# ADOE: where is "." when we are ROOT?   '/root' ?
+# ADOE: cant we use '~' always?
 	if [ "$IS_ROOT" = true ]; then
-		rm -f $SUDOERS_FILE
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		visudo -c -q -f ~/temp_sudo_file && \
 			chown root:$ROOT_GROUP ~/temp_sudo_file &&
@@ -379,7 +461,6 @@ create_user_linux() {
 			mv ~/temp_sudo_file $SUDOERS_FILE &&
 			echo "Created $SUDOERS_FILE"
 	else
-		sudo rm -f $SUDOERS_FILE
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		sudo visudo -c -q -f ~/temp_sudo_file && \
 			sudo chown root:$ROOT_GROUP ~/temp_sudo_file &&
@@ -398,11 +479,7 @@ create_user_linux() {
 		tty
 	)
 	for grp in "${groups[@]}"; do
-		if [ "$IS_ROOT" = true ]; then
-			getent group $grp &> /dev/null && usermod -a -G $grp $username
-		else
-			getent group $grp &> /dev/null && sudo usermod -a -G $grp $username
-		fi
+		getent group $grp &> /dev/null && $SUDOX usermod -a -G $grp $username
 	done
 }
 
@@ -411,11 +488,7 @@ create_user_freebsd() {
 	id "$username" &> /dev/null
 	if [ $? -ne 0 ]; then
 		# User does not exist
-		if [ "$IS_ROOT" = true ]; then
-			pw useradd -m -s /usr/sbin/nologin -n "$username"
-		else
-			sudo pw useradd -m -s /usr/sbin/nologin -n "$username"
-		fi
+		$SUDOX pw useradd -m -s /usr/sbin/nologin -n "$username"
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands may be executed as sudo without password
@@ -433,90 +506,8 @@ create_user_freebsd() {
 		tty
 	)
 	for grp in "${groups[@]}"; do
-		if [ "$IS_ROOT" = true ]; then
-			getent group $grp && pw group mod $grp -m $username
-		else
-			getent group $grp && sudo pw group mod $grp -m $username
-		fi
+		getent group $grp && $SUDOX pw group mod $grp -m $username
 	done
-}
-
-install_package_linux() {
-	package="$1"
-	# Test if the package is installed
-	dpkg -s "$package" &> /dev/null
-	if [ $? -ne 0 ]; then
-		if [ "$INSTALL_CMD" = "yum" ]; then
-			# Install it
-			if [ "$IS_ROOT" = true ]; then
-				errormessage=$( yum install -q -y $package > /dev/null 2>&1)
-			else
-				errormessage=$( sudo yum install -q -y $package > /dev/null 2>&1)
-			fi
-		else
-			# Install it
-			if [ "$IS_ROOT" = true ]; then
-				errormessage=$( $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
-			else
-				errormessage=$( sudo $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
-			fi
-		fi
-
-		# Hide "Error: Nothing to do"
-		if [ "$errormessage" != "Error: Nothing to do" ]; then
-			if [ "$errormessage" != "" ]; then
-				echo $errormessage
-			fi
-			echo "Installed $package"
-		fi
-	fi
-}
-
-install_package_freebsd() {
-	package="$1"
-	# check if package is installed (pkg is nice enough to provide us with a exitcode)
-	if ! pkg info "$1" >/dev/null 2>&1; then
-		# Install it
-		if [ "$IS_ROOT" = true ]; then
-			pkg install --yes --quiet "$1" > /dev/null
-		else
-			sudo pkg install --yes --quiet "$1" > /dev/null
-		fi
-		echo "Installed $package"
-	fi
-}
-
-install_package_macos() {
-	package="$1"
-	# Test if the package is installed (Use brew to install essential tools)
-	brew list | grep "$package" &> /dev/null
-	if [ $? -ne 0 ]; then
-		# Install it
-		brew install $package &> /dev/null
-		if [ $? -eq 0 ]; then
-			echo "Installed $package"
-		else
-			echo "$package was not installed"
-		fi
-	fi
-}
-
-install_package() {
-	case "$HOST_PLATFORM" in
-		"linux")
-			install_package_linux $1
-		;;
-		"osx")
-			install_package_macos $1
-		;;
-		"freebsd")
-			install_package_freebsd $1
-		;;
-		# The following should never happen, but better be safe than sorry
-		*)
-			echo "Unsupported platform $HOST_PLATFORM"
-		;;
-	esac
 }
 
 fix_dir_permissions() {
@@ -534,11 +525,7 @@ fix_dir_permissions() {
 		sudo usermod -a -G $IOB_USER $USER
 	fi
 	# Give the iobroker group write access to all files by setting the default ACL
-	if [ "$IS_ROOT" = true ]; then
-		setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
-	else
-		sudo setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && sudo setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
-	fi
+	$SUDOX setfacl -Rdm g:$IOB_USER:rwx $IOB_DIR &> /dev/null && $SUDOX setfacl -Rm g:$IOB_USER:rwx $IOB_DIR &> /dev/null
 	if [ $? -ne 0 ]; then
 		# We cannot rely on default permissions on this system
 		echo "${yellow}This system does not support setting default permissions.${normal}"
@@ -549,26 +536,9 @@ fix_dir_permissions() {
 	fi
 }
 
-disable_npm_audit() {
-	# Make sure the npmrc file exists
-	touch .npmrc
-	# If .npmrc does not contain "audit=false", we need to change it
-	grep -q -E "^audit=false" .npmrc &> /dev/null
-	if [ $? -ne 0 ]; then
-		# Remember its contents (minus any possible audit=true)
-		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
-		# And write it back
-		echo "$NPMRC_FILE" > .npmrc
-		# Append the line to disable audit
-		echo "# disable npm audit warnings" >> .npmrc
-		echo "audit=false" >> .npmrc
-	fi
-}
-
-if [ "$IS_ROOT" = true ]; then
-	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
-else
-	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
+print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
+if [ "$IS_ROOT" != true ]; then
+	print_bold "" "You might need to enter your password a couple of times."
 fi
 
 NUM_STEPS=3
@@ -577,14 +547,12 @@ NUM_STEPS=3
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-if [ "$IS_ROOT" = true ]; then
-	$INSTALL_CMD update -y
-else
-	sudo $INSTALL_CMD update -y
-fi
+$SUDOX $INSTALL_CMD update -y
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
-case "$HOST_PLATFORM" in
+# TODO: Which other packages do we need by default?
+install_necessary_packages() {
+	case "$HOST_PLATFORM" in
 	"linux")
 		declare -a packages=(
 			"acl" # To use setfacl
@@ -601,19 +569,15 @@ case "$HOST_PLATFORM" in
 			"unzip"
 		)
 		for pkg in "${packages[@]}"; do
-			install_package_linux $pkg
+			install_package $pkg
 		done
 
 		# ==================
 		# Configure packages
 
 		# Give nodejs access to protected ports and raw devices like ble
-		cmdline="setcap"
-		if [ "$IS_ROOT" != true ]; then
-			# use sudo as non-root
-			cmdline="sudo $cmdline"
-		fi
-	
+		cmdline="$SUDOX setcap"
+
 		if running_in_docker; then
 			capabilities=$(grep ^CapBnd /proc/$$/status)
 			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
@@ -643,9 +607,9 @@ case "$HOST_PLATFORM" in
 			"python" # Required for node-gyp compilation
 		)
 		for pkg in "${packages[@]}"; do
-			install_package_freebsd $pkg
+			install_package $pkg
 		done
-		# we need to do some settting up things after installing the packages
+		# we need to do some setting up things after installing the packages
 		# ensure dns_sd.h is where node-gyp expect it 
 		ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
 		# enable dbus in the avahi configuration
@@ -663,7 +627,7 @@ case "$HOST_PLATFORM" in
 		;;
 	"osx")
 		# Test if brew is installed. If it is, install some packages that are often used.
-		brew -v &> /dev/null
+		$INSTALL_CMD -v &> /dev/null
 		if [ $? -eq 0 ]; then
 			declare -a packages=(
 				# These are used by a couple of adapters and should therefore exist:
@@ -673,7 +637,7 @@ case "$HOST_PLATFORM" in
 				"unzip"
 			)
 			for pkg in "${packages[@]}"; do
-				install_package_macos $pkg
+				install_package $pkg
 			done
 		else
 			echo "${yellow}Since brew is not installed, frequently-used dependencies could not be installed."
@@ -683,7 +647,9 @@ case "$HOST_PLATFORM" in
 		;;
 	*)
 		;;
-esac
+	esac
+}
+install_necessary_packages
 
 # ########################################################
 print_step "Checking ioBroker user and directory permissions" 2 "$NUM_STEPS"
@@ -708,43 +674,29 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 fi
 change_npm_command_root
 
-# Disable any warnings related to "npm audit fix"
-cd $IOB_DIR
-disable_npm_audit
-
 # ########################################################
 print_step "Checking autostart" 3 "$NUM_STEPS"
+cd $IOB_DIR
+
+# Disable any warnings related to "npm audit fix"
+disable_npm_audit
 
 # First delete all possible remains of an old installation
 INITD_FILE="/etc/init.d/iobroker.sh"
 if [ -f "$INITD_FILE" ]; then
-	if [ "$IS_ROOT" = true ]; then
-		rm "$INITD_FILE"
-	else
-		sudo rm "$INITD_FILE"
-	fi
+	$SUDOX rm "$INITD_FILE"
 fi
 
 SYSTEMD_FILE="/lib/systemd/system/iobroker.service"
 if [ -f "$SYSTEMD_FILE" ]; then
-	if [ "$IS_ROOT" = true ]; then
-		rm "$SYSTEMD_FILE"
-		systemctl stop iobroker &> /dev/null
-		systemctl daemon-reload
-	else
-		sudo rm "$SYSTEMD_FILE"
-		systemctl stop iobroker &> /dev/null
-		sudo systemctl daemon-reload
-	fi
+	$SUDOX rm "$SYSTEMD_FILE"
+	systemctl stop iobroker &> /dev/null
+	$SUDOX systemctl daemon-reload
 fi
 
 RCD_FILE="/usr/local/etc/rc.d/iobroker"
 if [ -f "$RCD_FILE" ]; then
-	if [ "$IS_ROOT" = true ]; then
-		rm "$RCD_FILE"
-	else
-		sudo rm "$RCD_FILE"
-	fi
+	$SUDOX rm "$RCD_FILE"
 	sysrc iobroker_enable-=YES
 fi
 
@@ -833,32 +785,24 @@ elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
 	IOB_BIN_PATH=/usr/local/bin
 fi
 # First remove the old binaries and symlinks
-if [ "$IS_ROOT" = true ]; then
-	rm -f $IOB_DIR/iobroker 
-	rm -f $IOB_BIN_PATH/iobroker
-	rm -f $IOB_DIR/iob
-	rm -f $IOB_BIN_PATH/iob
-else
-	sudo rm -f $IOB_DIR/iobroker 
-	sudo rm -f $IOB_BIN_PATH/iobroker
-	sudo rm -f $IOB_DIR/iob
-	sudo rm -f $IOB_BIN_PATH/iob
-fi
+$SUDOX rm -f $IOB_DIR/iobroker
+$SUDOX rm -f $IOB_BIN_PATH/iobroker
+$SUDOX rm -f $IOB_DIR/iob
+$SUDOX rm -f $IOB_BIN_PATH/iob
 
 # Symlink the global binaries iob and iobroker
+$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
+
+# ADOE: probably wrong? (iob   vs   iobroker)
 if [ "$IS_ROOT" = true ]; then
-	ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-	ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
+	     ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
 else
-	sudo ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-	sudo ln -sfn $IOB_DIR/iob $IOB_BIN_PATH/iob
+	sudo ln -sfn $IOB_DIR/iob      $IOB_BIN_PATH/iob
 fi
+
 # Symlink the local binary iob
-if [ "$IS_ROOT" = true ]; then
-	ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
-else
-	sudo ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
-fi
+$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
+
 # Create executables in the ioBroker directory
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
@@ -915,14 +859,19 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
+# ADOE: simplify?
+
+
 	if [ "$IS_ROOT" = true ]; then
 		echo "$INITD_FILE" > $SERVICE_FILENAME
-		set_root_permissions $SERVICE_FILENAME
 	else
 		echo "$INITD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-		set_root_permissions $SERVICE_FILENAME
 	fi
+	set_root_permissions $SERVICE_FILENAME
+
+
 	# Remember what we did
+
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 		echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
 	else
@@ -952,20 +901,17 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 	)
 
 	# Create the startup file and give it the correct permissions
+
 	if [ "$IS_ROOT" = true ]; then
 		echo "$SYSTEMD_FILE" > $SERVICE_FILENAME
-		chmod 644 $SERVICE_FILENAME
-
-		systemctl daemon-reload
-		systemctl enable iobroker
 	else
 		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
 		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
-		sudo chmod 644 $SERVICE_FILENAME
-
-		sudo systemctl daemon-reload
-		sudo systemctl enable iobroker
 	fi
+	$SUDOX chmod 644 $SERVICE_FILENAME
+	$SUDOX systemctl daemon-reload
+	$SUDOX systemctl enable iobroker
+
 	echo "Autostart enabled!"
 	echo "Autostart: systemd" >> "$INSTALLER_INFO_FILE"
 
@@ -1020,6 +966,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
+
 	if [ "$IS_ROOT" = true ]; then
 		echo "$RCD_FILE" > $SERVICE_FILENAME
 	else
@@ -1032,6 +979,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 	echo "Autostart enabled!"
 	echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
+
 elif [ "$INITSYSTEM" = "launchctl" ]; then
 	echo "Enabling autostart..."
 
