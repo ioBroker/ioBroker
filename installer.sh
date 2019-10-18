@@ -46,9 +46,10 @@ curl -L $LIB_URL > ~/$LIB_NAME					#test
 if test -f ~/$LIB_NAME; then echo "library found"; else echo "Inst/Fix: library not found"; exit -2; fi					#test
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Inst/Fix: library not found"; exit -2; fi
 # test one function of the library
-(RET=$(libloaded)) 2>/dev/null
+RET=$(libloaded)
 if [ $? -ne 0 ]; then echo "Inst/Fix: library $LIB_NAME could not be loaded!"; exit -2; fi
-if [ "$RET" != "ok" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; fi
+if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; fi
+echo "Library=$RET"
 
 
 # Test which platform this script is being run on

@@ -1,8 +1,12 @@
 # ------------------------------
+# Increase this version number whenever you update the fixer
+# ------------------------------
+IFIX_LIB_VERSION="2019-10-18" # format YYYY-MM-DD
+
+# ------------------------------
 # test function of the library
 # ------------------------------
-function libloaded() { local retval='ok'; echo "$retval"; }
-
+function libloaded() { echo "$IFIX_LIB_VERSION"; }
 
 # ------------------------------
 # functions for ioBroker Installer/Fixer
