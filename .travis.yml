@@ -133,8 +133,8 @@ script:
       cd $TEST_DIR
       ls -la
       # Run the fixer
-      sudo chmod +x fix_installation.sh
-      fix_installation.sh
+      sudo chmod +x ./fix_installation.sh
+      ./fix_installation.sh
       # Test file permissions again...
       sudo chmod +x travis/travis_testFiles.sh
       travis/travis_testFiles.sh
