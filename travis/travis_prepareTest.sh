@@ -17,6 +17,3 @@ sleep 60
 ps auxww|grep io
 date
 cat log/iobroker*.log
-
-node node_modules/iobroker.js-controller/iobroker.js stop
-sleep 30
