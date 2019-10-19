@@ -12,7 +12,7 @@ IOB_USER="iobroker"
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
 	# On OSX, the current one (i.e. travis)
 	TEST_CMD="test"
-	OWNER_CMD="stat --format=%U"
+	OWNER_CMD="stat -f %U"
 	IOB_USER="travis"
 fi
 
