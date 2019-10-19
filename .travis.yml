@@ -104,6 +104,8 @@ install:
   - test/travis_install.sh
   - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
+  # Remember the test dir
+  - TEST_DIR=$(pwd)
   # only continue tests if ioBroker was actually installed
   - |
     if [ ! -e iob_not_installed ]; then
@@ -124,4 +126,15 @@ script:
       # And perform the tests
       cd $IOB_DIR
       node_modules/mocha/bin/mocha --exit
+    fi
+  # Now test that the fixer does what it should
+  - |
+    if [ ! -e iob_not_installed ]; then
+      cd $TEST_DIR
+      # Run the fixer
+      sudo chmod +x fix_installation.sh
+      fix_installation.sh
+      # Test file permissions again...
+      sudo chmod +x test/travis_testFiles.sh
+      test/travis_testFiles.sh
     fi
