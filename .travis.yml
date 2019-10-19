@@ -98,23 +98,23 @@ before_install:
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-6; fi'
 install:
-  - sudo chmod +x test/travis_install.sh
+  - sudo chmod +x travis/travis_install.sh
   # make sure the iob_not_installed file can be created
   - sudo chmod 777 .
-  - test/travis_install.sh
+  - travis/travis_install.sh
   - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
   # Remember the test dir
-  - TEST_DIR=$(pwd)
+  - TEST_DIR=$(pwd) && echo "$TEST_DIR"
   # only continue tests if ioBroker was actually installed
   - |
     if [ ! -e iob_not_installed ]; then
       # Test file permissions now...
-      sudo chmod +x test/travis_testFiles.sh
-      test/travis_testFiles.sh
+      sudo chmod +x travis/travis_testFiles.sh
+      travis/travis_testFiles.sh
       # ...because this will change them
-      sudo chmod +x test/travis_prepareTest.sh
-      test/travis_prepareTest.sh
+      sudo chmod +x travis/travis_prepareTest.sh
+      travis/travis_prepareTest.sh
     fi
 script:
   # only continue tests if ioBroker was actually installed
@@ -131,12 +131,10 @@ script:
   - |
     if [ ! -e iob_not_installed ]; then
       cd $TEST_DIR
-      # Move the test file back here - TODO: maybe travis test files should be in a separate folder?
-      mv $IOB_DIR/test/travis_testFiles.sh test
       # Run the fixer
       sudo chmod +x fix_installation.sh
       fix_installation.sh
       # Test file permissions again...
-      sudo chmod +x test/travis_testFiles.sh
-      test/travis_testFiles.sh
+      sudo chmod +x travis/travis_testFiles.sh
+      travis/travis_testFiles.sh
     fi
