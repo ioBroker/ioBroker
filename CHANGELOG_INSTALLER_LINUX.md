@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-10-19
+* Install `python-dev` to fix npm error: `ImportError: No module named compiler.ast`
+
 ## 2019-10-18
 * Emergency fix to last change: escape `$` in `$(pwd)`
 

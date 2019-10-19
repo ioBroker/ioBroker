@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-18" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-19" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -599,6 +599,7 @@ case "$HOST_PLATFORM" in
 			"git"
 			"curl"
 			"unzip"
+			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
 		for pkg in "${packages[@]}"; do
 			install_package_linux $pkg
