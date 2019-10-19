@@ -620,6 +620,7 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg

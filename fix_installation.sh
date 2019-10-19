@@ -554,9 +554,10 @@ fix_dir_permissions() {
 	fi
 }
 
-print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
-if [ "$IS_ROOT" != true ]; then
-	print_bold "" "You might need to enter your password a couple of times."
+if [ "$IS_ROOT" = true ]; then
+	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 NUM_STEPS=3
@@ -585,6 +586,7 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg
