@@ -109,9 +109,11 @@ before_script:
   # only continue tests if ioBroker was actually installed
   - |
     if [ ! -e iob_not_installed ]; then
-      # Test file permissions now...
-      sudo chmod +x travis/travis_testFiles.sh
-      travis/travis_testFiles.sh
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        # Test file permissions now...
+        sudo chmod +x travis/travis_testFiles.sh
+        travis/travis_testFiles.sh
+      fi
       # ...because this will change them
       sudo chmod +x travis/travis_prepareTest.sh
       travis/travis_prepareTest.sh
@@ -132,7 +134,7 @@ script:
     if [ ! -e iob_not_installed ]; then
       # Stop ioBroker processes before running the fixer
       IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
-      mv test $IOB_DIR/test
+      cd $IOB_DIR
       node node_modules/iobroker.js-controller/iobroker.js stop
       sleep 30
       #
@@ -141,7 +143,9 @@ script:
       # Run the fixer
       sudo chmod +x ./fix_installation.sh
       sudo ./fix_installation.sh
-      # Test file permissions again...
-      sudo chmod +x travis/travis_testFiles.sh
-      travis/travis_testFiles.sh
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        # Test file permissions again...
+        sudo chmod +x travis/travis_testFiles.sh
+        travis/travis_testFiles.sh
+      fi
     fi
