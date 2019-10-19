@@ -14,7 +14,12 @@
 #	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
 #	* refactored "Determine the platform..." to function  "install_necessary_packages()"
 #	* calling "install_package()" instead of "install_package_*"
-#	* 
+
+# ADOE/20191019
+# Changelog for Fixer
+#	* Fixed #212   escape `$` in `$(pwd)`
+#	* Fixed #216   Fix permission errors in fixer
+
 
 # Please revise possible problems/simplifications:
 #	* Search for: "$SUDOERS_CONTENT". See comments "ADOE":
@@ -27,12 +32,11 @@
 #
 #	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
 #	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
-#
 
 
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-13" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-19" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -149,17 +153,17 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	touch .npmrc
+	sudo touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	grep -q -E "^audit=false" .npmrc &> /dev/null
+	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
 		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
 		# And write it back
-		echo "$NPMRC_FILE" > .npmrc
+		echo "$NPMRC_FILE" | sudo tee .npmrc &> /dev/null
 		# Append the line to disable audit
-		echo "# disable npm audit warnings" >> .npmrc
-		echo "audit=false" >> .npmrc
+		echo "# disable npm audit warnings" | sudo tee -a .npmrc &> /dev/null
+		echo "audit=false" | sudo tee -a .npmrc &> /dev/null
 	fi
 }
 
@@ -284,6 +288,16 @@ running_in_docker() {
 	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
 
+
+# Catch the case where a user
+#	- installs ioBroker as NOT root,
+#	- but later runs npm install as root
+#
+# The way this is handled, makes sure that both "npm install" AND "sudo npm install"
+# get patched to run "npm" as the user iobroker.
+# For      npm install to work, we need to patch the command for non-root, hence       ~/.bashrc.
+# For sudo npm install to work, we need to patch the command for     root, hence   /root/.bashrc.
+
 # Changes the user's npm command so it is always executed as `iobroker`
 # when inside the iobroker directory
 change_npm_command_user() {
@@ -292,7 +306,7 @@ change_npm_command_user() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*
@@ -329,7 +343,7 @@ change_npm_command_root() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*
@@ -420,7 +434,6 @@ create_user_linux() {
 		sudo usermod -a -G $username $USER
 	fi
 
-
 	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands iobroker may execute as sudo without password
@@ -429,17 +442,22 @@ create_user_linux() {
 		"systemctl start" "systemctl stop"
 		"mount" "umount" "systemd-run"
 		"apt-get" "apt" "dpkg" "make"
-		"ping" "fping" "arp-scan"
-		"setcap" "vcgencmd" "cat" "df"
-		"mysqldump" "ldconfig"
+		"ping" "fping"
+		"arp-scan"
+		"setcap"
+		"vcgencmd"
+		"cat"
+		"df"
+		"mysqldump"
+		"ldconfig"
 	)
 	add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
 
 	# Additionally, define which iobroker-related commands may be executed by every user
 	declare -a all_user_commands=(
-			"systemctl start iobroker"
-			"systemctl stop iobroker"
-			"systemctl restart iobroker"
+		"systemctl start iobroker"
+		"systemctl stop iobroker"
+		"systemctl restart iobroker"
 	)
 	add2sudoers "ALL ALL=" "${all_user_commands[@]}"
 
@@ -451,8 +469,7 @@ create_user_linux() {
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	$SUDOX rm -f $SUDOERS_FILE
 # ADOE: ./temp_sudo_file   vs.   ~/temp_sudo_file
-# ADOE: where is "." when we are ROOT?   '/root' ?
-# ADOE: cant we use '~' always?
+# ADOE: caveat: FIXER <> INSTALLER!   why?
 	if [ "$IS_ROOT" = true ]; then
 		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 		visudo -c -q -f ~/temp_sudo_file && \
@@ -519,6 +536,7 @@ fix_dir_permissions() {
 	if [ -d "/home/$IOB_USER/.npm" ]; then
 		change_owner $IOB_USER "/home/$IOB_USER/.npm"
 	fi
+
 	if [ "$IS_ROOT" != true ]; then
 		# To allow the current user to install adapters via the shell,
 		# We need to give it access rights to the directory aswell
@@ -662,11 +680,9 @@ if [ "$USER" != "$IOB_USER" ]; then
 	fi
 fi
 
-# Make sure that the app dir belongs to the correct user
-# Don't do it on OSX, because we'll install as the current user anyways
-if [ "$HOST_PLATFORM" != "osx" ]; then
-	fix_dir_permissions
-fi
+# Disable any warnings related to "npm audit fix"
+cd $IOB_DIR
+disable_npm_audit
 
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
@@ -674,12 +690,14 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 fi
 change_npm_command_root
 
+# Make sure that the app dir belongs to the correct user
+# Don't do it on OSX, because we'll install as the current user anyways
+if [ "$HOST_PLATFORM" != "osx" ]; then
+	fix_dir_permissions
+fi
+
 # ########################################################
 print_step "Checking autostart" 3 "$NUM_STEPS"
-cd $IOB_DIR
-
-# Disable any warnings related to "npm audit fix"
-disable_npm_audit
 
 # First delete all possible remains of an old installation
 INITD_FILE="/etc/init.d/iobroker.sh"
@@ -804,8 +822,9 @@ fi
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
-echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
+echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
 make_executable "$IOB_DIR/iobroker"
+
 # and give them the correct ownership
 change_owner $IOB_USER "$IOB_DIR/iobroker"
 change_owner $IOB_USER "$IOB_DIR/iob"

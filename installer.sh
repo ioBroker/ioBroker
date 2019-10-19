@@ -13,7 +13,9 @@
 #	* calling "install_package()" instead of "install_package_*"
 #	* refactored "Detect IP address" tu function "detect_ip_address()"
 
-
+# ADOE/20191019
+# Changelog for Installer
+#	* Fixed #212   escape `$` in `$(pwd)`
 
 
 # Please revise possible problems/simplifications:
@@ -27,12 +29,11 @@
 #
 #	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
 #	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
-#
 
 
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-13" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-19" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -149,17 +150,17 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	touch .npmrc
+	sudo touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	grep -q -E "^audit=false" .npmrc &> /dev/null
+	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
 		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
 		# And write it back
-		echo "$NPMRC_FILE" > .npmrc
+		echo "$NPMRC_FILE" | sudo tee .npmrc &> /dev/null
 		# Append the line to disable audit
-		echo "# disable npm audit warnings" >> .npmrc
-		echo "audit=false" >> .npmrc
+		echo "# disable npm audit warnings" | sudo tee -a .npmrc &> /dev/null
+		echo "audit=false" | sudo tee -a .npmrc &> /dev/null
 	fi
 }
 
@@ -335,6 +336,16 @@ running_in_docker() {
 	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
 
+
+# Catch the case where a user
+#	- installs ioBroker as NOT root,
+#	- but later runs npm install as root
+#
+# The way this is handled, makes sure that both "npm install" AND "sudo npm install"
+# get patched to run "npm" as the user iobroker.
+# For      npm install to work, we need to patch the command for non-root, hence       ~/.bashrc.
+# For sudo npm install to work, we need to patch the command for     root, hence   /root/.bashrc.
+
 # Changes the user's npm command so it is always executed as `iobroker`
 # when inside the iobroker directory
 change_npm_command_user() {
@@ -343,7 +354,7 @@ change_npm_command_user() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*
@@ -380,7 +391,7 @@ change_npm_command_root() {
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
-			if [[ $(pwd) == "$IOB_DIR"* ]]; then
+			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
 				eval \$__real_npm \$*
@@ -422,6 +433,23 @@ make_executable() {
 	$SUDOX chmod 755 $file
 }
 
+# 3 blocks code repetition reduced
+function add2sudoers() {
+	local xsudoers=$1
+	shift
+	xarry=("$@")
+	for cmd in "${xarry[@]}"; do
+		# Test each command if and where it is installed
+		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
+		cmd_path=$(which $cmd_bin 2> /dev/null)
+		if [ $? -eq 0 ]; then
+			# Then add the command to SUDOERS_CONTENT
+			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
+			SUDOERS_CONTENT+=$xsudoers"NOPASSWD: $full_cmd\n"
+		fi
+	done
+}
+
 create_user_linux() {
 	username="$1"
 	id "$username" &> /dev/null;
@@ -435,13 +463,14 @@ create_user_linux() {
 		sudo usermod -a -G $username $USER
 	fi
 
+	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands iobroker may execute as sudo without password
 	declare -a iob_commands=(
 		"shutdown -h now" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
 		"mount" "umount" "systemd-run"
-		"$INSTALL_CMD" "apt" "dpkg" "make"
+		"apt-get" "apt" "dpkg" "make"
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
@@ -451,18 +480,7 @@ create_user_linux() {
 		"mysqldump"
 		"ldconfig"
 	)
-
-	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
-	for cmd in "${iob_commands[@]}"; do
-		# Test each command if and where it is installed
-		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
-		cmd_path=$(which $cmd_bin 2> /dev/null)
-		if [ $? -eq 0 ]; then
-			# Then add the command to SUDOERS_CONTENT
-			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
-			SUDOERS_CONTENT+="$username ALL=(ALL) NOPASSWD: $full_cmd\n"
-		fi
-	done
+	add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
 
 	# Additionally, define which iobroker-related commands may be executed by every user
 	declare -a all_user_commands=(
@@ -470,29 +488,12 @@ create_user_linux() {
 		"systemctl stop iobroker"
 		"systemctl restart iobroker"
 	)
-	for cmd in "${all_user_commands[@]}"; do
-		# Test each command if and where it is installed
-		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
-		cmd_path=$(which $cmd_bin 2> /dev/null)
-		if [ $? -eq 0 ]; then
-			# Then add the command to SUDOERS_CONTENT
-			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
-			SUDOERS_CONTENT+="ALL ALL=NOPASSWD: $full_cmd\n"
-		fi
-	done
+	add2sudoers "ALL ALL=" "${all_user_commands[@]}"
 
 	# Furthermore, allow all users to execute node iobroker.js as iobroker
 	if [ "$IOB_USER" != "$USER" ]; then
-		cmd="node $CONTROLLER_DIR/iobroker.js"
-		cmd_bin=$(echo $cmd | cut -d ' ' -f1)
-		cmd_path=$(which $cmd_bin 2> /dev/null)
-		if [ $? -eq 0 ]; then
-			# Then add the command to SUDOERS_CONTENT
-			full_cmd=$(echo "$cmd" | sed -e "s|$cmd_bin|$cmd_path|")
-			SUDOERS_CONTENT+="ALL ALL=($IOB_USER) NOPASSWD: $full_cmd\n"
-		fi
+		add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js"
 	fi
-	# TODO: ^ Can we reduce code repetition in these 3 blocks? ^
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 # ADOE: ./temp_sudo_file   vs.   ~/temp_sudo_file
@@ -843,8 +844,15 @@ fi
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
+# TODO: check if this must be fixed like in in the FIXER for #216
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
+#echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
 make_executable "$IOB_DIR/iobroker"
+
+# TODO: check if this is necessary, like in the FIXER
+## and give them the correct ownership
+#change_owner $IOB_USER "$IOB_DIR/iobroker"
+#change_owner $IOB_USER "$IOB_DIR/iob"
 
 # #############################
 # Enable autostart
