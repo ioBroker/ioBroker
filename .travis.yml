@@ -106,8 +106,11 @@ install:
 before_script:
   # only continue tests if ioBroker was actually installed
   - |
-    if [ ! -e iob_not_installed ]
-    then
+    if [ ! -e iob_not_installed ]; then
+      # Test file permissions now...
+      sudo chmod +x test/travis_testFiles.sh
+      test/travis_testFiles.sh
+      # ...because this will change them
       sudo chmod +x test/travis_prepareTest.sh
       test/travis_prepareTest.sh
     fi
