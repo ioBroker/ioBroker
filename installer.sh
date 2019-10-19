@@ -375,8 +375,15 @@ fi
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
+# TODO: check if this must be fixed like in in the FIXER for #216
 echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
+#echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
 make_executable "$IOB_DIR/iobroker"
+
+# TODO: check if this is necessary, like in the FIXER
+## and give them the correct ownership
+#change_owner $IOB_USER "$IOB_DIR/iobroker"
+#change_owner $IOB_USER "$IOB_DIR/iob"
 
 # #############################
 # Enable autostart

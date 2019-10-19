@@ -1,7 +1,9 @@
 
-# ADOE/20191018
+# ADOE/20191019
 # Changelog for Library
 #	* Fixed #212   escape `$` in `$(pwd)`
+#	* Fixed #216   Fix permission errors in fixer
+
 
 # ------------------------------
 # Increase this version number whenever you update the fixer
@@ -197,17 +199,17 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	touch .npmrc
+	sudo touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	grep -q -E "^audit=false" .npmrc &> /dev/null
+	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
 		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
 		# And write it back
-		echo "$NPMRC_FILE" > .npmrc
+		echo "$NPMRC_FILE" | sudo tee .npmrc &> /dev/null
 		# Append the line to disable audit
-		echo "# disable npm audit warnings" >> .npmrc
-		echo "audit=false" >> .npmrc
+		echo "# disable npm audit warnings" | sudo tee -a .npmrc &> /dev/null
+		echo "audit=false" | sudo tee -a .npmrc &> /dev/null
 	fi
 }
 
@@ -263,6 +265,16 @@ running_in_docker() {
 	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
 }
 
+
+# Catch the case where a user
+#	- installs ioBroker as NOT root,
+#	- but later runs npm install as root
+#
+# The way this is handled, makes sure that both "npm install" AND "sudo npm install"
+# get patched to run "npm" as the user iobroker.
+# For      npm install to work, we need to patch the command for non-root, hence       ~/.bashrc.
+# For sudo npm install to work, we need to patch the command for     root, hence   /root/.bashrc.
+
 # Changes the user's npm command so it is always executed as `iobroker`
 # when inside the iobroker directory
 change_npm_command_user() {
@@ -299,7 +311,6 @@ change_npm_command_user() {
 		echo "$BASHRC_LINES" >> ~/.bashrc
 	fi
 }
-
 # Changes the root's npm command so it is always executed as `iobroker`
 # when inside the iobroker directory
 change_npm_command_root() {

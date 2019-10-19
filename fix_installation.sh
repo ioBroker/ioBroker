@@ -34,6 +34,9 @@
 #	* loaded this libfile via curl, executed it and checked if working
 #	* Dont forget to adapt repository in $LIB_URL
 
+# ADOE/20191019
+#	* Fixed #216   Fix permission errors in fixer
+
 
 
 
@@ -235,11 +238,9 @@ if [ "$USER" != "$IOB_USER" ]; then
 	fi
 fi
 
-# Make sure that the app dir belongs to the correct user
-# Don't do it on OSX, because we'll install as the current user anyways
-if [ "$HOST_PLATFORM" != "osx" ]; then
-	fix_dir_permissions
-fi
+# Disable any warnings related to "npm audit fix"
+cd $IOB_DIR
+disable_npm_audit
 
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
@@ -247,12 +248,14 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 fi
 change_npm_command_root
 
+# Make sure that the app dir belongs to the correct user
+# Don't do it on OSX, because we'll install as the current user anyways
+if [ "$HOST_PLATFORM" != "osx" ]; then
+	fix_dir_permissions
+fi
+
 # ########################################################
 print_step "Checking autostart" 3 "$NUM_STEPS"
-cd $IOB_DIR
-
-# Disable any warnings related to "npm audit fix"
-disable_npm_audit
 
 # First delete all possible remains of an old installation
 INITD_FILE="/etc/init.d/iobroker.sh"
@@ -377,8 +380,9 @@ fi
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
-echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
+echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
 make_executable "$IOB_DIR/iobroker"
+
 # and give them the correct ownership
 change_owner $IOB_USER "$IOB_DIR/iobroker"
 change_owner $IOB_USER "$IOB_DIR/iob"
