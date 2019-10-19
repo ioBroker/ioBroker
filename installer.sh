@@ -13,6 +13,17 @@
 #	* calling "install_package()" instead of "install_package_*"
 #	* refactored "Detect IP address" tu function "detect_ip_address()"
 
+# ADOE/20191018
+# Changelog for Installer
+#	* moved most functions to library-file
+#	* loaded this libfile via curl, executed it and checked if working
+#	* Dont forget to adapt repository in $LIB_URL
+
+# ADOE/20191019
+# Changelog for Installer
+#	* Fixed #212   escape `$` in `$(pwd)`
+
+
 # Please revise possible problems/simplifications:
 #	* Search for: "$SUDOERS_CONTENT". See comments "ADOE":
 #	  1) for ROOT, "./temp_sudo_file" is used instead of "~/temp_sudo_file"
@@ -26,17 +37,10 @@
 #	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
 
 
-# ADOE/20191018
-# Changelog for Installer
-#	* moved most functions to library-file
-#	* loaded this libfile via curl, executed it and checked if working
-#	* Dont forget to adapt repository in $LIB_URL
-
-
 
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-18" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-19" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -150,6 +154,7 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg
