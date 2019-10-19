@@ -131,6 +131,8 @@ script:
   - |
     if [ ! -e iob_not_installed ]; then
       cd $TEST_DIR
+      # Move the test file back here - TODO: maybe travis test files should be in a separate folder?
+      mv $IOB_DIR/test/travis_testFiles.sh test
       # Run the fixer
       sudo chmod +x fix_installation.sh
       fix_installation.sh
