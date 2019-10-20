@@ -217,6 +217,14 @@ print_msg() {
 	echo
 }
 
+# Adds dirs to the PATH variable without duplicating entries
+add_to_path() {
+	case ":$PATH:" in
+		*":$1:"*) :;; # already there
+		*) PATH="$1:$PATH";;
+	esac
+}
+
 function write_to_file()  { echo $1 | $SUDOX tee    $2 &> /dev/null }
 function append_to_file() { echo $1 | $SUDOX tee -a $2 &> /dev/null }
 
@@ -233,14 +241,6 @@ if [ "$IS_ROOT" != true ]; then
 		exit 1
 	fi
 fi
-
-# Adds dirs to the PATH variable without duplicating entries
-add_to_path() {
-	case ":$PATH:" in
-		*":$1:"*) :;; # already there
-		*) PATH="$1:$PATH";;
-	esac
-}
 
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
 # directories to PATH for non-root users

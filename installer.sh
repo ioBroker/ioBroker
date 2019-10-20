@@ -265,8 +265,17 @@ detect_ip_address() {
 	return $IP
 }
 
+# Adds dirs to the PATH variable without duplicating entries
+add_to_path() {
+	case ":$PATH:" in
+		*":$1:"*) :;; # already there
+		*) PATH="$1:$PATH";;
+	esac
+}
+
 function write_to_file()  { echo $1 | $SUDOX tee    $2 &> /dev/null }
 function append_to_file() { echo $1 | $SUDOX tee -a $2 &> /dev/null }
+
 
 # Test which platform this script is being run on
 get_platform_params
@@ -284,30 +293,6 @@ print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_V
 if [ "$IS_ROOT" != true ]; then
 	print_bold "" "You might need to enter your password a couple of times."
 fi
-
-# ADOE: this is a double. See below after "Installing prerequisites".
-## Install Node.js if it is not installed
-#if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-#	install_nodejs
-#fi
-#
-## Check if npm is installed
-#if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-#	# If not, try to install it
-#	install_package npm
-#	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-#		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
-#		exit 1
-#	fi
-#fi
-
-# Adds dirs to the PATH variable without duplicating entries
-add_to_path() {
-	case ":$PATH:" in
-		*":$1:"*) :;; # already there
-		*) PATH="$1:$PATH";;
-	esac
-}
 
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
 # directories to PATH for non-root users
