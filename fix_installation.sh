@@ -20,23 +20,15 @@
 #	* Fixed #212   escape `$` in `$(pwd)`
 #	* Fixed #216   Fix permission errors in fixer
 
+# ADOE/20191020
+# Changelog for Installer
+#	* Minor fixes
 
-# Please revise possible problems/simplifications:
-#	* Search for: "$SUDOERS_CONTENT". See comments "ADOE":
-#	  1) for ROOT, "./temp_sudo_file" is used instead of "~/temp_sudo_file"
-#	  2) IF: can "~/" be used also for root? ==> THEN: we can change the whole block to use $SUDOX
-#
-#	* Search for "ADOE: probably wrong? (iob   vs   iobroker)"
-#	  Root uses "$IOB_DIR/iobroker" and nonRoot uses "$IOB_DIR/iob" as source
-#	  Is that correct?
-#
-#	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
-#	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
 
 
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-19" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-20" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -160,10 +152,10 @@ disable_npm_audit() {
 		# Remember its contents (minus any possible audit=true)
 		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
 		# And write it back
-		echo "$NPMRC_FILE" | sudo tee .npmrc &> /dev/null
+		write_to_file "$NPMRC_FILE" .npmrc
 		# Append the line to disable audit
-		echo "# disable npm audit warnings" | sudo tee -a .npmrc &> /dev/null
-		echo "audit=false" | sudo tee -a .npmrc &> /dev/null
+		append_to_file "# disable npm audit warnings" .npmrc
+		append_to_file "audit=false" .npmrc
 	fi
 }
 
@@ -224,6 +216,10 @@ print_msg() {
 	echo -e "${text}"
 	echo
 }
+
+function write_to_file()  { echo $1 | $SUDOX tee    $2 &> /dev/null }
+function append_to_file() { echo $1 | $SUDOX tee -a $2 &> /dev/null }
+
 
 # Test which platform this script is being run on
 get_platform_params
@@ -289,9 +285,8 @@ running_in_docker() {
 }
 
 
-# Catch the case where a user
-#	- installs ioBroker as NOT root,
-#	- but later runs npm install as root
+# change_npm_command_user: patches the npm command for the current user (if iobroker was installed as non-root).
+# change_npm_command_root: patches the npmcommand for the root user (always!)
 #
 # The way this is handled, makes sure that both "npm install" AND "sudo npm install"
 # get patched to run "npm" as the user iobroker.
@@ -359,7 +354,7 @@ change_npm_command_root() {
 	)
 
 	sudo mkdir -p /root/.iobroker
-	echo "$NPM_COMMAND_FIX" | sudo tee "$NPM_COMMAND_FIX_PATH" &> /dev/null
+	write_to_file "$NPM_COMMAND_FIX" $NPM_COMMAND_FIX_PATH
 	# Activate the change
 	if [ "$IS_ROOT" = "true" ]; then
 		source "$NPM_COMMAND_FIX_PATH"
@@ -370,7 +365,7 @@ change_npm_command_root() {
 	# If .bashrc does not contain the source command, we need to add it
 	sudo grep -q -E "^source /root/\.iobroker/npm_command_fix" /root/.bashrc &> /dev/null
 	if [ $? -ne 0 ]; then
-		echo "$BASHRC_LINES" | sudo tee -a /root/.bashrc &> /dev/null
+		append_to_file "$BASHRC_LINES" /root/.bashrc
 	fi
 }
 
@@ -468,23 +463,12 @@ create_user_linux() {
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
 	$SUDOX rm -f $SUDOERS_FILE
-# ADOE: ./temp_sudo_file   vs.   ~/temp_sudo_file
-# ADOE: caveat: FIXER <> INSTALLER!   why?
-	if [ "$IS_ROOT" = true ]; then
-		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
-		visudo -c -q -f ~/temp_sudo_file && \
-			chown root:$ROOT_GROUP ~/temp_sudo_file &&
-			chmod 440 ~/temp_sudo_file &&
-			mv ~/temp_sudo_file $SUDOERS_FILE &&
-			echo "Created $SUDOERS_FILE"
-	else
-		echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
-		sudo visudo -c -q -f ~/temp_sudo_file && \
-			sudo chown root:$ROOT_GROUP ~/temp_sudo_file &&
-			sudo chmod 440 ~/temp_sudo_file &&
-			sudo mv ~/temp_sudo_file $SUDOERS_FILE &&
-			echo "Created $SUDOERS_FILE"
-	fi
+	echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
+	$SUDOX visudo -c -q -f ~/temp_sudo_file && \
+		$SUDOX chown root:$ROOT_GROUP ~/temp_sudo_file &&
+		$SUDOX chmod 440 ~/temp_sudo_file &&
+		$SUDOX mv ~/temp_sudo_file $SUDOERS_FILE &&
+		echo "Created $SUDOERS_FILE"
 	# Add the user to all groups if they exist
 	declare -a groups=(
 		audio
@@ -538,8 +522,6 @@ fix_dir_permissions() {
 	fi
 
 	if [ "$IS_ROOT" != true ]; then
-		# To allow the current user to install adapters via the shell,
-		# We need to give it access rights to the directory aswell
 		sudo usermod -a -G $IOB_USER $USER
 	fi
 	# Give the iobroker group write access to all files by setting the default ACL
@@ -812,19 +794,12 @@ $SUDOX rm -f $IOB_BIN_PATH/iob
 
 # Symlink the global binaries iob and iobroker
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-
-# ADOE: probably wrong? (iob   vs   iobroker)
-if [ "$IS_ROOT" = true ]; then
-	     ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
-else
-	sudo ln -sfn $IOB_DIR/iob      $IOB_BIN_PATH/iob
-fi
-
+$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
 # Symlink the local binary iob
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
-echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
+write_to_file "$IOB_EXECUTABLE" $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
 
 # and give them the correct ownership
@@ -880,19 +855,10 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
-# ADOE: simplify?
-
-
-	if [ "$IS_ROOT" = true ]; then
-		echo "$INITD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$INITD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-	fi
+	write_to_file "$INITD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
 
-
 	# Remember what we did
-
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 		echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
 	else
@@ -923,10 +889,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 
 	# Create the startup file and give it the correct permissions
 
-	if [ "$IS_ROOT" = true ]; then
-		echo "$SYSTEMD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
+	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
+	if [ "$IS_ROOT" != true ]; then
 		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
 	fi
 	$SUDOX chmod 644 $SERVICE_FILENAME
@@ -987,12 +951,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
-
-	if [ "$IS_ROOT" = true ]; then
-		echo "$RCD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$RCD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-	fi
+	write_to_file "$RCD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
 
 	# Enable startup
