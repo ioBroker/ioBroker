@@ -7,12 +7,12 @@ cd $IOB_DIR
 
 # On linux, the iobroker user must be able to access the files
 TEST_CMD="sudo -u iobroker test"
-OWNER_CMD="stat -c %U"
+# OWNER_CMD="stat -c %U"
 IOB_USER="iobroker"
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
 	# On OSX, the current one (i.e. travis)
 	TEST_CMD="test"
-	OWNER_CMD="stat -f %U"
+	# OWNER_CMD="stat -f %U"
 	IOB_USER="travis"
 fi
 
@@ -21,7 +21,7 @@ fi
 # All files in $IOB_DIR must belong to $IOB_USER and be readable
 shopt -s dotglob # include dotfiles in *.* glob
 for file in *.*; do
-	[ $($OWNER_CMD $file) = "$IOB_USER" ] # has the correct owner
+	[ $(ls -la | grep $file | cut -d" " -f3) = "$IOB_USER" ] # has the correct owner
 	$TEST_CMD -r $file # is readable
 done
 
