@@ -1,5 +1,17 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-10-21
+* (ADOE) Large refactoring:
+    * moved some functions to fit order in INSTALLER
+    * refactored 3 repeated execution blocks into function "add2sudoers()"
+    * introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
+    * refactored detection of HOST_PLATFORM into function get_platform_params()
+    * extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD, IOB_DIR, IOB_USER
+    * changed "brew" and "pkg" to "$INSTALL_CMD"
+    * refactored "Enable colored output" into function "enable_colored_output()"
+    * refactored "Determine the platform..." to function  "install_necessary_packages()"
+    * calling "install_package()" instead of "install_package_*"
+
 ## 2019-10-19
 * Install `python-dev` to fix npm error: `ImportError: No module named compiler.ast`
 
