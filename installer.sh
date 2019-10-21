@@ -248,9 +248,12 @@ add_to_path() {
 	esac
 }
 
-function write_to_file()  { echo $1 | $SUDOX tee    $2 &> /dev/null }
-function append_to_file() { echo $1 | $SUDOX tee -a $2 &> /dev/null }
-
+function write_to_file()  {
+	echo $1 | $SUDOX tee $2 &> /dev/null
+}
+function append_to_file() {
+	echo $1 | $SUDOX tee -a $2 &> /dev/null
+}
 
 # Test which platform this script is being run on
 get_platform_params
