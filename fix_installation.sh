@@ -1,34 +1,7 @@
 #!/bin/bash
 
-# ADOE/20191016
-# Changelog for Fixer
-#	* moved some functions to fit order in INSTALLER
-#	* refactored 3 repeated execution blocks into function "add2sudoers()"
-# From here, same changes as in INSTALLER
-#	* introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
-#	  and changed several findings
-#	* refactored detection of HOST_PLATFORM into function get_platform_params()
-#	* extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD,IOB_DIR,IOB_USER
-#	* changed "brew" and "pkg" to "$INSTALL_CMD"
-#	* refactored "Enable colored output" into function "enable_colored_output()"
-#	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
-#	* refactored "Determine the platform..." to function  "install_necessary_packages()"
-#	* calling "install_package()" instead of "install_package_*"
-
-# ADOE/20191019
-# Changelog for Fixer
-#	* Fixed #212   escape `$` in `$(pwd)`
-#	* Fixed #216   Fix permission errors in fixer
-
-# ADOE/20191020
-# Changelog for Installer
-#	* Minor fixes
-
-
-
-
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-20" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
