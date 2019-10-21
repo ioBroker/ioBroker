@@ -68,20 +68,20 @@ matrix:
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *linux
       node_js: 12 # Comes with npm 6
-    # Enable this when Node 14 is out
-    # - <<: *linux
-    #   node_js: node
     - <<: *osx
       node_js: 8.12 # Comes with 6.4.1
     - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
       node_js: 12 # Comes with npm 6
-    # Enable this when Node 14 is out
-    # - <<: *osx
-    #   node_js: node
 
-  # # Do not fail the build on newer Node versions we do not officially support yet
+  #   # This section is used to test compatibility with new node versions
+  #   # They are allowed to fail, but give us a chance to react early
+  #   # Enable this section when the next version of Node.js is out (v14)
+  #   - <<: *linux
+  #     node_js: node
+  #   - <<: *osx
+  #     node_js: node
   # allow_failures:
   #   - os: osx
   #     node_js: node
@@ -132,7 +132,7 @@ script:
       IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
       cd $IOB_DIR
       node node_modules/iobroker.js-controller/iobroker.js stop
-      sleep 30
+      sleep 60
       #
       cd $TEST_DIR
       ls -la
