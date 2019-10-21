@@ -1,34 +1,7 @@
 #!/bin/bash
 
-# ADOE/20191016
-# Changelog for Fixer
-#	* moved some functions to fit order in INSTALLER
-#	* refactored 3 repeated execution blocks into function "add2sudoers()"
-# From here, same changes as in INSTALLER
-#	* introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
-#	  and changed several findings
-#	* refactored detection of HOST_PLATFORM into function get_platform_params()
-#	* extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD,IOB_DIR,IOB_USER
-#	* changed "brew" and "pkg" to "$INSTALL_CMD"
-#	* refactored "Enable colored output" into function "enable_colored_output()"
-#	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
-#	* refactored "Determine the platform..." to function  "install_necessary_packages()"
-#	* calling "install_package()" instead of "install_package_*"
-
-# ADOE/20191019
-# Changelog for Fixer
-#	* Fixed #212   escape `$` in `$(pwd)`
-#	* Fixed #216   Fix permission errors in fixer
-
-# ADOE/20191020
-# Changelog for Installer
-#	* Minor fixes
-
-
-
-
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-20" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -145,18 +118,19 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	sudo touch .npmrc
+	$SUDOX touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
+	$SUDOX grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
-		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		NPMRC_FILE=$($SUDOX grep -v -E "^audit=true" .npmrc)
 		# And write it back
 		write_to_file "$NPMRC_FILE" .npmrc
 		# Append the line to disable audit
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
 	fi
+	# No need to change the permissions, since we're doing that soon anyways
 }
 
 enable_colored_output() {
@@ -225,9 +199,12 @@ add_to_path() {
 	esac
 }
 
-function write_to_file()  { echo $1 | $SUDOX tee    $2 &> /dev/null }
-function append_to_file() { echo $1 | $SUDOX tee -a $2 &> /dev/null }
-
+function write_to_file()  {
+	echo "$1" | $SUDOX tee "$2" &> /dev/null
+}
+function append_to_file() {
+	echo "$1" | $SUDOX tee -a "$2" &> /dev/null
+}
 
 # Test which platform this script is being run on
 get_platform_params
@@ -580,6 +557,7 @@ install_necessary_packages() {
 		# Give nodejs access to protected ports and raw devices like ble
 		cmdline="$SUDOX setcap"
 
+		set -x
 		if running_in_docker; then
 			capabilities=$(grep ^CapBnd /proc/$$/status)
 			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
@@ -594,6 +572,7 @@ install_necessary_packages() {
 		else
 			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
 		fi
+		set +x
 		;;
 	"freebsd")
 		declare -a packages=(
