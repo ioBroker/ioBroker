@@ -118,17 +118,23 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	sudo touch .npmrc
+	$SUDOX touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
+	$SUDOX grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
-		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		NPMRC_FILE=$($SUDOX grep -v -E "^audit=true" .npmrc)
 		# And write it back
 		write_to_file "$NPMRC_FILE" .npmrc
 		# Append the line to disable audit
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER .npmrc
 	fi
 }
 
@@ -267,9 +273,10 @@ if [ "$IS_ROOT" != true ]; then
 	fi
 fi
 
-print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
-if [ "$IS_ROOT" != true ]; then
-	print_bold "" "You might need to enter your password a couple of times."
+if [ "$IS_ROOT" = "true" ]; then
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin

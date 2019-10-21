@@ -118,18 +118,19 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	sudo touch .npmrc
+	$SUDOX touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
+	$SUDOX grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
-		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		NPMRC_FILE=$($SUDOX grep -v -E "^audit=true" .npmrc)
 		# And write it back
 		write_to_file "$NPMRC_FILE" .npmrc
 		# Append the line to disable audit
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
 	fi
+	# No need to change the permissions, since we're doing that soon anyways
 }
 
 enable_colored_output() {
@@ -556,6 +557,7 @@ install_necessary_packages() {
 		# Give nodejs access to protected ports and raw devices like ble
 		cmdline="$SUDOX setcap"
 
+		set -x
 		if running_in_docker; then
 			capabilities=$(grep ^CapBnd /proc/$$/status)
 			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
@@ -570,6 +572,7 @@ install_necessary_packages() {
 		else
 			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
 		fi
+		set +x
 		;;
 	"freebsd")
 		declare -a packages=(
