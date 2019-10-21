@@ -27,39 +27,39 @@ include: &osx
 
 matrix:
   include:
-    # These tests should fail:
-    - <<: *linux
-      node_js: 4 # old Node
-    - <<: *linux
-      node_js: 6 # old Node
-    - <<: *linux
-      node_js: 8.11 # old Node, also comes with old NPM
-    - <<: *linux
-      node_js: 8.12 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
-    - <<: *linux
-      node_js: 10.2 # comes with old NPM
-    - <<: *linux
-      node_js: 10 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
-    - <<: *osx
-      node_js: 4 # old Node
-    - <<: *osx
-      node_js: 6 # old Node
-    - <<: *osx
-      node_js: 8.11 # old Node, also comes with old NPM
-    - <<: *osx
-      node_js: 8.12 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
-    - <<: *osx
-      node_js: 10.2 # comes with old NPM
-    - <<: *osx
-      node_js: 10 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
+    # # These tests should fail:
+    # - <<: *linux
+    #   node_js: 4 # old Node
+    # - <<: *linux
+    #   node_js: 6 # old Node
+    # - <<: *linux
+    #   node_js: 8.11 # old Node, also comes with old NPM
+    # - <<: *linux
+    #   node_js: 8.12 # correct node, old NPM manually installed
+    #   env:
+    #     - NPM_VER=5.7.1
+    # - <<: *linux
+    #   node_js: 10.2 # comes with old NPM
+    # - <<: *linux
+    #   node_js: 10 # correct node, old NPM manually installed
+    #   env:
+    #     - NPM_VER=5.7.1
+    # - <<: *osx
+    #   node_js: 4 # old Node
+    # - <<: *osx
+    #   node_js: 6 # old Node
+    # - <<: *osx
+    #   node_js: 8.11 # old Node, also comes with old NPM
+    # - <<: *osx
+    #   node_js: 8.12 # correct node, old NPM manually installed
+    #   env:
+    #     - NPM_VER=5.7.1
+    # - <<: *osx
+    #   node_js: 10.2 # comes with old NPM
+    # - <<: *osx
+    #   node_js: 10 # correct node, old NPM manually installed
+    #   env:
+    #     - NPM_VER=5.7.1
 
     # These tests should succeed
     - <<: *linux
@@ -68,16 +68,16 @@ matrix:
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *linux
       node_js: 12 # Comes with npm 6
-    - <<: *linux
-      node_js: node
+    # - <<: *linux
+    #   node_js: node
     - <<: *osx
       node_js: 8.12 # Comes with 6.4.1
     - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
       node_js: 12 # Comes with npm 6
-    - <<: *osx
-      node_js: node
+    # - <<: *osx
+    #   node_js: node
 
   # # Do not fail the build on newer Node versions we do not officially support yet
   # allow_failures:

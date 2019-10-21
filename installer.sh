@@ -898,6 +898,12 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 	# Create the startup file and give it the correct permissions
 	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
 	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
+	
+	
+	# Debug
+	cat $SERVICE_FILENAME
+
+
 	if [ "$IS_ROOT" != true ]; then
 		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
 	fi
