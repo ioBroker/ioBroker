@@ -1,32 +1,7 @@
 #!/bin/bash
 
-# ADOE/20191016
-# Changelog for Installer
-#	* introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
-#	  and changed several findings
-#	* refactored detection of HOST_PLATFORM into function get_platform_params()
-#	* extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD,IOB_DIR,IOB_USER
-#	* changed "brew" and "pkg" to "$INSTALL_CMD"
-#	* refactored "Enable colored output" into function "enable_colored_output()"
-#	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
-#	* refactored "Determine the platform..." to function  "install_necessary_packages()"
-#	* calling "install_package()" instead of "install_package_*"
-#	* refactored "Detect IP address" tu function "detect_ip_address()"
-
-# ADOE/20191019
-# Changelog for Installer
-#	* Fixed #212   escape `$` in `$(pwd)`
-
-# ADOE/20191020
-# Changelog for Installer
-#	* Minor fixes
-#	* Fixed #206   add taobao registry
-
-
-
-
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-20" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -143,17 +118,23 @@ install_package() {
 
 disable_npm_audit() {
 	# Make sure the npmrc file exists
-	sudo touch .npmrc
+	$SUDOX touch .npmrc
 	# If .npmrc does not contain "audit=false", we need to change it
-	sudo grep -q -E "^audit=false" .npmrc &> /dev/null
+	$SUDOX grep -q -E "^audit=false" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Remember its contents (minus any possible audit=true)
-		NPMRC_FILE=$(grep -v -E "^audit=true" .npmrc)
+		NPMRC_FILE=$($SUDOX grep -v -E "^audit=true" .npmrc)
 		# And write it back
 		write_to_file "$NPMRC_FILE" .npmrc
 		# Append the line to disable audit
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER .npmrc
 	fi
 }
 
@@ -273,9 +254,12 @@ add_to_path() {
 	esac
 }
 
-function write_to_file()  { echo $1 | $SUDOX tee    $2 &> /dev/null }
-function append_to_file() { echo $1 | $SUDOX tee -a $2 &> /dev/null }
-
+function write_to_file()  {
+	echo "$1" | $SUDOX tee "$2" &> /dev/null
+}
+function append_to_file() {
+	echo "$1" | $SUDOX tee -a "$2" &> /dev/null
+}
 
 # Test which platform this script is being run on
 get_platform_params
@@ -289,9 +273,10 @@ if [ "$IS_ROOT" != true ]; then
 	fi
 fi
 
-print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
-if [ "$IS_ROOT" != true ]; then
-	print_bold "" "You might need to enter your password a couple of times."
+if [ "$IS_ROOT" = "true" ]; then
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
@@ -414,7 +399,6 @@ make_executable() {
 	$SUDOX chmod 755 $file
 }
 
-# 3 blocks code repetition reduced
 function add2sudoers() {
 	local xsudoers=$1
 	shift
@@ -554,15 +538,6 @@ print_step "Installing prerequisites" 1 "$NUM_STEPS"
 # update repos
 $SUDOX $INSTALL_CMD update -y
 
-# npm mirror, default use npmjs.org
-REGISTRY_URL="https://registry.npmjs.org"
-case "$MIRROR" in
-	Taobao)
-		REGISTRY_URL="https://registry.npm.taobao.org"
-		;;
-esac
-echo "current registry is $REGISTRY_URL"
-
 # Install Node.js if it is not installed
 if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
 	install_nodejs
@@ -576,9 +551,18 @@ if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
 		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
 		exit 1
 	fi
-	# change registry
+fi
+
+# Select an npm mirror, by default use npmjs.org
+REGISTRY_URL="https://registry.npmjs.org"
+case "$MIRROR" in
+	[Tt]aobao)
+		REGISTRY_URL="https://registry.npm.taobao.org"
+		;;
+esac
+if [ $(npm config get registry) != "$REGISTRY_URL" ]; then
+	echo "Changing npm registry to $REGISTRY_URL"
 	npm config set registry $REGISTRY_URL
-	echo "current system registry was: $(npm config get registry)"
 fi
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
