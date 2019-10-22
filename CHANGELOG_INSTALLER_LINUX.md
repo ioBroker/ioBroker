@@ -1,5 +1,20 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-10-21
+* (ADOE) Large refactoring:
+    * refactored 3 repeated execution blocks into function "add2sudoers()"
+    * introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
+    * refactored detection of HOST_PLATFORM into function get_platform_params()
+    * extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD, IOB_DIR, IOB_USER
+    * changed "brew" and "pkg" to "$INSTALL_CMD"
+    * refactored "Enable colored output" into function "enable_colored_output()"
+    * "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one.
+    * refactored "Determine the platform..." to function  "install_necessary_packages()"
+    * calling "install_package()" instead of "install_package_*"
+    * refactored "Detect IP address" tu function "detect_ip_address()"
+* Added option to choose another npm registry.  
+Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install ioBroker using the taobao registry
+
 ## 2019-10-19
 * Install `python-dev` to fix npm error: `ImportError: No module named compiler.ast`
 
