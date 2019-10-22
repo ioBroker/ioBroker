@@ -1,47 +1,7 @@
 #!/bin/bash
 
-# ADOE/20191016
-# Changelog for Fixer
-#	* moved some functions to fit order in INSTALLER
-#	* refactored 3 repeated execution blocks into function "add2sudoers()"
-# From here, same changes as in INSTALLER
-#	* introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
-#	  and changed several findings
-#	* refactored detection of HOST_PLATFORM into function get_platform_params()
-#	* extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD,IOB_DIR,IOB_USER
-#	* changed "brew" and "pkg" to "$INSTALL_CMD"
-#	* refactored "Enable colored output" into function "enable_colored_output()"
-#	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
-#	* refactored "Determine the platform..." to function  "install_necessary_packages()"
-#	* calling "install_package()" instead of "install_package_*"
-
-# Please revise possible problems/simplifications:
-#	* Search for: "$SUDOERS_CONTENT". See comments "ADOE":
-#	  1) for ROOT, "./temp_sudo_file" is used instead of "~/temp_sudo_file"
-#	  2) IF: can "~/" be used also for root? ==> THEN: we can change the whole block to use $SUDOX
-#
-#	* Search for "ADOE: probably wrong? (iob   vs   iobroker)"
-#	  Root uses "$IOB_DIR/iobroker" and nonRoot uses "$IOB_DIR/iob" as source
-#	  Is that correct?
-#
-#	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
-#	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
-
-
-# ADOE/20191018
-# Changelog for Fixer
-#	* moved most functions to library-file
-#	* loaded this libfile via curl, executed it and checked if working
-#	* Dont forget to adapt repository in $LIB_URL
-
-# ADOE/20191019
-#	* Fixed #216   Fix permission errors in fixer
-
-
-
-
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-19" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -50,23 +10,24 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 
 
+#ADOE: Adapt repository path as needed.
+#ADOE: Is there a possibility to do that automatically via GitHub?
 LIB_NAME="instfixlib.sh"
 LIB_URL="https://raw.githubusercontent.com/ArneDoe/ioBroker/libload/$LIB_NAME"
-echo "curl -sL $LIB_URL"																	#test
+# get and load the LIB
 curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Inst/Fix: library not found"; exit -2; fi
 # test one function of the library
 RET=$(libloaded)
 if [ $? -ne 0 ]; then echo "Inst/Fix: library $LIB_NAME could not be loaded!"; exit -2; fi
 if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; fi
-echo "Library=$RET"
+echo "Library version=$RET"
 
 
 # Test which platform this script is being run on
 get_platform_params
 
 # Check if "sudo" command is available (in case we're not root)
-# If we're root, sudo is going to be installed later
 if [ "$IS_ROOT" != true ]; then
 	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
 		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
@@ -112,9 +73,11 @@ FIXER_URL="https://iobroker.net/fix.sh"
 # Remember the full path of bash
 BASH_CMDLINE=$(which bash)
 
-print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
-if [ "$IS_ROOT" != true ]; then
-	print_bold "" "You might need to enter your password a couple of times."
+
+if [ "$IS_ROOT" = true ]; then
+	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 NUM_STEPS=3
@@ -155,6 +118,8 @@ install_necessary_packages() {
 		# Give nodejs access to protected ports and raw devices like ble
 		cmdline="$SUDOX setcap"
 
+#ADOE: is set -x/+x intended in production?
+		set -x
 		if running_in_docker; then
 			capabilities=$(grep ^CapBnd /proc/$$/status)
 			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
@@ -169,6 +134,8 @@ install_necessary_packages() {
 		else
 			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
 		fi
+#ADOE: is set -x/+x intended in production?
+		set +x
 		;;
 	"freebsd")
 		declare -a packages=(
@@ -369,19 +336,12 @@ $SUDOX rm -f $IOB_BIN_PATH/iob
 
 # Symlink the global binaries iob and iobroker
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-
-# ADOE: probably wrong? (iob   vs   iobroker)
-if [ "$IS_ROOT" = true ]; then
-	     ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
-else
-	sudo ln -sfn $IOB_DIR/iob      $IOB_BIN_PATH/iob
-fi
-
+$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
 # Symlink the local binary iob
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
-echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
+write_to_file "$IOB_EXECUTABLE" $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
 
 # and give them the correct ownership
@@ -437,19 +397,10 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
-# ADOE: simplify?
-
-
-	if [ "$IS_ROOT" = true ]; then
-		echo "$INITD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$INITD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-	fi
+	write_to_file "$INITD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
 
-
 	# Remember what we did
-
 	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
 		echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
 	else
@@ -480,10 +431,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 
 	# Create the startup file and give it the correct permissions
 
-	if [ "$IS_ROOT" = true ]; then
-		echo "$SYSTEMD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
+	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
+	if [ "$IS_ROOT" != true ]; then
 		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
 	fi
 	$SUDOX chmod 644 $SERVICE_FILENAME
@@ -544,12 +493,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	)
 
 	# Create the startup file, give it the correct permissions and start ioBroker
-
-	if [ "$IS_ROOT" = true ]; then
-		echo "$RCD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$RCD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-	fi
+	write_to_file "$RCD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
 
 	# Enable startup
