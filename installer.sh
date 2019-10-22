@@ -1,46 +1,7 @@
 #!/bin/bash
 
-# ADOE/20191016
-# Changelog for Installer
-#	* introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
-#	  and changed several findings
-#	* refactored detection of HOST_PLATFORM into function get_platform_params()
-#	* extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD,IOB_DIR,IOB_USER
-#	* changed "brew" and "pkg" to "$INSTALL_CMD"
-#	* refactored "Enable colored output" into function "enable_colored_output()"
-#	* "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one. See comments "ADOE"
-#	* refactored "Determine the platform..." to function  "install_necessary_packages()"
-#	* calling "install_package()" instead of "install_package_*"
-#	* refactored "Detect IP address" tu function "detect_ip_address()"
-
-# ADOE/20191018
-# Changelog for Installer
-#	* moved most functions to library-file
-#	* loaded this libfile via curl, executed it and checked if working
-#	* Dont forget to adapt repository in $LIB_URL
-
-# ADOE/20191019
-# Changelog for Installer
-#	* Fixed #212   escape `$` in `$(pwd)`
-
-
-# Please revise possible problems/simplifications:
-#	* Search for: "$SUDOERS_CONTENT". See comments "ADOE":
-#	  1) for ROOT, "./temp_sudo_file" is used instead of "~/temp_sudo_file"
-#	  2) IF: can "~/" be used also for root? ==> THEN: we can change the whole block to use $SUDOX
-#
-#	* Search for "ADOE: probably wrong? (iob   vs   iobroker)"
-#	  Root uses "$IOB_DIR/iobroker" and nonRoot uses "$IOB_DIR/iob" as source
-#	  Is that correct?
-#
-#	* Could "echo "$somefile" | sudo tee $otherfile &> /dev/null" be also used for ROOT?
-#	  Example: Search for "echo "$SYSTEMD_FILE" | sudo tee"
-
-
-
-
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-19" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -49,16 +10,18 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 
 
+#ADOE: Adapt repository path as needed.
+#ADOE: Is there a possibility to do that automatically via GitHub?
 LIB_NAME="instfixlib.sh"
 LIB_URL="https://raw.githubusercontent.com/ArneDoe/ioBroker/libload/$LIB_NAME"
-echo "curl -sL $LIB_URL"																	#test
+# get and load the LIB
 curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Inst/Fix: library not found"; exit -2; fi
 # test one function of the library
 RET=$(libloaded)
 if [ $? -ne 0 ]; then echo "Inst/Fix: library $LIB_NAME could not be loaded!"; exit -2; fi
 if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; fi
-echo "Library=$RET"
+echo "Library version=$RET"
 
 
 # Test which platform this script is being run on
@@ -73,26 +36,11 @@ if [ "$IS_ROOT" != true ]; then
 	fi
 fi
 
-print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
-if [ "$IS_ROOT" != true ]; then
-	print_bold "" "You might need to enter your password a couple of times."
+if [ "$IS_ROOT" = "true" ]; then
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+else
+	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
-
-# ADOE: this is a double. See below after "Installing prerequisites".
-## Install Node.js if it is not installed
-#if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
-#	install_nodejs
-#fi
-#
-## Check if npm is installed
-#if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-#	# If not, try to install it
-#	install_package npm
-#	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
-#		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
-#		exit 1
-#	fi
-#fi
 
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
 # directories to PATH for non-root users
@@ -134,6 +82,18 @@ if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
 		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
 		exit 1
 	fi
+fi
+
+# Select an npm mirror, by default use npmjs.org
+REGISTRY_URL="https://registry.npmjs.org"
+case "$MIRROR" in
+	[Tt]aobao)
+		REGISTRY_URL="https://registry.npm.taobao.org"
+		;;
+esac
+if [ $(npm config get registry) != "$REGISTRY_URL" ]; then
+	echo "Changing npm registry to $REGISTRY_URL"
+	npm config set registry $REGISTRY_URL
 fi
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
@@ -368,21 +328,13 @@ fi
 
 # Symlink the global binaries iob and iobroker
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-
-# ADOE: probably wrong? (iob   vs   iobroker)
-if [ "$IS_ROOT" = true ]; then
-	     ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
-else
-	sudo ln -sfn $IOB_DIR/iob      $IOB_BIN_PATH/iob
-fi
-
+$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
 # Symlink the local binary iob
 $SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
 
 # Create executables in the ioBroker directory
 # TODO: check if this must be fixed like in in the FIXER for #216
-echo "$IOB_EXECUTABLE" > $IOB_DIR/iobroker
-#echo "$IOB_EXECUTABLE" | sudo tee $IOB_DIR/iobroker &> /dev/null
+write_to_file "$IOB_EXECUTABLE" $IOB_DIR/iobroker
 make_executable "$IOB_DIR/iobroker"
 
 # TODO: check if this is necessary, like in the FIXER
@@ -448,12 +400,7 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 
 	# Create the startup file, give it the correct permissions and start ioBroker
 	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
-# ADOE: simplify?
-	if [ "$IS_ROOT" = true ]; then
-		echo "$INITD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$INITD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-	fi
+	write_to_file "$INITD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
 	$SUDOX bash $SERVICE_FILENAME
 
@@ -489,10 +436,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 
 	# Create the startup file and give it the correct permissions
 	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
-	if [ "$IS_ROOT" = true ]; then
-		echo "$SYSTEMD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$SYSTEMD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
+	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
+	if [ "$IS_ROOT" != true ]; then
 		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
 	fi
 	$SUDOX chmod 644 $SERVICE_FILENAME
@@ -554,11 +499,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 	# Create the startup file, give it the correct permissions and start ioBroker
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
-	if [ "$IS_ROOT" = true ]; then
-		echo "$RCD_FILE" > $SERVICE_FILENAME
-	else
-		echo "$RCD_FILE" | sudo tee $SERVICE_FILENAME &> /dev/null
-	fi
+	write_to_file "$RCD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
 
 	# Enable startup and start the service
