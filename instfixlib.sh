@@ -2,12 +2,12 @@
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
-INSFIX_LIB_VERSION="2019-10-22" # format YYYY-MM-DD
+INSFIX_LIB_VERSION="2019-10-24" # format YYYY-MM-DD
 
 # ------------------------------
 # test function of the library
 # ------------------------------
-function libloaded() { echo "$INSFIX_LIB_VERSION"; }
+function get_lib_version() { echo "$INSFIX_LIB_VERSION"; }
 
 # ------------------------------
 # functions for ioBroker Installer/Fixer
@@ -178,6 +178,108 @@ install_package() {
 	esac
 }
 
+install_necessary_packages() {
+# Determine the platform we operate on and select the installation routine/packages accordingly 
+# TODO: Which other packages do we need by default?
+	case "$HOST_PLATFORM" in
+	"linux")
+		declare -a packages=(
+			"acl" # To use setfacl
+			"sudo" # To use sudo (obviously)
+			"libcap2-bin" # To give nodejs access to protected ports
+			# These are used by a couple of adapters and should therefore exist:
+			"build-essential"
+			"libavahi-compat-libdnssd-dev"
+			"libudev-dev"
+			"libpam0g-dev"
+			"pkg-config"
+			"git"
+			"curl"
+			"unzip"
+			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
+		)
+		for pkg in "${packages[@]}"; do
+			install_package $pkg
+		done
+
+		# ==================
+		# Configure packages
+
+		# Give nodejs access to protected ports and raw devices like ble
+		cmdline="$SUDOX setcap"
+
+		if running_in_docker; then
+			capabilities=$(grep ^CapBnd /proc/$$/status)
+			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
+				$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+			else
+				$cmdline 'cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+				echo "${yellow}Docker detected!"
+				echo "If you have any adapters that need the CAP_NET_ADMIN capability,"
+				echo "you need to start the docker container with the option --cap-add=NET_ADMIN"
+				echo "and manually add that capability to node${normal}"
+			fi
+		else
+			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
+		fi
+		;;
+	"freebsd")
+		declare -a packages=(
+			"sudo"
+			"git"
+			"curl"
+			"bash"
+			"unzip"
+			"avahi-libdns" # avahi gets installed along with this
+			"dbus"
+			"nss_mdns" # needed for the mdns host resolution 
+			"gcc"
+			"python" # Required for node-gyp compilation
+		)
+		for pkg in "${packages[@]}"; do
+			install_package $pkg
+		done
+		# we need to do some setting up things after installing the packages
+		# ensure dns_sd.h is where node-gyp expect it 
+		ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
+		# enable dbus in the avahi configuration
+		sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
+		# enable mdns usage for host resolution
+		sed -i -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
+
+		# enable services avahi/dbus
+		sysrc -f /etc/rc.conf dbus_enable="YES"
+		sysrc -f /etc/rc.conf avahi_daemon_enable="YES"
+
+		# start services
+		service dbus start
+		service avahi-daemon start
+		;;
+	"osx")
+		# Test if brew is installed. If it is, install some packages that are often used.
+		$INSTALL_CMD -v &> /dev/null
+		if [ $? -eq 0 ]; then
+			declare -a packages=(
+				# These are used by a couple of adapters and should therefore exist:
+				"pkg-config"
+				"git"
+				"curl"
+				"unzip"
+			)
+			for pkg in "${packages[@]}"; do
+				install_package $pkg
+			done
+		else
+			echo "${yellow}Since brew is not installed, frequently-used dependencies could not be installed."
+			echo "Before installing some adapters, you might have to install some packages yourself."
+			echo "Please check the adapter manuals before installing them.${normal}"
+		fi
+		;;
+	*)
+		;;
+	esac
+}
+
 disable_npm_audit() {
 	# Make sure the npmrc file exists
 	$SUDOX touch .npmrc
@@ -193,17 +295,14 @@ disable_npm_audit() {
 		append_to_file "audit=false" .npmrc
 	fi
 
-#ADOE: IF (INSTALLER) THEN ...
-	# Make sure that npm can access the .npmrc
-	if [ "$HOST_PLATFORM" = "osx" ]; then
-		$SUDOX chown -R $USER .npmrc
-	else
-		$SUDOX chown -R $USER:$USER .npmrc
+	if [ "$INSTALLER_VERSION" != "" ]; then
+		# Make sure that npm can access the .npmrc
+		if [ "$HOST_PLATFORM" = "osx" ]; then
+			$SUDOX chown -R $USER .npmrc
+		else
+			$SUDOX chown -R $USER:$USER .npmrc
+		fi
 	fi
-#ADOE: ELSE IF (FIXER) THEN ...
-	# No need to change the permissions, since we're doing that soon anyways
-#ADOE: ENDIF
-
 }
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -394,11 +493,7 @@ create_user_linux() {
 	fi
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
-
-#ADOE: IF (INSTALLER) THEN ...
 	$SUDOX rm -f $SUDOERS_FILE
-#ADOE: ENDIF
-
 	echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
 	$SUDOX visudo -c -q -f ~/temp_sudo_file && \
 		$SUDOX chown root:$ROOT_GROUP ~/temp_sudo_file &&
@@ -452,16 +547,12 @@ fix_dir_permissions() {
 	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
 	echo "Fixing directory permissions..."
 
-#ADOE: IF (INSTALLER) THEN ...
-	$SUDOX chown -R $IOB_USER:$IOB_USER $IOB_DIR
-#ADOE: ELSE IF (FIXER) THEN ...
 	# ioBroker install dir
 	change_owner $IOB_USER $IOB_DIR
 	# and the npm cache dir
 	if [ -d "/home/$IOB_USER/.npm" ]; then
 		change_owner $IOB_USER "/home/$IOB_USER/.npm"
 	fi
-#ADOE: ENDIF
 
 	if [ "$IS_ROOT" != true ]; then
 		sudo usermod -a -G $IOB_USER $USER

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-21" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-24" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -18,9 +18,9 @@ LIB_URL="https://raw.githubusercontent.com/ArneDoe/ioBroker/libload/$LIB_NAME"
 curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Inst/Fix: library not found"; exit -2; fi
 # test one function of the library
-RET=$(libloaded)
+RET=$(get_lib_version)
 if [ $? -ne 0 ]; then echo "Inst/Fix: library $LIB_NAME could not be loaded!"; exit -2; fi
-if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; fi
+if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; exit -2; fi
 echo "Library version=$RET"
 
 
@@ -89,110 +89,6 @@ print_step "Installing prerequisites" 1 "$NUM_STEPS"
 $SUDOX $INSTALL_CMD update -y
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
-# TODO: Which other packages do we need by default?
-install_necessary_packages() {
-	case "$HOST_PLATFORM" in
-	"linux")
-		declare -a packages=(
-			"acl" # To use setfacl
-			"sudo" # To use sudo (obviously)
-			"libcap2-bin" # To give nodejs access to protected ports
-			# These are used by a couple of adapters and should therefore exist:
-			"build-essential"
-			"libavahi-compat-libdnssd-dev"
-			"libudev-dev"
-			"libpam0g-dev"
-			"pkg-config"
-			"git"
-			"curl"
-			"unzip"
-			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
-		)
-		for pkg in "${packages[@]}"; do
-			install_package $pkg
-		done
-
-		# ==================
-		# Configure packages
-
-		# Give nodejs access to protected ports and raw devices like ble
-		cmdline="$SUDOX setcap"
-
-#ADOE: is set -x/+x intended in production?
-		set -x
-		if running_in_docker; then
-			capabilities=$(grep ^CapBnd /proc/$$/status)
-			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
-				$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
-			else
-				$cmdline 'cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
-				echo "${yellow}Docker detected!"
-				echo "If you have any adapters that need the CAP_NET_ADMIN capability,"
-				echo "you need to start the docker container with the option --cap-add=NET_ADMIN"
-				echo "and manually add that capability to node${normal}"
-			fi
-		else
-			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
-		fi
-#ADOE: is set -x/+x intended in production?
-		set +x
-		;;
-	"freebsd")
-		declare -a packages=(
-			"sudo"
-			"git"
-			"curl"
-			"bash"
-			"unzip"
-			"avahi-libdns" # avahi gets installed along with this
-			"dbus"
-			"nss_mdns" # needed for the mdns host resolution 
-			"gcc"
-			"python" # Required for node-gyp compilation
-		)
-		for pkg in "${packages[@]}"; do
-			install_package $pkg
-		done
-		# we need to do some setting up things after installing the packages
-		# ensure dns_sd.h is where node-gyp expect it 
-		ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
-		# enable dbus in the avahi configuration
-		sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
-		# enable mdns usage for host resolution
-		sed -i -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
-
-		# enable services avahi/dbus
-		sysrc -f /etc/rc.conf dbus_enable="YES"
-		sysrc -f /etc/rc.conf avahi_daemon_enable="YES"
-
-		# start services
-		service dbus start
-		service avahi-daemon start
-		;;
-	"osx")
-		# Test if brew is installed. If it is, install some packages that are often used.
-		$INSTALL_CMD -v &> /dev/null
-		if [ $? -eq 0 ]; then
-			declare -a packages=(
-				# These are used by a couple of adapters and should therefore exist:
-				"pkg-config"
-				"git"
-				"curl"
-				"unzip"
-			)
-			for pkg in "${packages[@]}"; do
-				install_package $pkg
-			done
-		else
-			echo "${yellow}Since brew is not installed, frequently-used dependencies could not be installed."
-			echo "Before installing some adapters, you might have to install some packages yourself."
-			echo "Please check the adapter manuals before installing them.${normal}"
-		fi
-		;;
-	*)
-		;;
-	esac
-}
 install_necessary_packages
 
 # ########################################################
