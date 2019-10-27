@@ -112,6 +112,32 @@ get_platform_params() {
 	esac
 }
 
+function set_some_common_params() {
+	CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
+	INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
+
+	# Where the fixer script is located
+	FIXER_URL="https://iobroker.net/fix.sh"
+
+	# Remember the full path of bash
+	BASH_CMDLINE=$(which bash)
+
+	# Check if "sudo" command is available (in case we're not root)
+	if [ "$IS_ROOT" != true ]; then
+		if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
+			echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
+			echo "Please install it first using \"$INSTALL_CMD install sudo\""
+			exit 1
+		fi
+	fi
+
+	# Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
+	# directories to PATH for non-root users
+	if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
+	if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
+	if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
+}
+
 install_package_linux() {
 	package="$1"
 	# Test if the package is installed

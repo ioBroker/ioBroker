@@ -26,15 +26,7 @@ echo "Library version=$RET"
 
 # Test which platform this script is being run on
 get_platform_params
-
-# Check if "sudo" command is available (in case we're not root)
-if [ "$IS_ROOT" != true ]; then
-	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
-		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
-		echo "Please install it first using \"$INSTALL_CMD install sudo\""
-		exit 1
-	fi
-fi
+set_some_common_params
 
 if [ "$IS_ROOT" = "true" ]; then
 	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
@@ -48,17 +40,8 @@ if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
 if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
 if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
 
-CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
-INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
-
 # Which npm package should be installed (default "iobroker")
 INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
-
-# Where the fixer script is located
-FIXER_URL="https://iobroker.net/fix.sh"
-
-# Remember the full path of bash
-BASH_CMDLINE=$(which bash)
 
 export AUTOMATED_INSTALLER="true"
 NUM_STEPS=4

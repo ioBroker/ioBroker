@@ -26,24 +26,13 @@ echo "Library version=$RET"
 
 # Test which platform this script is being run on
 get_platform_params
-
-# Check if "sudo" command is available (in case we're not root)
-if [ "$IS_ROOT" != true ]; then
-	if [[ $(which "sudo" 2>/dev/null) != *"/sudo" ]]; then
-		echo "${red}Cannot continue because the \"sudo\" command is not available!${normal}"
-		echo "Please install it first using \"$INSTALL_CMD install sudo\""
-		exit 1
-	fi
-fi
+set_some_common_params
 
 # Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
 # directories to PATH for non-root users
 if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
 if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
 if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
-
-CONTROLLER_DIR="$IOB_DIR/node_modules/iobroker.js-controller"
-INSTALLER_INFO_FILE="$IOB_DIR/INSTALLER_INFO.txt"
 
 # Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
@@ -66,12 +55,6 @@ if [ ! -f "$INSTALLER_INFO_FILE" ]; then
 fi
 echo "Fixer version: $FIXER_VERSION" >> $INSTALLER_INFO_FILE
 echo "Fix date $(date +%F)" >> $INSTALLER_INFO_FILE
-
-# Where the fixer script is located
-FIXER_URL="https://iobroker.net/fix.sh"
-
-# Remember the full path of bash
-BASH_CMDLINE=$(which bash)
 
 
 if [ "$IS_ROOT" = true ]; then
