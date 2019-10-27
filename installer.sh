@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-24" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-10-27" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -33,12 +33,6 @@ if [ "$IS_ROOT" = "true" ]; then
 else
 	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
-
-# Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
-# directories to PATH for non-root users
-if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
-if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
-if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
 
 # Which npm package should be installed (default "iobroker")
 INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}

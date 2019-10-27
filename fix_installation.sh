@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-24" # format YYYY-MM-DD
+FIXER_VERSION="2019-10-27" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -27,12 +27,6 @@ echo "Library version=$RET"
 # Test which platform this script is being run on
 get_platform_params
 set_some_common_params
-
-# Starting with Debian 10 (Buster), we need to add the [/usr[/local]]/sbin
-# directories to PATH for non-root users
-if [ -d "/sbin" ]; then add_to_path "/sbin"; fi
-if [ -d "/usr/sbin" ]; then add_to_path "/usr/sbin"; fi
-if [ -d "/usr/local/sbin" ]; then add_to_path "/usr/local/sbin"; fi
 
 # Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
