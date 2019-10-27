@@ -2,7 +2,7 @@
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
-INSFIX_LIB_VERSION="2019-10-24" # format YYYY-MM-DD
+INSFIX_LIB_VERSION="2019-10-27" # format YYYY-MM-DD
 
 # ------------------------------
 # test function of the library
