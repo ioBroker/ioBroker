@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-10-21" # format YYYY-MM-DD
+INSTALLER_VERSION="2019-11-03" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
 then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
+USER_GROUP="$USER"
 
 get_platform_params() {
 	# Test which platform this script is being run on
@@ -48,6 +49,9 @@ get_platform_params() {
 		exit 1
 		;;
 	esac
+	if [ "$IS_ROOT" = true ]; then
+		USER_GROUP="$ROOT_GROUP"
+	fi
 }
 
 install_package_linux() {
@@ -129,6 +133,28 @@ disable_npm_audit() {
 		# Append the line to disable audit
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER .npmrc
+	fi
+}
+
+set_npm_python() {
+	# Make sure the npmrc file exists
+	$SUDOX touch .npmrc
+	# If .npmrc does not contain "python=", we need to change it
+	$SUDOX grep -q -E "^python=" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$($SUDOX grep -v -E "^python=" .npmrc)
+		# And write it back
+		write_to_file "$NPMRC_FILE" .npmrc
+		# Append the line to change the python binary
+		append_to_file "# change link from python3 to python2.7 (needed for gyp)" .npmrc
+		append_to_file "python=/usr/local/bin/python2.7" .npmrc
 	fi
 	# Make sure that npm can access the .npmrc
 	if [ "$HOST_PLATFORM" = "osx" ]; then
@@ -536,7 +562,7 @@ NUM_STEPS=4
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD update -y
+$SUDOX $INSTALL_CMD update
 
 # Install Node.js if it is not installed
 if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
@@ -705,6 +731,11 @@ print_step "Installing ioBroker" 3 "$NUM_STEPS"
 
 # Disable any warnings related to "npm audit fix"
 disable_npm_audit
+
+if [ "$HOST_PLATFORM" = "freebsd" ]; then
+	# Make sure we use the correct python binary
+	set_npm_python
+fi
 
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
@@ -918,9 +949,11 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 elif [ "$INITSYSTEM" = "rc.d" ]; then
 	echo "Enabling autostart..."
 
+	PIDFILE="$CONTROLLER_DIR/lib/iobroker.pid"
+
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
-		#!/bin/sh
+		#!$BASH_CMDLINE
 		#
 		# PROVIDE: iobroker
 		# REQUIRE: DAEMON
@@ -934,24 +967,21 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		load_rc_config \$name
 
 		iobroker_enable=\${iobroker_enable-"NO"}
-		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
+		iobroker_pidfile=\${iobroker_pidfile-"$PIDFILE"}
 
-		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-		NODECMD=\`which node\`
-
-		iobroker_start ()
+		iobroker_start()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			iobroker start
 		}
 
-		iobroker_stop ()
+		iobroker_stop()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			iobroker stop
 		}
 
-		iobroker_status ()
+		iobroker_status()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			iobroker status
 		}
 
 		PATH="\${PATH}:/usr/local/bin"
@@ -969,6 +999,10 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
 	write_to_file "$RCD_FILE" $SERVICE_FILENAME
 	set_root_permissions $SERVICE_FILENAME
+
+	# Make sure that $IOB_USER may access the pidfile
+	$SUDOX touch "$PIDFILE"
+	$SUDOX chown $IOB_USER:$IOB_USER $PIDFILE
 
 	# Enable startup and start the service
 	sysrc iobroker_enable=YES
@@ -1046,7 +1080,7 @@ change_npm_command_root
 unset AUTOMATED_INSTALLER
 
 # Detect IP address
-IP=detect_ip_address
+IP=$(detect_ip_address)
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"

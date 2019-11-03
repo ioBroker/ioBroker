@@ -1,0 +1,61 @@
+freebsd_instance:
+  image_family: freebsd-12-0
+ 
+task:
+  prepare_install_script:
+    - pkg install -y bash node npm libnghttp2
+    - mkdir -p node_modules/iobroker
+    - mv doc node_modules/iobroker
+    - mv img node_modules/iobroker
+    - mv install node_modules/iobroker
+    - mv lib node_modules/iobroker
+    - mv wiki node_modules/iobroker
+    - mv package.json node_modules/iobroker
+    - mv installer.sh node_modules/iobroker
+  install_script:
+    - sudo chmod +x travis/travis_install.sh
+    # make sure the iob_not_installed file can be created
+    - sudo chmod 777 .
+    - bash travis/travis_install.sh
+  prepare_test_script:
+    # only continue tests if ioBroker was actually installed
+    - |
+      if [ ! -e iob_not_installed ]; then
+        # Test file permissions now...
+        sudo chmod +x travis/travis_testFiles.sh
+        bash travis/travis_testFiles.sh
+        # ...because this will change them
+        sudo chmod +x travis/travis_prepareTest.sh
+        bash travis/travis_prepareTest.sh
+      fi
+  test_script:
+    # Remember the test dir
+    - TEST_DIR=`pwd`
+    # only continue tests if ioBroker was actually installed
+    - |
+      if [ ! -e iob_not_installed ]; then
+        # Move the test files to the correct location
+        IOB_DIR=`[ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker"`
+        mv test $IOB_DIR/test
+        # And perform the tests
+        cd $IOB_DIR
+        node_modules/mocha/bin/mocha --exit
+      fi
+    # Now test that the fixer does what it should
+    - find / -iname "fix_installation.sh"
+    - |
+      if [ ! -e iob_not_installed ]; then
+        # Stop ioBroker processes before running the fixer
+        IOB_DIR=`[ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker"`
+        cd $IOB_DIR
+        node node_modules/iobroker.js-controller/iobroker.js stop
+        sleep 60
+        #
+        cd $TEST_DIR
+        # Run the fixer
+        sudo chmod +x ./fix_installation.sh
+        sudo env "PATH=$PATH" bash ./fix_installation.sh
+        # Test file permissions again...
+        sudo chmod +x travis/travis_testFiles.sh
+        bash travis/travis_testFiles.sh
+      fi
