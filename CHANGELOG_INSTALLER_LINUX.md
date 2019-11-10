@@ -1,7 +1,7 @@
 # Changelog for Linux-Installer-Script
 
 ## 2019-11-03
-* Fix support of FreeBSD
+* FreeBSD should now finally be supported correctly
 
 ## 2019-10-21
 * (ADOE) Large refactoring:
