@@ -138,7 +138,7 @@ disable_npm_audit() {
 	if [ "$HOST_PLATFORM" = "osx" ]; then
 		$SUDOX chown -R $USER .npmrc
 	else
-		$SUDOX chown -R $USER:$USER .npmrc
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
 	fi
 }
 
@@ -160,7 +160,7 @@ set_npm_python() {
 	if [ "$HOST_PLATFORM" = "osx" ]; then
 		$SUDOX chown -R $USER .npmrc
 	else
-		$SUDOX chown -R $USER:$USER .npmrc
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
 	fi
 }
 
@@ -712,7 +712,7 @@ if [ "$IS_ROOT" != true ]; then
 	if [ "$HOST_PLATFORM" = "osx" ]; then
 		sudo chown -R $USER $IOB_DIR
 	else
-		sudo chown -R $USER:$USER $IOB_DIR
+		sudo chown -R $USER:$USER_GROUP $IOB_DIR
 	fi
 fi
 cd $IOB_DIR

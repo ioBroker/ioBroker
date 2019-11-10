@@ -41,6 +41,8 @@ task:
         cd $IOB_DIR
         node_modules/mocha/bin/mocha --exit
       fi
+    # Now test if adapters which require python can be installed
+    - iobroker url iobroker.lovelace
     # Now test that the fixer does what it should
     - find / -iname "fix_installation.sh"
     - |
