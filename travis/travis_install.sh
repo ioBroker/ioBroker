@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 export NPM=$(which npm)
 export NPM_MAJOR=$($NPM -v | cut -d. -f1)
@@ -57,7 +58,7 @@ fi
 TARBALL=$(cd node_modules/iobroker && npm pack --loglevel error)
 sudo chmod +x node_modules/iobroker/installer.sh
 # and install that
-env "PATH=$PATH:$NPM" "INSTALL_TARGET=$PWD/node_modules/iobroker/$TARBALL" node_modules/iobroker/installer.sh; export EXIT_CODE=$?
+env "PATH=$PATH:$NPM" "INSTALL_TARGET=$PWD/node_modules/iobroker/$TARBALL" bash node_modules/iobroker/installer.sh; export EXIT_CODE=$?
 echo "installation exit code was $EXIT_CODE"
 echo ""
 echo "Installer info:"

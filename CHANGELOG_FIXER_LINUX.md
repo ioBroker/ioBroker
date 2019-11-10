@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-11-10
+* FreeBSD should now finally be supported correctly
+
 ## 2019-10-21
 * (ADOE) Large refactoring:
     * moved some functions to fit order in INSTALLER

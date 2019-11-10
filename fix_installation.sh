@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-21" # format YYYY-MM-DD
+FIXER_VERSION="2019-11-10" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
 then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
+USER_GROUP="$USER"
 
 get_platform_params() {
 	# Test which platform this script is being run on
@@ -48,6 +49,9 @@ get_platform_params() {
 		exit 1
 		;;
 	esac
+	if [ "$IS_ROOT" = true ]; then
+		USER_GROUP="$ROOT_GROUP"
+	fi
 }
 
 install_package_linux() {
@@ -131,6 +135,28 @@ disable_npm_audit() {
 		append_to_file "audit=false" .npmrc
 	fi
 	# No need to change the permissions, since we're doing that soon anyways
+}
+
+set_npm_python() {
+	# Make sure the npmrc file exists
+	$SUDOX touch .npmrc
+	# If .npmrc does not contain "python=", we need to change it
+	$SUDOX grep -q -E "^python=" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$($SUDOX grep -v -E "^python=" .npmrc)
+		# And write it back
+		write_to_file "$NPMRC_FILE" .npmrc
+		# Append the line to change the python binary
+		append_to_file "# change link from python3 to python2.7 (needed for gyp)" .npmrc
+		append_to_file "python=/usr/local/bin/python2.7" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+	fi
 }
 
 enable_colored_output() {
@@ -525,7 +551,7 @@ NUM_STEPS=3
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD update -y
+$SUDOX $INSTALL_CMD update
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
 # TODO: Which other packages do we need by default?
@@ -557,7 +583,6 @@ install_necessary_packages() {
 		# Give nodejs access to protected ports and raw devices like ble
 		cmdline="$SUDOX setcap"
 
-		set -x
 		if running_in_docker; then
 			capabilities=$(grep ^CapBnd /proc/$$/status)
 			if [[ $(capsh --decode=${capabilities:(-16)}) == *"cap_net_admin"* ]]; then
@@ -572,7 +597,6 @@ install_necessary_packages() {
 		else
 			$cmdline 'cap_net_admin,cap_net_bind_service,cap_net_raw+eip' $(eval readlink -f `which node`)
 		fi
-		set +x
 		;;
 	"freebsd")
 		declare -a packages=(
@@ -646,6 +670,11 @@ fi
 # Disable any warnings related to "npm audit fix"
 cd $IOB_DIR
 disable_npm_audit
+
+if [ "$HOST_PLATFORM" = "freebsd" ]; then
+	# Make sure we use the correct python binary
+	set_npm_python
+fi
 
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
@@ -884,7 +913,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
-		#!/bin/sh
+		#!$BASH_CMDLINE
 		#
 		# PROVIDE: iobroker
 		# REQUIRE: DAEMON
@@ -901,21 +930,20 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
 		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-		NODECMD=\`which node\`
 
-		iobroker_start ()
+		iobroker_start()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			iobroker start
 		}
 
-		iobroker_stop ()
+		iobroker_stop()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			iobroker stop
 		}
 
-		iobroker_status ()
+		iobroker_status()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			iobroker status
 		}
 
 		PATH="\${PATH}:/usr/local/bin"
