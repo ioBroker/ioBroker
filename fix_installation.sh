@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2019-10-27" # format YYYY-MM-DD
+FIXER_VERSION="2019-11-11" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
 then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
+USER_GROUP="$USER"
 
 
 #ADOE: Adapt repository path as needed.
@@ -63,7 +64,7 @@ NUM_STEPS=3
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD update -y
+$SUDOX $INSTALL_CMD update
 
 # Determine the platform we operate on and select the installation routine/packages accordingly 
 install_necessary_packages
@@ -82,6 +83,11 @@ fi
 # Disable any warnings related to "npm audit fix"
 cd $IOB_DIR
 disable_npm_audit
+
+if [ "$HOST_PLATFORM" = "freebsd" ]; then
+	# Make sure we use the correct python binary
+	set_npm_python
+fi
 
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
@@ -320,7 +326,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
-		#!/bin/sh
+		#!$BASH_CMDLINE
 		#
 		# PROVIDE: iobroker
 		# REQUIRE: DAEMON
@@ -337,21 +343,20 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		iobroker_pidfile=\${iobroker_pidfile-"$CONTROLLER_DIR/lib/iobroker.pid"}
 
 		PIDF=$CONTROLLER_DIR/lib/iobroker.pid
-		NODECMD=\`which node\`
 
-		iobroker_start ()
+		iobroker_start()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js start"
+			iobroker start
 		}
 
-		iobroker_stop ()
+		iobroker_stop()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js stop"
+			iobroker stop
 		}
 
-		iobroker_status ()
+		iobroker_status()
 		{
-			su -m $IOB_USER -s "$BASH_CMDLINE" -c "\${NODECMD} ${CONTROLLER_DIR}/iobroker.js status"
+			iobroker status
 		}
 
 		PATH="\${PATH}:/usr/local/bin"

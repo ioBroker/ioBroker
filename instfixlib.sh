@@ -1,4 +1,3 @@
-
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
@@ -110,6 +109,9 @@ get_platform_params() {
 		exit 1
 		;;
 	esac
+	if [ "$IS_ROOT" = true ]; then
+		USER_GROUP="$ROOT_GROUP"
+	fi
 }
 
 function set_some_common_params() {
@@ -320,15 +322,13 @@ disable_npm_audit() {
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
 	fi
-
-	if [ "$INSTALLER_VERSION" != "" ]; then
-		# Make sure that npm can access the .npmrc
-		if [ "$HOST_PLATFORM" = "osx" ]; then
-			$SUDOX chown -R $USER .npmrc
-		else
-			$SUDOX chown -R $USER:$USER .npmrc
-		fi
-	fi
+#	# No need to change the permissions, since we're doing that soon anyways
+#	# Make sure that npm can access the .npmrc
+#	if [ "$HOST_PLATFORM" = "osx" ]; then
+#		$SUDOX chown -R $USER .npmrc
+#	else
+#		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+#	fi
 }
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -573,11 +573,15 @@ fix_dir_permissions() {
 	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
 	echo "Fixing directory permissions..."
 
-	# ioBroker install dir
-	change_owner $IOB_USER $IOB_DIR
-	# and the npm cache dir
-	if [ -d "/home/$IOB_USER/.npm" ]; then
-		change_owner $IOB_USER "/home/$IOB_USER/.npm"
+	if [ "$INSTALLER_VERSION" != "" ]; then
+		$SUDOX chown -R $IOB_USER:$IOB_USER $IOB_DIR
+	else
+		# ioBroker install dir
+		change_owner $IOB_USER $IOB_DIR
+		# and the npm cache dir
+		if [ -d "/home/$IOB_USER/.npm" ]; then
+			change_owner $IOB_USER "/home/$IOB_USER/.npm"
+		fi
 	fi
 
 	if [ "$IS_ROOT" != true ]; then
@@ -645,6 +649,27 @@ detect_ip_address() {
 	return $IP
 }
 
+set_npm_python() {
+	# Make sure the npmrc file exists
+	$SUDOX touch .npmrc
+	# If .npmrc does not contain "python=", we need to change it
+	$SUDOX grep -q -E "^python=" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$($SUDOX grep -v -E "^python=" .npmrc)
+		# And write it back
+		write_to_file "$NPMRC_FILE" .npmrc
+		# Append the line to change the python binary
+		append_to_file "# change link from python3 to python2.7 (needed for gyp)" .npmrc
+		append_to_file "python=/usr/local/bin/python2.7" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+	fi
+}
 
 
 
