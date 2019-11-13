@@ -10,7 +10,6 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
-
 #ADOE: Adapt repository path as needed.
 #ADOE: Is there a possibility to do that automatically via GitHub?
 LIB_NAME="instfixlib.sh"
@@ -23,6 +22,7 @@ RET=$(get_lib_version)
 if [ $? -ne 0 ]; then echo "Inst/Fix: library $LIB_NAME could not be loaded!"; exit -2; fi
 if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; exit -2; fi
 echo "Library version=$RET"
+
 
 # Test which platform this script is being run on
 get_platform_params

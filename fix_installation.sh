@@ -10,7 +10,6 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
-
 #ADOE: Adapt repository path as needed.
 #ADOE: Is there a possibility to do that automatically via GitHub?
 LIB_NAME="instfixlib.sh"
