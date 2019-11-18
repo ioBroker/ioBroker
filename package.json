@@ -60,7 +60,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "install/windows/",
     "lib/"
   ],
   "license": "MIT",
