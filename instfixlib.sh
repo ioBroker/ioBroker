@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
-INSFIX_LIB_VERSION="2019-10-27" # format YYYY-MM-DD
+INSFIX_LIB_VERSION="2019-11-22" # format YYYY-MM-DD
 
 # ------------------------------
 # test function of the library
@@ -646,7 +646,7 @@ detect_ip_address() {
 	else
 		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
 	fi
-	return $IP
+	echo $IP
 }
 
 set_npm_python() {
