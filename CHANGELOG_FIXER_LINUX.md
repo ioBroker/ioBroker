@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2019-11-26
+* (ADOE) Extracted many shared Installer/Fixer functions into a common library script
+
 ## 2019-11-10
 * FreeBSD should now finally be supported correctly
 
