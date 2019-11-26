@@ -217,6 +217,8 @@ install_necessary_packages() {
 			"libcap2-bin" # To give nodejs access to protected ports
 			# These are used by a couple of adapters and should therefore exist:
 			"build-essential"
+			"gcc-c++"
+			"make"
 			"libavahi-compat-libdnssd-dev"
 			"libudev-dev"
 			"libpam0g-dev"
@@ -322,13 +324,34 @@ disable_npm_audit() {
 		append_to_file "# disable npm audit warnings" .npmrc
 		append_to_file "audit=false" .npmrc
 	fi
-#	# No need to change the permissions, since we're doing that soon anyways
-#	# Make sure that npm can access the .npmrc
-#	if [ "$HOST_PLATFORM" = "osx" ]; then
-#		$SUDOX chown -R $USER .npmrc
-#	else
-#		$SUDOX chown -R $USER:$USER_GROUP .npmrc
-#	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+	fi
+}
+
+set_npm_python() {
+	# Make sure the npmrc file exists
+	$SUDOX touch .npmrc
+	# If .npmrc does not contain "python=", we need to change it
+	$SUDOX grep -q -E "^python=" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible audit=true)
+		NPMRC_FILE=$($SUDOX grep -v -E "^python=" .npmrc)
+		# And write it back
+		write_to_file "$NPMRC_FILE" .npmrc
+		# Append the line to change the python binary
+		append_to_file "# change link from python3 to python2.7 (needed for gyp)" .npmrc
+		append_to_file "python=/usr/local/bin/python2.7" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+	fi
 }
 
 # Adds dirs to the PATH variable without duplicating entries
@@ -573,9 +596,9 @@ fix_dir_permissions() {
 	# When autostart is enabled, we need to fix the permissions so that `iobroker` can access it
 	echo "Fixing directory permissions..."
 
-	if [ "$INSTALLER_VERSION" != "" ]; then
-		$SUDOX chown -R $IOB_USER:$IOB_USER $IOB_DIR
-	else
+	change_owner $IOB_USER $IOB_DIR
+	# These commands are only for the fixer
+	if [ "$FIXER_VERSION" != "" ]; then
 		# ioBroker install dir
 		change_owner $IOB_USER $IOB_DIR
 		# and the npm cache dir
@@ -601,10 +624,6 @@ fix_dir_permissions() {
 
 install_nodejs() {
 	print_bold "Node.js not found. Installing..."
-	install_package gcc-c++
-	install_package make
-	install_package build-essential
-	install_package curl
 
 	if [ "$INSTALL_CMD" = "yum" ]; then
 		if [ "$IS_ROOT" = true ]; then
@@ -648,30 +667,5 @@ detect_ip_address() {
 	fi
 	echo $IP
 }
-
-set_npm_python() {
-	# Make sure the npmrc file exists
-	$SUDOX touch .npmrc
-	# If .npmrc does not contain "python=", we need to change it
-	$SUDOX grep -q -E "^python=" .npmrc &> /dev/null
-	if [ $? -ne 0 ]; then
-		# Remember its contents (minus any possible audit=true)
-		NPMRC_FILE=$($SUDOX grep -v -E "^python=" .npmrc)
-		# And write it back
-		write_to_file "$NPMRC_FILE" .npmrc
-		# Append the line to change the python binary
-		append_to_file "# change link from python3 to python2.7 (needed for gyp)" .npmrc
-		append_to_file "python=/usr/local/bin/python2.7" .npmrc
-	fi
-	# Make sure that npm can access the .npmrc
-	if [ "$HOST_PLATFORM" = "osx" ]; then
-		$SUDOX chown -R $USER .npmrc
-	else
-		$SUDOX chown -R $USER:$USER_GROUP .npmrc
-	fi
-}
-
-
-
 
 echo "library: loaded"
