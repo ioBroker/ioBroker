@@ -10,17 +10,16 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
-#ADOE: Adapt repository path as needed.
-#ADOE: Is there a possibility to do that automatically via GitHub?
-LIB_NAME="instfixlib.sh"
-LIB_URL="https://raw.githubusercontent.com/ArneDoe/ioBroker/libload/$LIB_NAME"
+# TODO: Change this URL when merging into stable!
+LIB_NAME="installer_library.sh"
+LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 # get and load the LIB
 curl -sL $LIB_URL > ~/$LIB_NAME
-if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Inst/Fix: library not found"; exit -2; fi
+if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit -2; fi
 # test one function of the library
 RET=$(get_lib_version)
-if [ $? -ne 0 ]; then echo "Inst/Fix: library $LIB_NAME could not be loaded!"; exit -2; fi
-if [ "$RET" == "" ]; then echo "Inst/Fix: library $LIB_NAME does not work."; exit -2; fi
+if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit -2; fi
+if [ "$RET" == "" ]; then echo "Installer/Fixer: library $LIB_NAME does not work."; exit -2; fi
 echo "Library version=$RET"
 
 
