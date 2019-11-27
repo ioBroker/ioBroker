@@ -4,6 +4,12 @@
 INSFIX_LIB_VERSION="2019-11-22" # format YYYY-MM-DD
 
 # ------------------------------
+# Supported and suggested node versions
+# ------------------------------
+NODE_JS_LINUX_URL = "https://deb.nodesource.com/setup_10.x"
+NODE_JS_BREW_URL = "https://nodejs.org/dist/v10.17.0/node-v10.17.0.pkg"
+
+# ------------------------------
 # test function of the library
 # ------------------------------
 function get_lib_version() { echo "$INSFIX_LIB_VERSION"; }
@@ -207,7 +213,7 @@ install_package() {
 }
 
 install_necessary_packages() {
-# Determine the platform we operate on and select the installation routine/packages accordingly 
+# Determine the platform we operate on and select the installation routine/packages accordingly
 # TODO: Which other packages do we need by default?
 	case "$HOST_PLATFORM" in
 	"linux")
@@ -262,7 +268,7 @@ install_necessary_packages() {
 			"unzip"
 			"avahi-libdns" # avahi gets installed along with this
 			"dbus"
-			"nss_mdns" # needed for the mdns host resolution 
+			"nss_mdns" # needed for the mdns host resolution
 			"gcc"
 			"python" # Required for node-gyp compilation
 		)
@@ -270,7 +276,7 @@ install_necessary_packages() {
 			install_package $pkg
 		done
 		# we need to do some setting up things after installing the packages
-		# ensure dns_sd.h is where node-gyp expect it 
+		# ensure dns_sd.h is where node-gyp expect it
 		ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
 		# enable dbus in the avahi configuration
 		sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
@@ -627,22 +633,22 @@ install_nodejs() {
 
 	if [ "$INSTALL_CMD" = "yum" ]; then
 		if [ "$IS_ROOT" = true ]; then
-			curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+			curl -sL $NODE_JS_LINUX_URL | bash -
 		else
-			curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
+			curl -sL $NODE_JS_LINUX_URL | sudo -E bash -
 		fi
 	elif [ "$INSTALL_CMD" = "pkg" ]; then
 		$SUDOX pkg install -y node
 	elif [ "$INSTALL_CMD" = "brew" ]; then
 		echo "${red}Cannot install Node.js using brew.${normal}"
-		echo "Please download Node.js from https://nodejs.org/dist/v10.16.3/node-v10.16.3.pkg"
+		echo "Please download Node.js from ${$NODE_JS_BREW_URL}"
 		echo "Then try to install ioBroker again!"
 		exit 1
 	else
 		if [ "$IS_ROOT" = true ]; then
-			curl -sL https://deb.nodesource.com/setup_10.x | bash -
+			curl -sL $NODE_JS_LINUX_URL | bash -
 		else
-			curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+			curl -sL $NODE_JS_LINUX_URL | sudo -E bash -
 		fi
 	fi
 	install_package nodejs

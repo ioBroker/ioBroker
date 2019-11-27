@@ -72,7 +72,7 @@ if [ $(npm config get registry) != "$REGISTRY_URL" ]; then
 	npm config set registry $REGISTRY_URL
 fi
 
-# Determine the platform we operate on and select the installation routine/packages accordingly 
+# Determine the platform we operate on and select the installation routine/packages accordingly
 install_necessary_packages
 
 # ########################################################
@@ -138,7 +138,7 @@ print_step "Finalizing installation" 4 "$NUM_STEPS"
 INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
-elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
+elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
@@ -301,14 +301,14 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Documentation=http://iobroker.net
 		After=network.target redis.service
 		Wants=redis.service
-		
+
 		[Service]
 		Type=simple
 		User=$IOB_USER
 		Environment="NODE=\$(which node)"
 		ExecStart=$BASH_CMDLINE -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
-		
+
 		[Install]
 		WantedBy=multi-user.target
 		EOF
@@ -388,7 +388,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 	# Enable startup and start the service
 	sysrc iobroker_enable=YES
 	service iobroker start
-	
+
 	echo "Autostart enabled!"
 	echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
 
