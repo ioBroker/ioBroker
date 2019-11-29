@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
-INSFIX_LIB_VERSION="2019-11-22" # format YYYY-MM-DD
+LIBRARY_VERSION="2019-11-29" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -12,7 +12,7 @@ NODE_JS_BREW_URL = "https://nodejs.org/dist/v10.17.0/node-v10.17.0.pkg"
 # ------------------------------
 # test function of the library
 # ------------------------------
-function get_lib_version() { echo "$INSFIX_LIB_VERSION"; }
+function get_lib_version() { echo "$LIBRARY_VERSION"; }
 
 # ------------------------------
 # functions for ioBroker Installer/Fixer
@@ -233,6 +233,7 @@ install_necessary_packages() {
 			"curl"
 			"unzip"
 			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
+			"video" # Allows saving images from the Pi camera
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg

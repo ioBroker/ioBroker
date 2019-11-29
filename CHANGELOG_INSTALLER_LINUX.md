@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2019-11-29
+* Add user to `video` group (Linux)
+
 ## 2019-11-26
 * (ADOE) Extracted many shared Installer/Fixer functions into a common library script
 
