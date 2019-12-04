@@ -588,7 +588,6 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.onlyWWW            - [true/false] say to controller, that adapter has only html files and no main.js, like rickshaw
 * common.singleton          - adapter can be installed only once in whole system
 * common.singletonHost      - adapter can be installed only once on one host
-* common.allowInit          - [true/false] allow scheduled adapter start once after configuration changed and then by schedule
 * common.config.width       - default width for configuration dialog
 * common.config.height      - default height for configuration dialog
 * common.config.minWidth    - minimal width for configuration dialog
