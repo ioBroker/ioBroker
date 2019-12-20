@@ -64,7 +64,7 @@ print_step "Installing prerequisites" 1 "$NUM_STEPS"
 # update repos
 $SUDOX $INSTALL_CMD update
 
-# Determine the platform we operate on and select the installation routine/packages accordingly 
+# Determine the platform we operate on and select the installation routine/packages accordingly
 install_necessary_packages
 
 # ########################################################
@@ -134,7 +134,7 @@ INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
-elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then 
+elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
@@ -289,15 +289,15 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Description=ioBroker Server
 		Documentation=http://iobroker.net
 		After=network.target redis.service
-		Wants=redis.service
-		
+		Wants=redis.service influxdb.service mysql-server.service mariadb-server.service
+
 		[Service]
 		Type=simple
 		User=$IOB_USER
 		Environment="NODE=\$(which node)"
 		ExecStart=$BASH_CMDLINE -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
-		
+
 		[Install]
 		WantedBy=multi-user.target
 		EOF
