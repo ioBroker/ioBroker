@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the fixer
 # ------------------------------
-LIBRARY_VERSION="2019-11-29" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-01-13" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -520,7 +520,7 @@ create_user_linux() {
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands iobroker may execute as sudo without password
 	declare -a iob_commands=(
-		"shutdown -h now" "halt" "poweroff" "reboot"
+		"shutdown" "halt" "poweroff" "reboot"
 		"systemctl start" "systemctl stop"
 		"mount" "umount" "systemd-run"
 		"apt-get" "apt" "dpkg" "make"
@@ -642,7 +642,7 @@ install_nodejs() {
 		$SUDOX pkg install -y node
 	elif [ "$INSTALL_CMD" = "brew" ]; then
 		echo "${red}Cannot install Node.js using brew.${normal}"
-		echo "Please download Node.js from ${$NODE_JS_BREW_URL}"
+		echo "Please download Node.js from $NODE_JS_BREW_URL"
 		echo "Then try to install ioBroker again!"
 		exit 1
 	else
