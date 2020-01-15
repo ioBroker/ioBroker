@@ -6,8 +6,8 @@ LIBRARY_VERSION="2020-01-13" # format YYYY-MM-DD
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
-NODE_JS_LINUX_URL = "https://deb.nodesource.com/setup_10.x"
-NODE_JS_BREW_URL = "https://nodejs.org/dist/v10.17.0/node-v10.17.0.pkg"
+NODE_JS_LINUX_URL="https://deb.nodesource.com/setup_10.x"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v10.17.0/node-v10.17.0.pkg"
 
 # ------------------------------
 # test function of the library
