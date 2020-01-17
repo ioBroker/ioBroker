@@ -616,7 +616,7 @@ id *system.adapter.&lt;adapter.name&gt;*
 * common.materializeTab     - if adapter supports > admin3  for tab (materialize style)
 * common.dataFolder         - folder relative to iobroker-data where the adapter stores the data. This folder will be backed up and restored automatically. You can use variable '%INSTANCE%' in it.
 * common.webPreSettings     - list of parameters that must be included into info.js by webServer adapter. (Example material)
-* common.apt-get            - list of debian packages, that required for this adapter (of course only debian)
+* common.osDependencies     - list of OS dependencies, that are required for this adapter, e.g. `{"linux": ["build-essential", "libssl-dev"]}`
 * common.eraseOnUpload      - erase all previous data in the directory before upload
 * common.webByVersion       - show version as prefix in web adapter (usually - ip:port/material, webByVersion - ip:port/1.2.3/material)
 * common.noIntro            - never show instances of this adapter on Intro/Overview screen in admin (like icons, widgets)
@@ -655,7 +655,8 @@ id *system.host.&lt;host&gt;*
 * common.children
 
 #### config
-
+* native                    - predefined attributes which are accessible in index_m.html and at runtime via `adapter.config.<attribute>`, e.g. `{"port": 1234, "password": "secret"}`
+* protectedNative           - array of config attributes which will only be accessible by the own adapter, e.g. `["password"]`
 
 
 #### script
