@@ -2,6 +2,7 @@
 
 ## 2020-01-25
 * The installer lib file is now deleted after sourcing it
+* Configure `npm` to enforce engine versions in `package.json`
 
 ## 2020-01-13
 * The `shutdown` command is no longer limited to `-h now`

@@ -361,6 +361,28 @@ set_npm_python() {
 	fi
 }
 
+force_strict_npm_version_checks() {
+	# Make sure the npmrc file exists
+	$SUDOX touch .npmrc
+	# If .npmrc does not contain "engine-strict=true", we need to change it
+	$SUDOX grep -q -E "^engine-strict=true" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible engine-strict=false)
+		NPMRC_FILE=$($SUDOX grep -v -E "^engine-strict=false" .npmrc)
+		# And write it back
+		write_to_file "$NPMRC_FILE" .npmrc
+		# Append the line to force strict version checks
+		append_to_file "# force strict version checks" .npmrc
+		append_to_file "engine-strict=true" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+	fi
+}
+
 # Adds dirs to the PATH variable without duplicating entries
 add_to_path() {
 	case ":$PATH:" in

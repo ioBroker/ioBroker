@@ -79,9 +79,12 @@ if [ "$USER" != "$IOB_USER" ]; then
 	fi
 fi
 
-# Disable any warnings related to "npm audit fix"
 cd $IOB_DIR
+# Disable any warnings related to "npm audit fix"
 disable_npm_audit
+
+# Enforce strict version checks before installing new packages
+force_strict_npm_version_checks
 
 if [ "$HOST_PLATFORM" = "freebsd" ]; then
 	# Make sure we use the correct python binary
