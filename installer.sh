@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2019-11-29" # format YYYY-MM-DD
+INSTALLER_VERSION="2020-01-25" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -10,12 +10,13 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
-# TODO: Change this URL when merging into stable!
 LIB_NAME="installer_library.sh"
-LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
+LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
 # get and load the LIB
 curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit -2; fi
+# Delete the lib again. We have sourced it so we don't need it anymore
+rm ~/$LIB_NAME
 # test one function of the library
 RET=$(get_lib_version)
 if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit -2; fi

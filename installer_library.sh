@@ -1,7 +1,7 @@
 # ------------------------------
-# Increase this version number whenever you update the fixer
+# Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-01-13" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-01-25" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
