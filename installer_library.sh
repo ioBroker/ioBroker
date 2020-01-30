@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-01-25" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-01-30" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -233,7 +233,6 @@ install_necessary_packages() {
 			"curl"
 			"unzip"
 			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
-			"video" # Allows saving images from the Pi camera
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg
@@ -587,6 +586,7 @@ create_user_linux() {
 		i2c
 		redis
 		tty
+		video
 	)
 	for grp in "${groups[@]}"; do
 		getent group $grp &> /dev/null && $SUDOX usermod -a -G $grp $username
@@ -614,6 +614,7 @@ create_user_freebsd() {
 		i2c
 		redis
 		tty
+		video
 	)
 	for grp in "${groups[@]}"; do
 		getent group $grp && $SUDOX pw group mod $grp -m $username

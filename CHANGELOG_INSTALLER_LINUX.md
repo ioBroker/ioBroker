@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2020-01-30
+* (Linux) Add iobroker user to the `video` group
+
 ## 2020-01-25
 * The installer lib file is now deleted after sourcing it
 * Configure `npm` to enforce engine versions in `package.json`
