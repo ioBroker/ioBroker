@@ -1,6 +1,6 @@
 ![Logo](img/ioBrokerLogoSmall.png)
 # ioBroker
-=====================
+
 [![NPM version](http://img.shields.io/npm/v/iobroker.svg)](https://www.npmjs.com/package/iobroker)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.svg)](https://www.npmjs.com/package/iobroker)
 
@@ -25,14 +25,14 @@ Data Logging. It like a software f.e. [fhem](http://fhem.de), [OpenHAB](http://w
 ## Concept
 
 ioBroker is not just an application, it's more of a a concept, a database schema, and offers a very easy way for systems
-to interoperate. ioBroker defines some common rules for a pair of databases used to exchange data and publish events
+to inter-operate. ioBroker defines some common rules for a pair of databases used to exchange data and publish events
 between different systems.
 
 ![architecture](img/architecture.png)
 
 #### Databases
 
-ioBroker uses "in memory" database to hold the data and saves it on disk with resonable intervals. There are two types of
+ioBroker uses "in memory" database to hold the data and saves it on disk with reasonable intervals. There are two types of
 storage:
 - states (values)
 - objects (meta/configuration information)
@@ -57,7 +57,7 @@ See actual list of adapters on [iobroker.net](http://iobroker.net)
 #### Security
 
 ioBroker is designed to be accessed by trusted adapters inside trusted networks. This means that usually it is not a
-good idea to expose the ioBroker databases, adapters or any smarthome devices directly to the internet or, in general,
+good idea to expose the ioBroker databases, adapters or any smart home devices directly to the internet or, in general,
 to an environment where untrusted clients can directly access these network services. Adapters that offer services
 supposed to be exposed to the internet should be handled with care. You should always activate **HTTPS** and use valid
 certificates for web, admin if open it for internet or for example use it with additional security measures like VPN,
@@ -95,9 +95,9 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 * [ioBroker.js-controller Changelog](https://github.com/ioBroker/ioBroker.js-controller/blob/master/CHANGELOG.md)
 
 ## License
-This module is distributer under the MIT License (MIT). Please notice, that other ioBroker adapters can have different licenses.
+This module is distributor under the MIT License (MIT). Please notice, that other ioBroker adapters can have different licenses.
 
-Copyright (c) 2014-2018 bluefox <dogafox@gmail.com>,
+Copyright (c) 2014-2020 bluefox <dogafox@gmail.com>,
 
 Copyright (c) 2014      hobbyquaker
 
