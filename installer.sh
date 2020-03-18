@@ -133,7 +133,9 @@ else
 fi
 
 npm i --production --loglevel error --unsafe-perm > /dev/null
-
+# Debug build issues
+cat /home/travis/.npm/_logs/*.log
+npm ls semver
 
 # ########################################################
 print_step "Finalizing installation" 4 "$NUM_STEPS"
