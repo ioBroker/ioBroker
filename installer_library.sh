@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-01-30" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-04-12" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -566,7 +566,7 @@ create_user_linux() {
 
 	# Furthermore, allow all users to execute node iobroker.js as iobroker
 	if [ "$IOB_USER" != "$USER" ]; then
-		add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js"
+		add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js *"
 	fi
 
 	SUDOERS_FILE="/etc/sudoers.d/iobroker"
