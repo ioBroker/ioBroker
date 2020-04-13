@@ -12,8 +12,9 @@ export NODE_BUILD=$($NODE -v | cut -d. -f3)
 
 # try to install ioBroker and capture the response code to test its behavior
 sudo -H env "PATH=$PATH" $NPM install --unsafe-perm --prefix "node_modules/iobroker"; export EXIT_CODE=$?
-# node version too old (< 8.12), the script should exit with code 2
-if [[ ($NODE_MAJOR -lt 8) || (($NODE_MAJOR -eq 8) && ($NODE_MINOR -lt 12)) ]]
+# node version too old (< 10), the script should exit with code 2
+# if [[ ($NODE_MAJOR -lt 8) || (($NODE_MAJOR -eq 8) && ($NODE_MINOR -lt 12)) ]]
+if [[ ($NODE_MAJOR -lt 10) ]]
 then
 	if [[ ($EXIT_CODE -eq 2) || ($EXIT_CODE -eq 1) ]]
 	then

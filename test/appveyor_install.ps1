@@ -6,7 +6,7 @@ if ($env:npm_version -ne $null) { npm i -g npm@$env:npm_version }
 node -v
 npm -v
 
-$MIN_NODE_VERSION = [System.Version]"8.12.0"
+$MIN_NODE_VERSION = [System.Version]"10.0.0"
 # The minimum supported npm version
 $MIN_NPM_VERSION = [System.Version]"6.0.0"
 

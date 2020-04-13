@@ -29,15 +29,9 @@ matrix:
   include:
     # These tests should fail:
     - <<: *linux
-      node_js: 4 # old Node
-    - <<: *linux
       node_js: 6 # old Node
     - <<: *linux
       node_js: 8.11 # old Node, also comes with old NPM
-    - <<: *linux
-      node_js: 8.12 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
     - <<: *linux
       node_js: 10.2 # comes with old NPM
     - <<: *linux
@@ -45,15 +39,9 @@ matrix:
       env:
         - NPM_VER=5.7.1
     - <<: *osx
-      node_js: 4 # old Node
-    - <<: *osx
       node_js: 6 # old Node
     - <<: *osx
       node_js: 8.11 # old Node, also comes with old NPM
-    - <<: *osx
-      node_js: 8.12 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
     - <<: *osx
       node_js: 10.2 # comes with old NPM
     - <<: *osx
@@ -63,13 +51,9 @@ matrix:
 
     # These tests should succeed
     - <<: *linux
-      node_js: 8.12 # Comes with 6.4.1
-    - <<: *linux
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *linux
       node_js: 12 # Comes with npm 6
-    - <<: *osx
-      node_js: 8.12 # Comes with 6.4.1
     - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
