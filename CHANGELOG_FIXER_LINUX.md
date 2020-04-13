@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2020-04-12
+* (Linux) Avoid entering the sudo password for iobroker CLI
+
 ## 2020-01-30
 * (Linux) Add iobroker user to the `video` group
 
