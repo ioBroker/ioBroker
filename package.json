@@ -1,6 +1,6 @@
 {
   "name": "iobroker",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "engines": {
     "node": ">=8.12"
   },
@@ -57,6 +57,11 @@
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "main": "lib/setup.js",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "lib/"
+  ],
   "license": "MIT",
   "devDependencies": {
     "eslint": "^6.2.2",

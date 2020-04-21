@@ -18,6 +18,7 @@ $NpmVersion = [System.Version](npm -v)
 Push-Location -Path "node_modules\iobroker"
 npm pack | Tee-Object -Variable tgz
 Move-Item -Path $tgz -Destination ..\..
+Move-Item -Path "install" -Destination ..\..
 Pop-Location
 # delete everything else
 Remove-Item "node_modules\iobroker" -Force -Recurse

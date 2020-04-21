@@ -7,13 +7,11 @@ task:
     - mkdir -p node_modules/iobroker
     - mv doc node_modules/iobroker
     - mv img node_modules/iobroker
-    - mv install node_modules/iobroker
     - mv lib node_modules/iobroker
     - mv wiki node_modules/iobroker
     - mv package.json node_modules/iobroker
     - mv installer.sh node_modules/iobroker
   install_script:
-    - sudo chmod +x travis/travis_install.sh
     # make sure the iob_not_installed file can be created
     - sudo chmod 777 .
     - bash travis/travis_install.sh
@@ -22,10 +20,8 @@ task:
     - |
       if [ ! -e iob_not_installed ]; then
         # Test file permissions now...
-        sudo chmod +x travis/travis_testFiles.sh
         bash travis/travis_testFiles.sh
         # ...because this will change them
-        sudo chmod +x travis/travis_prepareTest.sh
         bash travis/travis_prepareTest.sh
       fi
   test_script:
@@ -55,9 +51,7 @@ task:
         #
         cd $TEST_DIR
         # Run the fixer
-        sudo chmod +x ./fix_installation.sh
         sudo env "PATH=$PATH" bash ./fix_installation.sh
         # Test file permissions again...
-        sudo chmod +x travis/travis_testFiles.sh
         bash travis/travis_testFiles.sh
       fi
