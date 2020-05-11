@@ -59,7 +59,7 @@
   "main": "lib/setup.js",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^6.2.2",
+    "eslint": "^7.0.0",
     "mocha": "^7.1.0",
     "chai": "^4.2.0"
   }
