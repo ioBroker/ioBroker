@@ -10,6 +10,7 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
+# get and load the LIB => START
 LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
 # get and load the LIB
@@ -17,6 +18,8 @@ curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit -2; fi
 # Delete the lib again. We have sourced it so we don't need it anymore
 rm ~/$LIB_NAME
+# get and load the LIB => END
+
 # test one function of the library
 RET=$(get_lib_version)
 if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit -2; fi

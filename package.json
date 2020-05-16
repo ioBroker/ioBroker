@@ -53,14 +53,17 @@
   },
   "scripts": {
     "install": "node lib/checkVersions.js",
-    "postinstall": "node lib/install.js",
+    "postinstall_disabled": "node lib/install.js",
+    "deploy": "node node_modules/gulp/bin/gulp.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
   "main": "lib/setup.js",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^6.2.2",
-    "mocha": "^7.1.0",
-    "chai": "^4.2.0"
+    "eslint": "^7.0.0",
+    "mocha": "^7.1.2",
+    "chai": "^4.2.0",
+    "gulp": "^4.0.2",
+    "ssh2": "^0.8.9"
   }
 }
