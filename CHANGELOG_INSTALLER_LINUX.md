@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2020-06-12
+* (Linux) Added net-tools to fix error #277 "ifconfig: command not found" 
+
 ## 2020-04-12
 * (Linux) Avoid entering the sudo password for iobroker CLI
 
