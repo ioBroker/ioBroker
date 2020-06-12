@@ -232,6 +232,7 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			"net-tools" # To fix issue #277
 			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
 		for pkg in "${packages[@]}"; do
