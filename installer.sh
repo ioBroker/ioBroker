@@ -174,7 +174,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		else
-			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
 		EOF
 	)
@@ -190,7 +190,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		else
-			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
 		EOF
 	)
@@ -200,7 +200,7 @@ else
 		if [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		else
-			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js \$@
+			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
 		EOF
 	)
