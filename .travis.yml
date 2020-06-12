@@ -54,10 +54,14 @@ matrix:
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *linux
       node_js: 12 # Comes with npm 6
+    - <<: *linux
+      node_js: 14 # Comes with npm 6
     - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
       node_js: 12 # Comes with npm 6
+    - <<: *osx
+      node_js: 14 # Comes with npm 6
 
   #   # This section is used to test compatibility with new node versions
   #   # They are allowed to fail, but give us a chance to react early
