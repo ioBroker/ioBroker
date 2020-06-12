@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-05-17" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-06-12" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -232,6 +232,7 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			"net-tools" # To fix issue #277
 			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
 		for pkg in "${packages[@]}"; do
