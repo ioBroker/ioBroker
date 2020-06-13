@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2020-06-12
+* (Linux) Added net-tools to fix error #277 "ifconfig: command not found" 
+* (Linux) correctly parse string arguments inside quotes
+
 ## 2020-04-12
 * (Linux) Avoid entering the sudo password for iobroker CLI
 
