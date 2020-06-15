@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2020-04-12" # format YYYY-MM-DD
+FIXER_VERSION="2020-06-15" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -12,7 +12,7 @@ USER_GROUP="$USER"
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
-LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
+LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 # get and load the LIB
 curl -sL $LIB_URL > ~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit -2; fi
