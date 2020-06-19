@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-06-12" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-06-19" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -530,7 +530,7 @@ create_user_linux() {
 	id "$username" &> /dev/null;
 	if [ $? -ne 0 ]; then
 		# User does not exist
-		$SUDOX useradd -m -s /usr/sbin/nologin "$username"
+		$SUDOX adduser --home $IOB_DIR --shell /usr/sbin/nologin "$username"
 		echo "User $username created"
 	fi
 	# Add the current non-root user to the iobroker group so he can access the iobroker dir
@@ -599,12 +599,11 @@ create_user_freebsd() {
 	id "$username" &> /dev/null
 	if [ $? -ne 0 ]; then
 		# User does not exist
-		$SUDOX pw useradd -m -s /usr/sbin/nologin -n "$username"
+		$SUDOX pw adduser -m -s /usr/sbin/nologin -n "$username"
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands may be executed as sudo without password
-	# TODO: Find out the correct paths on FreeBSD
-	# SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
+	SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
 
 	# Add the user to all groups if they exist
 	declare -a groups=(

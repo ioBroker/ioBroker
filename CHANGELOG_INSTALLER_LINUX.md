@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+## 2020-06-19
+* (Linux) Switched from useradd to adduser #174
+* (FreeBSD) Removed Todo for setting Sudoers File 
+
 ## 2020-06-12
 * (Linux) Added net-tools to fix error #277 "ifconfig: command not found" 
 * (Linux) correctly parse string arguments inside quotes
