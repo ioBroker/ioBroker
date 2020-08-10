@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2020-06-15
+* Corrected installer_library.sh path on github (error #281) 
+
 ## 2020-06-12
 * (Linux) Added net-tools to fix error #277 "ifconfig: command not found" 
 * (Linux) correctly parse string arguments inside quotes
