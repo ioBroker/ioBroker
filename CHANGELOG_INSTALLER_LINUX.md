@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2020-06-19 
+* (Linux) Updated Recommended Node.JS and NPM Version to 12.x LTS and improved CheckVersions Output for the user
+
 ## 2020-06-12
 * (Linux) Added net-tools to fix error #277 "ifconfig: command not found" 
 * (Linux) correctly parse string arguments inside quotes
