@@ -15,8 +15,8 @@ const DEBUG     = process.env.DEBUG     === 'true' || process.env.DEBUG     === 
 const FAST_TEST = process.env.FAST_TEST === 'true' || process.env.FAST_TEST === true;
 
 const SFTP_CONFIG = {
-    host: SFTP_HOST,
-    port: parseInt(SFTP_PORT, 10),
+    host:     SFTP_HOST,
+    port:     parseInt(SFTP_PORT, 10),
     username: SFTP_USER,
     password: SFTP_PASS,
 };
