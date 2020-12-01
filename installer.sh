@@ -118,11 +118,6 @@ disable_npm_audit
 # Enforce strict version checks before installing new packages
 force_strict_npm_version_checks
 
-if [ "$HOST_PLATFORM" = "freebsd" ]; then
-	# Make sure we use the correct python binary
-	set_npm_python
-fi
-
 # download the installer files and run them
 # If this script is run as root, we need the --unsafe-perm option
 if [ "$IS_ROOT" = true ]; then

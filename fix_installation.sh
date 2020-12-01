@@ -89,11 +89,6 @@ disable_npm_audit
 # Enforce strict version checks before installing new packages
 force_strict_npm_version_checks
 
-if [ "$HOST_PLATFORM" = "freebsd" ]; then
-	# Make sure we use the correct python binary
-	set_npm_python
-fi
-
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 	change_npm_command_user
