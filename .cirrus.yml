@@ -3,7 +3,7 @@ freebsd_instance:
  
 task:
   prepare_install_script:
-    - pkg install -y bash node npm libnghttp2
+    - pkg install -y bash node npm libnghttp2 python sudo
     - mkdir -p node_modules/iobroker
     - mv doc node_modules/iobroker
     - mv img node_modules/iobroker
