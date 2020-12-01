@@ -16,17 +16,17 @@ task:
     - sudo chmod +x travis/travis_install.sh
     # make sure the iob_not_installed file can be created
     - sudo chmod 777 .
-    - bash travis/travis_install.sh
+    - ./travis/travis_install.sh
   prepare_test_script:
     # only continue tests if ioBroker was actually installed
     - |
       if [ ! -e iob_not_installed ]; then
         # Test file permissions now...
         sudo chmod +x travis/travis_testFiles.sh
-        bash travis/travis_testFiles.sh
+        ./travis/travis_testFiles.sh
         # ...because this will change them
         sudo chmod +x travis/travis_prepareTest.sh
-        bash travis/travis_prepareTest.sh
+        ./travis/travis_prepareTest.sh
       fi
   test_script:
     # Remember the test dir
