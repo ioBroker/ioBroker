@@ -339,6 +339,7 @@ disable_npm_audit() {
 	fi
 }
 
+# This is obsolete and can maybe removed
 set_npm_python() {
 	# Make sure the npmrc file exists
 	$SUDOX touch .npmrc
