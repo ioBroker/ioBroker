@@ -1,12 +1,12 @@
 # Get the latest stable version of Node.js or io.js
-Install-Product node $env:nodejs_version $env:platform
+Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:platform
 # if we have defined a specific npm version, use that one
 if ($env:npm_version -ne $null) { npm i -g npm@$env:npm_version }
 
 node -v
 npm -v
 
-$MIN_NODE_VERSION = [System.Version]"8.12.0"
+$MIN_NODE_VERSION = [System.Version]"10.0.0"
 # The minimum supported npm version
 $MIN_NPM_VERSION = [System.Version]"6.0.0"
 
@@ -57,7 +57,7 @@ if ($NpmVersion -lt $MIN_NPM_VERSION) {
 
 # NPM version supported
 # Do the 2nd part of the installation
-npm install --production --no-optional
+npm install --production --loglevel error
 $EXIT_CODE = $LASTEXITCODE
 echo "installation exit code was $EXIT_CODE"
 exit $EXIT_CODE

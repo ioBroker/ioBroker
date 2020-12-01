@@ -18,7 +18,7 @@ Sometimes node.js has not installed the soft link. If you see outputs with ```/u
     ```sudo mkdir /opt/iobroker ; sudo chown $USER.$USER /opt/iobroker ; cd /opt/iobroker```
 * Install
 
-    ```sudo npm install iobroker```
+    ```sudo -H npm install iobroker --production --loglevel error --unsafe-perm```
 
 * Load available adapter information
 

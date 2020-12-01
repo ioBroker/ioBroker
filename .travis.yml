@@ -3,6 +3,9 @@ git:
 
 language: node_js
 
+cache:
+  npm: false
+
 include: &all
   sudo: required
   addons:
@@ -10,7 +13,7 @@ include: &all
       sources:
       - ubuntu-toolchain-r-test
       packages:
-      - g++-4.8
+      - g++-6
 
 include: &linux
   <<: *all
@@ -26,15 +29,9 @@ matrix:
   include:
     # These tests should fail:
     - <<: *linux
-      node_js: 4 # old Node
-    - <<: *linux
       node_js: 6 # old Node
     - <<: *linux
       node_js: 8.11 # old Node, also comes with old NPM
-    - <<: *linux
-      node_js: 8.12 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
     - <<: *linux
       node_js: 10.2 # comes with old NPM
     - <<: *linux
@@ -42,15 +39,9 @@ matrix:
       env:
         - NPM_VER=5.7.1
     - <<: *osx
-      node_js: 4 # old Node
-    - <<: *osx
       node_js: 6 # old Node
     - <<: *osx
       node_js: 8.11 # old Node, also comes with old NPM
-    - <<: *osx
-      node_js: 8.12 # correct node, old NPM manually installed
-      env:
-        - NPM_VER=5.7.1
     - <<: *osx
       node_js: 10.2 # comes with old NPM
     - <<: *osx
@@ -60,35 +51,56 @@ matrix:
 
     # These tests should succeed
     - <<: *linux
-      node_js: 8.12 # Comes with 6.4.1
+      node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *linux
+      node_js: 12 # Comes with npm 6
+    - <<: *linux
+      node_js: 14 # Comes with npm 6
+    - <<: *osx
       node_js: 10 # Comes with npm 6, starting with 10.3
     - <<: *osx
-      node_js: 8.12 # Comes with 6.4.1
+      node_js: 12 # Comes with npm 6
     - <<: *osx
-      node_js: 10 # Comes with npm 6, starting with 10.3
+      node_js: 14 # Comes with npm 6
 
+  #   # This section is used to test compatibility with new node versions
+  #   # They are allowed to fail, but give us a chance to react early
+  #   # Enable this section when the next version of Node.js is out (v14)
+  #   - <<: *linux
+  #     node_js: node
+  #   - <<: *osx
+  #     node_js: node
+  # allow_failures:
+  #   - os: osx
+  #     node_js: node
+  #   - os: linux
+  #     node_js: node
 
 before_install:
   # if we have defined a specific npm version, use that one
   - if [[ "$NPM_VER" != "" ]]; then npm i -g npm@$NPM_VER; fi
   - mkdir -p node_modules/iobroker
-  - mv !(node_modules|test) node_modules/iobroker/
+  - mv !(node_modules|test|travis|fix_installation.sh) node_modules/iobroker/ || true
   - 'if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export CC=clang++; export CXX=clang++; export CXXFLAGS=-std=c++11; fi'
-  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-4.8; fi'
+  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export CXX=g++-6; fi'
 install:
-  - sudo chmod +x test/travis_install.sh
+  - sudo chmod +x travis/travis_install.sh
   # make sure the iob_not_installed file can be created
   - sudo chmod 777 .
-  - test/travis_install.sh
+  - travis/travis_install.sh
   - if [ -e iob_not_installed ]; then echo "ioBroker was not installed (this was expected). Skipping next steps..."; fi
 before_script:
+  # Remember the test dir
+  - TEST_DIR=$(pwd) && echo "$TEST_DIR"
   # only continue tests if ioBroker was actually installed
   - |
-    if [ ! -e iob_not_installed ]
-    then
-      sudo chmod +x test/travis_prepareTest.sh
-      test/travis_prepareTest.sh
+    if [ ! -e iob_not_installed ]; then
+      # Test file permissions now...
+      sudo chmod +x travis/travis_testFiles.sh
+      travis/travis_testFiles.sh
+      # ...because this will change them
+      sudo chmod +x travis/travis_prepareTest.sh
+      travis/travis_prepareTest.sh
     fi
 script:
   # only continue tests if ioBroker was actually installed
@@ -100,4 +112,23 @@ script:
       # And perform the tests
       cd $IOB_DIR
       node_modules/mocha/bin/mocha --exit
+    fi
+  # Now test that the fixer does what it should
+  - |
+    if [ ! -e iob_not_installed ]; then
+      # Stop ioBroker processes before running the fixer
+      IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
+      node "$IOB_DIR/node_modules/iobroker.js-controller/iobroker.js" stop
+      sleep 60
+      # Grace time is over, kill all remaining processes
+      ps -ef | grep -E 'io\.[a-zA-Z0-9_\-]+\.[0-9]+' | awk '{print $2}' | xargs kill -9
+      # Run the fixer
+      cd $TEST_DIR
+      sudo chmod +x ./fix_installation.sh
+      # sudo env "PATH=$PATH" ./fix_installation.sh
+      ./fix_installation.sh
+      ls -la "$IOB_DIR"
+      # Test file permissions again...
+      sudo chmod +x travis/travis_testFiles.sh
+      travis/travis_testFiles.sh
     fi
