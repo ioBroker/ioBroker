@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2020-12-07
+* (FreeBSD) Fixed installation for FreeBSD by using `/usr/bin/env` to detect path for `bash` automatically and do not enforce usage of python 2.7 which is EOL
+* (Linux) Use `-y` argument for `yum`
+
 ## 2020-06-15
 * Corrected installer_library.sh path on github (error #281) 
 
