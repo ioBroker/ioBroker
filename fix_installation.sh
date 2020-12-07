@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2020-12-01" # format YYYY-MM-DD
+FIXER_VERSION="2020-12-07" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -66,7 +66,7 @@ NUM_STEPS=3
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD update
+$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 
 # Determine the platform we operate on and select the installation routine/packages accordingly
 install_necessary_packages
