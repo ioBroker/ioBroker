@@ -1,7 +1,9 @@
 # Changelog for Linux-Installer-Script
 
-## 2020-12-01
+## 2020-12-07
 * (FreeBSD) Fixed installation for FreeBSD by using `/usr/bin/env` to detect path for `bash` automatically and do not enforce usage of python 2.7 which is EOL
+* (Linux) Use `-y` argument for `yum`
+
 ## 2020-06-19 
 * (Linux) Updated Recommended Node.JS and NPM Version to 12.x LTS and improved CheckVersions Output for the user
 

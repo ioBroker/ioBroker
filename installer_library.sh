@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-12-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-12-07" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -80,16 +80,25 @@ get_platform_params() {
 	# Test which platform this script is being run on
 	# When adding another supported platform, also add detection for the install command
 	# HOST_PLATFORM:  Name of the platform
-	# INSTALL_CMD:	  comand for package installation
+	# INSTALL_CMD:      comand for package installation
+	# INSTALL_CMD_ARGS: arguments for $INSTALL_CMD to install something
+	# INSTALL_CMD_UPD_ARGS: arguments for $INSTALL_CMD to update something
 	# IOB_DIR:	  Directory where iobroker should be installed
 	# IOB_USER:	  The user to run ioBroker as
+
+	INSTALL_CMD_UPD_ARGS=""
+
 	unamestr=$(uname)
 	case "$unamestr" in
 	"Linux")
 		HOST_PLATFORM="linux"
 		INSTALL_CMD="apt-get"
+		INSTALL_CMD_ARGS="install -yq"
 		if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
 			INSTALL_CMD="yum"
+			# The args -y and -q have to be separate
+			INSTALL_CMD_ARGS="install -q -y"
+			INSTALL_CMD_UPD_ARGS="-y"
 		fi
 		IOB_DIR="/opt/iobroker"
 		IOB_USER="iobroker"
@@ -99,6 +108,7 @@ get_platform_params() {
 		HOST_PLATFORM="osx"
 		ROOT_GROUP="wheel"
 		INSTALL_CMD="brew"
+		INSTALL_CMD_ARGS="install"
 		IOB_DIR="/usr/local/iobroker"
 		IOB_USER="$USER"
 		;;
@@ -106,6 +116,7 @@ get_platform_params() {
 		HOST_PLATFORM="freebsd"
 		ROOT_GROUP="wheel"
 		INSTALL_CMD="pkg"
+		INSTALL_CMD_ARGS="install -yq"
 		IOB_DIR="/opt/iobroker"
 		IOB_USER="iobroker"
 		;;
@@ -153,10 +164,10 @@ install_package_linux() {
 	if [ $? -ne 0 ]; then
 		if [ "$INSTALL_CMD" = "yum" ]; then
 			# Install it
-			errormessage=$( $SUDOX yum install -q -y $package > /dev/null 2>&1)
+			errormessage=$( $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS $package > /dev/null 2>&1)
 		else
 			# Install it
-			errormessage=$( $SUDOX $INSTALL_CMD install -yq --no-install-recommends $package > /dev/null 2>&1)
+			errormessage=$( $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends $package > /dev/null 2>&1)
 		fi
 
 		# Hide "Error: Nothing to do"
@@ -174,7 +185,7 @@ install_package_freebsd() {
 	# check if package is installed (pkg is nice enough to provide us with a exitcode)
 	if ! $INSTALL_CMD info "$1" >/dev/null 2>&1; then
 		# Install it
-		$SUDOX $INSTALL_CMD install --yes --quiet "$1" > /dev/null
+		$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS "$1" > /dev/null
 		echo "Installed $package"
 	fi
 }
@@ -185,7 +196,7 @@ install_package_macos() {
 	$INSTALL_CMD list | grep "$package" &> /dev/null
 	if [ $? -ne 0 ]; then
 		# Install it
-		$INSTALL_CMD install $package &> /dev/null
+		$INSTALL_CMD $INSTALL_CMD_ARGS $package &> /dev/null
 		if [ $? -eq 0 ]; then
 			echo "Installed $package"
 		else
@@ -702,7 +713,7 @@ install_nodejs() {
 			curl -sL $NODE_JS_LINUX_URL | sudo -E bash -
 		fi
 	elif [ "$INSTALL_CMD" = "pkg" ]; then
-		$SUDOX pkg install -y node
+		$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS node
 	elif [ "$INSTALL_CMD" = "brew" ]; then
 		echo "${red}Cannot install Node.js using brew.${normal}"
 		echo "Please download Node.js from $NODE_JS_BREW_URL"
