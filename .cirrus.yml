@@ -1,32 +1,40 @@
 freebsd_instance:
-  image_family: freebsd-12-0
+  image_family: freebsd-12-2
  
 task:
   prepare_install_script:
-    - pkg install -y bash node npm libnghttp2
+    - pkg install -y bash node npm libnghttp2 python sudo
     - mkdir -p node_modules/iobroker
+    # following mv command is same as: mv !(node_modules|test|travis|fix_installation.sh) node_modules/iobroker/ || true
+    - mv CHANGELOG_FIXER_LINUX.md node_modules/iobroker
+    - mv CHANGELOG_INSTALLER_LINUX.md node_modules/iobroker
+    - mv LICENSE node_modules/iobroker
+    - mv README.md node_modules/iobroker    
+    - mv appveyor.yml node_modules/iobroker
+    - mv gulpfile.js node_modules/iobroker
+    - mv installer_library.sh node_modules/iobroker
+    - mv installer.sh node_modules/iobroker
+    - mv package.json node_modules/iobroker
     - mv doc node_modules/iobroker
     - mv img node_modules/iobroker
     - mv install node_modules/iobroker
     - mv lib node_modules/iobroker
     - mv wiki node_modules/iobroker
-    - mv package.json node_modules/iobroker
-    - mv installer.sh node_modules/iobroker
   install_script:
     - sudo chmod +x travis/travis_install.sh
     # make sure the iob_not_installed file can be created
     - sudo chmod 777 .
-    - bash travis/travis_install.sh
+    - ./travis/travis_install.sh
   prepare_test_script:
     # only continue tests if ioBroker was actually installed
     - |
       if [ ! -e iob_not_installed ]; then
         # Test file permissions now...
         sudo chmod +x travis/travis_testFiles.sh
-        bash travis/travis_testFiles.sh
+        ./travis/travis_testFiles.sh
         # ...because this will change them
         sudo chmod +x travis/travis_prepareTest.sh
-        bash travis/travis_prepareTest.sh
+        ./travis/travis_prepareTest.sh
       fi
   test_script:
     # Remember the test dir

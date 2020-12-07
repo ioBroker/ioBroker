@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2020-06-12" # format YYYY-MM-DD
+LIBRARY_VERSION="2020-12-01" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -339,6 +339,7 @@ disable_npm_audit() {
 	fi
 }
 
+# This is obsolete and can maybe removed
 set_npm_python() {
 	# Make sure the npmrc file exists
 	$SUDOX touch .npmrc
@@ -603,8 +604,46 @@ create_user_freebsd() {
 	fi
 	# Add the user to all groups we need and give him passwordless sudo privileges
 	# Define which commands may be executed as sudo without password
-	# TODO: Find out the correct paths on FreeBSD
-	# SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
+	SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
+	# Add the user to all groups we need and give him passwordless sudo privileges
+	# Define which commands iobroker may execute as sudo without password
+	declare -a iob_commands=(
+		"shutdown" "halt" "poweroff" "reboot"
+		"service iobroker start" "service iobroker stop"
+		"mount" "umount" "systemd-run"
+		"pkg" "make"
+		"ping" "fping"
+		"arp-scan"
+		"setcap"
+		"vcgencmd"
+		"cat"
+		"df"
+		"mysqldump"
+		"ldconfig"
+	)
+	add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
+
+	# Additionally, define which iobroker-related commands may be executed by every user
+	declare -a all_user_commands=(
+		"service iobroker start"
+		"service iobroker stop"
+		"service iobroker restart"
+	)
+	add2sudoers "ALL ALL=" "${all_user_commands[@]}"
+
+	# Furthermore, allow all users to execute node iobroker.js as iobroker
+	if [ "$IOB_USER" != "$USER" ]; then
+		add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js *"
+	fi
+
+	SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
+	$SUDOX rm -f $SUDOERS_FILE
+	echo -e "$SUDOERS_CONTENT" > ~/temp_sudo_file
+	$SUDOX visudo -c -q -f ~/temp_sudo_file && \
+		$SUDOX chown root:$ROOT_GROUP ~/temp_sudo_file &&
+		$SUDOX chmod 440 ~/temp_sudo_file &&
+		$SUDOX mv ~/temp_sudo_file $SUDOERS_FILE &&
+		echo "Created $SUDOERS_FILE"
 
 	# Add the user to all groups if they exist
 	declare -a groups=(

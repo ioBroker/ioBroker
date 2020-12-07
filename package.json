@@ -53,7 +53,7 @@
   },
   "scripts": {
     "install": "node lib/checkVersions.js",
-    "postinstall_disabled": "node lib/install.js",
+    "postinstall": "node lib/install.js",
     "deploy": "node node_modules/gulp/bin/gulp.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
