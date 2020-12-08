@@ -17,7 +17,6 @@ jobs:
           SKIP_POSTINSTALL: true
       - run: npm run deploy
         env:
-          SKIP_POSTINSTALL: true
           SFTP_HOST: ${{secrets.SFTP_HOST}}
           SFTP_PASS: ${{secrets.SFTP_PASS}}
           SFTP_PORT: ${{secrets.SFTP_PORT}}
