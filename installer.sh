@@ -443,6 +443,17 @@ else
 	echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
 fi
 
+# Raspbery image has as last line in  /etc/rc.local the ioBroker installer. It must be removed
+if [ -f /etc/rc.local ]; then
+     if [ -w /etc/rc.local ]; then
+        if [ "$IS_ROOT" != true ]; then
+	    sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+        else    
+	    sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+        fi
+    fi
+fi
+
 # Test again which platform this script is being run on
 # This is necessary because FreeBSD does crazy stuff
 get_platform_params
