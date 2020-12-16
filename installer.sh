@@ -445,12 +445,12 @@ fi
 
 # Raspbery image has as last line in  /etc/rc.local the ioBroker installer. It must be removed
 if [ -f /etc/rc.local ]; then
-    if [ -w /etc/rc.local ]; then
+     if [ -w /etc/rc.local ]; then
         if [ "$IS_ROOT" != true ]; then
 	    sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
-	else    
+        else    
 	    sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
-	fi
+        fi
     fi
 fi
 
