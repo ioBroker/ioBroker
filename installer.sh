@@ -124,7 +124,7 @@ PACKAGE_JSON_FILE=$(cat <<- EOF
 		"name": "iobroker.inst",
 		"version": "3.0.0",
 		"private": true,
-		"description": 'Automate your Life',
+		"description": "Automate your Life",
 		"engines": {
 			"node": ">=10.0.0"
 		},
