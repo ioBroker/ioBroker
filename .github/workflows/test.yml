@@ -31,11 +31,12 @@ jobs:
         source ./installer_library.sh
 
     - name: Install ioBroker
-      run: |
-        # Run installer script
-        bash ./installer.sh
-        # And make sure that it worked
-        bash .github/testFiles.sh
+      run: bash ./installer.sh
+
+    - name: Test permissions
+      # TODO: test this on OSX too!
+      if: startsWith(runner.OS, 'ubuntu')
+      run: bash .github/testFiles.sh
 
     - name: Prepare tests
       run: npm install mocha chai request
