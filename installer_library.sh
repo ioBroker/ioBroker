@@ -243,6 +243,13 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			# These are required for canvas
+			"libcairo2-dev"
+			"libpango1.0-dev"
+			"libjpeg-dev"
+			"libgif-dev"
+			"librsvg2-dev"
+			"libpixman-1-dev"
 			"net-tools" # To fix issue #277
 			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 		)
