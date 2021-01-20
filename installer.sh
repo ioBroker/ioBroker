@@ -443,15 +443,15 @@ else
 	echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
 fi
 
-# Raspbery image has as last line in  /etc/rc.local the ioBroker installer. It must be removed
+# Raspbery image has as last line in /etc/rc.local the ioBroker installer. It must be removed
 if [ -f /etc/rc.local ]; then
-     if [ -w /etc/rc.local ]; then
-        if [ "$IS_ROOT" != true ]; then
-	    sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
-        else    
-	    sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
-        fi
-    fi
+	if [ -w /etc/rc.local ]; then
+		if [ "$IS_ROOT" != true ]; then
+			sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+		else
+			sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+		fi
+	fi
 fi
 
 # Test again which platform this script is being run on
@@ -468,6 +468,9 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 	change_npm_command_user
 fi
 change_npm_command_root
+
+# Enable auto-completion for ioBroker commands
+enable_cli_completions
 
 unset AUTOMATED_INSTALLER
 

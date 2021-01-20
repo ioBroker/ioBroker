@@ -95,6 +95,9 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 fi
 change_npm_command_root
 
+# Enable auto-completion for ioBroker commands
+enable_cli_completions
+
 # Make sure that the app dir belongs to the correct user
 fix_dir_permissions
 
