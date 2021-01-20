@@ -1,0 +1,45 @@
+name: Test
+
+# Run this job on all pushes and pull requests
+on:
+  push:
+    branches:
+      - "*"
+  pull_request: {}
+
+jobs:
+  # ===================
+  # Runs unit tests on all supported node versions and OSes
+  test-install:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x, 15.x]
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Fix up installer script for local installs
+      run: |
+        # remove download of library
+        sed '/# get and load the LIB => START/,/# get and load the LIB => END/d' installer.sh
+        # and source it manually
+        source ./installer_library.sh
+
+    - name: Install ioBroker
+      run: bash ./installer.sh
+
+    - name: Test permissions
+      # TODO: test this on OSX too!
+      if: startsWith(runner.OS, 'ubuntu')
+      run: bash .github/testFiles.sh
+
+    - name: Prepare tests
+      run: npm install mocha chai request
+
+    - name: Test if ioBroker starts by checking the admin adapter output
+      run: curl --insecure http://127.0.0.1:8081 2> /dev/null | grep 'ioBroker.admin' &> /dev/null || exit 1

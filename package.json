@@ -1,9 +1,6 @@
 {
   "name": "iobroker",
-  "version": "2.0.4",
-  "engines": {
-    "node": ">=10.0.0"
-  },
+  "version": "3.0.0",
   "optionalDependencies": {},
   "dependencies": {
     "colors": "^1.4.0",
@@ -52,8 +49,6 @@
     "unsafe-perm": true
   },
   "scripts": {
-    "install": "node lib/checkVersions.js",
-    "postinstall": "node lib/install.js",
     "deploy": "node node_modules/gulp/bin/gulp.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },

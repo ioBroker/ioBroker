@@ -118,18 +118,30 @@ disable_npm_audit
 # Enforce strict version checks before installing new packages
 force_strict_npm_version_checks
 
-# download the installer files and run them
-# If this script is run as root, we need the --unsafe-perm option
-if [ "$IS_ROOT" = true ]; then
-	echo "Installed as root" >> $INSTALLER_INFO_FILE
-	npm i $INSTALL_TARGET --loglevel error --unsafe-perm > /dev/null
-else
-	echo "Installed as non-root user $USER" >> $INSTALLER_INFO_FILE
-	npm i $INSTALL_TARGET --loglevel error > /dev/null
-fi
+# Create ioBroker's package.json and install dependencies:
+PACKAGE_JSON_FILE=$(cat <<- EOF
+	{
+		"name": "iobroker.inst",
+		"version": "3.0.0",
+		"private": true,
+		"description": "Automate your Life",
+		"engines": {
+			"node": ">=10.0.0"
+		},
+		"dependencies": {
+			"iobroker.js-controller": "stable",
+			"iobroker.admin": "stable",
+			"iobroker.discovery": "stable",
+			"iobroker.info": "stable"
+		}
+	}
+	EOF
+)
 
+# Create package.json and install all dependencies
+PACKAGE_JSON_FILENAME="$IOB_DIR/package.json"
+write_to_file "$PACKAGE_JSON_FILE" $PACKAGE_JSON_FILENAME
 npm i --production --loglevel error --unsafe-perm > /dev/null
-
 
 # ########################################################
 print_step "Finalizing installation" 4 "$NUM_STEPS"
