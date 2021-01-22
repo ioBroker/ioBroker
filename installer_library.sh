@@ -546,54 +546,6 @@ enable_cli_completions() {
 	fi
 }
 
-enable_cli_completions_root() {
-	# Performs the necessary configuration for CLI auto completion
-	COMPLETIONS_PATH="/root/.iobroker/iobroker_completions"
-	COMPLETIONS=$(cat <<- 'EOF'
-		iobroker_yargs_completions()
-		{
-			local cur_word args type_list
-
-			cur_word="${COMP_WORDS[COMP_CWORD]}"
-			args=("${COMP_WORDS[@]}")
-
-			# ask yargs to generate completions.
-			type_list=$(iobroker --get-yargs-completions "${args[@]}")
-
-			COMPREPLY=( $(compgen -W "${type_list}" -- ${cur_word}) )
-
-			# if no match was found, fall back to filename completion
-			if [ ${#COMPREPLY[@]} -eq 0 ]; then
-			COMPREPLY=()
-			fi
-
-			return 0
-		}
-		complete -o default -F iobroker_yargs_completions iobroker
-		complete -o default -F iobroker_yargs_completions iob
-		EOF
-	)
-	BASHRC_LINES=$(cat <<- EOF
-
-		# Enable ioBroker command auto-completion
-		source /root/.iobroker/iobroker_completions
-		EOF
-	)
-
-	sudo mkdir -p /root/.iobroker
-	write_to_file "$COMPLETIONS" "$COMPLETIONS_PATH"
-	# Activate the change
-	source "$COMPLETIONS_PATH"
-
-	# Make sure the bashrc file exists - it should, but you never know...
-	sudo touch /root/.bashrc
-	# If .bashrc does not contain the source command, we need to add it
-	sudo grep -q -E "^source /root/\.iobroker/iobroker_completions" ~/.bashrc &> /dev/null
-	if [ $? -ne 0 ]; then
-		echo "$BASHRC_LINES" >> /root/.bashrc
-	fi
-}
-
 set_root_permissions() {
 	file="$1"
 	$SUDOX chown root:$ROOT_GROUP $file
