@@ -500,7 +500,7 @@ change_npm_command_root() {
 
 enable_cli_completions() {
 	# Performs the necessary configuration for CLI auto completion
-	COMPLETIONS_PATH="~/.iobroker/iobroker_completions"
+	COMPLETIONS_PATH=~/.iobroker/iobroker_completions
 	COMPLETIONS=$(cat <<- 'EOF'
 		iobroker_yargs_completions()
 		{
