@@ -467,7 +467,10 @@ if [ -f /etc/rc.local ]; then
 fi
 
 # Enable auto-completion for ioBroker commands
-enable_cli_completions
+if [[ "$IS_ROOT" != true ]]; then
+	enable_cli_completions
+fi
+enable_cli_completions_root
 
 # Test again which platform this script is being run on
 # This is necessary because FreeBSD does crazy stuff

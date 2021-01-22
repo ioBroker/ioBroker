@@ -87,7 +87,10 @@ cd $IOB_DIR
 disable_npm_audit
 
 # Enable auto-completion for ioBroker commands
-enable_cli_completions
+if [[ "$IS_ROOT" != true ]]; then
+	enable_cli_completions
+fi
+enable_cli_completions_root
 
 # Enforce strict version checks before installing new packages
 force_strict_npm_version_checks
