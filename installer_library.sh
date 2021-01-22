@@ -429,7 +429,7 @@ change_npm_command_user() {
 	NPM_COMMAND_FIX=$(cat <<- EOF
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
-			__real_npm=\$(which --skip-alias --skip-functions npm)
+			__real_npm=\$(which npm)
 			if [[ \$(pwd) == "$IOB_DIR"* ]]; then
 				sudo -H -u $IOB_USER \$__real_npm \$*
 			else
