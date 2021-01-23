@@ -86,6 +86,9 @@ cd $IOB_DIR
 # Disable any warnings related to "npm audit fix"
 disable_npm_audit
 
+# Enable auto-completion for ioBroker commands
+enable_cli_completions
+
 # Enforce strict version checks before installing new packages
 force_strict_npm_version_checks
 
@@ -94,9 +97,6 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 	change_npm_command_user
 fi
 change_npm_command_root
-
-# Enable auto-completion for ioBroker commands
-enable_cli_completions
 
 # Make sure that the app dir belongs to the correct user
 fix_dir_permissions

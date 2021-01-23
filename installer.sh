@@ -466,6 +466,9 @@ if [ -f /etc/rc.local ]; then
 	fi
 fi
 
+# Enable auto-completion for ioBroker commands
+enable_cli_completions
+
 # Test again which platform this script is being run on
 # This is necessary because FreeBSD does crazy stuff
 get_platform_params
@@ -480,9 +483,6 @@ if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
 	change_npm_command_user
 fi
 change_npm_command_root
-
-# Enable auto-completion for ioBroker commands
-enable_cli_completions
 
 unset AUTOMATED_INSTALLER
 
