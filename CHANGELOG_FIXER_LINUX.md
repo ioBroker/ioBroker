@@ -1,5 +1,17 @@
 # Changelog for Linux-Fixer-Script
 
+## 2021-01-23
+* (Linux) fix CLI completions
+* (Linux) revert "ignore which aliases"
+
+## 2021-01-20
+* (Linux) enable auto-completion for iobroker commands
+* (Linux) ignore which aliases
+* (Linux) updated native packages so canvas can be built by default
+* (macOS) disabled file permission check on OSX
+* fixed cirrus tests
+* added support of npm7
+
 ## 2020-12-07
 * (FreeBSD) Fixed installation for FreeBSD by using `/usr/bin/env` to detect path for `bash` automatically and do not enforce usage of python 2.7 which is EOL
 * (Linux) Use `-y` argument for `yum`
