@@ -97,7 +97,7 @@ We recommend x86 based or ARM based systems like [BananaPi](http://www.bananapi.
 ## License
 This module is distributor under the MIT License (MIT). Please notice, that other ioBroker adapters can have different licenses.
 
-Copyright (c) 2014-2020 bluefox <dogafox@gmail.com>,
+Copyright (c) 2014-2021 bluefox <dogafox@gmail.com>,
 
 Copyright (c) 2014      hobbyquaker
 
