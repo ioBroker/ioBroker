@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2021-04-07
+* Install backitup Adapter on new installations by default (not fixer relevant)
+
 ## 2021-01-23
 * (Linux) fix CLI completions
 * (Linux) revert "ignore which aliases"
