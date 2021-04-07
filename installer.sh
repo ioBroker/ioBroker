@@ -132,6 +132,7 @@ PACKAGE_JSON_FILE=$(cat <<- EOF
 			"iobroker.js-controller": "stable",
 			"iobroker.admin": "stable",
 			"iobroker.discovery": "stable",
+			"iobroker.backitup": "stable",
 			"iobroker.info": "stable"
 		}
 	}
