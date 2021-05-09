@@ -6,7 +6,7 @@
     "colors": "^1.4.0",
     "fs-extra": "^9.1.0",
     "semver": "^7.3.4",
-    "yargs": "^16.2.0"
+    "yargs": "^17.0.1"
   },
   "homepage": "http://iobroker.net",
   "description": "automate your life - platform",
