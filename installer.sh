@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2021-04-07" # format YYYY-MM-DD
+INSTALLER_VERSION="2021-06-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -132,8 +132,7 @@ PACKAGE_JSON_FILE=$(cat <<- EOF
 			"iobroker.js-controller": "stable",
 			"iobroker.admin": "stable",
 			"iobroker.discovery": "stable",
-			"iobroker.backitup": "stable",
-			"iobroker.info": "stable"
+			"iobroker.backitup": "stable"
 		}
 	}
 	EOF

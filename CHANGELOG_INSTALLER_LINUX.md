@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2021-06-18
+* Remove info adapter from new installations by default
+
 ## 2021-04-07
 * Install backitup Adapter on new installations by default
 
