@@ -2,10 +2,7 @@ name: Test
 
 # Run this job on all pushes and pull requests
 on:
-  push:
-    branches:
-      - "*"
-  pull_request: {}
+  workflow_dispatch:
 
 jobs:
   # ===================
