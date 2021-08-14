@@ -39,4 +39,4 @@ jobs:
       run: npm install mocha chai request
 
     - name: Test if ioBroker starts by checking the admin adapter output
-      run: curl --insecure http://127.0.0.1:8081 2> /dev/null | grep 'ioBroker.admin' &> /dev/null || exit 1
+      run: curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1
