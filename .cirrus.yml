@@ -21,7 +21,7 @@ task:
       .github/testFiles.sh
 
     # Test if ioBroker starts by checking the admin adapter output
-    - curl --insecure http://127.0.0.1:8081 2> /dev/null | grep 'ioBroker.admin' &> /dev/null || exit 1
+    - curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1
 
     # Now test if adapters which require python can be installed
     - iobroker url iobroker.lovelace
