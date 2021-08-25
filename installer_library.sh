@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2021-04-07" # format YYYY-MM-DD
+LIBRARY_VERSION="2021-08-05" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -418,8 +418,12 @@ function append_to_file() {
 }
 
 running_in_docker() {
-	# Test if we're running inside a docker container
-	awk -F/ '$2 == "docker"' /proc/self/cgroup | read
+	# Test if we're running inside a docker container or as github actions job while building docker container image
+	if awk -F/ '$2 == "docker"' /proc/self/cgroup | read || awk -F/ '$2 == "actions_job"' /proc/self/cgroup | read ; then
+		return 0
+	else
+		return 1
+	fi
 }
 
 change_npm_command_user() {

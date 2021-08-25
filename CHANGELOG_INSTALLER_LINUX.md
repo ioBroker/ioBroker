@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2021-08-05
+* Expand Docker detection in setup to make it work during Docker build process in GitHub Actions 
+
 ## 2021-06-18
 * Remove info adapter from new installations by default
 
