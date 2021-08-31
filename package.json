@@ -4,7 +4,7 @@
   "optionalDependencies": {},
   "dependencies": {
     "colors": "^1.4.0",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.0.0",
     "semver": "^7.3.4",
     "yargs": "^17.1.1"
   },
