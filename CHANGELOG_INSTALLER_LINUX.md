@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2021-11-18
+* Install Node.js 14.x by default
+
 ## 2021-08-05
 * Expand Docker detection in setup to make it work during Docker build process in GitHub Actions 
 
