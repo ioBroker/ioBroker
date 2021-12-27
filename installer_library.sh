@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2021-08-05" # format YYYY-MM-DD
+LIBRARY_VERSION="2021-12-27" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -252,6 +252,7 @@ install_necessary_packages() {
 			"libpixman-1-dev"
 			"net-tools" # To fix issue #277
 			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
+			"cmake" # https://github.com/ioBroker/ioBroker.js-controller/issues/1604
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg

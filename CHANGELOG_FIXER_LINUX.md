@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2021-12-27
+* Install `cmake` on linux
+
 ## 2021-04-07
 * Install backitup Adapter on new installations by default (not fixer relevant)
 

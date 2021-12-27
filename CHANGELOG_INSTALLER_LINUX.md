@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2021-12-27
+* Install `cmake` on linux
+
 ## 2021-11-18
 * Install Node.js 14.x by default
 
