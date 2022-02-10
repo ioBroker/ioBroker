@@ -115,6 +115,9 @@ print_step "Installing ioBroker" 3 "$NUM_STEPS"
 # Disable any warnings related to "npm audit fix"
 disable_npm_audit
 
+# Disable any information related to npm updates
+disable_npm_updatenotifier
+
 # Enforce strict version checks before installing new packages
 force_strict_npm_version_checks
 
