@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2022-02-10
+* Prevent npm from showing npm update information
+
 ## 2021-12-27
 * Install `cmake` on linux
 

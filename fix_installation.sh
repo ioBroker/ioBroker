@@ -83,8 +83,12 @@ if [ "$USER" != "$IOB_USER" ]; then
 fi
 
 cd $IOB_DIR
+
 # Disable any warnings related to "npm audit fix"
 disable_npm_audit
+
+# Disable any information related to npm updates
+disable_npm_updatenotifier
 
 # Enable auto-completion for ioBroker commands
 enable_cli_completions

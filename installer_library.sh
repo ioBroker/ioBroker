@@ -358,6 +358,28 @@ disable_npm_audit() {
 	fi
 }
 
+disable_npm_updatenotifier() {
+	# Make sure the npmrc file exists
+	$SUDOX touch .npmrc
+	# If .npmrc does not contain "update-notifier=false", we need to change it
+	$SUDOX grep -q -E "^update-notifier=false" .npmrc &> /dev/null
+	if [ $? -ne 0 ]; then
+		# Remember its contents (minus any possible update-notifier=true)
+		NPMRC_FILE=$($SUDOX grep -v -E "^update-notifier=true" .npmrc)
+		# And write it back
+		write_to_file "$NPMRC_FILE" .npmrc
+		# Append the line to disable update-notifier
+		append_to_file "# disable npm update-notifier information" .npmrc
+		append_to_file "update-notifier=false" .npmrc
+	fi
+	# Make sure that npm can access the .npmrc
+	if [ "$HOST_PLATFORM" = "osx" ]; then
+		$SUDOX chown -R $USER .npmrc
+	else
+		$SUDOX chown -R $USER:$USER_GROUP .npmrc
+	fi
+}
+
 # This is obsolete and can maybe removed
 set_npm_python() {
 	# Make sure the npmrc file exists
@@ -365,7 +387,7 @@ set_npm_python() {
 	# If .npmrc does not contain "python=", we need to change it
 	$SUDOX grep -q -E "^python=" .npmrc &> /dev/null
 	if [ $? -ne 0 ]; then
-		# Remember its contents (minus any possible audit=true)
+		# Remember its contents
 		NPMRC_FILE=$($SUDOX grep -v -E "^python=" .npmrc)
 		# And write it back
 		write_to_file "$NPMRC_FILE" .npmrc
