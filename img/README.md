@@ -1,6 +1,11 @@
 # Logos
 
+**All logos are protected by copyright and may not be used without permission.**
+
+Please request permission via info@iobroker.net
+
 ## Round ioBroker logo
+
 ![logo](logos/ioBroker_Logo_64px.png)
 64x64 png
 
@@ -32,6 +37,7 @@ big vector svg
 256x256 png
 
 ## Long ioBroker logo
+
 ![logo](logos/ioBroker_Logo_Long_1536x354.png)
 1526x354 png
 
@@ -42,6 +48,7 @@ big vector svg
 vector svg
 
 ## Admin ioBroker logo
+
 ![logo](logos/ioBroker_Admin_Logo_256px.png)
 256x256 png
 
@@ -49,5 +56,6 @@ vector svg
 256x256 ico
 
 ## Material ioBroker logo
+
 ![logo](logos/ioBroker_Logo_Material_512px.png)
 512x512 ico
