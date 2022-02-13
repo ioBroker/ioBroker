@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2022-02-10" # format YYYY-MM-DD
+INSTALLER_VERSION="2022-02-13" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -323,6 +323,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		Environment="NODE=\$(which node)"
 		ExecStart=$BASH_CMDLINE -c '\${NODE} $CONTROLLER_DIR/controller.js'
 		Restart=on-failure
+		RestartSec=3s
 
 		[Install]
 		WantedBy=multi-user.target
