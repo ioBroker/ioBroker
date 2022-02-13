@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2022-02-13
+* Delay restarting js-controller after a crash to avoid locked DB files
+
 ## 2022-02-10
 * Prevent npm from showing npm update information
 
