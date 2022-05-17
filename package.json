@@ -2,7 +2,12 @@
   "name": "iobroker",
   "version": "3.1.0",
   "optionalDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "colors": "^1.3.3",
+    "fs-extra": "^8.1.0",
+    "semver": "^7.1.1",
+    "yargs": "^14.0.0"
+  },
   "homepage": "http://iobroker.net",
   "description": "automate your life - platform",
   "keywords": [
@@ -44,6 +49,8 @@
     "unsafe-perm": true
   },
   "scripts": {
+    "install": "node lib/checkVersions.js",
+    "postinstall": "node lib/install.js",
     "deploy": "node node_modules/gulp/bin/gulp.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
