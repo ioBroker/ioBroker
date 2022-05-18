@@ -94,4 +94,4 @@ if (semver.lt(versions.npm, semver.coerce(RECOMMENDED_NPM_VERSION))) {
     console.warn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 }
 
-process.exit(0);
+// process.exit(0);

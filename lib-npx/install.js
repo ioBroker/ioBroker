@@ -23,7 +23,9 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
     process.exit(100);
 }
 
-console.log(process.cwd());
+require('./checkVersions.js');
+
+// console.log(process.cwd());
 // process.exit(0);
 
 require('./installCopyFiles.js');
