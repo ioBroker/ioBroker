@@ -12,6 +12,7 @@ jobs:
         node-version: 14
     - name: install
       run: |
+        npm i -g windows-build-tools
         npm link
         cd ..
         mkdir iobroker-inst
