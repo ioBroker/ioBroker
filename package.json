@@ -8,6 +8,7 @@
     "semver": "^7.1.1",
     "yargs": "^14.0.0"
   },
+  "main": "lib-npx/install.js",
   "homepage": "http://iobroker.net",
   "description": "automate your life - platform",
   "keywords": [
@@ -50,7 +51,7 @@
   },
   "scripts": {
     "install": "node lib/checkVersions.js",
-    "postinstall": "node lib/install.js",
+    "no-postinstall": "node lib/install.js",
     "deploy": "node node_modules/gulp/bin/gulp.js",
     "test": "node node_modules/mocha/bin/mocha --exit"
   },
