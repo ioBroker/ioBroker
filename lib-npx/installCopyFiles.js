@@ -50,9 +50,11 @@ function createPackageJson() {
         })
     };
     // Write the package.json in the root dir
-    fs.writeFileSync(
-        path.join(targetDir, 'package.json'),
-        JSON.stringify(rootPackageJson, null, 2),
-        'utf8'
-    );
+    if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
+        fs.writeFileSync(
+            path.join(targetDir, 'package.json'),
+            JSON.stringify(rootPackageJson, null, 2),
+            'utf8'
+        );
+    }
 }

@@ -72,7 +72,7 @@ function setupWindows(callback) {
     console.log('npm install node-windows@0.1.14 --loglevel error --production --save --prefix "' + npmRootDir + '"');
 
     try {
-        execSync('npm install node-windows@0.1.14 --loglevel error --production --save --prefix "' + npmRootDir + '"', {stdio: 'inherit'});
+        execSync('npm install node-windows@0.1.14 --force --loglevel error --production --save --prefix "' + npmRootDir + '"', {stdio: 'inherit'});
     }
     catch (error) {
         console.log('Error when installing Windows Service Library: ' + error);
