@@ -11,7 +11,7 @@
   "files": ["*"],
   "main": "./lib-npx/install.js",
   "bin": {
-    "iobroker": "node ./lib-npx/install.js"
+    "iobroker": "./lib-npx/install.js"
   },
   "homepage": "http://iobroker.net",
   "description": "automate your life - platform",
