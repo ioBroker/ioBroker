@@ -12,8 +12,8 @@ jobs:
         node-version: 14
     - name: install
       run: |
-        npm i
+        npm link
         cd ..
         mkdir iobroker-inst
         cd iobroker-inst
-        npx ../iobroker
+        npx iobroker
