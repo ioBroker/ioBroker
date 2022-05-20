@@ -8,7 +8,9 @@
     "semver": "^7.1.1",
     "yargs": "^14.0.0"
   },
-  "files": ["*"],
+  "files": [
+    "*"
+  ],
   "main": "./lib-npx/install.js",
   "bin": {
     "iobroker": "./lib-npx/install.js"
