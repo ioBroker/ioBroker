@@ -157,7 +157,8 @@ function setup(callback) {
         console.log('Non-critical error: ' + e.message);
     }
     child_process.execSync('iob start', {
-        stdio: 'inherit'
+        stdio: 'inherit',
+        cwd: process.cwd(),
     });
 
     typeof callback === 'function' && callback();
