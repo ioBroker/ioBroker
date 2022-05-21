@@ -37,7 +37,7 @@ function copyFilesToRootDir() {
 
 /** Creates a package.json with the desired contents in the root folder */
 function createPackageJson() {
-    const ownPackage = require(targetDir + '/package.json');
+    const ownPackage = require('../package.json');
     // This is the package.json contents that will be in the target directory
     const rootPackageJson = {
         name: 'iobroker.inst',
@@ -68,7 +68,7 @@ function createPackageJson() {
         );
     } else {
         // fix package.json
-        const actualPackage = fs.readFileSync(path.join(targetDir, 'package.json')).toString('utf8');
+        const actualPackage = JSON.parse(fs.readFileSync(path.join(targetDir, 'package.json')).toString('utf8'));
         actualPackage.private = true;
         Object.assign(actualPackage.scripts, rootPackageJson.scripts);
         Object.assign(actualPackage.dependencies, rootPackageJson.dependencies);
