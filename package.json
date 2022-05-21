@@ -11,6 +11,7 @@
   "files": [
     "img/logos/ioBroker_Logo_Long_Vector.svg",
     "img/architecture.png",
+    "test.js",
     "lib-npx",
     "iob.bat",
     "iobroker.bat",
