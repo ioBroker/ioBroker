@@ -26,9 +26,6 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
 
 require('./checkVersions.js');
 
-// console.log(process.cwd());
-// process.exit(0);
-
 require('./installCopyFiles.js');
 const targetDir = process.cwd();
 child_process.execSync('npm install --production', {

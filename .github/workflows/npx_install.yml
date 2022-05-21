@@ -2,6 +2,11 @@ name: iobroker npx install Windows 64bit Build
 
 on: [push, pull_request]
 
+# Cancel previous PR/branch runs when a new commit is pushed
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: windows-latest
