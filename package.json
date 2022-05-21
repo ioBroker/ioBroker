@@ -9,7 +9,12 @@
     "yargs": "^17.5.1"
   },
   "files": [
-    "*"
+    "img/logos/ioBroker_Logo_Long_Vector.svg",
+    "img/architecture.png",
+    "lib-npx",
+    "iob.bat",
+    "iobroker.bat",
+    "LICENSE"
   ],
   "main": "./lib-npx/install.js",
   "bin": {

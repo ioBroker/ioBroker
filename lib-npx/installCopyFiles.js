@@ -5,11 +5,10 @@
 const fs = require('fs-extra');
 const path = require('path');
 const tools = require('./tools.js');
-const ownPackage = require("../package.json");
 
 const thisPackageRoot = path.join(__dirname, '..');
 const targetDir = process.cwd();
-const noCopyDirs = ['doc', 'img', 'node_modules', 'test', 'wiki', 'lib', 'lib-npx'];
+const noCopyDirs = ['img', 'node_modules', 'lib-npx'];
 
 // First copy files, then create a new package.json
 copyFilesToRootDir();
