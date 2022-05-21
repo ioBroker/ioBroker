@@ -127,10 +127,14 @@ function setup(callback) {
             console.log('creating conf/iobroker.json');
             config.objects.host = yargs.argv.objects || '127.0.0.1';
             config.states.host = yargs.argv.states || '127.0.0.1';
-            config.dataDir = tools.getDefaultDataDir();
+            config.dataDir = path.join(process.cwd(), 'iobroker-data'); //tools.getDefaultDataDir();
             // Create default data dir
             fs.ensureDirSync(config.dataDir);
-            fs.writeFileSync(tools.getConfigFileName(), JSON.stringify(config, null, 2));
+            fs.writeFileSync(path.join(process.cwd(), 'iobroker-data/iobroker.json'), JSON.stringify(config, null, 2));
+            child_process.execSync('iob rebuild', {
+                stdio: 'inherit',
+                cwd: process.cwd(),
+            });
         } else {
             console.log(`Could not find "${controllerDir}/conf/iobroker-dist.json". Possible iobroker.js-controller was not installed`);
         }
