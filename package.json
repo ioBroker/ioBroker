@@ -12,6 +12,7 @@
     "img/logos/ioBroker_Logo_Long_Vector.svg",
     "img/architecture.png",
     "lib-npx",
+    "install",
     "iob.bat",
     "iobroker.bat",
     "LICENSE"
