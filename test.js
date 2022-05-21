@@ -26,7 +26,7 @@ function wait() {
 }
 
 async function test() {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 10; i++) {
         let result = await checkAdmin();
         if (result) {
             process.exit(0);
