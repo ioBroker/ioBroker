@@ -7,11 +7,6 @@ on:
       - "*"
   pull_request: {}
 
-# Cancel previous PR/branch runs when a new commit is pushed
-concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   # ===================
   # Runs unit tests on all supported node versions and OSes
