@@ -17,3 +17,6 @@ jobs:
         mkdir iobroker-inst
         cd iobroker-inst
         npx iobroker
+
+    - name: test
+      run: curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1

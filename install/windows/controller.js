@@ -1,2 +1,2 @@
 'use strict';
-require(__dirname + '/node_modules/iobroker.js-controller/controller.js');
+require('./node_modules/iobroker.js-controller/controller.js');

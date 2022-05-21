@@ -6,7 +6,6 @@ const tools = require('./tools.js');
 const platform = require('os').platform();
 const colors = require('colors');
 const child_process = require('child_process');
-const path = require('path');
 
 if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
     // On Linux/OSX this must be run with the installer script now!

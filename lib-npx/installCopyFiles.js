@@ -5,6 +5,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const tools = require('./tools.js');
+const ownPackage = require("../package.json");
 
 const thisPackageRoot = path.join(__dirname, '..');
 const targetDir = process.cwd();
@@ -18,11 +19,17 @@ createPackageJson();
 function copyFilesToRootDir() {
     function copyPredicate(filename) {
         // Don't copy any of these folders:
-        if (noCopyDirs.indexOf(filename) > -1) return false;
+        if (noCopyDirs.includes(filename)) {
+            return false;
+        }
         // Don't copy files starting with .
-        if (/^\./.test(filename)) return false;
+        if (/^\./.test(filename)) {
+            return false;
+        }
         // Don't overwrite the package files
-        if (/package(-lock)?\.json/.test(filename)) return false;
+        if (/package(-lock)?\.json/.test(filename)) {
+            return false;
+        }
         return true;
     }
 
@@ -34,26 +41,42 @@ function createPackageJson() {
     const ownPackage = require('../package.json');
     // This is the package.json contents that will be in the target directory
     const rootPackageJson = {
-        'name': 'iobroker.inst',
-        'version': ownPackage.version,
-        'private': true,
-        'description': 'Automation platform in node.js',
+        name: 'iobroker.inst',
+        version: ownPackage.version,
+        private: true,
+        description: 'Automation platform in node.js',
         // Copy scripts and required engine from our own package.json
-        'scripts': ownPackage.scripts,
-        'engine': ownPackage.engine,
+        scripts: {
+            uninstall: 'node uninstall.js',
+            install: 'node install.js'
+        },
+        engine: ownPackage.engine,
         // Require the dependencies in our own package.json plus the following ones
-        'dependencies': Object.assign({}, ownPackage.dependencies, {
+        dependencies: Object.assign({}, ownPackage.dependencies, {
             'iobroker.js-controller': 'stable',
             'iobroker.admin': 'stable',
             'iobroker.discovery': 'stable',
             'iobroker.info': 'stable'
-        })
+        }),
     };
+
     // Write the package.json in the root dir
     if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
         fs.writeFileSync(
             path.join(targetDir, 'package.json'),
             JSON.stringify(rootPackageJson, null, 2),
+            'utf8'
+        );
+    } else {
+        // fix package.json
+        const actualPackage = fs.readFileSync(path.join(targetDir, 'package.json')).toString('utf8');
+        actualPackage.private = true;
+        Object.assign(actualPackage.scripts, rootPackageJson.scripts);
+        Object.assign(actualPackage.dependencies, rootPackageJson.dependencies);
+        actualPackage.engine = ownPackage.engine;
+        fs.writeFileSync(
+            path.join(targetDir, 'package.json'),
+            JSON.stringify(actualPackage, null, 2),
             'utf8'
         );
     }

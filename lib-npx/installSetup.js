@@ -2,13 +2,14 @@
  *
  *  ioBroker installer from npm
  *
- *  Copyright 1'2015-2018 bluefox <dogafox@gmail.com>
+ *  Copyright 1'2015-2022 bluefox <dogafox@gmail.com>
  *
  *
  */
 
-/* jshint -W097 */// jshint strict:false
-/*jslint node: true */
+/* jshint -W097 */
+/* jshint strict: false */
+/* jslint node: true */
 'use strict';
 
 const yargs = require('yargs')
@@ -29,15 +30,15 @@ const rootDir = process.cwd();
 /** The location of the js-controller module. E.g. /opt/iobroker/node_modules/iobroker.js-controller */
 const controllerDir = path.join(rootDir, 'node_modules/iobroker.js-controller/');
 /** The location of the executable "iobroker" (in the js-controller directory) */
-const iobrokerExecutable = path.join(controllerDir, 'iobroker');
+// const iobrokerExecutable = path.join(controllerDir, 'iobroker');
 /** The location of the executable "iobroker" inside the root directory (links to the one in js-controller) */
 const iobrokerRootExecutable = path.join(rootDir, 'iobroker');
 /** The location of the executable "iob" (in the js-controller directory) */
-const iobExecutable = path.join(controllerDir, 'iob');
+// const iobExecutable = path.join(controllerDir, 'iob');
 /** The location of the executable "iob" inside the root directory (links to the one in js-controller) */
 const iobRootExecutable = path.join(rootDir, 'iob');
 /** The location of the log directory */
-const logDir = path.join(rootDir, 'log');
+// const logDir = path.join(rootDir, 'log');
 /** The location of js-controller's main module (relative) */
 const jsControllerMainModule = 'node_modules/iobroker.js-controller/iobroker.js';
 /** The location of js-controller's main module (absolute) */
@@ -46,7 +47,7 @@ const jsControllerMainModuleAbsolute = path.join(rootDir, jsControllerMainModule
 /** The command line to execute ioBroker */
 const commandLine = `node ${jsControllerMainModule} $1 $2 $3 $4 $5`;
 /** The command line to execute ioBroker (absolute path) */
-const commandLineAbsolute = `node ${jsControllerMainModuleAbsolute} $1 $2 $3 $4 $5`;
+// const commandLineAbsolute = `node ${jsControllerMainModuleAbsolute} $1 $2 $3 $4 $5`;
 
 const debug = !!process.env.IOB_DEBUG;
 
@@ -60,8 +61,12 @@ function setupWindows(callback) {
     fs.writeFileSync(iobRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
 
-    if (!fs.existsSync(process.env['APPDATA'] + '/npm')) fs.mkdirSync(process.env['APPDATA'] + '/npm');
-    if (!fs.existsSync(process.env['APPDATA'] + '/npm-cache')) fs.mkdirSync(process.env['APPDATA'] + '/npm-cache');
+    if (!fs.existsSync(process.env['APPDATA'] + '/npm')) {
+        fs.mkdirSync(process.env['APPDATA'] + '/npm');
+    }
+    if (!fs.existsSync(process.env['APPDATA'] + '/npm-cache')) {
+        fs.mkdirSync(process.env['APPDATA'] + '/npm-cache');
+    }
 
     // Copy the files from /install/windows to the root dir
     tools.copyFilesRecursiveSync(path.join(rootDir, 'install/windows'), rootDir);
@@ -69,14 +74,14 @@ function setupWindows(callback) {
     // Call npm install node-windows
     // js-controller installed as npm
     const npmRootDir = rootDir.replace(/\\/g, '/');
-    console.log('npm install node-windows@0.1.14 --loglevel error --production --save --prefix "' + npmRootDir + '"');
+    console.log(`npm install node-windows@0.1.14 --loglevel error --production --save --prefix "${npmRootDir}"`);
 
     try {
-        execSync('npm install node-windows@0.1.14 --force --loglevel error --production --save --prefix "' + npmRootDir + '"', {stdio: 'inherit'});
+        execSync(`npm install node-windows@0.1.14 --force --loglevel error --production --save --prefix "${npmRootDir}"`, {stdio: 'inherit'});
     }
     catch (error) {
         console.log('Error when installing Windows Service Library: ' + error);
-        if (callback) callback(error.code);
+        callback && callback(error.code);
         return;
     }
 
@@ -84,7 +89,7 @@ function setupWindows(callback) {
     //console.log('node "' + path.join(rootDir, 'install.js') + '"');
 
     try {
-        execSync('node "' + path.join(rootDir, 'install.js') + '"', {stdio: 'inherit'});
+        execSync(`node "${path.join(rootDir, 'install.js')}"`, {stdio: 'inherit'});
     }
     catch (error) {
         console.log('Error when registering ioBroker as service: ' + error);
@@ -94,7 +99,7 @@ function setupWindows(callback) {
 
     console.log('ioBroker service installed. Write "serviceIoBroker start" to start the service and go to http://localhost:8081 to open the admin UI.');
     console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
-    if (callback) callback();
+    callback && callback();
 }
 
 function log(text) {
@@ -127,7 +132,7 @@ function setup(callback) {
             fs.ensureDirSync(config.dataDir);
             fs.writeFileSync(tools.getConfigFileName(), JSON.stringify(config, null, 2));
         } else {
-            console.log('Could not find "' + controllerDir + '/conf/iobroker-dist.json". Possible iobroker.js-controller was not installed');
+            console.log(`Could not find "${controllerDir}/conf/iobroker-dist.json". Possible iobroker.js-controller was not installed`);
         }
     }
 
@@ -154,7 +159,8 @@ function setup(callback) {
     child_process.execSync('iob start', {
         stdio: 'inherit'
     });
-    if (typeof callback === 'function') callback();
+
+    typeof callback === 'function' && callback();
 }
 
 setup(processExit);

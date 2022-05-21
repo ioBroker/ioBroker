@@ -3,10 +3,10 @@
   "version": "3.1.0",
   "optionalDependencies": {},
   "dependencies": {
-    "colors": "^1.3.3",
-    "fs-extra": "^8.1.0",
-    "semver": "^7.1.1",
-    "yargs": "^14.0.0"
+    "colors": "^1.4.0",
+    "fs-extra": "^10.1.0",
+    "semver": "^7.3.7",
+    "yargs": "^17.5.1"
   },
   "files": [
     "*"
@@ -56,15 +56,14 @@
     "unsafe-perm": true
   },
   "scripts": {
-    "deploy": "node node_modules/gulp/bin/gulp.js",
-    "test": "node node_modules/mocha/bin/mocha --exit"
+    "deploy": "node node_modules/gulp/bin/gulp.js"
   },
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^8.0.0",
-    "mocha": "^9.0.1",
-    "chai": "^4.2.0",
+    "eslint": "^8.16.0",
+    "mocha": "^9.2.2",
+    "chai": "^4.3.6",
     "gulp": "^4.0.2",
-    "ssh2": "^1.1.0"
+    "ssh2": "^1.10.0"
   }
 }

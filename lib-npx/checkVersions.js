@@ -39,7 +39,7 @@ function getSystemVersions() {
                 .split(path.delimiter)
                 .filter(dir => {
                     dir = dir.toLowerCase();
-                    return !(dir.indexOf('iobroker') > -1 && dir.indexOf(path.join('node_modules', '.bin')) > -1);
+                    return !dir.includes('iobroker') || !dir.includes(path.join('node_modules', '.bin'));
                 })
                 .join(path.delimiter);
 
