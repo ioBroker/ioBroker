@@ -37,7 +37,7 @@ function copyFilesToRootDir() {
 
 /** Creates a package.json with the desired contents in the root folder */
 function createPackageJson() {
-    const ownPackage = require('../package.json');
+    const ownPackage = require(targetDir + '/package.json');
     // This is the package.json contents that will be in the target directory
     const rootPackageJson = {
         name: 'iobroker.inst',
