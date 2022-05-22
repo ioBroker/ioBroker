@@ -35,6 +35,12 @@ jobs:
           npm whoami
           npm publish
 
+      - name: deploy fix
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+          npm run make-fix
+          npm publish
+
       - name: Create Github Release
         uses: actions/create-release@v1
         env:

@@ -8,9 +8,9 @@
 
 *Automate your life!*
 
-To install on linux just run: `curl -sLf https://iobroker.net/install.sh | bash -`
+To install on linux just run: `npx @iobroker/install`
 
-To install on windows: `mkdir C:\iobroker && cd C:\iobroker && npx iobroker` or use [installer](https://github.com/ioBroker/ioBroker.build)
+To install on windows: `mkdir C:\iobroker && cd C:\iobroker && npx @iobroker/install` or use [installer](https://github.com/ioBroker/ioBroker.build)
 
 See [ioBroker documentation](https://www.iobroker.net/#en/documentation) for more information
 

@@ -46,8 +46,8 @@ function createPackageJson() {
         description: 'Automation platform in node.js',
         // Copy scripts and required engine from our own package.json
         scripts: {
-            'uninstall-service': 'node uninstall.js',
-            'install-service': 'node install.js'
+            'install-service': 'node install.js',
+            'uninstall-service': 'node uninstall.js'
         },
         engine: ownPackage.engine,
         // Require the dependencies in our own package.json plus the following ones

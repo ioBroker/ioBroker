@@ -1,11 +1,13 @@
 {
-  "name": "iobroker",
+  "name": "@iobroker/install",
   "version": "4.0.3",
   "optionalDependencies": {
     "node-windows": "1.0.0-beta.6"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "colors": "^1.4.0",
     "fs-extra": "^10.1.0",
     "semver": "^7.3.7",
     "yargs": "^17.5.1"
@@ -65,6 +67,7 @@
   },
   "scripts": {
     "deploy": "node node_modules/gulp/bin/gulp.js",
+    "make-fix": "node node_modules/gulp/bin/gulp.js fix",
     "release": "release-script",
     "release-patch": "release-script patch --yes",
     "release-minor": "release-script minor --yes",
