@@ -1,6 +1,6 @@
 {
   "name": "iobroker",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "optionalDependencies": {
     "node-windows": "1.0.0-beta.6"
   },
