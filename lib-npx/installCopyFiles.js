@@ -71,9 +71,9 @@ function createPackageJson() {
         // fix package.json
         const actualPackage = JSON.parse(fs.readFileSync(path.join(targetDir, 'package.json')).toString('utf8'));
         actualPackage.private = true;
-        Object.assign(actualPackage.scripts, rootPackageJson.scripts);
-        Object.assign(actualPackage.dependencies, rootPackageJson.dependencies);
-        Object.assign(actualPackage.optionalDependencies, rootPackageJson.optionalDependencies);
+        actualPackage.scripts ? Object.assign(actualPackage.scripts, rootPackageJson.scripts) : actualPackage.scripts = rootPackageJson.scripts;
+        actualPackage.dependencies ? Object.assign(actualPackage.dependencies, rootPackageJson.dependencies) : actualPackage.dependencies = rootPackageJson.dependencies;
+        actualPackage.optionalDependencies ? Object.assign(actualPackage.optionalDependencies, rootPackageJson.optionalDependencies) : actualPackage.optionalDependencies = rootPackageJson.optionalDependencies;
         actualPackage.engine = ownPackage.engine;
         fs.writeFileSync(
             path.join(targetDir, 'package.json'),

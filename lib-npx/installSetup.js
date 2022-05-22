@@ -76,7 +76,7 @@ function setupWindows(callback) {
     // Call npm install node-windows
     // js-controller installed as npm
     const npmRootDir = rootDir.replace(/\\/g, '/');
-    const cmd = `npm install node-windows@${nodeWindowsVersion} --loglevel error --production --save --prefix "${npmRootDir}"`;
+    const cmd = `npm install node-windows@${nodeWindowsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
     console.log(cmd);
 
     try {
