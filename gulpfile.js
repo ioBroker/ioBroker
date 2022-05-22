@@ -132,4 +132,10 @@ gulp.task('create', () => {
     });
 });
 
+gulp.task('fix', async () => {
+    const pack = require('package.json');
+    pack.name = '@iobroker/fix';
+    fs.writeFileSync(__driname + '/package.json', JSON.stringify(pack, null, 2));
+});
+
 gulp.task('default', gulp.series('create', 'deploy'));

@@ -67,6 +67,7 @@
   },
   "scripts": {
     "deploy": "node node_modules/gulp/bin/gulp.js",
+    "make-fix": "node node_modules/gulp/bin/gulp.js fix",
     "release": "release-script",
     "release-patch": "release-script patch --yes",
     "release-minor": "release-script minor --yes",

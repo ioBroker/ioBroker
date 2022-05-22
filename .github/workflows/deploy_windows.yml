@@ -9,7 +9,7 @@ on:
       - "v?[0-9]+.[0-9]+.[0-9]+"
       # pre-releases
       - "v?[0-9]+.[0-9]+.[0-9]+-**"
-  pull_request: {}
+  pull_request: { }
 
 jobs:
   deploy:
@@ -26,6 +26,20 @@ jobs:
         with:
           node-version: 14
 
+      - name: Extract the version and commit body from the tag
+        id: extract_release
+        # The body may be multiline, therefore we need to escape some characters
+        run: |
+          VERSION="${{ github.ref }}"
+          VERSION=${VERSION##*/}
+          VERSION=${VERSION##*v}
+          echo "::set-output name=VERSION::$VERSION"
+          BODY=$(git show -s --format=%b)
+          BODY="${BODY//'%'/'%25'}"
+          BODY="${BODY//$'\n'/'%0A'}"
+          BODY="${BODY//$'\r'/'%0D'}"
+          echo "::set-output name=BODY::$BODY"
+
       - name: install
         run: npm i
 
@@ -33,6 +47,12 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
           npm whoami
+          npm publish
+
+      - name: deploy fix
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+          npm run make-fix
           npm publish
 
       - name: Create Github Release
