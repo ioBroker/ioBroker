@@ -1,3 +1,3 @@
 # Changelog for Windows-Installer-NPX
-## 4.0.1 (2022-05-22)*
+## **WORK IN PROGRESS**
 * Activate windows as npx installer again
