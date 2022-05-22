@@ -57,9 +57,7 @@ function createPackageJson() {
             'iobroker.discovery': 'stable',
             'iobroker.info': 'stable'
         }),
-        optionalDependencies: Object.assign({}, ownPackage.optionalDependencies || {}, {
-            'node-windows': '^1.0.0-beta.6',
-        }),
+        optionalDependencies: ownPackage.optionalDependencies,
     };
 
     // Write the package.json in the root dir
