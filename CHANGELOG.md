@@ -1,6 +1,6 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS** -->
-## 4.1.0 (2022-05-22)
+## **WORK IN PROGRESS**
 * Allowed to install on linux too
 
 ## 4.0.3 (2022-05-22)
