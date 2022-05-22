@@ -42,10 +42,10 @@ const iobRootExecutable = path.join(rootDir, 'iob');
 /** The location of js-controller's main module (relative) */
 const jsControllerMainModule = 'node_modules/iobroker.js-controller/iobroker.js';
 /** The location of js-controller's main module (absolute) */
-const jsControllerMainModuleAbsolute = path.join(rootDir, jsControllerMainModule);
+// const jsControllerMainModuleAbsolute = path.join(rootDir, jsControllerMainModule);
 
 /** The command line to execute ioBroker */
-const commandLine = `node ${jsControllerMainModule} $1 $2 $3 $4 $5`;
+const commandLine = `@echo off\r\nif %1==fix (npx @iobroker/fix) else (node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6)`;
 /** The command line to execute ioBroker (absolute path) */
 // const commandLineAbsolute = `node ${jsControllerMainModuleAbsolute} $1 $2 $3 $4 $5`;
 

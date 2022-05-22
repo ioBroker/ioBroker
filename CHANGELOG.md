@@ -1,5 +1,8 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS** -->
+## **WORK IN PROGRESS**
+* Added support for windows: `iob fix`
+
 ## 4.1.4 (2022-05-22)
 * Allowed to install on linux too
 
