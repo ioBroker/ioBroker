@@ -96,6 +96,10 @@ function setupWindows(callback) {
         if (callback) callback(error.code);
         return;
     }
+    child_process.execSync('iob start', {
+        stdio: 'inherit',
+        cwd: process.cwd(),
+    });
 
     console.log('ioBroker service installed. Write "serviceIoBroker start" to start the service and go to http://localhost:8081 to open the admin UI.');
     console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
@@ -160,10 +164,6 @@ function setup(callback) {
     } catch (e) {
         console.log('Non-critical error: ' + e.message);
     }
-    child_process.execSync('iob start', {
-        stdio: 'inherit',
-        cwd: process.cwd(),
-    });
 
     typeof callback === 'function' && callback();
 }
