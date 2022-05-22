@@ -11,13 +11,16 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 14
+
       - run: npm i
         env:
           SKIP_POSTINSTALL: true
+
       - run: npm run deploy
         env:
           SFTP_HOST: ${{secrets.SFTP_HOST}}
           SFTP_PASS: ${{secrets.SFTP_PASS}}
           SFTP_PORT: ${{secrets.SFTP_PORT}}
           SFTP_USER: ${{secrets.SFTP_USER}}
+
