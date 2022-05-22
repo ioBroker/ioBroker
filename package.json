@@ -1,8 +1,28 @@
 {
   "name": "iobroker",
-  "version": "3.1.0",
-  "optionalDependencies": {},
-  "dependencies": {},
+  "version": "4.0.2",
+  "optionalDependencies": {
+    "node-windows": "1.0.0-beta.6"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "fs-extra": "^10.1.0",
+    "semver": "^7.3.7",
+    "yargs": "^17.5.1"
+  },
+  "files": [
+    "img/logos/ioBroker_Logo_Long_Vector.svg",
+    "img/architecture.png",
+    "lib-npx",
+    "install",
+    "iob.bat",
+    "iobroker.bat",
+    "LICENSE"
+  ],
+  "main": "./lib-npx/install.js",
+  "bin": {
+    "iobroker": "./lib-npx/install.js"
+  },
   "homepage": "http://iobroker.net",
   "description": "automate your life - platform",
   "keywords": [
@@ -45,14 +65,19 @@
   },
   "scripts": {
     "deploy": "node node_modules/gulp/bin/gulp.js",
-    "test": "node node_modules/mocha/bin/mocha --exit"
+    "release": "release-script",
+    "release-patch": "release-script patch --yes",
+    "release-minor": "release-script minor --yes",
+    "release-major": "release-script major --yes"
   },
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^8.0.0",
-    "mocha": "^9.0.1",
-    "chai": "^4.2.0",
+    "@alcalzone/release-script": "^3.5.9",
+    "@alcalzone/release-script-plugin-license": "^3.5.9",
+    "eslint": "^8.16.0",
+    "mocha": "^9.2.2",
+    "chai": "^4.3.6",
     "gulp": "^4.0.2",
-    "ssh2": "^1.1.0"
+    "ssh2": "^1.10.0"
   }
 }

@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      # normal versions
+      - "v?[0-9]+.[0-9]+.[0-9]+"
+      # pre-releases
+      - "v?[0-9]+.[0-9]+.[0-9]+-**"
+  pull_request: {}
+
+jobs:
+  deploy:
+    # Trigger this step only when a commit on master is tagged with a version number
+    if: |
+      contains(github.event.head_commit.message, '[skip ci]') == false &&
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/')
+
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+
+      - name: install
+        run: npm i
+
+      - name: deploy
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
+          npm whoami
+          npm publish
+
+      - name: Create Github Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release v${{ steps.extract_release.outputs.VERSION }}
+          draft: false
+          # Prerelease versions create pre-releases on GitHub
+          prerelease: ${{ contains(steps.extract_release.outputs.VERSION, '-') }}
+          body: ${{ steps.extract_release.outputs.BODY }}
