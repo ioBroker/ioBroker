@@ -74,10 +74,10 @@ function setupWindows(callback) {
     // Call npm install node-windows
     // js-controller installed as npm
     const npmRootDir = rootDir.replace(/\\/g, '/');
-    console.log(`npm install node-windows@1.0.0-beta.7 --loglevel error --production --save --prefix "${npmRootDir}"`);
+    console.log(`npm install node-windows@1.0.0-beta.6 --loglevel error --production --save --prefix "${npmRootDir}"`);
 
     try {
-        execSync(`npm install node-windows@1.0.0-beta.7 --force --loglevel error --production --save --prefix "${npmRootDir}"`, {stdio: 'inherit'});
+        execSync(`npm install node-windows@1.0.0-beta.6 --force --loglevel error --production --save --prefix "${npmRootDir}"`, {stdio: 'inherit'});
     }
     catch (error) {
         console.log('Error when installing Windows Service Library: ' + error);

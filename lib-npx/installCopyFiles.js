@@ -57,6 +57,9 @@ function createPackageJson() {
             'iobroker.discovery': 'stable',
             'iobroker.info': 'stable'
         }),
+        optionalDependencies: Object.assign({}, ownPackage.optionalDependencies || {}, {
+            'node-windows': '^1.0.0-beta.6',
+        }),
     };
 
     // Write the package.json in the root dir
@@ -72,6 +75,7 @@ function createPackageJson() {
         actualPackage.private = true;
         Object.assign(actualPackage.scripts, rootPackageJson.scripts);
         Object.assign(actualPackage.dependencies, rootPackageJson.dependencies);
+        Object.assign(actualPackage.optionalDependencies, rootPackageJson.optionalDependencies);
         actualPackage.engine = ownPackage.engine;
         fs.writeFileSync(
             path.join(targetDir, 'package.json'),
