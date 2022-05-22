@@ -8,6 +8,10 @@
 
 *Automate your life!*
 
+To install on linux just run: `curl -sLf https://iobroker.net/install.sh | bash -`
+
+To install on windows: `mkdir C:\iobroker && cd C:\iobroker && npx iobroker` or use [installer](https://github.com/ioBroker/ioBroker.build)
+
 See [ioBroker documentation](https://www.iobroker.net/#en/documentation) for more information
 
 * [ioBroker website](https://www.iobroker.net)
@@ -24,7 +28,7 @@ ioBroker defines some common rules for a pair of databases used to exchange data
 
 ![architecture](img/architecture.png)
 
-#### Databases
+### Databases
 
 ioBroker uses "in memory" database to hold the data and saves it on disk with reasonable intervals. 
 There are two types of storage:
@@ -37,7 +41,7 @@ Objects and states can be stored in "in memory" or in Redis.
 
 It's used to maintain and publish all states of connected systems.
 
-#### Adapters
+### Adapters
 
 Systems are attached to ioBrokers databases via so-called adapters, technically processes running anywhere
 in the network and connecting all kinds of systems to ioBrokers databases. 
@@ -46,7 +50,7 @@ and an adapter can run on any host that is able to reach the databases via ip ne
 
 See actual list of adapters on [iobroker.net](https://www.iobroker.net/#en/adapters)
 
-#### Security
+### Security
 
 ioBroker is designed to be accessed by trusted adapters inside trusted networks. 
 This means that usually it is not a good idea to expose the ioBroker databases, 
@@ -57,17 +61,17 @@ You should always activate **HTTPS** and use valid certificates for web, admin i
 for example use it with additional security measures like VPN, VLAN and reverse proxies.
 
 ## Getting Started
-#### Operating System and Hardware
+### Operating System and Hardware
 [ioBroker.js-controller](https://github.com/iobroker/ioBroker.js-controller/) should run on any hardware 
 and OS that runs [Node.js](https://nodejs.org/) (ARM, x86, Windows, Linux, OSX).
 
 ioBroker spawns a new Node.js process for every adapter instance, so RAM becomes a limiting factor. 
 A single adapter's memory fingerprint is roundabout 10 to 60 MB.
 
-#### Installation and first steps
+### Installation and first steps
 * [ioBroker Download](https://www.iobroker.net/#en/download)
 
-#### Community support
+### Community support
 * Get help in the [ioBroker Forums](https://forum.iobroker.net) (english, german and russian languages)
 
 ## Logos and pictures
