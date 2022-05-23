@@ -1,6 +1,9 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## **WORK IN PROGRESS**
+* Made the parameters call list longer
+
 ## 4.1.10 (2022-05-23)
 * Start/stop service by calling `iob.bat start/stop`
 

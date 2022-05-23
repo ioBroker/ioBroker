@@ -55,11 +55,11 @@ if %1==fix (
             if %1==stop (
                 call serviceIoBroker.bat stop
             ) else (
-                node ${jsControllerMainModule} %1 %2 %3 %4 %5
+                node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6 %7 %8
             )
         )
     ) else (
-        node ${jsControllerMainModule} %1 %2 %3 %4 %5
+        node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6 %7 %8
     )
 )`;
 
