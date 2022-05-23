@@ -58,6 +58,7 @@ function processExit(exitCode) {
 function setupWindows(callback) {
     const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
 
+    const batExists = fs.existsSync(iobRootExecutable + '.bat');
     fs.writeFileSync(iobrokerRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
     fs.writeFileSync(iobRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
@@ -80,8 +81,7 @@ function setupWindows(callback) {
 
     try {
         execSync(cmd, {stdio: 'inherit'});
-    }
-    catch (error) {
+    } catch (error) {
         console.log('Error when installing Windows Service Library: ' + error);
         callback && callback(error.code);
         return;
@@ -90,12 +90,14 @@ function setupWindows(callback) {
     //console.log('Windows service library installed, now register ioBroker as Service');
     //console.log('node "' + path.join(rootDir, 'install.js') + '"');
 
-    // stop instance
+    // stop instance if batch existed before
     try {
-        execSync('iob stop', {
-            stdio: 'inherit',
-            cwd: process.cwd(),
-        });
+        if (batExists) {
+            execSync('iob stop', {
+                stdio: 'inherit',
+                cwd: process.cwd(),
+            });
+        }
     } catch (error) {
         // ignore
     }
