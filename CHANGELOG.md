@@ -1,6 +1,6 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS** -->
-## **WORK IN PROGRESS**
+## 4.1.7 (2022-05-23)
 * ioBroker stopped now before fix
 
 ## 4.1.5 (2022-05-22)
