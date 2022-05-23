@@ -58,9 +58,9 @@ function processExit(exitCode) {
 function setupWindows(callback) {
     const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
 
-    const batExists = fs.existsSync(iobRootExecutable + '.bat');
-    fs.writeFileSync(iobrokerRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
-    fs.writeFileSync(iobRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
+    const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
+    fs.writeFileSync(path.join(rootDir, iobrokerRootExecutable + '.bat'), commandLine.replace(/\$/g, '%'));
+    fs.writeFileSync(path.join(iobRootExecutable + '.bat'), commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
 
     if (!fs.existsSync(process.env['APPDATA'] + '/npm')) {
@@ -93,7 +93,7 @@ function setupWindows(callback) {
     // stop instance if batch existed before
     try {
         if (batExists) {
-            execSync('iob stop', {
+            execSync('serviceIoBroker.bat stop', {
                 stdio: 'inherit',
                 cwd: process.cwd(),
             });
@@ -110,7 +110,7 @@ function setupWindows(callback) {
     }
 
     // start instance
-    execSync('iob start', {
+    execSync('serviceIoBroker.bat start', {
         stdio: 'inherit',
         cwd: process.cwd(),
     });
@@ -169,7 +169,7 @@ function setup(callback) {
             default: {
                 if (/^win/.test(platform)) {
                     // TODO: Move Windows to a PowerShell script
-                    setupWindows(callback);
+                    return setupWindows(callback);
                 } else {
                     console.warn('Unknown platform so autostart is not enabled');
                 }
