@@ -44,7 +44,25 @@ const jsControllerMainModule = 'node_modules/iobroker.js-controller/iobroker.js'
 // const jsControllerMainModuleAbsolute = path.join(rootDir, jsControllerMainModule);
 
 /** The command line to execute ioBroker */
-const commandLine = `@echo off\r\nif %1==fix (npx @iobroker/fix) else (node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6)`;
+const commandLine = `@echo off
+if %1==fix (
+    npx @iobroker/fix
+) else (
+    if exist serviceIoBroker.bat (
+        if %1==start (
+            call serviceIoBroker.bat start
+        ) else (
+            if %1==stop (
+                call serviceIoBroker.bat stop
+            ) else (
+                node ${jsControllerMainModule} %1 %2 %3 %4 %5
+            )
+        )
+    ) else (
+        node ${jsControllerMainModule} %1 %2 %3 %4 %5
+    )
+)`;
+
 /** The command line to execute ioBroker (absolute path) */
 // const commandLineAbsolute = `node ${jsControllerMainModuleAbsolute} $1 $2 $3 $4 $5`;
 

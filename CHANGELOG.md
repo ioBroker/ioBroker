@@ -1,6 +1,9 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## **WORK IN PROGRESS**
+* Start/stop service by calling `iob.bat start/stop` 
+
 ## 4.1.9 (2022-05-23)
 * Stop service before fix and then start service again
 
