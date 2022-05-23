@@ -4,7 +4,7 @@
 
 const tools = require('./tools.js');
 const platform = require('os').platform();
-const child_process = require('child_process');
+const { execSync, exec }  = require('child_process');
 
 function runLinux(isFix) {
     return new Promise((resolve, reject) => {
@@ -13,7 +13,6 @@ function runLinux(isFix) {
 
         // System call used for update of js-controller itself,
         // because during installation npm packet will be deleted too, but some files must be loaded even during the installation process.
-        const exec = require('child_process').exec;
         const child = exec(cmd);
 
         child.stderr.pipe(process.stderr);
@@ -47,7 +46,7 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
 
     require('./installCopyFiles.js');
     const targetDir = process.cwd();
-    child_process.execSync('npm install --production', {
+    execSync('npm install --production', {
         cwd: targetDir,
         stdio: 'inherit'
     });

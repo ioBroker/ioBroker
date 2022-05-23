@@ -21,8 +21,7 @@ const yargs = require('yargs')
 
 const fs = require('fs-extra');
 const path = require('path');
-const child_process = require('child_process');
-const execSync = child_process.execSync;
+const { execSync }  = require('child_process');
 const tools = require('./tools.js');
 
 /** The location of this module's root dir. E.g. /opt/iobroker */
@@ -91,15 +90,25 @@ function setupWindows(callback) {
     //console.log('Windows service library installed, now register ioBroker as Service');
     //console.log('node "' + path.join(rootDir, 'install.js') + '"');
 
+    // stop instance
+    try {
+        execSync('iob stop', {
+            stdio: 'inherit',
+            cwd: process.cwd(),
+        });
+    } catch (error) {
+        // ignore
+    }
+
     try {
         execSync(`node "${path.join(rootDir, 'install.js')}"`, {stdio: 'inherit'});
-    }
-    catch (error) {
+    } catch (error) {
         console.log('Error when registering ioBroker as service: ' + error);
-        if (callback) callback(error.code);
-        return;
+        return callback && callback(error.code);
     }
-    child_process.execSync('iob start', {
+
+    // start instance
+    execSync('iob start', {
         stdio: 'inherit',
         cwd: process.cwd(),
     });
@@ -138,7 +147,7 @@ function setup(callback) {
             // Create default data dir
             fs.ensureDirSync(config.dataDir);
             fs.writeFileSync(path.join(process.cwd(), 'iobroker-data/iobroker.json'), JSON.stringify(config, null, 2));
-            child_process.execSync('iob rebuild', {
+            execSync('iob rebuild', {
                 stdio: 'inherit',
                 cwd: process.cwd(),
             });
