@@ -59,8 +59,8 @@ function setupWindows(callback) {
     const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
 
     const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
-    fs.writeFileSync(path.join(rootDir, iobrokerRootExecutable + '.bat'), commandLine.replace(/\$/g, '%'));
-    fs.writeFileSync(path.join(iobRootExecutable + '.bat'), commandLine.replace(/\$/g, '%'));
+    fs.writeFileSync(iobrokerRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
+    fs.writeFileSync(iobRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
 
     if (!fs.existsSync(process.env['APPDATA'] + '/npm')) {
@@ -115,7 +115,7 @@ function setupWindows(callback) {
         cwd: process.cwd(),
     });
 
-    console.log('ioBroker service installed. Write "serviceIoBroker start" to start the service and go to http://localhost:8081 to open the admin UI.');
+    console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
     console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
     callback && callback();
 }

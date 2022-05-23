@@ -1,7 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-## 4.1.8 (2022-05-23)
+## **WORK IN PROGRESS**
 * Stop service before fix and then start service again
 
 ## 4.1.7 (2022-05-23)
