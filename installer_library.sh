@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2022-02-10" # format YYYY-MM-DD
+LIBRARY_VERSION="2022-06-03" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -251,7 +251,6 @@ install_necessary_packages() {
 			"librsvg2-dev"
 			"libpixman-1-dev"
 			"net-tools" # To fix issue #277
-			"python-dev" # To fix npm error: ImportError: No module named compiler.ast
 			"cmake" # https://github.com/ioBroker/ioBroker.js-controller/issues/1604
 		)
 		for pkg in "${packages[@]}"; do

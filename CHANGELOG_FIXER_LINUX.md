@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2022-06-03
+* Remove python-dev from installed debian packages again to prevent installing python2 on some distributions
+
 ## 2022-02-13
 * Delay restarting js-controller after a crash to avoid locked DB files
 
