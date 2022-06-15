@@ -1,13 +1,13 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2022-06-03" # format YYYY-MM-DD
+LIBRARY_VERSION="2022-06-15" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
-NODE_JS_LINUX_URL="https://deb.nodesource.com/setup_14.x"
-NODE_JS_BREW_URL="https://nodejs.org/dist/v14.18.1/node-v14.18.1.pkg"
+NODE_JS_LINUX_URL="https://deb.nodesource.com/setup_16.x"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v14.18.1/node-v16.15.1.pkg"
 
 # ------------------------------
 # test function of the library
