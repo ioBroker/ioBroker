@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { JsonlDB } = require('@alcalzone/jsonl-db');
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +26,7 @@ async function main() {
             console.log('states.jsonl not found to compress, skip');
         }
     } catch (e) {
-        console.log(`Cannot compress states.jsonl: ${e.message}`);
+        console.log(`Cannot compress states.jsonl: ${e.stack}`);
     }
     const objectsFile = path.join(path, 'objects.jsonl');
     try {
@@ -35,8 +37,8 @@ async function main() {
             console.log('objects.jsonl not found to compress, skip');
         }
     } catch (e) {
-        console.log(`Cannot compress objects.jsonl: ${e.message}`);
+        console.log(`Cannot compress objects.jsonl: ${e.stack}`);
     }
 }
 
-main();
+main().then(() => process.exit(1)).catch(e => {});

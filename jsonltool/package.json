@@ -1,5 +1,5 @@
 {
-    "name": "jsonltools",
+    "name": "jsonltool",
     "version": "0.0.1",
     "bin": "./index.js",
     "dependencies": {
