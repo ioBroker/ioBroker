@@ -3,7 +3,7 @@ name: iobroker npx install Windows 64bit Build
 on: [push, pull_request]
 
 jobs:
-  build:
+  test-windows-install:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
@@ -15,6 +15,17 @@ jobs:
         npm link
         cd ..
         mkdir iobroker-inst
+        cd iobroker-inst
+        npx iobroker
+
+    - name: fix
+      run: |
+        cd ..
+        cd ioBroker
+        npm unlink
+        npm run make-fix
+        npm link
+        cd ..
         cd iobroker-inst
         npx iobroker
 
