@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2022-11-19
+* Adjust minimum Node.js version to 12.13 for new installations which match to the minimum version of js-controller 4.0.x
+
 ## 2022-06-03
 * Remove python-dev from installed debian packages again to prevent installing python2 on some distributions
 

@@ -4,6 +4,8 @@
 const fs = require('fs-extra');
 //const semver = require('semver');
 const path = require('path');
+const semver = require('semver');
+const child_process = require('child_process');
 //const { URLSearchParams } = require('url');
 //let axios;
 /*
@@ -618,6 +620,45 @@ function isAutomatedInstallation() {
     return !!process.env.AUTOMATED_INSTALLER;
 }
 
+/**
+ * Retrieves the version of the globally installed npm and node
+ * @returns {{npm: string, node: string}}
+ */
+function getSystemVersions() {
+    // Run npm -v and extract the version string
+    const ret = {
+        npm: undefined,
+        node: undefined
+    };
+    try {
+        let npmVersion;
+        ret.node = semver.valid(process.version);
+        try {
+            // remove local node_modules\.bin dir from path
+            // or we potentially get a wrong npm version
+            const newEnv = Object.assign({}, process.env);
+            newEnv.PATH = (newEnv.PATH || newEnv.Path || newEnv.path)
+                .split(path.delimiter)
+                .filter(dir => {
+                    dir = dir.toLowerCase();
+                    return !dir.includes('iobroker') || !dir.includes(path.join('node_modules', '.bin'));
+                })
+                .join(path.delimiter);
+
+            npmVersion = child_process.execSync('npm -v', { encoding: 'utf8', env: newEnv });
+            if (npmVersion) npmVersion = semver.valid(npmVersion.trim());
+            console.log('NPM version: ' + npmVersion);
+            ret.npm = npmVersion;
+        } catch (e) {
+            console.error('Error trying to check npm version: ' + e);
+        }
+    } catch (e) {
+        console.error('Could not check npm version: ' + e);
+        console.error('Assuming that correct version is installed.');
+    }
+    return ret;
+}
+
 module.exports = {
     /*findIPs,
     rmdirRecursiveSync,
@@ -632,5 +673,6 @@ module.exports = {
     getDefaultDataDir,
     getConfigFileName,
     copyFilesRecursiveSync,
-    isAutomatedInstallation
+    isAutomatedInstallation,
+    getSystemVersions
 };

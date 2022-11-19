@@ -76,11 +76,6 @@ if %1==fix (
 
 const debug = !!process.env.IOB_DEBUG;
 
-// Save objects before exit
-function processExit(exitCode) {
-    process.exit(exitCode);
-}
-
 function setupWindows(callback) {
     const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
 
@@ -208,4 +203,4 @@ function setup(callback) {
     typeof callback === 'function' && callback();
 }
 
-setup(processExit);
+setup();
