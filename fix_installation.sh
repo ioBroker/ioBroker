@@ -3,6 +3,17 @@
 # Increase this version number whenever you update the fixer
 FIXER_VERSION="2022-06-03" # format YYYY-MM-DD
 
+compress_jsonl_databases() {
+    NPMV=$(npm -v | cut -d. -f1);
+    # depending on the npm version the npx call needs to be different
+    if [ $NPMV -lt 7 ]; then
+            (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
+            (cd "$IOB_DIR")
+    else
+            (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
+    fi;
+}
+
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
 then IS_ROOT=true;  SUDOX=""
@@ -60,7 +71,7 @@ else
 	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
-NUM_STEPS=3
+NUM_STEPS=4
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
@@ -106,7 +117,13 @@ change_npm_command_root
 fix_dir_permissions
 
 # ########################################################
-print_step "Checking autostart" 3 "$NUM_STEPS"
+print_step "JSONL database maintenance" 3 "$NUM_STEPS"
+
+# Compress the JSONL database - if needed
+compress_jsonl_databases
+
+# ########################################################
+print_step "Checking autostart" 4 "$NUM_STEPS"
 
 # First delete all possible remains of an old installation
 INITD_FILE="/etc/init.d/iobroker.sh"

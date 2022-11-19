@@ -1,8 +1,0 @@
-{
-    "name": "jsonltool",
-    "version": "0.0.1",
-    "bin": "./index.js",
-    "dependencies": {
-        "@alcalzone/jsonl-db": "^2.5.3"
-    }
-}
