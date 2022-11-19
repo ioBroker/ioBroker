@@ -29,7 +29,7 @@ jobs:
         npm unlink
         npm install
         npm run make-fix
-        rd /s /q node_modules
+        Remove-Item "node_modules" -Recurse -Force
         npm link
         cd ..
         cd iobroker-inst
