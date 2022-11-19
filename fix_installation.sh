@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2022-06-03" # format YYYY-MM-DD
+FIXER_VERSION="2022-11-19" # format YYYY-MM-DD
 
 compress_jsonl_databases() {
+    echo "Checking for uncompressed JSONL databases... This might take a while!"
+    echo ""
+
     NPMV=$(npm -v | cut -d. -f1);
     # depending on the npm version the npx call needs to be different
     if [ $NPMV -lt 7 ]; then
