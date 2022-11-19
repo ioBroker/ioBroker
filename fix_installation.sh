@@ -120,7 +120,7 @@ change_npm_command_root
 fix_dir_permissions
 
 # ########################################################
-print_step "JSONL database maintenance" 3 "$NUM_STEPS"
+print_step "Database maintenance" 3 "$NUM_STEPS"
 
 # Compress the JSONL database - if needed
 compress_jsonl_databases
