@@ -26,8 +26,8 @@ jobs:
       run: |
         cd ..
         cd ioBroker
-        npm install
         npm unlink
+        npm install
         npm run make-fix
         npm link
         cd ..
