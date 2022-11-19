@@ -7,6 +7,10 @@ on:
       - "*"
   pull_request: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-test
+  cancel-in-progress: true
+
 jobs:
   # ===================
   # Runs unit tests on all supported node versions and OSes

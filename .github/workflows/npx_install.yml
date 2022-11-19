@@ -2,6 +2,10 @@ name: iobroker npx install Windows 64bit Build
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-winnpx
+  cancel-in-progress: true
+
 jobs:
   test-windows-install:
     runs-on: windows-latest
