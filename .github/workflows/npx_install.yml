@@ -27,17 +27,17 @@ jobs:
         cd iobroker-inst
         npx iobroker
 
-    - name: prepare-fix
-      run: |
-        npm unlink
-        ((Get-Content -path package.json -Raw) -replace '@iobroker/install','@iobroker/fix') | Set-Content -Path package.json
-        npm link
+    #- name: prepare-fix
+    #  run: |
+    #    npm unlink
+    #    ((Get-Content -path package.json -Raw) -replace '@iobroker/install','@iobroker/fix') | Set-Content -Path package.json
+    #   npm link
 
-    - name: fix
-      run: |
-        cd ..
-        cd iobroker-inst
-        npx fix
+    #- name: fix
+    #  run: |
+    #    cd ..
+    #    cd iobroker-inst
+    #    npx iobroker
 
     #- name: test
     #  run: node test
