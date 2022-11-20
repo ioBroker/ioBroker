@@ -10,6 +10,7 @@ const pack = require('../package.json');
 const semver = require('semver');
 
 function runLinux(isFix) {
+    console.log(`Linux installation starting... (fixing = ${isFix})`);
     return new Promise((resolve, reject) => {
         // Install iobroker
         const cmd = `curl -sL https://iobroker.net/${isFix ? 'fix.sh' : 'install.sh'} | bash -`;
@@ -35,7 +36,6 @@ function runLinux(isFix) {
 
 if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
     // On Linux/OSX this must be run with the installer script now!
-    const pack = require('../package.json');
     if (pack.name.includes('fix')) {
         runLinux(true)
             .then(() => {});
@@ -45,8 +45,8 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
     }
 
 } else {
-    console.log('Non-Win');
-    const pack = require('../package.json');
+    console.log(`Windows installation starting... (fixing = ${pack.name.includes('fix')})`);
+
     require('./checkVersions.js');
 
     require('./installCopyFiles.js');
