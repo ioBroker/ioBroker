@@ -14,15 +14,18 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 14
-    - name: install
+    - name: prepare-install
       run: |
         npm link
         cd ..
         mkdir iobroker-inst
         cd iobroker-inst
+
+    - name: prepare-install
+      run: |
         npx iobroker
 
-    - name: fix
+    - name: prepare-fix
       run: |
         cd ..
         cd ioBroker
@@ -33,6 +36,9 @@ jobs:
         npm link
         cd ..
         cd iobroker-inst
+
+    - name: fix
+      run: |
         npx iobroker
 
     #- name: test

@@ -45,6 +45,7 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
     }
 
 } else {
+    console.log('Non-Win');
     const pack = require('../package.json');
     require('./checkVersions.js');
 
