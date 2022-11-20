@@ -21,24 +21,24 @@ jobs:
         mkdir iobroker-inst
         cd iobroker-inst
 
-    - name: prepare-install
+    - name: install
       run: |
+        cd ..
+        cd iobroker-inst
         npx iobroker
 
     - name: prepare-fix
       run: |
-        cd ..
-        cd ioBroker
         npm unlink
         npm install
         npm run make-fix
         Remove-Item "node_modules" -Recurse -Force
         npm link
-        cd ..
-        cd iobroker-inst
 
     - name: fix
       run: |
+        cd ..
+        cd iobroker-inst
         npx iobroker
 
     #- name: test
