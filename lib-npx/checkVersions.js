@@ -6,8 +6,6 @@
  * to make sure they are compatible with ioBroker.
  */
 
-const path = require('path');
-const child_process = require('child_process');
 const { getSystemVersions } = require('./tools.js');
 const semver = require('semver');
 
