@@ -30,9 +30,7 @@ jobs:
     - name: prepare-fix
       run: |
         npm unlink
-        npm install
-        npm run make-fix
-        Remove-Item "node_modules" -Recurse -Force
+        ((Get-Content -path package.json -Raw) -replace '@iobroker/install','@iobroker/fix') | Set-Content -Path package.json
         npm link
 
     - name: fix
