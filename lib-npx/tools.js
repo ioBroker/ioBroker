@@ -650,10 +650,10 @@ function getSystemVersions() {
             console.log('NPM version: ' + npmVersion);
             ret.npm = npmVersion;
         } catch (e) {
-            console.error('Error trying to check npm version: ' + e);
+            console.error('Error trying to check npm version: ' + e.message);
         }
     } catch (e) {
-        console.error('Could not check npm version: ' + e);
+        console.error('Could not check npm version: ' + e.message);
         console.error('Assuming that correct version is installed.');
     }
     return ret;
