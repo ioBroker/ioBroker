@@ -52,7 +52,6 @@ function createPackageJson() {
         engines: {
             'node': '>=12.0.0'
         },
-        // Require the dependencies in our own package.json plus the following ones
         dependencies: {
             'iobroker.js-controller': 'stable',
             'iobroker.admin': 'stable',
