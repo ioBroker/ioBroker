@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2022-11-02
+* Add condition for checking if installer runs in Docker environment
+
 ## 2022-06-03
 * Remove python-dev from installed debian packages again to prevent installing python2 on some distributions
 
