@@ -1,7 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-## **WORK IN PROGRESS**
+## 4.2.0 (2022-12-09)
 * Sync Windows installer with Linux installer
 * Add Windows Fixer to compress JSONL databases
 
