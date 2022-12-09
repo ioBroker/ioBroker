@@ -7,6 +7,10 @@ on:
       - "*"
   pull_request: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-test
+  cancel-in-progress: true
+
 jobs:
   # ===================
   # Runs unit tests on all supported node versions and OSes
@@ -16,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x, 15.x]
+        node-version: [12.x, 14.x, 16.x, 18.x, 19.x]
         os: [ubuntu-latest, macos-latest]
 
     steps:

@@ -41,7 +41,7 @@ function createPackageJson() {
     // This is the package.json contents that will be in the target directory
     const rootPackageJson = {
         name: 'iobroker.inst',
-        version: ownPackage.version,
+        version: '3.0.0',
         private: true,
         description: 'Automation platform in node.js',
         // Copy scripts and required engine from our own package.json
@@ -49,15 +49,16 @@ function createPackageJson() {
             'install-service': 'node install.js',
             'uninstall-service': 'node uninstall.js'
         },
-        engine: ownPackage.engine,
-        // Require the dependencies in our own package.json plus the following ones
-        dependencies: Object.assign({}, ownPackage.dependencies, {
+        engines: {
+            'node': '>=12.0.0'
+        },
+        dependencies: {
             'iobroker.js-controller': 'stable',
             'iobroker.admin': 'stable',
             'iobroker.discovery': 'stable',
-            'iobroker.info': 'stable'
-        }),
-        optionalDependencies: ownPackage.optionalDependencies,
+            'iobroker.backitup': 'stable'
+        },
+        optionalDependencies: ownPackage.optionalDependencies
     };
 
     // Write the package.json in the root dir
@@ -74,7 +75,7 @@ function createPackageJson() {
         actualPackage.scripts = actualPackage.scripts ? Object.assign(actualPackage.scripts, rootPackageJson.scripts) : rootPackageJson.scripts;
         actualPackage.dependencies = actualPackage.dependencies ? Object.assign(actualPackage.dependencies, rootPackageJson.dependencies) : rootPackageJson.dependencies;
         actualPackage.optionalDependencies = actualPackage.optionalDependencies ? Object.assign(actualPackage.optionalDependencies, rootPackageJson.optionalDependencies) : rootPackageJson.optionalDependencies;
-        actualPackage.engine = ownPackage.engine;
+        actualPackage.engines = rootPackageJson.engines;
         fs.writeFileSync(
             path.join(targetDir, 'package.json'),
             JSON.stringify(actualPackage, null, 2),

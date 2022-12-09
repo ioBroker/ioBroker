@@ -2,21 +2,42 @@ name: iobroker npx install Windows 64bit Build
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-winnpx
+  cancel-in-progress: true
+
 jobs:
-  build:
+  test-windows-install:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
         node-version: 14
-    - name: install
+    - name: prepare-install
       run: |
         npm link
         cd ..
         mkdir iobroker-inst
         cd iobroker-inst
+
+    - name: install
+      run: |
+        cd ..
+        cd iobroker-inst
         npx iobroker
+
+    #- name: prepare-fix
+    #  run: |
+    #    npm unlink
+    #    ((Get-Content -path package.json -Raw) -replace '@iobroker/install','@iobroker/fix') | Set-Content -Path package.json
+    #   npm link
+
+    #- name: fix
+    #  run: |
+    #    cd ..
+    #    cd iobroker-inst
+    #    npx iobroker
 
     #- name: test
     #  run: node test
