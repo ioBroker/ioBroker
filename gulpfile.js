@@ -106,9 +106,11 @@ function replaceLib(text, lib) {
 gulp.task('deploy', () => {
     const install = fs.readFileSync(dist + 'install.sh');
     const fix = fs.readFileSync(dist + 'fix.sh');
+    const diag = fs.readFileSync(dist + 'diag.sh');
 
     return uploadOneFile('/install.sh', install)
-        .then(() => uploadOneFile('/fix.sh', fix));
+        .then(() => uploadOneFile('/fix.sh', fix))
+        .then(() => uploadOneFile('/diag.sh', diag));
 });
 
 gulp.task('create', () => {
@@ -120,6 +122,7 @@ gulp.task('create', () => {
         const install  = fs.readFileSync(__dirname + '/installer.sh').toString('utf8');
         const fix      = fs.readFileSync(__dirname + '/fix_installation.sh').toString('utf8');
         const lib      = fs.readFileSync(__dirname + '/installer_library.sh').toString('utf8');
+        const diag     = fs.readFileSync(__dirname + '/diag.sh').toString('utf8');
 
         // replace
         // LIB_NAME="installer_library.sh"
@@ -127,6 +130,7 @@ gulp.task('create', () => {
 
         fs.writeFileSync(dist + 'install.sh', replaceLib(install, lib));
         fs.writeFileSync(dist + 'fix.sh',     replaceLib(fix, lib));
+        fs.writeFileSync(dist + 'diag.sh',    diag);
 
         resolve();
     });

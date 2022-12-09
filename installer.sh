@@ -183,6 +183,8 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
+		elif [ "\$1" = "diag" ]; then
+			curl -sL $DIAG_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -199,6 +201,8 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
+		elif [ "\$1" = "diag" ]; then
+			curl -sL $DIAG_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -209,6 +213,8 @@ else
 		#!$BASH_CMDLINE
 		if [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
+		elif [ "\$1" = "diag" ]; then
+			curl -sL $DIAG_URL | bash -
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi

@@ -138,6 +138,9 @@ function set_some_common_params() {
 	# Where the fixer script is located
 	FIXER_URL="https://iobroker.net/fix.sh"
 
+	# Where the diag script is located
+	DIAG_URL="https://iobroker.net/diag.sh"
+
 	# Remember the full path of bash
 	BASH_CMDLINE=$(which bash)
 
