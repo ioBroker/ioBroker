@@ -4,6 +4,7 @@
 * Adjust minimum Node.js version to 12.13 for new installations which match to the minimum version of js-controller 4.0.x
 * Add condition for checking if installer runs in Docker environment
 * Adjust Docker detection
+* Add Diag script and "iob diag" command
 
 ## 2022-06-03
 * Remove python-dev from installed debian packages again to prevent installing python2 on some distributions

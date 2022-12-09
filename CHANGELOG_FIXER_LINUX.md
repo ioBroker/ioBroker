@@ -3,6 +3,7 @@
 ## 2022-12-09
 * Add Compressing of the JSONL databases when JSONL is used
 * Adjust Docker detection
+* Add Diag script and "iob diag" command
 
 ## 2022-06-03
 * Remove python-dev from installed debian packages again to prevent installing python2 on some distributions
