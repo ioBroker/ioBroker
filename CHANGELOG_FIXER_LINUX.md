@@ -1,7 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
-## 2022-11-19
+## 2022-12-09
 * Add Compressing of the JSONL databases when JSONL is used
+* Adjust Docker detection
 
 ## 2022-06-03
 * Remove python-dev from installed debian packages again to prevent installing python2 on some distributions

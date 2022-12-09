@@ -12,7 +12,29 @@ on:
   pull_request: { }
 
 jobs:
+  test-windows-install:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 14
+      - name: prepare-install
+        run: |
+          npm link
+          cd ..
+          mkdir iobroker-inst
+          cd iobroker-inst
+
+      - name: install
+        run: |
+          cd ..
+          cd iobroker-inst
+          npx iobroker
+
   deploy:
+    needs: [test-windows-install]
+
     # Trigger this step only when a commit on master is tagged with a version number
     if: |
       contains(github.event.head_commit.message, '[skip ci]') == false &&
