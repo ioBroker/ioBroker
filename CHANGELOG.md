@@ -1,6 +1,10 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## **WORK IN PROGRESS**
+* Sync Windows installer with Linux installer
+* Add Windows Fixer to compress JSONL databases
+
 ## 4.1.11 (2022-05-25)
 * Made the parameters call list longer
 
