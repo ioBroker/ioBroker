@@ -5,7 +5,7 @@
 const tools = require('./tools.js');
 const path = require('path');
 const platform = require('os').platform();
-const { execSync, exec }  = require('child_process');
+const { execSync, exec } = require('child_process');
 const pack = require('../package.json');
 const semver = require('semver');
 

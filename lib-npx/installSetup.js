@@ -13,8 +13,7 @@
 'use strict';
 
 const yargs = require('yargs')
-    .usage('Commands:\n' +
-        '$0 [--objects <host>] [--states <host>] [custom]\n')
+    .usage(`Commands:\n$0 [--objects <host>] [--states <host>] [custom]\n`)
     .default('objects', '127.0.0.1')
     .default('states', '127.0.0.1')
     .default('lang', 'en');
@@ -84,11 +83,11 @@ function setupWindows(callback) {
     fs.writeFileSync(iobRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
 
-    if (!fs.existsSync(process.env['APPDATA'] + '/npm')) {
-        fs.mkdirSync(process.env['APPDATA'] + '/npm');
+    if (!fs.existsSync(`${process.env['APPDATA']}/npm`)) {
+        fs.mkdirSync(`${process.env['APPDATA']}/npm`);
     }
-    if (!fs.existsSync(process.env['APPDATA'] + '/npm-cache')) {
-        fs.mkdirSync(process.env['APPDATA'] + '/npm-cache');
+    if (!fs.existsSync(`${process.env['APPDATA']}/npm-cache`)) {
+        fs.mkdirSync(`${process.env['APPDATA']}/npm-cache`);
     }
 
     // Copy the files from /install/windows to the root dir
@@ -103,7 +102,7 @@ function setupWindows(callback) {
     try {
         execSync(cmd, {stdio: 'inherit'});
     } catch (error) {
-        console.log('Error when installing Windows Service Library: ' + error);
+        console.log(`Error when installing Windows Service Library: ${error}`);
         callback && callback(error.code);
         return;
     }
@@ -126,7 +125,7 @@ function setupWindows(callback) {
     try {
         execSync(`node "${path.join(rootDir, 'install.js')}"`, {stdio: 'inherit'});
     } catch (error) {
-        console.log('Error when registering ioBroker as service: ' + error);
+        console.log(`Error when registering ioBroker as service: ${error}`);
         return callback && callback(error.code);
     }
 
@@ -142,7 +141,7 @@ function setupWindows(callback) {
 }
 
 function log(text) {
-    debug && console.log('[INSTALL] ' + text);
+    debug && console.log(`[INSTALL] ${text}`);
 }
 
 /**
@@ -197,7 +196,7 @@ function setup(callback) {
             }
         }
     } catch (e) {
-        console.log('Non-critical error: ' + e.message);
+        console.log(`Non-critical error: ${e.message}`);
     }
 
     typeof callback === 'function' && callback();
