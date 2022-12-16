@@ -31,7 +31,9 @@ echo "";
 echo "Just copy and paste the Summary Page, including the \`\`\` characters at start and end.";
 echo "It helps us to help you!"
 echo "";
-        read -p "Press <Enter> to continue";
+     # read -p "Press <Enter> to continue";
+echo "Press any key to continue";
+	read -n 1 -s
 echo "";
 echo -e "\033[33m======== Start marking the full check here =========\033[0m";
 echo "\`\`\`";
@@ -183,7 +185,9 @@ echo "";
 echo "iob diag has finished.";
 echo "";
 echo "";
-        read -p "For a Summary please press <Enter>";
+       # read -p "For a Summary please press <Enter>";
+echo "Press any key for a summary";
+	read -n 1 -s
 echo "";
         clear;
 echo "Copy text starting here:";
