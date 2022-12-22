@@ -1,8 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-
-## **WORK IN PROGRESS**
+## 4.2.1 (2022-12-22)
 * Catched some errors when executed in wrong directory on windows
 
 ## 4.2.0 (2022-12-09)
