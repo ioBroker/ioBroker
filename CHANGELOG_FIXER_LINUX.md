@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2022-12-22
+* Adjustments to run diagnostic script differently
+
 ## 2022-12-09
 * Add Compressing of the JSONL databases when JSONL is used
 * Adjust Docker detection

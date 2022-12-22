@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2022-12-09" # format YYYY-MM-DD
+INSTALLER_VERSION="2022-12-22" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -184,7 +184,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		elif [ "\$1" = "diag" ]; then
-			curl -sL $DIAG_URL | bash -
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -202,7 +202,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		elif [ "\$1" = "diag" ]; then
-			curl -sL $DIAG_URL | bash -
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -214,7 +214,7 @@ else
 		if [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		elif [ "\$1" = "diag" ]; then
-			curl -sL $DIAG_URL | bash -
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
