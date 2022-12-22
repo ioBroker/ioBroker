@@ -10,9 +10,15 @@ const thisPackageRoot = path.join(__dirname, '..');
 const targetDir = process.cwd();
 const noCopyDirs = ['img', 'node_modules', 'lib-npx'];
 
-// First copy files, then create a new package.json
-copyFilesToRootDir();
-createPackageJson();
+try {
+    // First copy files, then create a new package.json
+    copyFilesToRootDir();
+    createPackageJson();
+} catch (e) {
+    console.error('Please make sure to run this process in the directory where ioBroker should be installed, e.g. C:\\iobroker\\!');
+    console.error('Cannot install: ' + e);
+    process.exit(1);
+}
 
 /** Copies all necessary files in the target directory */
 function copyFilesToRootDir() {
