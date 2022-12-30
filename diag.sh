@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2022-12-30"; #version of this script
+SKRIPTV="2022-12-31"; #version of this script
 NODERECOM="16";  #recommended node version
 NPMRECOM="8";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -34,7 +34,7 @@ echo "";
      # read -p "Press <Enter> to continue";
 echo "Press any key to continue";
 read -n 1 -s
-        clear;
+	clear;
 echo "";
 echo -e "\033[33m======== Start marking the full check here =========\033[0m";
 echo "\`\`\`";
@@ -63,7 +63,7 @@ if [ "$SYSTDDVIRT" != "" ]; then
 else
     echo "Virtualization: Unknown (buanet/Synology?)"
 fi;
-        lsb_release -idrc;
+	lsb_release -idrc;
 echo "";
         cat /etc/os-release;
 echo "";
@@ -184,6 +184,11 @@ echo -e "\033[34;107m*** Listening Ports ***\033[0m";
 # Alternativ - ss ist nicht ueberall installiert
 # sudo ss -tulwp | grep LISTEN;
 echo "";
+echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m";
+echo "";
+# iobroker logs --lines 25;
+tail -n 25 /opt/iobroker/log/iobroker.current.log;
+echo "";
 echo "\`\`\`";
 echo "";
 echo -e "\033[33m============ Mark until here for C&P =============\033[0m";
@@ -193,14 +198,14 @@ echo "";
 echo "";
        # read -p "For a Summary please press <Enter>";
 echo "Press any key for a summary";
-        read -n 1 -s
+	read -n 1 -s
 echo "";
         clear;
 echo "Copy text starting here:";
 echo "";
 echo "\`\`\`";
 echo "======================= SUMMARY =======================";
-echo -e "\t\t\tv.`echo $SKRIPTV`"
+echo -e "\t\t`echo "     "v.$SKRIPTV`"
 echo "";
 echo "";
 echo -e "Operatingsystem: `lsb_release -d | tr -s ' ' | cut -d: -f 2`"
@@ -237,6 +242,9 @@ echo "";
 echo -e "ioBroker Status: \t`iobroker status`";
 # iobroker status;
 echo "";
+echo "Status admin:";
+iobroker list instances | grep admin.
+echo "";
 echo -e "Pending iob updates: \t`iob update -u | grep -c 'Updatable\|Updateable'`";
 echo "";
 iob repo list | tail -n1;
@@ -250,7 +258,7 @@ find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*objects\* -exec du 
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -sh {} + |sort -rh | head -n 5;
 echo "";
 echo "";
-echo "====================== END OF SUMMARY =================="
+echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
 unset LC_ALL
 exit;
