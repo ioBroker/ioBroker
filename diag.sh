@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2022-12-30"; #version of this script
+SKRIPTV="2022-12-31"; #version of this script
 NODERECOM="16";  #recommended node version
 NPMRECOM="8";    #recommended npm version
 XORGTEST=0;      #test for GUI
