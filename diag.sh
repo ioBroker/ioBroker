@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2022-12-13"; #version of this script
+SKRIPTV="2022.12.30"; #version of this script
 NODERECOM="16";  #recommended node version
 NPMRECOM="8";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -33,7 +33,8 @@ echo "It helps us to help you!"
 echo "";
      # read -p "Press <Enter> to continue";
 echo "Press any key to continue";
-	read -n 1 -s
+read -n 1 -s
+        clear;
 echo "";
 echo -e "\033[33m======== Start marking the full check here =========\033[0m";
 echo "\`\`\`";
@@ -62,7 +63,7 @@ if [ "$SYSTDDVIRT" != "" ]; then
 else
     echo "Virtualization: Unknown (buanet/Synology?)"
 fi;
-	lsb_release -idrc;
+        lsb_release -idrc;
 echo "";
         cat /etc/os-release;
 echo "";
@@ -91,6 +92,7 @@ else
 fi
 echo -e "Desktop: \t$DESKTOP_SESSION";
 echo -e "Terminal: \t$XDG_SESSION_TYPE";
+echo -e "Boot Target: \t`systemctl get-default`";
 echo "";
 echo -e "\033[34;107m*** MEMORY ***\033[0m";
         free -th --mega;
@@ -148,8 +150,12 @@ echo "";
 echo -e "\033[32mCore adapters versions\033[0m"
 echo -e "js-controller: \t`iob -v`";
 echo -e "admin: \t\t`iob version admin`";
+echo -e "javascript: \t`iob version javascript`";
 echo "";
 echo -e "Adapters from github: \t`(cd /opt/iobroker && npm ls | grep -c 'git')`";
+echo "";
+echo -e "\033[32mAdapter State\033[0m";
+iob list instances;
 echo "";
 echo -e "\033[32mEnabled adapters with bindings\033[0m";
 iob list instances | grep enabled | grep port ;
@@ -157,7 +163,7 @@ echo "";
 echo -e "\033[32mioBroker-Repositories\033[0m";
         iob repo list;
 echo "";
-echo -e "\033[32mioBroker-Instances\033[0m";
+echo -e "\033[32mInstalled ioBroker-Instances\033[0m";
         iob update -i;
 echo "";
 echo -e "\033[32mObjects and States\033[0m";
@@ -187,7 +193,7 @@ echo "";
 echo "";
        # read -p "For a Summary please press <Enter>";
 echo "Press any key for a summary";
-	read -n 1 -s
+        read -n 1 -s
 echo "";
         clear;
 echo "Copy text starting here:";
@@ -217,6 +223,7 @@ echo -e "Installation: \t\t`echo $INSTENV2`";
 echo -e "Timezone: \t\t`cat /etc/timezone`";
 echo -e "User-ID: \t\t`echo $EUID`";
 echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi`";
+echo -e "Boot Target: \t\t`systemctl get-default`";
 echo "";
 echo -e "Pending OS-Updates: \t`echo $APT`";
 echo "";
