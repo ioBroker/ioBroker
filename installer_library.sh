@@ -493,6 +493,11 @@ change_npm_command_root() {
 	# so that it is executed as `iobroker` when inside the iobroker directory
 	NPM_COMMAND_FIX_PATH=/root/.iobroker/npm_command_fix
 	NPM_COMMAND_FIX=$(cat <<- EOF
+		# Warn when iobroker or npm are executed as root
+		alias iobroker='echo iobroker can not be executed as root!'
+		alias npm='echo npm can not be executed as root!'
+		alias iob='echo iob can not be executed as root!'
+
 		# While inside the iobroker directory, execute npm as iobroker
 		function npm() {
 			__real_npm=\$(which npm)
