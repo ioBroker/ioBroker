@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2022-12-31"; #version of this script
+SKRIPTV="2023-01-02"; #version of this script
 NODERECOM="16";  #recommended node version
 NPMRECOM="8";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -102,6 +102,9 @@ echo "";
 echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
 echo "";
+echo -e "\033[32mMessages in dmesg:\033[0m";
+sudo dmesg -T | grep -i ext4;
+echo "";
 echo -e "\033[32mShow mounted filesystems (real ones only):\033[0m";
 findmnt --real;
 echo "";
@@ -129,6 +132,7 @@ sudo ln -s /usr/bin/node /usr/bin/nodejs &> /dev/null;
 echo -e "`type -P nodejs` \t`nodejs -v`";
 echo -e "`type -P node` \t\t`node -v`";
 echo -e "`type -P npm` \t\t`npm -v`";
+echo -e "`type -P npx` \t\t`npx -v`";
 echo "";
         apt-cache policy nodejs;
 echo "";
@@ -235,6 +239,7 @@ echo "";
 echo -e "Nodejs-Installation: \t`type -P nodejs` \t`nodejs -v`";
 echo -e "\t\t\t`type -P node` \t\t`node -v`";
 echo -e "\t\t\t`type -P npm` \t\t`npm -v`";
+echo -e "\t\t\t`type -P npx` \t\t`npx -v`";
 echo "";
 echo -e "ioBroker Core: \t\tjs-controller \t\t`iob -v`";
 echo -e "\t\t\tadmin \t\t\t`iob version admin`";
