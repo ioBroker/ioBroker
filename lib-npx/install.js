@@ -47,20 +47,6 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
 } else {
     console.log(`Windows installation starting... (fixing = ${pack.name.includes('fix')})`);
 
-    require('./checkVersions.js');
-
-    require('./installCopyFiles.js');
-
-    // We only do the basic install when we install, not on fix
-    if (!pack.name.includes('fix')) {
-        const targetDir = process.cwd();
-        execSync('npm install --production', {
-            cwd: targetDir,
-            stdio: 'inherit'
-        });
-    }
-    require('./installSetup.js');
-
     // fix command for windows
     if (pack.name.includes('fix')) {
         const iobrokerDir = path.join(process.cwd(), 'iobroker-data');
@@ -79,4 +65,18 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
             }
         }
     }
+
+    require('./checkVersions.js');
+
+    require('./installCopyFiles.js');
+
+    // We only do the basic install when we install, not on fix
+    if (!pack.name.includes('fix')) {
+        const targetDir = process.cwd();
+        execSync('npm install --production', {
+            cwd: targetDir,
+            stdio: 'inherit'
+        });
+    }
+    require('./installSetup.js');
 }

@@ -1,6 +1,11 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+
+### __WORK IN PROGRESS__
+* Optimize Windows installer script
+* Doe JSONL DB compression earlier in the windows installer flow  
+
 ## 4.2.1 (2022-12-22)
 * Catched some errors when executed in wrong directory on windows
 
