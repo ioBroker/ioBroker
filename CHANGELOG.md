@@ -2,7 +2,7 @@
 <!-- ## **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+## **WORK IN PROGRESS**
 * Optimize Windows installer script
 * Doe JSONL DB compression earlier in the windows installer flow  
 
