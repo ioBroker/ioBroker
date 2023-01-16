@@ -2,7 +2,6 @@
 :: Automatically check & get admin rights
 :::::::::::::::::::::::::::::::::::::::::
 @echo off
-CLS
 ECHO.
 ECHO =============================
 ECHO Running Admin shell
