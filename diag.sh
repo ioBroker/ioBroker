@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-01-02"; #version of this script
+SKRIPTV="2023-01-20"; #version of this script
 NODERECOM="16";  #recommended node version
 NPMRECOM="8";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -249,6 +249,9 @@ echo -e "ioBroker Status: \t`iobroker status`";
 echo "";
 echo "Status admin:";
 iobroker list instances | grep admin.
+echo "";
+echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
+echo -e "Active iob-Instances: \t`iob list instances | grep ^+ | wc -l`"; 
 echo "";
 echo -e "Pending iob updates: \t`iob update -u | grep -c 'Updatable\|Updateable'`";
 echo "";
