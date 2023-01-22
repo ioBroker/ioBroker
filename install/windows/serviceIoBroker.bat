@@ -2,7 +2,6 @@
 :: Automatically check & get admin rights
 :::::::::::::::::::::::::::::::::::::::::
 @echo off
-CLS
 ECHO.
 ECHO =============================
 ECHO Running Admin shell
@@ -39,13 +38,14 @@ cd /d %~dp0
 ::::::::::::::::::::::::::::
 ::START
 ::::::::::::::::::::::::::::
-if '%1' == 'start' %WINDIR%\system32\net.exe start ioBroker
-if '%1' == 'stop' %WINDIR%\system32\net.exe stop ioBroker
+call setEnvIobServiceName.bat
+if '%1' == 'start' %WINDIR%\system32\net.exe start %iobServiceName%
+if '%1' == 'stop' %WINDIR%\system32\net.exe stop %iobServiceName%
 if '%1' == '' (
-	%WINDIR%\system32\net.exe stop ioBroker
-	%WINDIR%\system32\net.exe start ioBroker
+	%WINDIR%\system32\net.exe stop %iobServiceName%
+	%WINDIR%\system32\net.exe start %iobServiceName%
 )
 if '%1' == 'restart' (
-	%WINDIR%\system32\net.exe stop ioBroker
-	%WINDIR%\system32\net.exe start ioBroker
+	%WINDIR%\system32\net.exe stop %iobServiceName%
+	%WINDIR%\system32\net.exe start %iobServiceName%
 )
