@@ -21,7 +21,7 @@ const yargs = require('yargs')
 
 const fs = require('fs-extra');
 const path = require('path');
-const { execSync }  = require('child_process');
+const { execSync } = require('child_process');
 const tools = require('./tools.js');
 
 /** The location of this module's root dir. E.g. /opt/iobroker */
@@ -101,7 +101,7 @@ function setupWindows(callback) {
     console.log(cmd);
 
     try {
-        execSync(cmd, {stdio: 'inherit'});
+        execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
         console.log('Error when installing Windows Service Library: ' + error);
         callback && callback(error.code);
@@ -124,21 +124,25 @@ function setupWindows(callback) {
     }
 
     try {
-        execSync(`node "${path.join(rootDir, 'install.js')}"`, {stdio: 'inherit'});
+        execSync(`node "${path.join(rootDir, 'install.js')}"`, { stdio: 'inherit' });
     } catch (error) {
         console.log('Error when registering ioBroker as service: ' + error);
         return callback && callback(error.code);
     }
 
     // start instance
-    execSync('serviceIoBroker.bat start', {
-        stdio: 'inherit',
-        cwd: process.cwd(),
-    });
+    // On some systems it takes a while until the service is fully created.
+    // During this time starting the service raises an error, so we wait 5 seconds to be sure.
+    setTimeout(function () {
+        execSync('serviceIoBroker.bat start', {
+            stdio: 'inherit',
+            cwd: process.cwd(),
+        });
 
-    console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
-    console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
-    callback && callback();
+        console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
+        console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
+        callback && callback();
+    }, 5000);
 }
 
 function log(text) {
