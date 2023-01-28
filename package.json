@@ -3,7 +3,8 @@
   "version": "4.2.1",
   "optionalDependencies": {
     "node-windows": "1.0.0-beta.8",
-	"dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "windows-shortcuts": "^0.1.6"
   },
   "publishConfig": {
     "access": "public"

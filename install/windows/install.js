@@ -1,9 +1,13 @@
 'use strict';
 
 const Service = require('node-windows').Service;
+const Shortcuts = require('./shortcuts')
 
 // Get environment variables from file .env 
 require('dotenv').config();
+
+// Create the according Windows startmenu entries
+Shortcuts.createStartMenu();
 
 // Create a new service object
 const svc = new Service({
