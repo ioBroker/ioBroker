@@ -120,7 +120,7 @@ function createStartMenu() {
         'echo.\n' +
         `call "${nodeVarsBat}"\n` +
         `cd ${process.cwd()}\n` +
-        `${path.parse(process.cwd()).root.replace('\\', '')}\n`;
+        `${path.parse(process.cwd()).root.replace(/\\/g, '')}\n`;
 
     try {
         fs.writeFileSync(ioNodeVarsBat, content);
