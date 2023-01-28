@@ -1,7 +1,7 @@
 'use strict';
 
 const Service = require('node-windows').Service;
-const Shortcuts = require('./shortcuts')
+const Shortcuts = require('./shortcuts');
 
 // Get environment variables from file .env 
 require('dotenv').config();
