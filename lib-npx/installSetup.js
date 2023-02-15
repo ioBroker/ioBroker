@@ -78,6 +78,8 @@ const debug = !!process.env.IOB_DEBUG;
 
 function setupWindows(callback) {
     const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
+    const dotenvVersion = require('../package.json').optionalDependencies['dotenv'].replace(/[~^<>=]+]/g, '');
+    const windowsShortcutsVersion = require('../package.json').optionalDependencies['windows-shortcuts'].replace(/[~^<>=]+]/g, '');
 
     const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
     fs.writeFileSync(iobrokerRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
@@ -94,16 +96,39 @@ function setupWindows(callback) {
     // Copy the files from /install/windows to the root dir
     tools.copyFilesRecursiveSync(path.join(rootDir, 'install/windows'), rootDir);
 
-    // Call npm install node-windows
+    // Call npm install node-windows, dotenv and windows-shortcuts
     // js-controller installed as npm
     const npmRootDir = rootDir.replace(/\\/g, '/');
-    const cmd = `npm install node-windows@${nodeWindowsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+
+    let cmd = `npm install node-windows@${nodeWindowsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
     console.log(cmd);
 
     try {
         execSync(cmd, {stdio: 'inherit'});
     } catch (error) {
         console.log('Error when installing Windows Service Library: ' + error);
+        callback && callback(error.code);
+        return;
+    }
+
+    cmd = `npm install dotenv@${dotenvVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+    console.log(cmd);
+
+    try {
+        execSync(cmd, {stdio: 'inherit'});
+    } catch (error) {
+        console.log('Error when installing dotenv Library: ' + error);
+        callback && callback(error.code);
+        return;
+    }
+
+    cmd = `npm install windows-shortcuts@${windowsShortcutsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+    console.log(cmd);
+
+    try {
+        execSync(cmd, {stdio: 'inherit'});
+    } catch (error) {
+        console.log('Error when installing Windows Shortcuts Library: ' + error);
         callback && callback(error.code);
         return;
     }
