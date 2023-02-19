@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-01-02"; #version of this script
+SKRIPTV="2023-02-19"; #version of this script
 NODERECOM="16";  #recommended node version
 NPMRECOM="8";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -37,6 +37,7 @@ read -n 1 -s
 	clear;
 echo "";
 echo -e "\033[33m======== Start marking the full check here =========\033[0m";
+echo "";
 echo "\`\`\`";
 echo -e "Skript v.`echo $SKRIPTV`"
 echo "";
@@ -102,7 +103,7 @@ echo "";
 echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
 echo "";
-echo -e "\033[32mMessages in dmesg:\033[0m";
+echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
 sudo dmesg -T | grep -i ext4;
 echo "";
 echo -e "\033[32mShow mounted filesystems (real ones only):\033[0m";
@@ -235,11 +236,19 @@ echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "fa
 echo -e "Boot Target: \t\t`systemctl get-default`";
 echo "";
 echo -e "Pending OS-Updates: \t`echo $APT`";
+echo -e "Pending iob updates: \t`iob update -u | grep -c 'Updatable\|Updateable'`";
 echo "";
 echo -e "Nodejs-Installation: \t`type -P nodejs` \t`nodejs -v`";
 echo -e "\t\t\t`type -P node` \t\t`node -v`";
 echo -e "\t\t\t`type -P npm` \t\t`npm -v`";
 echo -e "\t\t\t`type -P npx` \t\t`npx -v`";
+echo "";
+# echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
+echo "MEMORY: ";
+        free -ht --mega;
+echo "";
+echo -e "Active iob-Instances: \t`iob list instances | grep ^+ | wc -l`";
+	iob repo list | tail -n1;
 echo "";
 echo -e "ioBroker Core: \t\tjs-controller \t\t`iob -v`";
 echo -e "\t\t\tadmin \t\t\t`iob version admin`";
@@ -247,12 +256,8 @@ echo "";
 echo -e "ioBroker Status: \t`iobroker status`";
 # iobroker status;
 echo "";
-echo "Status admin:";
-iobroker list instances | grep admin.
-echo "";
-echo -e "Pending iob updates: \t`iob update -u | grep -c 'Updatable\|Updateable'`";
-echo "";
-iob repo list | tail -n1;
+echo "Status admin and web instance:";
+iobroker list instances | grep 'admin.\|web.'
 echo "";
 echo -e "Objects: \t\t`echo $IOBOBJECTS`";
 echo -e "States: \t\t`echo $IOBSTATES`";
@@ -265,5 +270,6 @@ echo "";
 echo "";
 echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
+echo "";
 unset LC_ALL
 exit;
