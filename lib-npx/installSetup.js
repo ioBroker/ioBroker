@@ -164,6 +164,9 @@ function setupWindows(callback) {
             cwd: process.cwd(),
         });
 
+        // we create a file to signalize to the Windows MSI installer, that the installation process ran til the end
+        fs.createFileSync('./instDone');
+
         console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
         console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
         callback && callback();
