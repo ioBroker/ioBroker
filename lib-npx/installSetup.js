@@ -21,7 +21,7 @@ const yargs = require('yargs')
 
 const fs = require('fs-extra');
 const path = require('path');
-const { execSync }  = require('child_process');
+const { execSync } = require('child_process');
 const tools = require('./tools.js');
 
 /** The location of this module's root dir. E.g. /opt/iobroker */
@@ -78,6 +78,8 @@ const debug = !!process.env.IOB_DEBUG;
 
 function setupWindows(callback) {
     const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
+    const dotenvVersion = require('../package.json').optionalDependencies['dotenv'].replace(/[~^<>=]+]/g, '');
+    const windowsShortcutsVersion = require('../package.json').optionalDependencies['windows-shortcuts'].replace(/[~^<>=]+]/g, '');
 
     const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
     fs.writeFileSync(iobrokerRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
@@ -94,16 +96,39 @@ function setupWindows(callback) {
     // Copy the files from /install/windows to the root dir
     tools.copyFilesRecursiveSync(path.join(rootDir, 'install/windows'), rootDir);
 
-    // Call npm install node-windows
+    // Call npm install node-windows, dotenv and windows-shortcuts
     // js-controller installed as npm
     const npmRootDir = rootDir.replace(/\\/g, '/');
-    const cmd = `npm install node-windows@${nodeWindowsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+
+    let cmd = `npm install node-windows@${nodeWindowsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+    console.log(cmd);
+
+    try {
+        execSync(cmd, { stdio: 'inherit' });
+    } catch (error) {
+        console.log('Error when installing Windows Service Library: ' + error);
+        callback && callback(error.code);
+        return;
+    }
+
+    cmd = `npm install dotenv@${dotenvVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
     console.log(cmd);
 
     try {
         execSync(cmd, {stdio: 'inherit'});
     } catch (error) {
-        console.log('Error when installing Windows Service Library: ' + error);
+        console.log('Error when installing dotenv Library: ' + error);
+        callback && callback(error.code);
+        return;
+    }
+
+    cmd = `npm install windows-shortcuts@${windowsShortcutsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+    console.log(cmd);
+
+    try {
+        execSync(cmd, {stdio: 'inherit'});
+    } catch (error) {
+        console.log('Error when installing Windows Shortcuts Library: ' + error);
         callback && callback(error.code);
         return;
     }
@@ -124,21 +149,28 @@ function setupWindows(callback) {
     }
 
     try {
-        execSync(`node "${path.join(rootDir, 'install.js')}"`, {stdio: 'inherit'});
+        execSync(`node "${path.join(rootDir, 'install.js')}"`, { stdio: 'inherit' });
     } catch (error) {
         console.log('Error when registering ioBroker as service: ' + error);
         return callback && callback(error.code);
     }
 
     // start instance
-    execSync('serviceIoBroker.bat start', {
-        stdio: 'inherit',
-        cwd: process.cwd(),
-    });
+    // On some systems it takes a while until the service is fully created.
+    // During this time starting the service raises an error, so we wait 5 seconds to be sure.
+    setTimeout(function () {
+        execSync('serviceIoBroker.bat start', {
+            stdio: 'inherit',
+            cwd: process.cwd(),
+        });
 
-    console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
-    console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
-    callback && callback();
+        // we create a file to signalize to the Windows MSI installer, that the installation process ran til the end
+        fs.createFileSync('./instDone');
+
+        console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
+        console.log('To see the outputs do not start the service, but write "node node_modules/iobroker.js-controller/controller"');
+        callback && callback();
+    }, 5000);
 }
 
 function log(text) {

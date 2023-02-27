@@ -8,6 +8,7 @@ const platform = require('os').platform();
 const { execSync, exec }  = require('child_process');
 const pack = require('../package.json');
 const semver = require('semver');
+const fs = require('fs-extra');
 
 function runLinux(isFix) {
     console.log(`Linux installation starting... (fixing = ${isFix})`);
@@ -46,6 +47,15 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
 
 } else {
     console.log(`Windows installation starting... (fixing = ${pack.name.includes('fix')})`);
+
+    // first of all we remove the file which indicates that the installation is completed
+    // this files is used to synchronise with the Windows MSI installer.
+    try {
+        fs.unlinkSync('./instDone');
+    }
+    catch(e) {
+        // nothing to do here, file did not exist
+    }
 
     // fix command for windows
     if (pack.name.includes('fix')) {
