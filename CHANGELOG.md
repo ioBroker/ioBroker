@@ -1,9 +1,14 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+
+### __WORK IN PROGRESS__
+* Also create Startmenu entries for Windows installation
+* Add option to specify the Windows service name for Windows installation
+
 ## 4.2.2 (2023-01-14)
 * Optimize Windows installer script
-* Doe JSONL DB compression earlier in the windows installer flow
+* Do JSONL DB compression earlier in the windows installer flow
 
 ## 4.2.1 (2022-12-22)
 * Catched some errors when executed in wrong directory on windows
