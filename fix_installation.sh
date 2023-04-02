@@ -123,7 +123,8 @@ fix_dir_permissions
 print_step "Check and cleanup npm temporary directories" 3 "$NUM_STEPS"
 
 # check for npm left over temporary directories
-$SUDOX find "$IOB_DIR/node_modules" -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \; && echo "Done."
+$SUDOX find "$IOB_DIR/node_modules" -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \; &> /dev/null
+echo "Done."
 
 # ########################################################
 print_step "Database maintenance" 4 "$NUM_STEPS"
