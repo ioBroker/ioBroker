@@ -5,9 +5,9 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-02-19"; #version of this script
-NODERECOM="16";  #recommended node version
-NPMRECOM="8";    #recommended npm version
+SKRIPTV="2023-04-02"; #version of this script
+NODERECOM="18";  #recommended node version
+NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
 DOCKER=/opt/scripts/.docker_config/.thisisdocker;
 APT=0;
@@ -43,12 +43,12 @@ echo -e "Skript v.`echo $SKRIPTV`"
 echo "";
 echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
 grep Model /proc/cpuinfo;
-echo -e "Architecture: \t`uname -m`";
+echo -e "Architecture    : `uname -m`";
 
 if [ -f "$DOCKER" ]; then
-    echo -e "Docker: \t`cat /opt/scripts/.docker_config/.thisisdocker`"
+    echo -e "Docker          : `cat /opt/scripts/.docker_config/.thisisdocker`"
 else
-    echo -e "Docker: \tfalse"
+    echo -e "Docker          : false"
 fi;
 # Alternativer DockerCheck - Nicht getestet:
 #
@@ -60,9 +60,9 @@ fi;
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
 if [ "$SYSTDDVIRT" != "" ]; then
-    echo -e "Virtualization: `systemd-detect-virt`"
+    echo -e "Virtualization  : `systemd-detect-virt`"
 else
-    echo "Virtualization: Unknown (buanet/Synology?)"
+    echo "Virtualization  : Unknown (buanet/Synology?)"
 fi;
 	lsb_release -idrc;
 echo "";
@@ -73,10 +73,7 @@ echo "Systemuptime and Load:";
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo "";
 echo -e "\033[34;107m*** Time and Time Zones ***\033[0m";
-        date -u;
-        date;
-        date +"%Z %z";
-        cat /etc/timezone;
+        timedatectl;
 echo "";
 echo -e "\033[34;107m*** User and Groups ***\033[0m";
         whoami;
@@ -145,7 +142,20 @@ echo "";
 # echo "The recommended versions for ioBroker are nodeJS v$NODERECOM / npm v$NPMRECOM!";
 # echo "Don't trust the doctor if he recommends different versions!"
 # echo "";
-echo -e "\033[32mTemp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l`";
+
+ANZNPMTMP=`find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l`;
+echo -e "\033[32mTemp directories causing npm8 problem:\033[0m "$ANZNPMTMP"";
+if [[ $ANZNPMTMP -gt 0 ]]
+then 
+	echo -e "Some problems detected, please run \e[031miob fix\e[0m";
+else
+	echo "No problems detected"
+fi;
+
+# echo "";
+# echo -e "Temp directories being cleaned up now `find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \;`";
+# find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \ &> /dev/null;
+# echo -e "\033[32m1 - Temp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium'>e;
 echo "";
 echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
@@ -229,8 +239,9 @@ elif [ $INSTENV -eq 1 ]; then
 else
         echo "Native";
 fi;)
+echo -e "Kernel: \t\t`uname -r`";
 echo -e "Installation: \t\t`echo $INSTENV2`";
-echo -e "Timezone: \t\t`cat /etc/timezone`";
+echo -e "Timezone: \t\t`timedatectl | grep zone | cut -c28-80`";
 echo -e "User-ID: \t\t`echo $EUID`";
 echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi`";
 echo -e "Boot Target: \t\t`systemctl get-default`";
@@ -242,6 +253,8 @@ echo -e "Nodejs-Installation: \t`type -P nodejs` \t`nodejs -v`";
 echo -e "\t\t\t`type -P node` \t\t`node -v`";
 echo -e "\t\t\t`type -P npm` \t\t`npm -v`";
 echo -e "\t\t\t`type -P npx` \t\t`npx -v`";
+echo -e "";
+echo -e "Recommended versions are nodejs "$NODERECOM".x.y and npm "$NPMRECOM".x.y";
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
 echo "MEMORY: ";
@@ -268,6 +281,16 @@ find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*objects\* -exec du 
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -sh {} + |sort -rh | head -n 5;
 echo "";
 echo "";
+if [[ $ANZNPMTMP -gt 0 ]]
+then
+	echo -e "*********************************************************************";
+	echo -e "Some problems detected, please run \e[031miob fix\e[0m and try to have them fixed";
+	echo -e "*********************************************************************";
+	echo -e ""
+else
+        echo ""
+fi;
+
 echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
 echo "";
