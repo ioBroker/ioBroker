@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2023-02-19
+* Restructured Summary and added memory state
+
 ## 2023-01-02
 * Added npx version to diag command
 * Added latest dmesg content to diag command
