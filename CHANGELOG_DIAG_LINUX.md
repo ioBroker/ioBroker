@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2023-04-02
+* Add checks for npm directory issues and tell the user to run the fixer
+
 ## 2023-02-19
 * Restructured Summary and added memory state
 
