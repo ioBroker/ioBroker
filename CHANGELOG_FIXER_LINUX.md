@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2023-04-02
+* Add check for left over npm temporary directories and clean them up if found
+
 ## 2022-12-22
 * Adjustments to run diagnostic script differently
 

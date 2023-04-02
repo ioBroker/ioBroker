@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2022-12-22" # format YYYY-MM-DD
+FIXER_VERSION="2023-04-02" # format YYYY-MM-DD
 
 compress_jsonl_databases() {
     echo "Checking for uncompressed JSONL databases... This might take a while!"
@@ -74,7 +74,7 @@ else
 	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
-NUM_STEPS=4
+NUM_STEPS=5
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
@@ -120,13 +120,19 @@ change_npm_command_root
 fix_dir_permissions
 
 # ########################################################
-print_step "Database maintenance" 3 "$NUM_STEPS"
+print_step "Check and cleanup npm temporary directories" 3 "$NUM_STEPS"
+
+# check for npm left over temporary directories
+$SUDOX find "$IOB_DIR/node_modules" -type d -iname ".*-????????" ! -iname ".local-chromium" -exec "$SUDOX" rm -rf "{}" \;
+
+# ########################################################
+print_step "Database maintenance" 4 "$NUM_STEPS"
 
 # Compress the JSONL database - if needed
 compress_jsonl_databases
 
 # ########################################################
-print_step "Checking autostart" 4 "$NUM_STEPS"
+print_step "Checking autostart" 5 "$NUM_STEPS"
 
 # First delete all possible remains of an old installation
 INITD_FILE="/etc/init.d/iobroker.sh"
