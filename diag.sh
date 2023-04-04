@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-04-02"; #version of this script
+SKRIPTV="2023-04-04"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -73,7 +73,16 @@ echo "Systemuptime and Load:";
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo "";
 echo -e "\033[34;107m*** Time and Time Zones ***\033[0m";
-        timedatectl;
+
+if [ -f "$DOCKER" ]; then
+	date -u;
+	date;
+	date +"%Z %z";
+	cat /etc/timezone;
+else
+    timedatectl;
+fi;
+
 echo "";
 echo -e "\033[34;107m*** User and Groups ***\033[0m";
         whoami;
@@ -90,7 +99,11 @@ else
 fi
 echo -e "Desktop: \t$DESKTOP_SESSION";
 echo -e "Terminal: \t$XDG_SESSION_TYPE";
-echo -e "Boot Target: \t`systemctl get-default`";
+if [ -f "$DOCKER" ]; then
+	echo -e "";
+else
+    	echo -e "Boot Target: \t`systemctl get-default`";
+fi;
 echo "";
 echo -e "\033[34;107m*** MEMORY ***\033[0m";
         free -th --mega;
@@ -114,6 +127,12 @@ echo -e "\033[32mFiles in neuralgic directories:\033[0m";
 echo "";
 echo -e  "\033[32m/var:\033[0m";
         sudo du -h /var/ | sort -rh | head -5;
+echo -e "";
+if [ -f "$DOCKER" ]; then
+    echo -e ""
+else
+    journalctl --disk-usage;
+fi;
 echo "";
 echo -e "\033[32m/opt/iobroker/backups:\033[0m";
         du -h /opt/iobroker/backups/ | sort -rh | head -5;
@@ -241,10 +260,21 @@ else
 fi;)
 echo -e "Kernel: \t\t`uname -r`";
 echo -e "Installation: \t\t`echo $INSTENV2`";
-echo -e "Timezone: \t\t`timedatectl | grep zone | cut -c28-80`";
+
+if [ -f "$DOCKER" ]; then
+    echo -e "Timezone: \t\t`cat /etc/timezone`"
+else
+    echo -e "Timezone: \t\t`timedatectl | grep zone | cut -c28-80`";
+fi;
+
 echo -e "User-ID: \t\t`echo $EUID`";
 echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi`";
-echo -e "Boot Target: \t\t`systemctl get-default`";
+if [ -f "$DOCKER" ]; then 
+	echo -e "";
+else 
+	echo -e "Boot Target: \t\t`systemctl get-default`";
+fi;
+
 echo "";
 echo -e "Pending OS-Updates: \t`echo $APT`";
 echo -e "Pending iob updates: \t`iob update -u | grep -c 'Updatable\|Updateable'`";
@@ -286,7 +316,7 @@ then
 	echo -e "*********************************************************************";
 	echo -e "Some problems detected, please run \e[031miob fix\e[0m and try to have them fixed";
 	echo -e "*********************************************************************";
-	echo -e ""
+	echo -e "";
 else
         echo ""
 fi;
