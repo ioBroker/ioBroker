@@ -17,7 +17,15 @@ if [%1]==[fix] (
                     node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
                 )
             ) else (
-                node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+				if [%1]==[restart] (
+					if [%2]==[] (
+						call serviceIoBroker.bat restart
+					) else (
+						node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+					)
+				) else (
+					node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+				)
             )
         )
     ) else (
