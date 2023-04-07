@@ -1,2 +1,2 @@
 @echo off
-iob.bat %1 %2 %3 %4 %5 %6 %7 %8
+call iob.bat %1 %2 %3 %4 %5 %6 %7 %8
