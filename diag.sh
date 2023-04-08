@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-04-04"; #version of this script
+SKRIPTV="2023-04-08"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -72,6 +72,15 @@ echo "Systemuptime and Load:";
         uptime;
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo "";
+# RASPBERRY only
+	if [[ $(which "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+		echo "Raspberry only:";
+		vcgencmd get_throttled 2> /dev/null;
+		echo "Other values than 0x0 hint to temperature/voltage problems";
+		vcgencmd measure_temp;
+		vcgencmd measure_volts;
+fi
+echo "";
 echo -e "\033[34;107m*** Time and Time Zones ***\033[0m";
 
 if [ -f "$DOCKER" ]; then
@@ -109,6 +118,14 @@ echo -e "\033[34;107m*** MEMORY ***\033[0m";
         free -th --mega;
 echo "";
         vmstat -S M -s | head -n 10;
+
+# RASPBERRY only
+if [[ $(which "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+	echo "";
+	echo "Raspberry only:";
+      	vcgencmd mem_oom;
+fi
+
 echo "";
 echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
@@ -180,6 +197,8 @@ echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
 echo -e "\033[32mioBroker Status\033[0m";
 iobroker status;
+echo "";
+iobroker status all | grep MULTIHOSTSERVICE/enabled
 echo "";
 echo -e "\033[32mCore adapters versions\033[0m"
 echo -e "js-controller: \t`iob -v`";
@@ -297,10 +316,11 @@ echo -e "ioBroker Core: \t\tjs-controller \t\t`iob -v`";
 echo -e "\t\t\tadmin \t\t\t`iob version admin`";
 echo "";
 echo -e "ioBroker Status: \t`iobroker status`";
-# iobroker status;
+echo "";
+iobroker status all | grep MULTIHOSTSERVICE/enabled;
 echo "";
 echo "Status admin and web instance:";
-iobroker list instances | grep 'admin.\|web.'
+iobroker list instances | grep 'admin.\|.web.'
 echo "";
 echo -e "Objects: \t\t`echo $IOBOBJECTS`";
 echo -e "States: \t\t`echo $IOBSTATES`";
