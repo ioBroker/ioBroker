@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-04-04"; #version of this script
+SKRIPTV="2023-04-15"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -72,6 +72,15 @@ echo "Systemuptime and Load:";
         uptime;
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo "";
+# RASPBERRY only
+if [[ $(which "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+	echo "Raspberry only:";
+	vcgencmd get_throttled 2> /dev/null;
+	echo "Other values than 0x0 hint to temperature/voltage problems";
+	vcgencmd measure_temp;
+	vcgencmd measure_volts;
+fi
+echo "";
 echo -e "\033[34;107m*** Time and Time Zones ***\033[0m";
 
 if [ -f "$DOCKER" ]; then
@@ -109,6 +118,14 @@ echo -e "\033[34;107m*** MEMORY ***\033[0m";
         free -th --mega;
 echo "";
         vmstat -S M -s | head -n 10;
+
+# RASPBERRY only
+if [[ $(which "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+	echo "";
+	echo "Raspberry only:";
+      	vcgencmd mem_oom;
+fi
+
 echo "";
 echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
@@ -150,6 +167,46 @@ echo -e "`type -P nodejs` \t`nodejs -v`";
 echo -e "`type -P node` \t\t`node -v`";
 echo -e "`type -P npm` \t\t`npm -v`";
 echo -e "`type -P npx` \t\t`npx -v`";
+
+PATHNODEJS=$(type -p nodejs);
+PATHNODE=$(type -p node);
+PATHNPM=$(type -p npm);
+PATHNPX=$(type -p npx);
+VERNODEJS=$(nodejs -v);
+VERNODE=$(node -v);
+VERNPM=$(npm -v);
+VERNPX=$(npx -v);
+if
+        [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $PATHNODE != "/usr/bin/node" ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $PATHNPM != "/usr/bin/npm" ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $PATHNPX != "/usr/bin/npx" ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $VERNODEJS != $VERNODE ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $VERNPM != $VERNPX ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+
+else
+                echo "";
+fi
+
+
+
 echo "";
         apt-cache policy nodejs;
 echo "";
@@ -180,6 +237,8 @@ echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
 echo -e "\033[32mioBroker Status\033[0m";
 iobroker status;
+echo "";
+iobroker status all | grep MULTIHOSTSERVICE/enabled
 echo "";
 echo -e "\033[32mCore adapters versions\033[0m"
 echo -e "js-controller: \t`iob -v`";
@@ -266,7 +325,6 @@ if [ -f "$DOCKER" ]; then
 else
     echo -e "Timezone: \t\t`timedatectl | grep zone | cut -c28-80`";
 fi;
-
 echo -e "User-ID: \t\t`echo $EUID`";
 echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi`";
 if [ -f "$DOCKER" ]; then 
@@ -285,6 +343,36 @@ echo -e "\t\t\t`type -P npm` \t\t`npm -v`";
 echo -e "\t\t\t`type -P npx` \t\t`npx -v`";
 echo -e "";
 echo -e "Recommended versions are nodejs "$NODERECOM".x.y and npm "$NPMRECOM".x.y";
+
+if  	
+	[[ $PATHNODEJS != "/usr/bin/nodejs" ]];  
+	then
+		echo "*** nodejs is NOT correctly installed ***";
+	elif 
+	[[ $PATHNODE != "/usr/bin/node" ]];	
+	then  	
+		echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $PATHNPM != "/usr/bin/npm" ]];
+	then          
+      		echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $PATHNPX != "/usr/bin/npx" ]];
+        then
+		echo "*** nodejs is NOT correctly installed ***";
+	elif
+        [[ $VERNODEJS != $VERNODE ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+        elif
+        [[ $VERNPM != $VERNPX ]];
+        then
+                echo "*** nodejs is NOT correctly installed ***";
+
+else 
+		echo "Your nodejs installation is correct";
+fi 
+
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
 echo "MEMORY: ";
@@ -297,10 +385,10 @@ echo -e "ioBroker Core: \t\tjs-controller \t\t`iob -v`";
 echo -e "\t\t\tadmin \t\t\t`iob version admin`";
 echo "";
 echo -e "ioBroker Status: \t`iobroker status`";
-# iobroker status;
 echo "";
+# iobroker status all | grep MULTIHOSTSERVICE/enabled;
 echo "Status admin and web instance:";
-iobroker list instances | grep 'admin.\|web.'
+iobroker list instances | grep 'admin.\|.web.'
 echo "";
 echo -e "Objects: \t\t`echo $IOBOBJECTS`";
 echo -e "States: \t\t`echo $IOBSTATES`";
