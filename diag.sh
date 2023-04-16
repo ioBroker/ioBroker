@@ -1,11 +1,11 @@
 #!/bin/bash
-# iobroker diagnostics
+# ioBroker diagnostics
 # written to help getting information about the environment the ioBroker installation is running in
 clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-04-15"; #version of this script
+SKRIPTV="2023-04-16"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -222,7 +222,7 @@ echo "";
 ANZNPMTMP=`find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l`;
 echo -e "\033[32mTemp directories causing npm8 problem:\033[0m "$ANZNPMTMP"";
 if [[ $ANZNPMTMP -gt 0 ]]
-then 
+then
 	echo -e "Some problems detected, please run \e[031miob fix\e[0m";
 else
 	echo "No problems detected"
@@ -327,9 +327,9 @@ else
 fi;
 echo -e "User-ID: \t\t`echo $EUID`";
 echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi`";
-if [ -f "$DOCKER" ]; then 
+if [ -f "$DOCKER" ]; then
 	echo -e "";
-else 
+else
 	echo -e "Boot Target: \t\t`systemctl get-default`";
 fi;
 
@@ -344,17 +344,17 @@ echo -e "\t\t\t`type -P npx` \t\t`npx -v`";
 echo -e "";
 echo -e "Recommended versions are nodejs "$NODERECOM".x.y and npm "$NPMRECOM".x.y";
 
-if  	
-	[[ $PATHNODEJS != "/usr/bin/nodejs" ]];  
+if
+	[[ $PATHNODEJS != "/usr/bin/nodejs" ]];
 	then
 		echo "*** nodejs is NOT correctly installed ***";
-	elif 
-	[[ $PATHNODE != "/usr/bin/node" ]];	
-	then  	
+	elif
+	[[ $PATHNODE != "/usr/bin/node" ]];
+	then
 		echo "*** nodejs is NOT correctly installed ***";
         elif
         [[ $PATHNPM != "/usr/bin/npm" ]];
-	then          
+	then
       		echo "*** nodejs is NOT correctly installed ***";
         elif
         [[ $PATHNPX != "/usr/bin/npx" ]];
@@ -369,9 +369,9 @@ if
         then
                 echo "*** nodejs is NOT correctly installed ***";
 
-else 
+else
 		echo "Your nodejs installation is correct";
-fi 
+fi
 
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";

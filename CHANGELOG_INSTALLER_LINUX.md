@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+## 2023-04-16
+* Install Node.js 18.x by default if no Node.js is installed
+* Replace which commands with type
+
 ## 2022-12-22
 * Adjustments to run diagnostic script differently
 

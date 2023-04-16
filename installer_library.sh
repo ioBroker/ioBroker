@@ -6,8 +6,8 @@ LIBRARY_VERSION="2022-12-09" # format YYYY-MM-DD
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
-NODE_JS_LINUX_URL="https://deb.nodesource.com/setup_16.x"
-NODE_JS_BREW_URL="https://nodejs.org/dist/v14.18.1/node-v16.15.1.pkg"
+NODE_JS_LINUX_URL="https://deb.nodesource.com/setup_18.x"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v18.15.0/node-v18.15.0.pkg"
 
 # ------------------------------
 # test function of the library
