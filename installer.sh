@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2022-12-22" # format YYYY-MM-DD
+INSTALLER_VERSION="2023-04-07" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -48,15 +48,15 @@ print_step "Installing prerequisites" 1 "$NUM_STEPS"
 $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 
 # Install Node.js if it is not installed
-if [[ $(which "node" 2>/dev/null) != *"/node" ]]; then
+if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
 	install_nodejs
 fi
 
 # Check if npm is installed
-if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+if [[ $(type -P "npm" 2>/dev/null) != *"/npm" ]]; then
 	# If not, try to install it
 	install_package npm
-	if [[ $(which "npm" 2>/dev/null) != *"/npm" ]]; then
+	if [[ $(type -P "npm" 2>/dev/null) != *"/npm" ]]; then
 		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
 		exit 1
 	fi
