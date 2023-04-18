@@ -1,5 +1,9 @@
 # Changelog for Linux-Diag-Script
 
+## 2023-04-16
+* Enhanced node.js check
+* Fixed some Docker related compatibility issues
+
 ## 2023-04-02
 * Add checks for npm directory issues and tell the user to run the fixer
 
