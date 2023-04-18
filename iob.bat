@@ -7,20 +7,28 @@ if [%1]==[fix] (
             if [%2]==[] (
                 call serviceIoBroker.bat start
             ) else (
-                node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+                node node_modules/iobroker.js-controller/iobroker.js %*
             )
         ) else (
             if [%1]==[stop] (
                 if [%2]==[] (
                     call serviceIoBroker.bat stop
                 ) else (
-                    node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+                    node node_modules/iobroker.js-controller/iobroker.js %*
                 )
             ) else (
-                node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+				if [%1]==[restart] (
+					if [%2]==[] (
+						call serviceIoBroker.bat restart
+					) else (
+						node node_modules/iobroker.js-controller/iobroker.js %*
+					)
+				) else (
+					node node_modules/iobroker.js-controller/iobroker.js %*
+				)
             )
         )
     ) else (
-        node node_modules/iobroker.js-controller/iobroker.js %1 %2 %3 %4 %5 %6 %7 %8
+        node node_modules/iobroker.js-controller/iobroker.js %*
     )
 )
