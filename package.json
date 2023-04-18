@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "fs-extra": "^10.1.0",
-    "semver": "^7.3.7",
-    "yargs": "^17.5.1"
+    "semver": "^7.5.0",
+    "yargs": "^17.7.1"
   },
   "files": [
     "img/logos/ioBroker_Logo_Long_Vector.svg",
@@ -79,10 +79,10 @@
   "devDependencies": {
     "@alcalzone/release-script": "^3.5.9",
     "@alcalzone/release-script-plugin-license": "^3.5.9",
-    "eslint": "^8.16.0",
-    "mocha": "^10.1.0",
-    "chai": "^4.3.6",
+    "eslint": "^8.38.0",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.7",
     "gulp": "^4.0.2",
-    "ssh2": "^1.10.0"
+    "ssh2": "^1.11.0"
   }
 }

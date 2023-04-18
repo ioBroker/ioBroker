@@ -1,6 +1,9 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## __WORK IN PROGRESS__
+* Handle restart properly in iob.bat and iobroker.bat for Windows
+
 ## 4.3.1 (2023-02-27)
 * Optimize Windows installation
 
