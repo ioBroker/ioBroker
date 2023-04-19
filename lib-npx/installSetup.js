@@ -45,29 +45,37 @@ const jsControllerMainModule = 'node_modules/iobroker.js-controller/iobroker.js'
 
 /** The command line to execute ioBroker */
 const commandLine = `@echo off
-if %1==fix (
+if [%1]==[fix] (
     npx @iobroker/fix
 ) else (
     if exist serviceIoBroker.bat (
-        if %1==start (
+        if [%1]==[start] (
             if [%2]==[] (
                 call serviceIoBroker.bat start
             ) else (
-                node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6 %7 %8
+                node ${jsControllerMainModule} %*
             )
         ) else (
-            if %1==stop (
+            if [%1]==[stop] (
                 if [%2]==[] (
                     call serviceIoBroker.bat stop
                 ) else (
-                    node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6 %7 %8
+                    node ${jsControllerMainModule} %*
                 )
             ) else (
-                node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6 %7 %8
+				if [%1]==[restart] (
+					if [%2]==[] (
+						call serviceIoBroker.bat restart
+					) else (
+						node ${jsControllerMainModule} %*
+					)
+				) else (
+					node ${jsControllerMainModule} %*
+				)
             )
         )
     ) else (
-        node ${jsControllerMainModule} %1 %2 %3 %4 %5 %6 %7 %8
+        node ${jsControllerMainModule} %*
     )
 )`;
 
@@ -115,7 +123,7 @@ function setupWindows(callback) {
     console.log(cmd);
 
     try {
-        execSync(cmd, {stdio: 'inherit'});
+        execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
         console.log('Error when installing dotenv Library: ' + error);
         callback && callback(error.code);
@@ -126,7 +134,7 @@ function setupWindows(callback) {
     console.log(cmd);
 
     try {
-        execSync(cmd, {stdio: 'inherit'});
+        execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
         console.log('Error when installing Windows Shortcuts Library: ' + error);
         callback && callback(error.code);
