@@ -1,8 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-
-## **WORK IN PROGRESS**
+## 4.3.4 (2023-04-20)
 * Handle restart properly in iob.bat and iobroker.bat for Windows
 
 ## 4.3.1 (2023-02-27)
