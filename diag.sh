@@ -1,11 +1,11 @@
 #!/bin/bash
-# ioBroker diagnostics
+# iobroker diagnostics
 # written to help getting information about the environment the ioBroker installation is running in
 clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-04-16"; #version of this script
+SKRIPTV="2023-05-10"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -43,8 +43,8 @@ echo -e "Skript v.`echo $SKRIPTV`"
 echo "";
 echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
 grep Model /proc/cpuinfo;
-echo -e "Architecture    : `uname -m`";
-
+echo -e "Kernel          : `uname -m`";
+echo -e "Userland        : `dpkg --print-architecture`";
 if [ -f "$DOCKER" ]; then
     echo -e "Docker          : `cat /opt/scripts/.docker_config/.thisisdocker`"
 else
@@ -73,7 +73,7 @@ echo "Systemuptime and Load:";
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo "";
 # RASPBERRY only
-if [[ $(which "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
 	echo "Raspberry only:";
 	vcgencmd get_throttled 2> /dev/null;
 	echo "Other values than 0x0 hint to temperature/voltage problems";
@@ -120,7 +120,7 @@ echo "";
         vmstat -S M -s | head -n 10;
 
 # RASPBERRY only
-if [[ $(which "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
 	echo "";
 	echo "Raspberry only:";
       	vcgencmd mem_oom;
@@ -176,30 +176,31 @@ VERNODEJS=$(nodejs -v);
 VERNODE=$(node -v);
 VERNPM=$(npm -v);
 VERNPX=$(npx -v);
+# NODENOTCORR=""\033[0;31m*** nodejs is NOT correctly installed ***\033[0m""
 if
         [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNODE != "/usr/bin/node" ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNPM != "/usr/bin/npm" ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNPX != "/usr/bin/npx" ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $VERNODEJS != $VERNODE ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $VERNPM != $VERNPX ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
 
 else
                 echo "";
@@ -222,7 +223,7 @@ echo "";
 ANZNPMTMP=`find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l`;
 echo -e "\033[32mTemp directories causing npm8 problem:\033[0m "$ANZNPMTMP"";
 if [[ $ANZNPMTMP -gt 0 ]]
-then
+then 
 	echo -e "Some problems detected, please run \e[031miob fix\e[0m";
 else
 	echo "No problems detected"
@@ -238,7 +239,8 @@ echo "";
 echo -e "\033[32mioBroker Status\033[0m";
 iobroker status;
 echo "";
-iobroker status all | grep MULTIHOSTSERVICE/enabled
+iobroker multihost status
+# iobroker status all | grep MULTIHOSTSERVICE/enabled
 echo "";
 echo -e "\033[32mCore adapters versions\033[0m"
 echo -e "js-controller: \t`iob -v`";
@@ -317,9 +319,10 @@ elif [ $INSTENV -eq 1 ]; then
 else
         echo "Native";
 fi;)
-echo -e "Kernel: \t\t`uname -r`";
 echo -e "Installation: \t\t`echo $INSTENV2`";
-
+echo -e "Kernel: \t\t`uname -r`";
+echo -e "Kernel: \t\t`uname -m`";
+echo -e "Userland: \t\t`dpkg --print-architecture`";
 if [ -f "$DOCKER" ]; then
     echo -e "Timezone: \t\t`cat /etc/timezone`"
 else
@@ -327,9 +330,9 @@ else
 fi;
 echo -e "User-ID: \t\t`echo $EUID`";
 echo -e "X-Server: \t\t`if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi`";
-if [ -f "$DOCKER" ]; then
+if [ -f "$DOCKER" ]; then 
 	echo -e "";
-else
+else 
 	echo -e "Boot Target: \t\t`systemctl get-default`";
 fi;
 
@@ -344,34 +347,33 @@ echo -e "\t\t\t`type -P npx` \t\t`npx -v`";
 echo -e "";
 echo -e "Recommended versions are nodejs "$NODERECOM".x.y and npm "$NPMRECOM".x.y";
 
-if
-	[[ $PATHNODEJS != "/usr/bin/nodejs" ]];
+if  	
+	[[ $PATHNODEJS != "/usr/bin/nodejs" ]];  
 	then
 		echo "*** nodejs is NOT correctly installed ***";
-	elif
-	[[ $PATHNODE != "/usr/bin/node" ]];
-	then
-		echo "*** nodejs is NOT correctly installed ***";
+	elif 
+	[[ $PATHNODE != "/usr/bin/node" ]];	
+	then  	
+		echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNPM != "/usr/bin/npm" ]];
-	then
-      		echo "*** nodejs is NOT correctly installed ***";
+	then          
+      		echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $PATHNPX != "/usr/bin/npx" ]];
         then
-		echo "*** nodejs is NOT correctly installed ***";
+		echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
 	elif
         [[ $VERNODEJS != $VERNODE ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
         elif
         [[ $VERNPM != $VERNPX ]];
         then
-                echo "*** nodejs is NOT correctly installed ***";
-
-else
+                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+else 
 		echo "Your nodejs installation is correct";
-fi
+fi 
 
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
