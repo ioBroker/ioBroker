@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-05-10"; #version of this script
+SKRIPTV="2023-05-29"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -42,7 +42,9 @@ echo "\`\`\`";
 echo -e "Skript v.`echo $SKRIPTV`"
 echo "";
 echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
-grep Model /proc/cpuinfo;
+
+if [ -f "$DOCKER" ]; then
+echo -e "Hardware Vendor : `cat /sys/devices/virtual/dmi/id/sys_vendor`";
 echo -e "Kernel          : `uname -m`";
 echo -e "Userland        : `dpkg --print-architecture`";
 if [ -f "$DOCKER" ]; then
@@ -50,6 +52,12 @@ if [ -f "$DOCKER" ]; then
 else
     echo -e "Docker          : false"
 fi;
+
+else 
+hostnamectl;
+fi;
+echo "";
+grep -i model /proc/cpuinfo | tail -1;
 # Alternativer DockerCheck - Nicht getestet:
 #
 # if [ -f /.dockerenv ]; then
@@ -64,9 +72,8 @@ if [ "$SYSTDDVIRT" != "" ]; then
 else
     echo "Virtualization  : Unknown (buanet/Synology?)"
 fi;
-	lsb_release -idrc;
-echo "";
-        cat /etc/os-release;
+echo -e "Kernel          : `uname -m`";
+echo -e "Userland        : `dpkg --print-architecture`";
 echo "";
 echo "Systemuptime and Load:";
         uptime;
@@ -303,7 +310,6 @@ echo "======================= SUMMARY =======================";
 echo -e "\t\t`echo "     "v.$SKRIPTV`"
 echo "";
 echo "";
-echo -e "Operatingsystem: `lsb_release -d | tr -s ' ' | cut -d: -f 2`"
 if [ -f "$DOCKER" ]; then
         INSTENV=2
 elif [ "$SYSTDDVIRT" != "none" ]; then
@@ -317,10 +323,23 @@ if [[ $INSTENV -eq 2 ]]; then
 elif [ $INSTENV -eq 1 ]; then
         echo $SYSTDDVIRT;
 else
-        echo "Native";
+        echo "native";
 fi;)
+if [ -f "$DOCKER" ]; then
+        grep -i model /proc/cpuinfo | tail -1;
+echo -e "Kernel          : `uname -m`";
+echo -e "Userland        : `dpkg --print-architecture`";
+if [ -f "$DOCKER" ]; then
+    echo -e "Docker          : `cat /opt/scripts/.docker_config/.thisisdocker`"
+else
+    echo -e "Docker          : false"
+fi;
+
+else
+hostnamectl;
+fi;
+echo "";
 echo -e "Installation: \t\t`echo $INSTENV2`";
-echo -e "Kernel: \t\t`uname -r`";
 echo -e "Kernel: \t\t`uname -m`";
 echo -e "Userland: \t\t`dpkg --print-architecture`";
 if [ -f "$DOCKER" ]; then
@@ -414,5 +433,6 @@ fi;
 echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
 echo "";
+echo "=== Mark text until here for copying ===";
 unset LC_ALL
 exit;
