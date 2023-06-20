@@ -5,7 +5,7 @@ clear;
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-05-10"; #version of this script
+SKRIPTV="2023-06-20"; #version of this script
 NODERECOM="18";  #recommended node version
 NPMRECOM="9";    #recommended npm version
 XORGTEST=0;      #test for GUI
@@ -42,13 +42,17 @@ echo "\`\`\`";
 echo -e "Skript v.`echo $SKRIPTV`"
 echo "";
 echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
-grep Model /proc/cpuinfo;
+
+if [ -f "$DOCKER" ]; then
+echo -e "Hardware Vendor : `cat /sys/devices/virtual/dmi/id/sys_vendor`";
 echo -e "Kernel          : `uname -m`";
 echo -e "Userland        : `dpkg --print-architecture`";
-if [ -f "$DOCKER" ]; then
-    echo -e "Docker          : `cat /opt/scripts/.docker_config/.thisisdocker`"
+echo -e "Docker          : `cat /opt/scripts/.docker_config/.thisisdocker`"
 else
-    echo -e "Docker          : false"
+	hostnamectl;    
+	echo "";	
+grep -i model /proc/cpuinfo | tail -1;
+echo -e "Docker          : false";
 fi;
 # Alternativer DockerCheck - Nicht getestet:
 #
@@ -62,11 +66,10 @@ SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
 if [ "$SYSTDDVIRT" != "" ]; then
     echo -e "Virtualization  : `systemd-detect-virt`"
 else
-    echo "Virtualization  : Unknown (buanet/Synology?)"
+    echo "Virtualization  : Docker"
 fi;
-	lsb_release -idrc;
-echo "";
-        cat /etc/os-release;
+echo -e "Kernel          : `uname -m`";
+echo -e "Userland        : `dpkg --print-architecture`";
 echo "";
 echo "Systemuptime and Load:";
         uptime;
@@ -80,6 +83,14 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
 	vcgencmd measure_temp;
 	vcgencmd measure_volts;
 fi
+
+if [[ -f "/var/run/reboot-required" ]]; then
+  	echo "";
+	echo "The systems needs to be REBOOTED!";
+  	echo "";
+fi
+
+
 echo "";
 echo -e "\033[34;107m*** Time and Time Zones ***\033[0m";
 
@@ -234,6 +245,8 @@ fi;
 # find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \ &> /dev/null;
 # echo -e "\033[32m1 - Temp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium'>e;
 echo "";
+echo -e "\033[32mErrors in npm tree:\033[0m `cd /opt/iobroker && npm ls -a | grep ERR | wc -l`";
+echo "";
 echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
 echo -e "\033[32mioBroker Status\033[0m";
@@ -303,7 +316,6 @@ echo "======================= SUMMARY =======================";
 echo -e "\t\t`echo "     "v.$SKRIPTV`"
 echo "";
 echo "";
-echo -e "Operatingsystem: `lsb_release -d | tr -s ' ' | cut -d: -f 2`"
 if [ -f "$DOCKER" ]; then
         INSTENV=2
 elif [ "$SYSTDDVIRT" != "none" ]; then
@@ -317,10 +329,23 @@ if [[ $INSTENV -eq 2 ]]; then
 elif [ $INSTENV -eq 1 ]; then
         echo $SYSTDDVIRT;
 else
-        echo "Native";
+        echo "native";
 fi;)
+if [ -f "$DOCKER" ]; then
+        grep -i model /proc/cpuinfo | tail -1;
+echo -e "Kernel          : `uname -m`";
+echo -e "Userland        : `dpkg --print-architecture`";
+if [ -f "$DOCKER" ]; then
+    echo -e "Docker          : `cat /opt/scripts/.docker_config/.thisisdocker`"
+else
+    echo -e "Docker          : false"
+fi;
+
+else
+hostnamectl;
+fi;
+echo "";
 echo -e "Installation: \t\t`echo $INSTENV2`";
-echo -e "Kernel: \t\t`uname -r`";
 echo -e "Kernel: \t\t`uname -m`";
 echo -e "Userland: \t\t`dpkg --print-architecture`";
 if [ -f "$DOCKER" ]; then
@@ -339,6 +364,12 @@ fi;
 echo "";
 echo -e "Pending OS-Updates: \t`echo $APT`";
 echo -e "Pending iob updates: \t`iob update -u | grep -c 'Updatable\|Updateable'`";
+if [[ -f "/var/run/reboot-required" ]]; then
+        echo "";
+        echo "The systems needs to be REBOOTED!";
+        echo "";
+fi
+
 echo "";
 echo -e "Nodejs-Installation: \t`type -P nodejs` \t`nodejs -v`";
 echo -e "\t\t\t`type -P node` \t\t`node -v`";
@@ -390,7 +421,7 @@ echo -e "ioBroker Status: \t`iobroker status`";
 echo "";
 # iobroker status all | grep MULTIHOSTSERVICE/enabled;
 echo "Status admin and web instance:";
-iobroker list instances | grep 'admin.\|.web.'
+iobroker list instances | grep 'admin.\|system.adapter.web.'
 echo "";
 echo -e "Objects: \t\t`echo $IOBOBJECTS`";
 echo -e "States: \t\t`echo $IOBSTATES`";
@@ -414,5 +445,6 @@ fi;
 echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
 echo "";
+echo "=== Mark text until here for copying ===";
 unset LC_ALL
 exit;
