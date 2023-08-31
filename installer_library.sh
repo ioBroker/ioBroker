@@ -1,12 +1,12 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2022-12-09" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-08-31" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
-NODE_JS_LINUX_URL="https://deb.nodesource.com/setup_18.x"
+NODE_MAJOR=18
 NODE_JS_BREW_URL="https://nodejs.org/dist/v18.15.0/node-v18.15.0.pkg"
 
 # ------------------------------
@@ -792,9 +792,11 @@ install_nodejs() {
 
 	if [ "$INSTALL_CMD" = "yum" ]; then
 		if [ "$IS_ROOT" = true ]; then
-			curl -sL $NODE_JS_LINUX_URL | bash -
+		    	yum install https://rpm.nodesource.com/pub_$NODE_MAJOR.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+            		yum install nodejs -y
 		else
-			curl -sL $NODE_JS_LINUX_URL | sudo -E bash -
+			sudo yum install https://rpm.nodesource.com/pub_$NODE_MAJOR.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
+            		sudo yum install nodejs -y
 		fi
 	elif [ "$INSTALL_CMD" = "pkg" ]; then
 		$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS node
@@ -805,9 +807,17 @@ install_nodejs() {
 		exit 1
 	else
 		if [ "$IS_ROOT" = true ]; then
-			curl -sL $NODE_JS_LINUX_URL | bash -
-		else
-			curl -sL $NODE_JS_LINUX_URL | sudo -E bash -
+			apt-get update
+            		apt-get install -y ca-certificates curl gnupg
+            		mkdir -p /etc/apt/keyrings
+            		curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+            		echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+        else
+			sudo apt-get update
+            		sudo apt-get install -y ca-certificates curl gnupg
+            		sudo mkdir -p /etc/apt/keyrings
+            		curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+            		echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 		fi
 	fi
 	install_package nodejs
