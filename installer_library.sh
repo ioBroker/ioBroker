@@ -7,7 +7,7 @@ LIBRARY_VERSION="2023-08-31" # format YYYY-MM-DD
 # Supported and suggested node versions
 # ------------------------------
 NODE_MAJOR=18
-NODE_JS_BREW_URL="https://nodejs.org/dist/latest-hydrogen/node-v18.17.1.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v18.17.1/node-v18.17.1.pkg"
 
 # ------------------------------
 # test function of the library
