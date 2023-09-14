@@ -11,11 +11,11 @@ const semver = require('semver');
 
 // DEFINE minimum versions here:
 /** The minimum required Node.JS version - should be the current LTS */
-const MIN_NODE_VERSION = '12.13.0';
+const MIN_NODE_VERSION = '16.13.0';
 /** The recommended npm version - should be the one bundled with MIN_NODE_VERSION */
-const RECOMMENDED_NPM_VERSION = '6.12.0';
+const RECOMMENDED_NPM_VERSION = '8.1.0';
 /** The minimum supported npm version - should probably be the same major version as RECOMMENDED_NPM_VERSION*/
-const MIN_NPM_VERSION = '6.0.0';
+const MIN_NPM_VERSION = '8.0.0';
 
 const versions = getSystemVersions();
 

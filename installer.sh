@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2023-04-16" # format YYYY-MM-DD
+INSTALLER_VERSION="2023-09-13" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -129,7 +129,7 @@ PACKAGE_JSON_FILE=$(cat <<- EOF
 		"private": true,
 		"description": "Automate your Life",
 		"engines": {
-			"node": ">=12.0.0"
+			"node": ">=16.0.0"
 		},
 		"dependencies": {
 			"iobroker.js-controller": "stable",
