@@ -16,6 +16,7 @@ jobs:
         node-version: 16
     - name: prepare-install
       run: |
+        npm i --omit=dev
         npm link
         cd ..
         mkdir iobroker-inst
