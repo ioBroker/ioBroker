@@ -1,8 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-
-## **WORK IN PROGRESS**
+## 5.0.0 (2023-09-14)
 * Adjust minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
 
 ## 4.3.4 (2023-04-20)
