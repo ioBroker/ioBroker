@@ -173,7 +173,6 @@ echo -e "\033[32mThe five largest files in iobroker-data are:\033[0m";
 echo "";
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
 echo "";
-sudo ln -s /usr/bin/node /usr/bin/nodejs &> /dev/null;
 echo -e "`type -P nodejs` \t`nodejs -v`";
 echo -e "`type -P node` \t\t`node -v`";
 echo -e "`type -P npm` \t\t`npm -v`";
