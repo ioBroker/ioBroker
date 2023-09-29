@@ -1,7 +1,7 @@
 #!/bin/bash
 # iobroker node-update
-# written to help updating and fixing nodejs on linux (deb + rpm based Distros)
-VERSION="2023-09-24"
+# written to help updating and fixing nodejs on linux (Debian based Distros)
+VERSION="2023-09-29"
 echo -e "ioBroker node-update v$VERSION is starting. Please be patient!";
 NODE_MAJOR=18           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
@@ -15,7 +15,7 @@ NODEINSTMAJOR=$(nodejs -v | cut -d. -f1 | cut -c 2-3);
 export LC_ALL=C;
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null);
 # ------------------------------
-# functions for ioBroker node-update
+# functions for ioBroker node-update - Code borrowed from 'iob installer' ;-)
 # ------------------------------
 
 
@@ -33,7 +33,7 @@ SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null);
         "Linux")
                 HOST_PLATFORM="linux"
                 INSTALL_CMD="apt-get"
-                INSTALL_CMD_ARGS="install -yq"
+                INSTALL_CMD_ARGS="install -yqq"
                 if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
                         INSTALL_CMD="yum"
                         # The args -y and -q have to be separate
@@ -55,7 +55,7 @@ SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null);
                 HOST_PLATFORM="freebsd"
                 ROOT_GROUP="wheel"
                 INSTALL_CMD="pkg"
-                INSTALL_CMD_ARGS="install -yq"
+                INSTALL_CMD_ARGS="install -yqq"
                 IOB_DIR="/opt/iobroker"
                 IOB_USER="iobroker"
                 ;;
@@ -94,7 +94,7 @@ if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit
         echo "Checking your installation now. Please be patient!"
         else
         NODERECOMNF=1;
-        echo -e "No recommendation for nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR tree.";
+        echo -e "No recommendation for a nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR tree.";
 fi;
 echo "";
 echo "Your current setup is:";
@@ -170,7 +170,7 @@ echo "";
 if
         [[ "$NODENOTCORR" -eq 1 ]]
         then
-                echo -e "\n\nYour nodejs-Installation seems to be not compatible. Shall we try to fix it?";
+                echo -e "\n\nYour nodejs-Installation seems to be faulty. Shall we try to fix it?";
                 echo "Press <y> to continue or any other key to quit";
                 read -r -s -n 1 charpaths;
         if
@@ -207,7 +207,7 @@ if
                                 echo -e "*** Deleting $PATHCOREPACK ***";
                                 $SUDOX rm "$(type -p corepack)";
                 fi
-                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-update' again to check if your installation is fine now";
+                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-fix' again to check if your installation is fine now";
         fi
                 else
         echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths.";
@@ -224,8 +224,8 @@ VERNODE=$(node -v);
 if [[ "$VERNODE" = "v$NODERECOM" ]];
 then
 echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one.";
-echo "You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands."
-echo -e "\nPlease DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They can and will crash your current installation"
+echo -e "\nYou can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands."
+echo "Please DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation!"
 unset LC_ALL;
 exit;
 fi;
@@ -251,7 +251,7 @@ fi;
 if
         [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]];
         then
-        echo -e "\nYou are running nodejs $VERNODE. Do you want to install recommended version v.$NODE_MAJOR ? ";
+        echo -e "\nYou are running nodejs $VERNODE. Do you want to install recommended version from nodejs v.$NODE_MAJOR tree? ";
         echo -e "\nPress <y> to continue or any other key to quit";
         read -r -s -n 1 char;
         if
@@ -270,7 +270,7 @@ if
 fi;
 
         if [ "$SYSTDDVIRT" != "none" ]; then
-                echo "$SYSTDDVIRT";
+                echo -e "\nVirtualization: $SYSTDDVIRT";
                         #sudo pkill -u iobroker;    #FIX ME! How to shut down iob in LXC without killing the script?
                                                     #Using 'iob stop' in the meantime.
                                 iob stop;
@@ -289,11 +289,12 @@ fi;
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
                         $SUDOX "$INSTALL_CMD" install -yqq ca-certificates curl gnupg;
-                        # Installing the key for  nodesource repository
+                        # Installing the key for nodesource repository
                         $SUDOX mkdir -p /etc/apt/keyrings;
                         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg;
                         # Setting up a fresh & clean nodesource.list
                         echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
+                        echo "";
                         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list;
                         echo "Package: nodejs" | $SUDOX tee -a /etc/apt/preferences.d/nodejs;
                         echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs;
@@ -303,40 +304,49 @@ fi;
 
                         echo "";
                         echo "Installing the recommended nodejs version now!";
+                        echo "";
                         if [ "$NODEINSTMAJOR" -gt "$NODE_MAJOR" ] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]
                                 then
                                 $SUDOX "$INSTALL_CMD" install --reinstall --allow-downgrades -y nodejs="$NODERECOM"-1nodesource1 ;
                                 elif
                                 [[ "$NODERECOMNF" -eq 1 ]]
                                 then
-                                #Falling back to initial release of nodejs recommended tree
-                                #NOT WORKING DUE TO TROUBLE WITH NODESOURCE REPO, TRY AGAIN LATER
-                                #NODERECOM=$NODE_MAJOR.0.0
-                                # Just another fallback for nodejs@18:
-                                NODERECOM=18.17.0
+                                NODERECOM=$NODE_MAJOR.0.0
+                                
                                 echo "Exact recommended version unknown, installing a fallback!";
                                 $SUDOX "$INSTALL_CMD" install --reinstall --allow-downgrades -y nodejs="$NODERECOM"-1nodesource1 ;
                                 echo -e "\nUpdating fallback to latest nodejs v$NODE_MAJOR release";
                                 $SUDOX "$INSTALL_CMD" update -qq;
-                                $SUDOX "$INSTALL_CMD" upgrade nodejs -y;
+                                $SUDOX "$INSTALL_CMD" full-upgrade -yqq;
                                 VERNODE=$(node -v);
-                        fi;
-                        
-                        if [ "$NODEINSTMAJOR" -lt "$NODE_MAJOR" ]
-                                then $SUDOX "$INSTALL_CMD" upgrade nodejs -yqq;
-                        fi;
-                        
-                if      [ "$SYSTDDVIRT" != "none" ]; then
+                                echo -e "$VERNODE has been installed! You are using the latest version now!"
+                                fi;
+                                
+                                if [ "$NODEINSTMAJOR" -lt "$NODE_MAJOR" ]
+                                then 
+                                        $SUDOX $INSTALL_CMD update
+                                        $SUDOX $INSTALL_CMD full-upgrade -yqq;
+                                fi;
+
+                if [ "$SYSTDDVIRT" != "none" ]; then
+                        echo "Installing the recommended nodejs version and other updates now!";
+                        $SUDOX $INSTALL_CMD update
+                        $SUDOX $INSTALL_CMD full-upgrade -yqq;
                         echo -e "\n*** You need to manually restart your container/virtual machine now! *** ";
                         echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify.";
                         unset LC_ALL;
                         exit;
                 else
+                        echo "Installing the recommended nodejs version and other updates now!";
+                        $SUDOX $INSTALL_CMD update -qq;
+                        $SUDOX "$INSTALL_CMD" full-upgrade -yqq;
                         echo -e "\nWe tried our best to fix your nodejs. Please run iob diag again to verify.";
                         echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments.";
                         iob restart;
                 fi;
+
                 echo "";
+
         if [[ -f "/var/run/reboot-required" ]];
         then
         echo "";
