@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2023-09-13
+* Adjust minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
+
 ## 2023-04-16
 * Install Node.js 18.x by default if no Node.js is installed
 * Replace which commands with type
