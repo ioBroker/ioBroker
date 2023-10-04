@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-08-31" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-10-04" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
