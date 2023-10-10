@@ -1,13 +1,13 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-10-04" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-09-01" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
 NODE_MAJOR=18
-NODE_JS_BREW_URL="https://nodejs.org/dist/v18.15.0/node-v18.15.0.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v18.17.1/node-v18.17.1.pkg"
 
 # ------------------------------
 # test function of the library
