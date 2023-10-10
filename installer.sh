@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2023-09-13" # format YYYY-MM-DD
+INSTALLER_VERSION="2023-10-10" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -183,6 +183,8 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
+		elif [ "\$1" = "nodejs-update" ]; then
+			curl -sL $NODE_UPDATER_URL | bash -
 		elif [ "\$1" = "diag" ]; then
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
@@ -201,6 +203,8 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		elif [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
+		elif [ "\$1" = "nodejs-update" ]; then
+			curl -sL $NODE_UPDATER_URL | bash -
 		elif [ "\$1" = "diag" ]; then
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
 		else
@@ -213,6 +217,8 @@ else
 		#!$BASH_CMDLINE
 		if [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
+		elif [ "\$1" = "nodejs-update" ]; then
+			curl -sL $NODE_UPDATER_URL | bash -
 		elif [ "\$1" = "diag" ]; then
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else

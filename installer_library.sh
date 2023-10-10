@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-09-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-10-10" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -137,6 +137,9 @@ function set_some_common_params() {
 
 	# Where the fixer script is located
 	FIXER_URL="https://iobroker.net/fix.sh"
+
+	# Where the node-update script is located
+	NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
 
 	# Where the diag script is located
 	DIAG_URL="https://iobroker.net/diag.sh"
@@ -810,6 +813,7 @@ install_nodejs() {
 			apt-get update
             		apt-get install -y ca-certificates curl gnupg
             		mkdir -p /etc/apt/keyrings
+
             		curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             		echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
         else
