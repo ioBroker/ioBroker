@@ -112,7 +112,7 @@ gulp.task('deploy', () => {
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
         .then(() => uploadOneFile('/diag.sh', diag))
-        .then(() => uploadOneFile('/node_updater.sh', nodeUpdater));
+        .then(() => uploadOneFile('/node_update.sh', nodeUpdater));
 });
 
 gulp.task('create', () => {
