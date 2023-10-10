@@ -1,5 +1,10 @@
 # Changelog for Linux-Installer-Script
 
+## 2023-10-10
+* IMPORTANT: Node.js v16+ is required at least for installation
+* Update node.js installation after nodesource repo changes and update node Node.js 18
+* Add command "iob nodejs-update" to update Node.js to latest recommended version (or any when major given as parameter)
+
 ## 2023-09-13
 * Adjust minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
 

@@ -1,5 +1,9 @@
 # Changelog for Linux-Diag-Script
 
+## 2023-10-10
+* Removed output of Machine & Boot IDs.
+* Added human readable diag of Raspberry Throttling States
+
 ## 2023-04-16
 * Enhanced node.js check
 * Fixed some Docker related compatibility issues

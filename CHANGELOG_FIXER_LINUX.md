@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2023-10-10
+* Add command "iob nodejs-update" to update Node.js to latest recommended version (or any when major given as parameter)
+
 ## 2023-04-02
 * Add check for left over npm temporary directories and clean them up if found
 

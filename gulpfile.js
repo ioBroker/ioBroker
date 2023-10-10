@@ -107,10 +107,12 @@ gulp.task('deploy', () => {
     const install = fs.readFileSync(dist + 'install.sh');
     const fix = fs.readFileSync(dist + 'fix.sh');
     const diag = fs.readFileSync(dist + 'diag.sh');
+    const nodeUpdater = fs.readFileSync(dist + 'node_updater.sh');
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
-        .then(() => uploadOneFile('/diag.sh', diag));
+        .then(() => uploadOneFile('/diag.sh', diag))
+        .then(() => uploadOneFile('/node_updater.sh', nodeUpdater));
 });
 
 gulp.task('create', () => {
@@ -123,6 +125,7 @@ gulp.task('create', () => {
         const fix      = fs.readFileSync(__dirname + '/fix_installation.sh').toString('utf8');
         const lib      = fs.readFileSync(__dirname + '/installer_library.sh').toString('utf8');
         const diag     = fs.readFileSync(__dirname + '/diag.sh').toString('utf8');
+        const nodeUpdater = fs.readFileSync(__dirname + '/node_updater.sh').toString('utf8');
 
         // replace
         // LIB_NAME="installer_library.sh"
@@ -131,12 +134,13 @@ gulp.task('create', () => {
         fs.writeFileSync(dist + 'install.sh', replaceLib(install, lib));
         fs.writeFileSync(dist + 'fix.sh',     replaceLib(fix, lib));
         fs.writeFileSync(dist + 'diag.sh',    diag);
+        fs.writeFileSync(dist + 'node_update.sh',    nodeUpdater);
 
         resolve();
     });
 });
 
-gulp.task('fix', async () => {
+gulp.task('fix', () => {
     const pack = require('./package.json');
     pack.name = '@iobroker/fix';
     fs.writeFileSync(__dirname + '/package.json', JSON.stringify(pack, null, 2));

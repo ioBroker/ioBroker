@@ -1,9 +1,9 @@
 {
   "name": "@iobroker/install",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "optionalDependencies": {
     "node-windows": "1.0.0-beta.8",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "windows-shortcuts": "^0.1.6"
   },
   "publishConfig": {
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "fs-extra": "^11.1.1",
-    "semver": "^7.5.0",
-    "yargs": "^17.7.1"
+    "semver": "^7.5.4",
+    "yargs": "^17.7.2"
   },
   "files": [
     "img/logos/ioBroker_Logo_Long_Vector.svg",

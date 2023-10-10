@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2023-10-07"
+VERSION="2023-10-10"
 NODE_MAJOR=18           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
@@ -33,8 +33,8 @@ fi;
 ### Starting the skript
 echo -e "ioBroker node-update v$VERSION is starting. Please be patient!";
 HOST=$(hostname)
-NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If succesfull, no fallback required.
-if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semvered nodejs installation is found
+NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If successful, no fallback required.
+if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semver'd nodejs installation is found
 then
 NODERECOMNF=1; #marker for 'no recommended version found'
 fi;
