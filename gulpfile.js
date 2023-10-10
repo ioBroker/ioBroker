@@ -107,7 +107,7 @@ gulp.task('deploy', () => {
     const install = fs.readFileSync(dist + 'install.sh');
     const fix = fs.readFileSync(dist + 'fix.sh');
     const diag = fs.readFileSync(dist + 'diag.sh');
-    const nodeUpdater = fs.readFileSync(dist + 'node_updater.sh');
+    const nodeUpdater = fs.readFileSync(dist + 'node_update.sh');
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
