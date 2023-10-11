@@ -11,15 +11,15 @@
 * Optimize Windows installation
 
 ## 4.3.0 (2023-02-27)
-* Also create Startmenu entries for Windows installation
+* Also create Start-menu entries for Windows installation
 * Add option to specify the Windows service name for Windows installation
 
 ## 4.2.2 (2023-01-14)
 * Optimize Windows installer script
-* Do JSONL DB compression earlier in the windows installer flow
+* Do JSONL DB compression earlier in the Windows installer flow
 
 ## 4.2.1 (2022-12-22)
-* Catched some errors when executed in wrong directory on windows
+* Caught some errors when executed in wrong directory on windows
 
 ## 4.2.0 (2022-12-09)
 * Sync Windows installer with Linux installer

@@ -5,7 +5,7 @@ const fs     = require('fs');
 const Stream = require('stream');
 const Client = require('ssh2').Client;
 
-const dist = __dirname + '/dist/';
+const dist = `${__dirname}/dist/`;
 
 const SFTP_HOST = process.env.SFTP_HOST;
 const SFTP_PORT = process.env.SFTP_PORT;
@@ -60,7 +60,7 @@ function uploadOneFile(fileName, data) {
                 }
 
                 if (FAST_TEST) {
-                    console.log('Simulate upload of ' + fileName);
+                    console.log(`Simulate upload of ${fileName}`);
                     return resolve();
                 }
 
@@ -104,10 +104,10 @@ function replaceLib(text, lib) {
 }
 
 gulp.task('deploy', () => {
-    const install = fs.readFileSync(dist + 'install.sh');
-    const fix = fs.readFileSync(dist + 'fix.sh');
-    const diag = fs.readFileSync(dist + 'diag.sh');
-    const nodeUpdater = fs.readFileSync(dist + 'node_update.sh');
+    const install = fs.readFileSync(`${dist}install.sh`);
+    const fix = fs.readFileSync(`${dist}fix.sh`);
+    const diag = fs.readFileSync(`${dist}diag.sh`);
+    const nodeUpdater = fs.readFileSync(`${dist}node_update.sh`);
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
@@ -121,20 +121,21 @@ gulp.task('create', () => {
             fs.mkdirSync(dist);
         }
 
-        const install  = fs.readFileSync(__dirname + '/installer.sh').toString('utf8');
-        const fix      = fs.readFileSync(__dirname + '/fix_installation.sh').toString('utf8');
-        const lib      = fs.readFileSync(__dirname + '/installer_library.sh').toString('utf8');
-        const diag     = fs.readFileSync(__dirname + '/diag.sh').toString('utf8');
-        const nodeUpdater = fs.readFileSync(__dirname + '/node_updater.sh').toString('utf8');
+        const install  = fs.readFileSync(`${__dirname}/installer.sh`).toString('utf8');
+        const fix      = fs.readFileSync(`${__dirname}/fix_installation.sh`).toString('utf8');
+        const lib      = fs.readFileSync(`${__dirname}/installer_library.sh`).toString('utf8');
+        const diag     = fs.readFileSync(`${__dirname}/diag.sh`).toString('utf8');
+        const nodeUpdater = fs.readFileSync(`${__dirname}/node_updater.sh`).toString('utf8');
 
         // replace
         // LIB_NAME="installer_library.sh"
         // LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
 
-        fs.writeFileSync(dist + 'install.sh', replaceLib(install, lib));
-        fs.writeFileSync(dist + 'fix.sh',     replaceLib(fix, lib));
-        fs.writeFileSync(dist + 'diag.sh',    diag);
-        fs.writeFileSync(dist + 'node_update.sh',    nodeUpdater);
+        fs.writeFileSync(`${dist}install.sh`, replaceLib(install, lib));
+        fs.writeFileSync(`${dist}fix.sh`,     replaceLib(fix, lib));
+        fs.writeFileSync(`${dist}diag.sh`,    diag);
+        // Important. We rename here the file from `node_updater.sh` to `node_update.sh`
+        fs.writeFileSync(`${dist}node_update.sh`,    nodeUpdater);
 
         resolve();
     });
@@ -143,7 +144,7 @@ gulp.task('create', () => {
 gulp.task('fix', () => {
     const pack = require('./package.json');
     pack.name = '@iobroker/fix';
-    fs.writeFileSync(__dirname + '/package.json', JSON.stringify(pack, null, 2));
+    fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pack, null, 2));
 });
 
 gulp.task('default', gulp.series('create', 'deploy'));

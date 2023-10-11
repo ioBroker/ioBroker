@@ -2,7 +2,7 @@
 
 ## 2023-10-10
 * Removed output of Machine & Boot IDs.
-* Added human readable diag of Raspberry Throttling States
+* Added a human-readable diag of Raspberry Throttling States
 
 ## 2023-04-16
 * Enhanced node.js check
