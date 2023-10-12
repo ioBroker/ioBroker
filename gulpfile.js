@@ -107,12 +107,12 @@ gulp.task('deploy', () => {
     const install = fs.readFileSync(`${dist}install.sh`);
     const fix = fs.readFileSync(`${dist}fix.sh`);
     const diag = fs.readFileSync(`${dist}diag.sh`);
-    const nodeUpdater = fs.readFileSync(`${dist}node_update.sh`);
+    const nodeUpdate = fs.readFileSync(`${dist}node-update.sh`);
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
         .then(() => uploadOneFile('/diag.sh', diag))
-        .then(() => uploadOneFile('/node_update.sh', nodeUpdater));
+        .then(() => uploadOneFile('/node-update.sh', nodeUpdate));
 });
 
 gulp.task('create', () => {
@@ -125,7 +125,7 @@ gulp.task('create', () => {
         const fix      = fs.readFileSync(`${__dirname}/fix_installation.sh`).toString('utf8');
         const lib      = fs.readFileSync(`${__dirname}/installer_library.sh`).toString('utf8');
         const diag     = fs.readFileSync(`${__dirname}/diag.sh`).toString('utf8');
-        const nodeUpdater = fs.readFileSync(`${__dirname}/node_updater.sh`).toString('utf8');
+        const nodeUpdate = fs.readFileSync(`${__dirname}/node-update.sh`).toString('utf8');
 
         // replace
         // LIB_NAME="installer_library.sh"
@@ -134,8 +134,7 @@ gulp.task('create', () => {
         fs.writeFileSync(`${dist}install.sh`, replaceLib(install, lib));
         fs.writeFileSync(`${dist}fix.sh`,     replaceLib(fix, lib));
         fs.writeFileSync(`${dist}diag.sh`,    diag);
-        // Important. We rename here the file from `node_updater.sh` to `node_update.sh`
-        fs.writeFileSync(`${dist}node_update.sh`,    nodeUpdater);
+        fs.writeFileSync(`${dist}node-update.sh`,    nodeUpdate);
 
         resolve();
     });
