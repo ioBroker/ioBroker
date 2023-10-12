@@ -19,7 +19,6 @@ elif [ "$(id -u)" -eq 0 ];
 then
         echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
         sleep 3;
-        unset LC_ALL;
 fi;
 
 if [[ $SYSTDDVIRT = "wsl" ]];
