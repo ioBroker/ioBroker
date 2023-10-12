@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2023-10-12
+* Fix how the Node.js update script is called
+
 ## 2023-10-10
 * Add command "iob nodejs-update" to update Node.js to latest recommended version (or any when major given as parameter)
 

@@ -15,11 +15,11 @@ then
         echo "Fixing Docker is not supported, please update your Docker Container";
         unset LC_ALL;
         exit 1;
-        elif [ "$(id -u)" -eq 0 ];
-                 then
-                         echo -e "This script must not be run as root! \nPlease use your standard user!"
+elif [ "$(id -u)" -eq 0 ];
+then
+        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
+        sleep 3;
         unset LC_ALL;
-        exit 1;
 fi;
 
 if [[ $SYSTDDVIRT = "wsl" ]];
