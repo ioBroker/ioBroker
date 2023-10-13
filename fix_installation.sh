@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2023-10-12" # format YYYY-MM-DD
+FIXER_VERSION="2023-10-13" # format YYYY-MM-DD
 
 compress_jsonl_databases() {
     echo "Checking for uncompressed JSONL databases... This might take a while!"
