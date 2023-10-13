@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+### 2023-10-13
+* Allow to define Node.js version as parameter for "iob nodejs-update" command
+
 ## 2023-10-12
 * Fix how the Node.js update script is called
 
