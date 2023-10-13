@@ -1,6 +1,6 @@
 # Changelog for Node.js Updater Script
 
-## 2023-10-12
+## 2023-10-13
 * Also allow to run as root but display informative message
 
 ## 2023-10-10

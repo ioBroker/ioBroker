@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2023-10-12"
+VERSION="2023-10-13"
 NODE_MAJOR=18           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
@@ -261,13 +261,13 @@ then
         if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                echo "Trying to fix your installation now. Please be patient."
+                echo "Trying to update your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
                 $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
                 # Deleting nodesource.list Will be recreated later.
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
-                echo "We are not fixing your installation. Exiting.";
+                echo "We are not updating your installation. Exiting.";
         exit;
         fi;
 fi;
@@ -281,13 +281,13 @@ if
         if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                echo "Trying to fix your installation now. Please be patient."
+                echo "Trying to update your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
                 $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
                 # Deleting nodesource.list Will be recreated later.
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
-                echo "We are not fixing your installation. Exiting.";
+                echo "We are not updating your installation. Exiting.";
         exit;
 
         fi;

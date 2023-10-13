@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-10-10" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-10-13" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -240,7 +240,7 @@ install_necessary_packages() {
 			"libcap2-bin" # To give nodejs access to protected ports
 			# These are used by a couple of adapters and should therefore exist:
 			"build-essential"
-			"gcc-c++"
+			"gcc"
 			"make"
 			"libavahi-compat-libdnssd-dev"
 			"libudev-dev"
