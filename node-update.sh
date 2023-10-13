@@ -12,7 +12,7 @@ DOCKER=/opt/scripts/.docker_config/.thisisdocker #used to identify docker
 
 if [ -f "$DOCKER" ];
 then
-        echo "Fixing Docker is not supported, please update your Docker Container";
+        echo "Updating Node.js in Docker is not supported, please update your Docker Container";
         unset LC_ALL;
         exit 1;
 elif [ "$(id -u)" -eq 0 ];
