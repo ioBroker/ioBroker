@@ -106,7 +106,7 @@ fi;
         fi
 
 clear;
-echo -e "ioBroker nodejs fixer $VERSION";
+echo -e "ioBroker nodejs updater $VERSION";
 
 if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]];
         then
@@ -231,7 +231,7 @@ if
                                 echo -e "*** Deleting $PATHCOREPACK ***";
                                 $SUDOX rm "$(type -p corepack)";
                 fi
-                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-fix' again to check if your installation is fine now";
+                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now";
         fi
                 else
         echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths.";
@@ -356,14 +356,14 @@ fi;
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
                         echo -e "\n*** You need to manually restart your container/virtual machine now! *** ";
-                        echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify.";
+                        echo -e "\nWe tried our best to update or fix your nodejs. Please run 'iob diag' again to verify.";
                         unset LC_ALL;
                         exit;
                 else
                         echo "Installing the recommended nodejs version!";
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
-                        echo -e "\nWe tried our best to fix your nodejs. Please run iob diag again to verify.";
+                        echo -e "\nWe tried our best to update or fix your nodejs. Please run iob diag again to verify.";
                         echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments.";
                         iob restart;
                 fi;
