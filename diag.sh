@@ -16,7 +16,7 @@ clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-10-10";      #version of this script
+SKRIPTV="2023-10-15";      #version of this script
 NODE_MAJOR=18           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 HOST=$(hostname)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #recommended node version
@@ -195,9 +195,9 @@ echo -e "\033[34;107m*** User and Groups ***\033[0m";
         groups;
 echo "";
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -f "Xorg")
+XORGTEST=$(pgrep -fc 'Xorg|Xwayland')
 # XORGTEST=$(ps aux | grep -c 'Xorg')
-if [[ "$XORGTEST" -gt 1 ]];
+if [[ "$XORGTEST" -ne 0 ]];
         then
                 echo -e "X-Server: \ttrue"
         else
@@ -454,7 +454,7 @@ else
 fi;
 
 else
-hostnamectl | grep -v 'Machine\|Boot';
+hostnamectl | grep -v 'Machine\|Boot\|Icon';
 fi;
 echo "";
 echo -e "Installation: \t\t$INSTENV2";
@@ -466,7 +466,7 @@ else
     echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)";
 fi;
 echo -e "User-ID: \t\t$EUID";
-echo -e "X-Server: \t\t$(if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi)";
+echo -e "X-Server: \t\t$(if [[ $XORGTEST -ne 0 ]]; then echo "true";else echo "false";fi)";
 if [ -f "$DOCKER" ]; then
         echo -e "";
 else
