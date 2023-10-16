@@ -8,16 +8,17 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "This script must not be run as root! \nPlease use your standard user!"
-                        exit 1
-
+                        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
+                        sleep 5;
 fi
+
 clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-10-15";      #version of this script
+SKRIPTV="2023-10-16";      #version of this script
 NODE_MAJOR=18           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
+
 HOST=$(hostname)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #recommended node version
 NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext);    #recommended npm version
@@ -194,10 +195,10 @@ echo -e "\033[34;107m*** User and Groups ***\033[0m";
         echo "$HOME";
         groups;
 echo "";
+
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -fc 'Xorg|Xwayland')
-# XORGTEST=$(ps aux | grep -c 'Xorg')
-if [[ "$XORGTEST" -ne 0 ]];
+XORGTEST=$(pgrep -c 'Xorg|wayland|X11')
+if [[ "$XORGTEST" -gt 0 ]];
         then
                 echo -e "X-Server: \ttrue"
         else
@@ -238,8 +239,8 @@ echo "";
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
 sudo dmesg -T | grep -i ext4;
 echo "";
-echo -e "\033[32mShow mounted filesystems \(real ones only\):\033[0m";
-findmnt --real;
+echo -e "\033[32mShow mounted filesystems:\033[0m";
+findmnt;
 echo "";
 if [[ -L "/opt/iobroker/backups" ]]; then
   echo "backups directory is linked to a different directory";
@@ -454,7 +455,7 @@ else
 fi;
 
 else
-hostnamectl | grep -v 'Machine\|Boot\|Icon';
+hostnamectl | grep -v 'Machine\|Boot';
 fi;
 echo "";
 echo -e "Installation: \t\t$INSTENV2";
@@ -466,7 +467,7 @@ else
     echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)";
 fi;
 echo -e "User-ID: \t\t$EUID";
-echo -e "X-Server: \t\t$(if [[ $XORGTEST -ne 0 ]]; then echo "true";else echo "false";fi)";
+echo -e "X-Server: \t\t$(if [[ $XORGTEST -gt 0 ]]; then echo "true";else echo "false";fi)";
 if [ -f "$DOCKER" ]; then
         echo -e "";
 else
@@ -534,7 +535,8 @@ then
                 echo "";
                 echo "Please check";
                 echo "https://forum.iobroker.net/topic/35090/howto-nodejs-installation-und-upgrades-unter-debian";
-                echo "for more information on how to fix these errors."
+                echo "for more information on how to fix these errors or run:";
+                echo "iobroker nodejs-update";
 fi;
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
