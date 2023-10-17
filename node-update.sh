@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2023-10-13"
+VERSION="2023-10-17"
 NODE_MAJOR=18           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
@@ -12,13 +12,14 @@ DOCKER=/opt/scripts/.docker_config/.thisisdocker #used to identify docker
 
 if [ -f "$DOCKER" ];
 then
-        echo "Updating Node.js in Docker is not supported, please update your Docker Container";
+        echo "Fixing Docker is not supported, please update your Docker Container";
         unset LC_ALL;
         exit 1;
-elif [ "$(id -u)" -eq 0 ];
-then
-        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
-        sleep 3;
+        elif [ "$(id -u)" -eq 0 ];
+                 then
+                         echo -e "This script must not be run as root! \nPlease use your standard user!"
+        unset LC_ALL;
+        exit 1;
 fi;
 
 if [[ $SYSTDDVIRT = "wsl" ]];
@@ -32,8 +33,8 @@ fi;
 ### Starting the skript
 echo -e "ioBroker node-update v$VERSION is starting. Please be patient!";
 HOST=$(hostname)
-NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If successful, no fallback required.
-if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semver'd nodejs installation is found
+NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If succesfull, no fallback required.
+if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semvered nodejs installation is found
 then
 NODERECOMNF=1; #marker for 'no recommended version found'
 fi;
@@ -106,7 +107,7 @@ fi;
         fi
 
 clear;
-echo -e "ioBroker nodejs updater $VERSION";
+echo -e "ioBroker nodejs fixer $VERSION";
 
 if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]];
         then
@@ -115,7 +116,7 @@ if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit
         elif
         [[ "$NODERECOM" == CUSTOM ]]
         then
-        echo -e "You requested to intall latest version from nodejs v$1 tree."
+        echo -e "You requested to install latest version from nodejs v$1 tree."
         else
         NODERECOMNF=1;
         echo -e "No recommendation for a nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR tree.";
@@ -231,7 +232,7 @@ if
                                 echo -e "*** Deleting $PATHCOREPACK ***";
                                 $SUDOX rm "$(type -p corepack)";
                 fi
-                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now";
+                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-fix' again to check if your installation is fine now";
         fi
                 else
         echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths.";
@@ -248,8 +249,9 @@ VERNODE=$(node -v);
 if [[ "$VERNODE" = "v$NODERECOM" ]];
 then
 echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one.";
-echo -e "\nYou can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands."
-echo "Please DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation!"
+echo -e "\n***You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
+echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
+echo -e "\n *** DO NOT use 'nodejs-update' as part of a regular update process! ***";
 unset LC_ALL;
 exit;
 fi;
@@ -261,13 +263,13 @@ then
         if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                echo "Trying to update your installation now. Please be patient."
+                echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
                 $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
                 # Deleting nodesource.list Will be recreated later.
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
-                echo "We are not updating your installation. Exiting.";
+                echo "We are not fixing your installation. Exiting.";
         exit;
         fi;
 fi;
@@ -281,13 +283,13 @@ if
         if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                echo "Trying to update your installation now. Please be patient."
+                echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
                 $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
                 # Deleting nodesource.list Will be recreated later.
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
-                echo "We are not updating your installation. Exiting.";
+                echo "We are not fixing your installation. Exiting.";
         exit;
 
         fi;
@@ -356,14 +358,14 @@ fi;
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
                         echo -e "\n*** You need to manually restart your container/virtual machine now! *** ";
-                        echo -e "\nWe tried our best to update or fix your nodejs. Please run 'iob diag' again to verify.";
+                        echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify.";
                         unset LC_ALL;
                         exit;
                 else
                         echo "Installing the recommended nodejs version!";
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
-                        echo -e "\nWe tried our best to update or fix your nodejs. Please run iob diag again to verify.";
+                        echo -e "\nWe tried our best to fix your nodejs. Please run iob diag again to verify.";
                         echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments.";
                         iob restart;
                 fi;
