@@ -310,6 +310,9 @@ fi;
                         sleep 1                 # wait 1s between "frames"
                 done;
                 echo "";
+                        echo -e "\n*** Removing previous installations of nodejs";
+                        $SUDOX prune nodejs libnode* node-* -yqq;
+                        
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
