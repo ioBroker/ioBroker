@@ -311,7 +311,7 @@ fi;
                 done;
                 echo "";
                         echo -e "\n*** Removing previous installations of nodejs";
-                        $SUDOX purge nodejs libnode* node-* -yqq;
+                        $SUDOX $INSTALL_CMD purge nodejs libnode* node-* -yqq;
                         
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
