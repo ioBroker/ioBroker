@@ -139,7 +139,7 @@ function set_some_common_params() {
 	FIXER_URL="https://iobroker.net/fix.sh"
 
 	# Where the node-update script is located
-	NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
+	NODE_UPDATER_URL="https://iobroker.net/node_update.sh"
 
 	# Where the diag script is located
 	DIAG_URL="https://iobroker.net/diag.sh"
