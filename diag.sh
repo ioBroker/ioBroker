@@ -197,7 +197,7 @@ echo -e "\033[34;107m*** User and Groups ***\033[0m";
 echo "";
 
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -c 'Xorg|wayland|X11')
+XORGTEST=$(pgrep -fc 'Xorg|wayland|X11')
 if [[ "$XORGTEST" -gt 0 ]];
         then
                 echo -e "X-Server: \ttrue"
