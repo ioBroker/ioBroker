@@ -148,7 +148,7 @@ else
       bit_n=$((bit_n+1))
     fi
   done
-fi
+fi;
 
 echo ""
 
@@ -401,12 +401,13 @@ echo -e "Pending Updates: $APT";
 echo "";
 
 echo -e "\033[34;107m*** Listening Ports ***\033[0m";
-if [[ $(type -P "ss" 2>/dev/null) = *"/ss" ]]; then
-        sudo ss -tulpn
-        else
-        sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
-fi;
 
+if [[ $(type -P "ss" 2>/dev/null) = *"/ss" ]]; 
+        then 
+                sudo ss -tulpn
+        else
+                sudo netstat -tulpen
+fi;
 echo "";
 echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m";
 echo "";
