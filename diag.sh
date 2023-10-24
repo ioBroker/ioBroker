@@ -16,7 +16,7 @@ clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-10-20";      #version of this script
+SKRIPTV="2023-10-24";      #version of this script
 NODE_MAJOR=18           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(hostname)
@@ -401,9 +401,13 @@ echo -e "Pending Updates: $APT";
 echo "";
 
 echo -e "\033[34;107m*** Listening Ports ***\033[0m";
+if [[ $(type -P "ss" 2>/dev/null) = *"/ss" ]]; then
+        sudo ss -tulpn
+        else
         sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
+fi;
 # Alternativ - ss ist nicht ueberall installiert
-# sudo ss -tulwp | grep LISTEN;
+
 echo "";
 echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m";
 echo "";
