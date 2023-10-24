@@ -406,7 +406,6 @@ if [[ $(type -P "ss" 2>/dev/null) = *"/ss" ]]; then
         else
         sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
 fi;
-# Alternativ - ss ist nicht ueberall installiert
 
 echo "";
 echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m";
