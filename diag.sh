@@ -237,7 +237,12 @@ echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
 echo "";
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
-sudo dmesg -T | grep -i ext4;
+if [ "$SYSTDDVIRT" = "lxc" ]; then
+    echo "Check not possible in LXC"
+else
+    sudo dmesg -T | grep -i ext4;
+fi;
+
 echo "";
 echo -e "\033[32mShow mounted filesystems:\033[0m";
 findmnt;
