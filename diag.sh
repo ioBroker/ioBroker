@@ -8,7 +8,7 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
+                        echo -e "You should not be root user on your system!\nBetter use a standard user!\n\n";
                         sleep 5;
 fi
 
@@ -194,6 +194,7 @@ echo -e "\033[34;107m*** User and Groups ***\033[0m";
         whoami;
         echo "$HOME";
         groups;
+        if 
 echo "";
 
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
