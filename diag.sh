@@ -197,7 +197,7 @@ echo -e "\033[34;107m*** User and Groups ***\033[0m";
 echo "";
 
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -fc 'Xorg|wayland|X11')
+XORGTEST=$(pgrep -fc 'Xorg|ayland|X11')
 if [[ "$XORGTEST" -gt 0 ]];
         then
                 echo -e "X-Server: \ttrue"
@@ -237,8 +237,8 @@ echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
 echo "";
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
-if [ "$SYSTDDVIRT" = "lxc" ]; then
-    echo "Check not possible in LXC"
+if [ "$SYSTDDVIRT" = "lxc" ] || [ -f "$DOCKER" ]; then
+    echo "Check not possible in LXC or Docker"
 else
     sudo dmesg -T | grep -i ext4;
 fi;
@@ -296,42 +296,44 @@ VERNODE=$(node -v);
 VERNPM=$(npm -v);
 VERNPX=$(npx -v);
 #VERCOREPACK=$(corepack -v);
+NOTCORRSTRG="\n\033[0;31m*** nodejs is NOT correctly installed ***\033[0m\nRun \e[031iob nodejs-update\e[0m to fix it. "
+
 
 if
         [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
         elif
         [[ $PATHNODE != "/usr/bin/node" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
         elif
         [[ $PATHNPM != "/usr/bin/npm" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
         elif
         [[ $PATHNPX != "/usr/bin/npx" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
         elif
         [[ $VERNODEJS != "$VERNODE" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
         elif
         [[ $VERNPM != "$VERNPX" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
         elif
         [[ $PATHCOREPACK != "/usr/bin/corepack" ]];
         then
                 NODENOTCORR=1
-                echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
+                echo -e "$NOTCORRSTRG";
 else
                 echo "";
 fi
