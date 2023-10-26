@@ -8,8 +8,8 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "You should not be root user on your system!\nBetter use a standard user!\n\n";
-                        sleep 5;
+                        echo -e "You should not be root user on your system!\nBetter use a standard user! Root delay of 15 seconds!\n\n";
+                        sleep 15;
 fi
 
 clear;
@@ -193,8 +193,7 @@ echo "";
 echo -e "\033[34;107m*** User and Groups ***\033[0m";
         whoami;
         echo "$HOME";
-        groups;
-        if 
+        groups; 
 echo "";
 
 echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
@@ -297,7 +296,7 @@ VERNODE=$(node -v);
 VERNPM=$(npm -v);
 VERNPX=$(npx -v);
 #VERCOREPACK=$(corepack -v);
-NOTCORRSTRG="\n\033[0;31m*** nodejs is NOT correctly installed ***\033[0m\nRun \e[031iob nodejs-update\e[0m to fix it. "
+NOTCORRSTRG="\n\033[0;31m*** nodejs is NOT correctly installed ***\033[0m\nRun \e[031iob nodejs-update\e[0m to fix it. ";
 
 
 if
