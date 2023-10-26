@@ -275,7 +275,7 @@ echo "";
 echo -e "\033[32mUSB-Devices by-id:\033[0m";
 echo "USB-Sticks -  Avoid direct links to /dev/* in your adapter setups, please always prefer the links 'by-id':";
 echo "";
-find /dev/serial/by-id/ -maxdepth 1 -mindepth 1;
+find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null ;             
 echo "";
 
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
