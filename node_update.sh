@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2023-10-24"
+VERSION="2023-11-01"
 NODE_MAJOR=18           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
@@ -116,10 +116,10 @@ if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit
         elif
         [[ "$NODERECOM" == CUSTOM ]]
         then
-        echo -e "You requested to install latest version from nodejs v$1 branch."
+        echo -e "You requested to install latest version from nodejs v$1 tree."
         else
         NODERECOMNF=1;
-        echo -e "No recommendation for a nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR branch.";
+        echo -e "No recommendation for a nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR tree.";
 fi;
 echo "";
 echo "Your current setup is:";
@@ -265,7 +265,7 @@ then
         then
                 echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
+                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt -o -path /run \) -prune -false -o -name nodesource.[gk]* -print)";
                 # Deleting nodesource.list Will be recreated later.
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
@@ -277,13 +277,13 @@ fi;
 if
         [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]];
         then
-        echo -e "\nYou are running nodejs $VERNODE. Do you want to install latest version from nodejs v.$NODE_MAJOR branch? ";
+        echo -e "\nYou are running nodejs $VERNODE. Do you want to install latest version from nodejs v.$NODE_MAJOR tree? ";
         echo -e "\nPress <y> to continue or any other key to quit";
         read -r -s -n 1 char;
         if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                echo -e "\nTrying to fix your installation now. Please be patient."
+                echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
                 $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
                 # Deleting nodesource.list Will be recreated later.
@@ -310,9 +310,6 @@ fi;
                         sleep 1                 # wait 1s between "frames"
                 done;
                 echo "";
-                        echo -e "\n*** Removing previous installations of nodejs";
-                        $SUDOX $INSTALL_CMD purge nodejs libnode* node-* -yqq;
-                        
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
