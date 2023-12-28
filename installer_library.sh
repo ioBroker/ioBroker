@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-10-13" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-12-28" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -173,7 +173,7 @@ install_package_linux() {
 			errormessage=$( $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS $package > /dev/null 2>&1)
 		else
 			# Install it
-			errormessage=$( $SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
+			errormessage=$( $SUDOX $INSTALL_CMD update -qq && $SUDOX DEBIAN_FRONTEND=noninteractive $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
 		fi
 
 		# Hide "Error: Nothing to do"
