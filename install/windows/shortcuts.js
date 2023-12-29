@@ -101,7 +101,7 @@ const linkAdmin = 'ioBroker Admin.lnk';
 const linkStartService = 'Start ioBroker Service.lnk';
 const linkStopService = 'Stop ioBroker Service.lnk';
 const linkRestartService = 'Restart ioBroker Service.lnk';
-const iconPath = path.join(process.cwd(), '\\node_modules\\iobroker.admin\\www\\favicon.ico');
+const iconPath = path.join(process.cwd(), '\\node_modules\\iobroker.admin\\adminWww\\favicon.ico');
 const servicePath = path.join(process.cwd(), 'serviceiobroker.bat');
 
 //
