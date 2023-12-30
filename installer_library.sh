@@ -825,7 +825,6 @@ install_nodejs() {
 			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		fi
 	fi
-	$INSTALL_CMD update 2>&1 > /dev/null
 	install_package nodejs
 
 	# Check if nodejs is now installed
