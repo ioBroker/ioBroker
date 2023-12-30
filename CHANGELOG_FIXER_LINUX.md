@@ -1,6 +1,6 @@
 # Changelog for Linux-Fixer-Script
 
-### 2023-12-28
+### 2023-12-29
 * Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
 
 ### 2023-10-13
