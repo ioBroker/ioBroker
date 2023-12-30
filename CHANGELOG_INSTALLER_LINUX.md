@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+### 2023-12-30
+* Fix Nodejs Update script call
+* Fixes in Nodejs installation
+
 ### 2023-12-29
 * Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
 

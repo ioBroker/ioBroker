@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-12-29" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-12-30" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -140,6 +140,9 @@ function set_some_common_params() {
 
 	# Where the diag script is located
 	DIAG_URL="https://iobroker.net/diag.sh"
+
+  # Where the nodejs Update script is located
+  NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
 
 	# Remember the full path of bash
 	BASH_CMDLINE=$(which bash)
@@ -826,6 +829,7 @@ install_nodejs() {
 			echo "Pin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
 		fi
 	fi
+	$INSTALL_CMD update 2>&1 > /dev/null
 	install_package nodejs
 
 	# Check if nodejs is now installed
