@@ -7,7 +7,7 @@ LIBRARY_VERSION="2023-12-30" # format YYYY-MM-DD
 # Supported and suggested node versions
 # ------------------------------
 NODE_MAJOR=18
-NODE_JS_BREW_URL="https://nodejs.org/dist/latest-hydrogen/node-v18.17.1.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v18.17.1/node-v18.17.1.pkg"
 
 # ------------------------------
 # test function of the library
@@ -240,7 +240,7 @@ install_necessary_packages() {
 			"libcap2-bin" # To give nodejs access to protected ports
 			# These are used by a couple of adapters and should therefore exist:
 			"build-essential"
-			"gcc-c++"
+			"gcc"
 			"make"
 			"libavahi-compat-libdnssd-dev"
 			"libudev-dev"
@@ -814,9 +814,7 @@ install_nodejs() {
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-			echo "Package: nodejs" | tee /etc/apt/preferences.d/nodejs.pref
-			echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs.pref
-			echo "Pin-Priority: 1001" | tee -a /etc/apt/preferences.d/nodejs.pref
+			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		else
 			$SUDOX $INSTALL_CMD update 2>&1 > /dev/null
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
@@ -824,9 +822,7 @@ install_nodejs() {
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-			echo "Package: nodejs" | sudo tee /etc/apt/preferences.d/nodejs.pref
-			echo "Pin: origin deb.nodesource.com" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
-			echo "Pin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
+			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		fi
 	fi
 	$INSTALL_CMD update 2>&1 > /dev/null
@@ -848,7 +844,7 @@ detect_ip_address() {
 	if [ "$HOST_PLATFORM" = "osx" ]; then
 		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+" | head -1)
 	else
-		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
+		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f11 | head -1)
 	fi
 	echo $IP
 }

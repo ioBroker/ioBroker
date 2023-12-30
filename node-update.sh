@@ -319,9 +319,7 @@ fi;
                         echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
                         echo "";
                         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list;
-                        echo "Package: nodejs" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref;
-                        echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs.pref;
-                        echo "Pin-Priority: 1001" | $SUDOX tee -a /etc/apt/preferences.d/nodejs.pref;
+                        echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
                         echo -e "\n*** These repos are active after the adjustments:"
                         $SUDOX "$INSTALL_CMD" update;
 
