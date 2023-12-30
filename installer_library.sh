@@ -1,13 +1,13 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2023-12-29" # format YYYY-MM-DD
+LIBRARY_VERSION="2023-12-30" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
 NODE_MAJOR=18
-NODE_JS_BREW_URL="https://nodejs.org/dist/latest-hydrogen/node-v18.17.1.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v18.17.1/node-v18.17.1.pkg"
 
 # ------------------------------
 # test function of the library
@@ -141,6 +141,9 @@ function set_some_common_params() {
 	# Where the diag script is located
 	DIAG_URL="https://iobroker.net/diag.sh"
 
+  # Where the nodejs Update script is located
+  NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
+
 	# Remember the full path of bash
 	BASH_CMDLINE=$(which bash)
 
@@ -170,7 +173,7 @@ install_package_linux() {
 			errormessage=$( $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS $package > /dev/null 2>&1)
 		else
 			# Install it
-			errormessage=$( $SUDOX DEBIAN_FRONTEND=noninteractive $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends $package > /dev/null 2>&1)
+			errormessage=$( $SUDOX $INSTALL_CMD update -qq && $SUDOX DEBIAN_FRONTEND=noninteractive $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
 		fi
 
 		# Hide "Error: Nothing to do"
@@ -237,7 +240,7 @@ install_necessary_packages() {
 			"libcap2-bin" # To give nodejs access to protected ports
 			# These are used by a couple of adapters and should therefore exist:
 			"build-essential"
-			"gcc-c++"
+			"gcc"
 			"make"
 			"libavahi-compat-libdnssd-dev"
 			"libudev-dev"
@@ -811,9 +814,7 @@ install_nodejs() {
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-			echo "Package: nodejs" | tee /etc/apt/preferences.d/nodejs.pref
-			echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs.pref
-			echo "Pin-Priority: 1001" | tee -a /etc/apt/preferences.d/nodejs.pref
+			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		else
 			$SUDOX $INSTALL_CMD update 2>&1 > /dev/null
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
@@ -821,9 +822,7 @@ install_nodejs() {
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-			echo "Package: nodejs" | sudo tee /etc/apt/preferences.d/nodejs.pref
-			echo "Pin: origin deb.nodesource.com" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
-			echo "Pin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/nodejs.pref
+			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		fi
 	fi
 	install_package nodejs
@@ -844,7 +843,7 @@ detect_ip_address() {
 	if [ "$HOST_PLATFORM" = "osx" ]; then
 		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+" | head -1)
 	else
-		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1)
+		IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1 | head -1)
 	fi
 	echo $IP
 }
