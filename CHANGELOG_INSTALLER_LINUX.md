@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+### 2023-12-29
+* Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
+
 ### 2023-10-13
 * Allow to define Node.js version as parameter for "iob nodejs-update" command
 * fix package installation error for gcc 

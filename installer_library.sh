@@ -170,7 +170,7 @@ install_package_linux() {
 			errormessage=$( $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS $package > /dev/null 2>&1)
 		else
 			# Install it
-			errormessage=$( $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends $package > /dev/null 2>&1)
+			errormessage=$( $SUDOX DEBIAN_FRONTEND=noninteractive $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends $package > /dev/null 2>&1)
 		fi
 
 		# Hide "Error: Nothing to do"
@@ -807,7 +807,7 @@ install_nodejs() {
 		if [ "$IS_ROOT" = true ]; then
 			$INSTALL_CMD update 2>&1 > /dev/null
             $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
-            mkdir -p /etc/apt/keyrings 
+            mkdir -p /etc/apt/keyrings
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
             echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
