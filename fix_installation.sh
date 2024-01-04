@@ -3,6 +3,8 @@
 # Increase this version number whenever you update the fixer
 FIXER_VERSION="2023-12-30" # format YYYY-MM-DD
 
+export DEBIAN_FRONTEND=noninteractive
+
 compress_jsonl_databases() {
     echo "Checking for uncompressed JSONL databases... This might take a while!"
     echo ""

@@ -4,6 +4,9 @@
 * Fix Nodejs Update script call
 * Fixes in Nodejs installation
 
+### 2024-01-04
+* Fix package installation issues on Debian
+
 ### 2023-12-29
 * Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
 

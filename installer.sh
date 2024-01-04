@@ -39,6 +39,7 @@ fi
 INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
 
 export AUTOMATED_INSTALLER="true"
+export DEBIAN_FRONTEND=noninteractive
 NUM_STEPS=4
 
 # ########################################################
