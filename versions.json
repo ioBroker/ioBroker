@@ -1,5 +1,5 @@
 {
-    "nodeAccepted": [12, 14, 16],
-    "nodeRecommended": 18,
+    "nodeJsAccepted": [12, 14, 16],
+    "nodeJsRecommended": 18,
     "winInstaller": "2.2.2"
 }
