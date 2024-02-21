@@ -79,12 +79,12 @@ enable_colored_output
 get_platform_params() {
 	# Test which platform this script is being run on
 	# When adding another supported platform, also add detection for the install command
-	# HOST_PLATFORM:  Name of the platform
-	# INSTALL_CMD:      comand for package installation
-	# INSTALL_CMD_ARGS: arguments for $INSTALL_CMD to install something
+	# HOST_PLATFORM:        Name of the platform
+	# INSTALL_CMD:          command for package installation
+	# INSTALL_CMD_ARGS:     arguments for $INSTALL_CMD to install something
 	# INSTALL_CMD_UPD_ARGS: arguments for $INSTALL_CMD to update something
-	# IOB_DIR:	  Directory where iobroker should be installed
-	# IOB_USER:	  The user to run ioBroker as
+	# IOB_DIR:	            Directory where iobroker should be installed
+	# IOB_USER:	            The user to run ioBroker as
 
 	INSTALL_CMD_UPD_ARGS=""
 
