@@ -8,16 +8,17 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "This script must not be run as root! \nPlease use your standard user!"
-                        exit 1
+                        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
+                        sleep 5;
 
 fi
 clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2023-10-10";      #version of this script
+SKRIPTV="2024-04-13";      #version of this script
 NODE_MAJOR=18           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
+
 HOST=$(hostname)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #recommended node version
 NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext);    #recommended npm version
@@ -57,7 +58,7 @@ echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
 if [ -f "$DOCKER" ]; then
 echo -e "Hardware Vendor : $(cat /sys/devices/virtual/dmi/id/sys_vendor)";
 echo -e "Kernel          : $(uname -m)";
-echo -e "Userland        : $(dpkg --print-architecture)";
+echo -e "Userland        : $(getconf LONG_BIT) bit";
 echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
         hostnamectl | grep -v 'Machine\|Boot';
@@ -70,7 +71,7 @@ fi;
 # if [ -f /.dockerenv ]; then
 #    echo "I'm inside matrix ;(";
 # else
-#    echo "I'm living in real world!";
+#    echo "I'm living in a real world!";
 # fi
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
@@ -80,7 +81,7 @@ else
     echo "Virtualization  : Docker"
 fi;
 echo -e "Kernel          : $(uname -m)";
-echo -e "Userland        : $(dpkg --print-architecture)";
+echo -e "Userland        : $(getconf LONG_BIT) bit";
 echo "";
 echo "Systemuptime and Load:";
         uptime;
@@ -189,19 +190,32 @@ else
 fi;
 
 echo "";
-echo -e "\033[34;107m*** User and Groups ***\033[0m";
+echo -e "\033[34;107m*** Users and Groups ***\033[0m";
+        echo "User that called 'iob diag':";
         whoami;
-        echo "$HOME";
-        groups;
-echo "";
-echo -e "\033[34;107m*** X-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -f "Xorg")
-# XORGTEST=$(ps aux | grep -c 'Xorg')
-if [[ "$XORGTEST" -gt 1 ]];
+        env | grep HOME;
+        echo "GROUPS=$(groups)";
+        echo "";
+        echo "User that is running 'js-controller':";
+        if [[ $(pidof iobroker.js-controller) -gt 0 ]];
         then
-                echo -e "X-Server: \ttrue"
+                IOUSER=$(ps -o user= -p "$(pidof iobroker.js-controller)")
+                echo "$IOUSER";
+                sudo -H -u "$IOUSER" env | grep HOME;
+                echo "GROUPS=$(sudo -u "$IOUSER" groups)"
         else
-                echo -e "X-Server: \tfalse"
+         echo "js-controller is not running";
+        fi;
+
+echo "";
+
+echo -e "\033[34;107m*** Display-Server-Setup ***\033[0m";
+XORGTEST=$(pgrep -c 'Xorg|ayland|X11|wayfire')
+if [[ "$XORGTEST" -gt 0 ]];
+        then
+                echo -e "Display-Server: true"
+        else
+                echo -e "Display-Server: false"
 fi
 echo -e "Desktop: \t$DESKTOP_SESSION";
 echo -e "Terminal: \t$XDG_SESSION_TYPE";
@@ -214,14 +228,20 @@ echo "";
 echo -e "\033[34;107m*** MEMORY ***\033[0m";
         free -th --mega;
 echo "";
+echo -e "Active iob-Instances: \t$(iob list instances | grep -c ^+)";
+echo "";
         vmstat -S M -s | head -n 10;
 
-# RASPBERRY only
-if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
-        echo "";
-        echo "Raspberry only:";
-        vcgencmd mem_oom;
-fi;
+# RASPBERRY only - Code broken for RPi5
+# if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
+#        echo "";
+#        echo "Raspberry only:";
+#        vcgencmd mem_oom;
+#fi;
+
+echo "";
+echo -e "\033[34;107m*** top - Table Of Processes  ***\033[0m";
+top -b -n 1 | head -n 5;
 
 if [ -f "$DOCKER" ]; then
 echo "";
@@ -238,8 +258,8 @@ echo "";
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
 sudo dmesg -T | grep -i ext4;
 echo "";
-echo -e "\033[32mShow mounted filesystems \(real ones only\):\033[0m";
-findmnt --real;
+echo -e "\033[32mShow mounted filesystems:\033[0m";
+findmnt;
 echo "";
 if [[ -L "/opt/iobroker/backups" ]]; then
   echo "backups directory is linked to a different directory";
@@ -267,29 +287,97 @@ echo -e "\033[32mThe five largest files in iobroker-data are:\033[0m";
 echo "";
 # Detecting dev-links in /dev/serial/by-id
 echo -e "\033[32mUSB-Devices by-id:\033[0m";
-echo "USB-Sticks -  Avoid direct links to /dev/* in your adapter setups, please always prefer the links 'by-id':";
+echo "USB-Sticks -  Avoid direct links to /dev/tty* in your adapter setups, please always prefer the links 'by-id':";
 echo "";
-find /dev/serial/by-id/ -maxdepth 1 -mindepth 1;
-echo "";
+SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null);
+IOBZIGBEEPORT=$(iob list instances | grep system.adapter.zigbee | awk -F ':' '{print $4}' | cut -c 2-)
+
+if [[ -n "$SYSZIGBEEPORT" ]];
+        then
+                echo "$SYSZIGBEEPORT";
+        else
+                echo "No Devices found 'by-id'";
+fi;
+
+
+
+if  [[ -z "$IOBZIGBEEPORT" ]]
+        then
+                echo "";
+        elif [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT"* ]]
+        then
+                echo "";
+                echo "Your ZigBee COM-Port is matching 'by-id'. Very good!";
+        else
+                echo;
+                echo "HINT:";
+                echo "COM-Port in your ZigBee-Instance ist not set to the 'by-id'-Link. Please check that!";
+fi;
+
+
+
+
+
+
+
+                echo "";
+
+
 
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
 echo "";
-echo -e "$(type -p nodejs) \t$(nodejs -v)";
-echo -e "$(type -p node) \t\t$(node -v)";
-echo -e "$(type -p npm) \t\t$(npm -v)";
-echo -e "$(type -p npx) \t\t$(npx -v)";
-echo -e "$(type -p corepack) \t$(corepack -v)";
-PATHAPT=$(type -p apt);
-PATHNODEJS=$(type -p nodejs);
-PATHNODE=$(type -p node);
-PATHNPM=$(type -p npm);
-PATHNPX=$(type -p npx);
-PATHCOREPACK=$(type -p corepack);
-VERNODEJS=$(nodejs -v);
-VERNODE=$(node -v);
-VERNPM=$(npm -v);
-VERNPX=$(npx -v);
-#VERCOREPACK=$(corepack -v);
+
+PATHAPT=$(type -P apt);
+PATHNODEJS=$(type -P nodejs);
+PATHNODE=$(type -P node);
+PATHNPM=$(type -P npm);
+PATHNPX=$(type -P npx);
+PATHCOREPACK=$(type -P corepack);
+
+
+if [ "$PATHNODEJS" = "" ];
+then
+        echo -e "nodejs: \t\tN/A";
+else
+        echo -e "$(type -P nodejs) \t$(nodejs -v)";
+        VERNODEJS=$(nodejs -v);
+fi;
+
+if [ "$PATHNODE" = "" ];
+then
+        echo -e "node: \t\tN/A";
+
+else
+        echo -e "$(type -P node) \t\t$(node -v)";
+        VERNODE=$(node -v);
+fi;
+
+if [ "$PATHNPM" = "" ];
+then
+        echo -e "npm: \t\t\tN/A";
+else
+        echo -e "$(type -P npm) \t\t$(npm -v)";
+        VERNPM=$(npm -v);
+fi;
+
+if [ "$PATHNPX" = "" ];
+then
+        echo -e "npx: \t\t\tN/A";
+
+else
+        echo -e "$(type -P npx) \t\t$(npx -v)";
+        VERNPX=$(npx -v);
+fi;
+
+if [ "$PATHCOREPACK" = "" ];
+then
+        echo -e "corepack: \tN/A";
+
+else
+        echo -e "$(type -P corepack) \t$(corepack -v)";
+        VERCOREPACK=$(corepack -v);
+fi;
+
 
 if
         [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
@@ -331,8 +419,14 @@ else
 fi
 
 echo "";
+if [ -f /usr/bin/apt-cache ]
+then
         apt-cache policy nodejs;
+        echo "";
+else
 echo "";
+fi
+
 # npm doctor can be misleading, deactivated to avoid confusion
 # echo -e "Calling 'npm doctor' for you. \033[32mPlease be patient!\033[0m";
 # echo "";
@@ -373,6 +467,7 @@ echo -e "admin: \t\t$(iob version admin)";
 echo -e "javascript: \t$(iob version javascript)";
 echo "";
 echo -e "Adapters from github: \t$( (cd /opt/iobroker && npm ls | grep -c 'git') )";
+(cd /opt/iobroker && npm ls | grep 'git')
 echo "";
 echo -e "\033[32mAdapter State\033[0m";
 iob list instances;
@@ -394,9 +489,16 @@ IOBSTATES=$(iob list states 2>/dev/null | wc -l);
 echo -e "States: \t$IOBSTATES";
 echo "";
 echo -e "\033[34;107m*** OS-Repositories and Updates ***\033[0m";
+if [ -f /usr/bin/apt-get ]
+then
         sudo apt-get update 1>/dev/null && sudo apt-get update
         APT=$(apt-get upgrade -s |grep -P '^\d+ upgraded'|cut -d" " -f1)
-echo -e "Pending Updates: $APT";
+        echo -e "Pending Updates: $APT";
+else
+        echo "No Debian-based Linux detected."
+fi
+
+
 echo "";
 
 echo -e "\033[34;107m*** Listening Ports ***\033[0m";
@@ -459,14 +561,14 @@ fi;
 echo "";
 echo -e "Installation: \t\t$INSTENV2";
 echo -e "Kernel: \t\t$(uname -m)";
-echo -e "Userland: \t\t$(dpkg --print-architecture)";
+echo -e "Userland: \t\t$(getconf LONG_BIT) bit";
 if [ -f "$DOCKER" ]; then
     echo -e "Timezone: \t\t$(cat /etc/timezone)"
 else
     echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)";
 fi;
 echo -e "User-ID: \t\t$EUID";
-echo -e "X-Server: \t\t$(if [[ $XORGTEST -gt 1 ]]; then echo "true";else echo "false";fi)";
+echo -e "Display-Server: \t$(if [[ $XORGTEST -gt 0 ]]; then echo "true";else echo "false";fi)";
 if [ -f "$DOCKER" ]; then
         echo -e "";
 else
@@ -483,11 +585,50 @@ if [[ -f "/var/run/reboot-required" ]]; then
 fi
 
 echo "";
-echo -e "Nodejs-Installation: \t$( type -p nodejs ) \t$( nodejs -v )";
-echo -e "\t\t\t$(type -P node) \t\t$(node -v)";
-echo -e "\t\t\t$(type -P npm) \t\t$(npm -v)";
-echo -e "\t\t\t$(type -P npx) \t\t$(npx -v)";
-echo -e "\t\t\t$(type -P corepack) \t$(corepack -v)";
+echo -e "Nodejs-Installation:";
+if [ "$PATHNODEJS" = "" ];
+then
+        echo -e "nodejs: \t\tN/A";
+else
+        echo -e "$(type -P nodejs) \t$(nodejs -v)";
+        VERNODEJS=$(nodejs -v);
+fi;
+
+if [ "$PATHNODE" = "" ];
+then
+        echo -e "node: \t\tN/A";
+
+else
+        echo -e "$(type -P node) \t\t$(node -v)";
+        VERNODE=$(node -v);
+fi;
+
+if [ "$PATHNPM" = "" ];
+then
+        echo -e "npm: \t\t\tN/A";
+else
+        echo -e "$(type -P npm) \t\t$(npm -v)";
+        VERNPM=$(npm -v);
+fi;
+
+if [ "$PATHNPX" = "" ];
+then
+        echo -e "npx: \t\t\tN/A";
+
+else
+        echo -e "$(type -P npx) \t\t$(npx -v)";
+        VERNPX=$(npx -v);
+fi;
+
+if [ "$PATHCOREPACK" = "" ];
+then
+        echo -e "corepack: \tN/A";
+
+else
+        echo -e "$(type -P corepack) \t$(corepack -v)";
+        VERCOREPACK=$(corepack -v);
+fi;
+
 echo -e "";
 echo -e "Recommended versions are nodejs ""$NODERECOM"" and npm ""$NPMRECOM""";
 
@@ -532,9 +673,9 @@ fi
 if [[ $NODENOTCORR -eq 1 ]];
 then
                 echo "";
-                echo "Please check";
-                echo "https://forum.iobroker.net/topic/35090/howto-nodejs-installation-und-upgrades-unter-debian";
-                echo "for more information on how to fix these errors."
+                echo "Please execute";
+                echo "iobroker nodejs-update";
+                echo "to fix these errors."
 fi;
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
@@ -551,7 +692,7 @@ echo -e "ioBroker Status: \t$(iobroker status)";
 echo "";
 # iobroker status all | grep MULTIHOSTSERVICE/enabled;
 echo "Status admin and web instance:";
-iobroker list instances | grep 'admin.\|system.adapter.web.'
+iobroker list instances | grep 'admin.\|system.adapter.web.';
 echo "";
 echo -e "Objects: \t\t$IOBOBJECTS";
 echo -e "States: \t\t$IOBSTATES";
