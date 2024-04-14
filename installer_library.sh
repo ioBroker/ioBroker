@@ -684,6 +684,7 @@ create_user_linux() {
 		dialout
 		gpio
 		i2c
+  		plugdev
 		redis
 		tty
 		video
@@ -750,6 +751,7 @@ create_user_freebsd() {
 		dialout
 		gpio
 		i2c
+  		plugdev
 		redis
 		tty
 		video
