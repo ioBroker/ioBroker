@@ -1,5 +1,18 @@
 # Changelog for Linux-Diag-Script
 
+## 2024-04-21
+* root check less strict - Script can now be run as root
+* Check for Userland architecture made compatible with non-Debian Linux
+* Check for Users and their Groups
+* Fixed check for running Display-Server
+* Added excerpt of 'top' - Only the header is displayed
+* All mounted filesystems are displayed, even virtual ones
+* Added check for 'by-id'-Links for serial devices (e.g. ZigBee-Sticks)
+* Made nodejs-Check more compatible with non-Debian Linux
+* GitHub-Installations are listed by name
+* Extended 'by-id'-Checks for Zigbee COM-Ports
+* Better check for running Display Servers
+
 ## 2023-10-10
 * Removed output of Machine & Boot IDs.
 * Added a human-readable diag of Raspberry Throttling States
