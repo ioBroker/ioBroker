@@ -16,7 +16,7 @@ clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-04-21";      #version of this script
+SKRIPTV="2024-05-05";      #version of this script
 NODE_MAJOR=18           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(hostname)
@@ -212,7 +212,7 @@ echo -e "\033[34;107m*** Users and Groups ***\033[0m";
 echo "";
 
 echo -e "\033[34;107m*** Display-Server-Setup ***\033[0m";
-XORGTEST=$(pgrep -c '[X]|[w]ayland|X11|wayfire')
+XORGTEST=$(pgrep -cf '[X]|[w]ayland|X11|wayfire')
 if [[ "$XORGTEST" -gt 0 ]];
         then
                 echo -e "Display-Server: true"
@@ -617,7 +617,7 @@ echo -e "Installation: \t\t$INSTENV2";
 echo -e "Kernel: \t\t$(uname -m)";
 echo -e "Userland: \t\t$(getconf LONG_BIT) bit";
 if [ -f "$DOCKER" ]; then
-    echo -e "Timezone: \t\t$(cat /etc/timezone)"
+    echo -e "Timezone: \t\t$(date +"%Z %z")"
 else
     echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)";
 fi;
