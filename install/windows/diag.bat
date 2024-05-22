@@ -40,9 +40,16 @@ echo Please wait until the script is completed ...
 echo. >> %logfile% 2>&1
 echo ``` >> %logfile% 2>&1
 echo -------------------------------------------------------------------------------------------------------------------------------------------------------------------- >> %logfile% 2>&1
-echo Disks: >> %logfile% 2>&1
+echo time and date: >> %logfile% 2>&1
 echo. >> %logfile% 2>&1
-for /f "tokens=1,2,3,4" %%a in ('wmic /node:localhost LogicalDisk Where DriveType^="3" Get DeviceID^,Size^,FreeSpace^,VolumeName^') do @echo %%a	%%c	%%b	%%d >> %logfile% 2>&1
+%windir%\System32\tzutil.exe /g >> %logfile% 2>&1
+echo. >> %logfile% 2>&1
+echo %date% %time% >> %logfile% 2>&1
+echo. >> %logfile% 2>&1
+echo -------------------------------------------------------------------------------------------------------------------------------------------------------------------- >> %logfile% 2>&1
+echo Disks (letter, size, free, name): >> %logfile% 2>&1
+echo. >> %logfile% 2>&1
+for /f "tokens=1,2,3,4" %%a in ('wmic /node:localhost LogicalDisk Where DriveType^="3" Get DeviceID^,Size^,FreeSpace^,VolumeName^|find ":"') do @echo %%a	%%c	%%b	%%d >> %logfile% 2>&1
 echo. >> %logfile% 2>&1
 echo -------------------------------------------------------------------------------------------------------------------------------------------------------------------- >> %logfile% 2>&1
 echo ioBroker Directory: >> %logfile% 2>&1
