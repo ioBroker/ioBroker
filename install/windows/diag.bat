@@ -17,21 +17,20 @@ set logfile=log\ioBroker-diag.log
 echo.
 echo *** ioBroker Diagnosis *** > %logfile% 2>&1
 echo. >> %logfile% 2>&1
-echo **************************************************************************************************************** >> %logfile% 2>&1
-echo *                                                                                                              * >> %logfile% 2>&1
-echo * Please stretch the window of your command window as wide as possible or switch to full screen                * >> %logfile% 2>&1
-echo *                                                                                                              * >> %logfile% 2>&1
-echo * The following checks may give hints to potential malconfigurations or errors, please post them in our forum: * >> %logfile% 2>&1
-echo *                                                                                                              * >> %logfile% 2>&1
-echo * https://forum.iobroker.net                                                                                   * >> %logfile% 2>&1
-echo *                                                                                                              * >> %logfile% 2>&1
-echo * Just copy and paste the conent of the log file %logfile% ``` characters at start and end.        * >> %logfile% 2>&1
-echo * It helps us to help you!                                                                                     * >> %logfile% 2>&1
-echo *                                                                                                              * >> %logfile% 2>&1
-echo * The output will be saved to the file %logfile% and displayed in this window once the script      * >> %logfile% 2>&1
-echo * has finished.                                                                                                * >> %logfile% 2>&1
-echo *                                                                                                              * >> %logfile% 2>&1
-echo **************************************************************************************************************** >> %logfile% 2>&1
+echo ************************************************************************* >> %logfile% 2>&1
+echo *                                                                       * >> %logfile% 2>&1
+echo * The following checks may give hints to potential malconfigurations    * >> %logfile% 2>&1
+echo * or errors, please post them in our forum:                             * >> %logfile% 2>&1
+echo *                                                                       * >> %logfile% 2>&1
+echo * https://forum.iobroker.net                                            * >> %logfile% 2>&1
+echo *                                                                       * >> %logfile% 2>&1
+echo * Just copy and paste the content of the log file %logfile% * >> %logfile% 2>&1
+echo * including ``` characters at start and end.                            * >> %logfile% 2>&1
+echo * It helps us to help you!                                              * >> %logfile% 2>&1
+echo *                                                                       * >> %logfile% 2>&1
+echo * The output will be saved to the file %logfile% and        * >> %logfile% 2>&1
+echo * displayed in notepad once the script has finished.                    * >> %logfile% 2>&1
+echo *                                                                       * >> %logfile% 2>&1
 echo. >> %logfile% 2>&1
 type %logfile%
 pause
@@ -125,10 +124,8 @@ echo. >> %logfile% 2>&1
 call npm -g ls --all >> %logfile% 2>&1
 echo. >> %logfile% 2>&1
 echo ``` >> %logfile% 2>&1
-type %logfile% | more
-echo.
 echo.
 echo The output is stored in the file %logfile%
 echo.
-echo.
+start notepad %logfile%
 :end
