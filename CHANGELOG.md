@@ -1,6 +1,10 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+
+## **WORK IN PROGRESS**
+* Create the correct `controller.js` file on windows to work with controller v6
+
 ## 5.0.0 (2023-09-14)
 * Adjust minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
 
