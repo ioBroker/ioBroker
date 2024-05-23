@@ -1,7 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-## 5.1.1 (2024-05-23)
+## 5.1.2 (2024-05-23)
 * Create the correct `controller.js` file on windows to work with controller v6
 
 ## 5.0.0 (2023-09-14)
