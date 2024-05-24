@@ -1,5 +1,10 @@
 # Changelog for Linux-Diag-Script
 
+## 2024-05-22
+* Added nodejs20
+* pgrep fixed for Display Server Detection
+* Fixed timezone detection on Docker
+
 ## 2024-04-21
 * root check less strict - Script can now be run as root
 * Check for Userland architecture made compatible with non-Debian Linux

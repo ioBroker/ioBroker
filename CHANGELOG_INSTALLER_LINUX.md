@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+### 2024-05-24
+* Install Node.js 20 by default for installer
+
 ### 2024-01-04
 * Fix package installation issues on Debian
 
