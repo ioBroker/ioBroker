@@ -1,5 +1,5 @@
 #!/bin/bash
-# iobroker node-update
+# iobroker nodejs-update
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
@@ -37,7 +37,7 @@ if [ -z $(type -P apt-get) ]
 fi;
 
 ### Starting the skript
-echo -e "ioBroker node-update v$VERSION is starting. Please be patient!";
+echo -e "ioBroker nodejs-update v$VERSION is starting. Please be patient!";
 HOST=$(hostname)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If successful, no fallback required.
 if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semvered nodejs installation is found
@@ -54,7 +54,7 @@ NODE_MAJOR=$1;
 NODERECOM=CUSTOM;
 fi;
 # ------------------------------
-# functions for ioBroker node-update - Code borrowed from 'iob installer' ;-)
+# functions for ioBroker nodejs-update - Code borrowed from 'iob installer' ;-)
 # ------------------------------
 
 
@@ -252,7 +252,7 @@ if
                                 echo -e "*** Deleting $PATHCOREPACK ***";
                                 $SUDOX rm "$(type -p corepack)";
                 fi
-                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-update' again to check if your installation is fine now";
+                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now";
         fi
                 else
         echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths.";
