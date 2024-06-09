@@ -3,8 +3,8 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2023-11-01"
-NODE_MAJOR=18           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
+VERSION="2024-06-09"
+NODE_MAJOR=20           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null);
@@ -15,9 +15,9 @@ then
         echo "Fixing Docker is not supported, please update your Docker Container";
         unset LC_ALL;
         exit 1;
-        elif [ "$(id -u)" -eq 0 ];
-                 then
-                         echo -e "This script must not be run as root! \nPlease use your standard user!"
+elif [ "$(id -u)" -eq 0 ];
+then
+        echo -e "This script must not be run as root! \nPlease use your standard user!"
         unset LC_ALL;
         exit 1;
 fi;
@@ -29,11 +29,18 @@ if [[ $SYSTDDVIRT = "wsl" ]];
         exit 1;
 fi;
 
+if [ -z "$(type -P apt-get)" ]
+        then
+        echo "Only a Debian-based Linux is supported"
+        unset LC_ALL;
+        exit 1;
+fi;
 
 ### Starting the skript
 echo -e "ioBroker node-update v$VERSION is starting. Please be patient!";
+
 HOST=$(hostname)
-NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If succesfull, no fallback required.
+NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If successful, no fallback required.
 if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semvered nodejs installation is found
 then
 NODERECOMNF=1; #marker for 'no recommended version found'
@@ -106,6 +113,16 @@ fi;
         USER_GROUP="$USER"
         fi
 
+if
+        [[ "$INSTALL_CMD" != "apt-get" ]];
+then
+        echo "Non-Debian-based Systems are not supported, exiting";
+        unset LC_ALL;
+        exit;
+fi;
+
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm -qqy"; #Deinstall DFSG-Version
+
 clear;
 echo -e "ioBroker nodejs fixer $VERSION";
 
@@ -121,29 +138,35 @@ if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit
         NODERECOMNF=1;
         echo -e "No recommendation for a nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR tree.";
 fi;
-echo "";
-echo "Your current setup is:";
+        echo "";
+        echo "Your current setup is:";
+
 if [[ -f /usr/bin/nodejs ]];
-then
-echo -e "$(type -p nodejs) \t$(nodejs -v)";
+        then
+                echo -e "$(type -p nodejs) \t$(nodejs -v)";
 fi;
-echo -e "$(type -p node) \t\t$(node -v)";
-echo -e "$(type -p npm) \t\t$(npm -v)";
-echo -e "$(type -p npx) \t\t$(npx -v)";
+        echo -e "$(type -p node) \t\t$(node -v)";
+        echo -e "$(type -p npm) \t\t$(npm -v)";
+        echo -e "$(type -p npx) \t\t$(npx -v)";
+
 if [[ -f /usr/bin/corepack ]]
-then
-echo -e "$(type -p corepack) \t$(corepack -v)";
+        then
+                echo -e "$(type -p corepack) \t$(corepack -v)";
 fi;
+
 PATHNODEJS=$(type -p nodejs);
 PATHNODE=$(type -p node);
 PATHNPM=$(type -p npm);
 PATHNPX=$(type -p npx);
+
 if [[ -f /usr/bin/corepack ]]; then
 PATHCOREPACK=$(type -p corepack);
 fi;
+
 if [[ -f /usr/bin/nodejs ]]; then
 VERNODEJS=$(nodejs -v);
 fi;
+
 VERNODE=$(node -v);
 VERNPM=$(npm -v);
 VERNPX=$(npx -v);
@@ -205,7 +228,7 @@ if
                 if
                                 [[ -f /usr/bin/nodejs && "$PATHNODEJS" != "/usr/bin/nodejs" ]];
                         then
-                                echo "*** Deleting $PATHNODEJS ***";
+                                echo -e "*** Deleting $PATHNODEJS ***";
                                 $SUDOX rm "$(type -p nodejs)";
                 fi
                 if
@@ -232,7 +255,7 @@ if
                                 echo -e "*** Deleting $PATHCOREPACK ***";
                                 $SUDOX rm "$(type -p corepack)";
                 fi
-                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-fix' again to check if your installation is fine now";
+                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-update' again to check if your installation is fine now";
         fi
                 else
         echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths.";
@@ -241,7 +264,7 @@ fi;
 if
         [[ "$INSTALL_CMD" != "apt-get" ]];
 then
-        echo "Non-Debian-based Systems are not supported yet, exiting";
+        echo "Non-Debian-based Systems are not supported, exiting";
         unset LC_ALL;
         exit;
 fi;
@@ -251,8 +274,14 @@ then
 echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one.";
 echo -e "\n***You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
 echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
-echo -e "\n *** DO NOT use 'nodejs-update' as part of a regular update process! ***";
+echo -e "\n*** DO NOT use 'nodejs-update' as part of a regular update process! ***\n";
 unset LC_ALL;
+if [[ -f "/var/run/reboot-required" ]];
+        then
+        echo "";
+        echo "This system needs to be REBOOTED NOW!";
+        echo "";
+fi;
 exit;
 fi;
 if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]];
@@ -270,6 +299,12 @@ then
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
                 echo "We are not fixing your installation. Exiting.";
+                        if [[ -f "/var/run/reboot-required" ]];
+        then
+        echo "";
+        echo "This system needs to be REBOOTED NOW!";
+        echo "";
+        fi;
         exit;
         fi;
 fi;
@@ -290,6 +325,13 @@ if
                 $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
         else
                 echo "We are not fixing your installation. Exiting.";
+        
+        if [[ -f "/var/run/reboot-required" ]];
+                then
+                echo "";
+                echo "This system needs to be REBOOTED NOW!";
+                echo "";
+        fi;
         exit;
 
         fi;
@@ -310,6 +352,9 @@ fi;
                         sleep 1                 # wait 1s between "frames"
                 done;
                 echo "";
+                        echo "Removing dfsg-nodejs";
+                        eval "$DFSGREM"
+                        echo "";
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
@@ -321,25 +366,22 @@ fi;
                         echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
                         echo "";
                         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list;
-                        echo "Package: nodejs" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref;
-                        echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs.pref;
-                        echo "Pin-Priority: 1001" | $SUDOX tee -a /etc/apt/preferences.d/nodejs.pref;
+                        echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs.pref
                         echo -e "\n*** These repos are active after the adjustments:"
                         $SUDOX "$INSTALL_CMD" update;
 
-                        echo "";
-                        echo "Installing the recommended nodejs version now!";
+
                         echo "";
                         if [ "$NODEINSTMAJOR" -gt "$NODE_MAJOR" ] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]
                                 then
-                                $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
+                                        $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
                                 elif
-                                [[ "$NODERECOMNF" -eq 1 ]]
+                                        [[ "$NODERECOMNF" -eq 1 ]]
                                 then
-                                NODERECOM=$NODE_MAJOR.0.0
+                                        NODERECOM=$NODE_MAJOR.0.0
 
                                 echo "Exact recommended version unknown, installing a fallback!";
-                                $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
+                                        $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
                                 echo -e "\nUpdating fallback to latest nodejs v$NODE_MAJOR release";
                                 $SUDOX $INSTALL_CMD -qq update;
                                 $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
@@ -354,15 +396,21 @@ fi;
                                 fi;
 
                 if [ "$SYSTDDVIRT" != "none" ]; then
-                        echo "Installing the recommended nodejs version!";
+                        echo "Installing nodejs now!";
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
                         echo -e "\n*** You need to manually restart your container/virtual machine now! *** ";
                         echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify.";
                         unset LC_ALL;
+                        if [[ -f "/var/run/reboot-required" ]];
+                                then
+                                echo "";
+                                echo "This system needs to be REBOOTED NOW!";
+                                echo "";
+                        fi;
                         exit;
                 else
-                        echo "Installing the recommended nodejs version!";
+                        echo "Installing nodejs!";
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
                         echo -e "\nWe tried our best to fix your nodejs. Please run iob diag again to verify.";
