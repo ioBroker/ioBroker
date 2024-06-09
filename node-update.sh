@@ -1,9 +1,9 @@
 #!/bin/bash
-# iobroker nodejs-update
+# iobroker node-update
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2024-05-23"
+VERSION="2024-06-09"
 NODE_MAJOR=20           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
@@ -12,7 +12,7 @@ DOCKER=/opt/scripts/.docker_config/.thisisdocker #used to identify docker
 
 if [ -f "$DOCKER" ];
 then
-        echo "Updating Node.js in Docker is not supported, please update your Docker Container";
+        echo "Fixing Docker is not supported, please update your Docker Container";
         unset LC_ALL;
         exit 1;
 elif [ "$(id -u)" -eq 0 ];
@@ -29,7 +29,7 @@ if [[ $SYSTDDVIRT = "wsl" ]];
         exit 1;
 fi;
 
-if [ -z $(type -P apt-get) ]
+if [ -z "$(type -P apt-get)" ]
         then
         echo "Only a Debian-based Linux is supported"
         unset LC_ALL;
@@ -37,7 +37,8 @@ if [ -z $(type -P apt-get) ]
 fi;
 
 ### Starting the skript
-echo -e "ioBroker nodejs-update v$VERSION is starting. Please be patient!";
+echo -e "ioBroker node-update v$VERSION is starting. Please be patient!";
+
 HOST=$(hostname)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #reading node version from iob states. If successful, no fallback required.
 if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; #check if a semvered nodejs installation is found
@@ -54,7 +55,7 @@ NODE_MAJOR=$1;
 NODERECOM=CUSTOM;
 fi;
 # ------------------------------
-# functions for ioBroker nodejs-update - Code borrowed from 'iob installer' ;-)
+# functions for ioBroker node-update - Code borrowed from 'iob installer' ;-)
 # ------------------------------
 
 
@@ -119,6 +120,8 @@ then
         unset LC_ALL;
         exit;
 fi;
+
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm -qqy"; #Deinstall DFSG-Version
 
 clear;
 echo -e "ioBroker nodejs fixer $VERSION";
@@ -252,7 +255,7 @@ if
                                 echo -e "*** Deleting $PATHCOREPACK ***";
                                 $SUDOX rm "$(type -p corepack)";
                 fi
-                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now";
+                echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob node-update' again to check if your installation is fine now";
         fi
                 else
         echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths.";
@@ -271,7 +274,7 @@ then
 echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one.";
 echo -e "\n***You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
 echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
-echo -e "\n *** DO NOT use 'nodejs-update' as part of a regular update process! ***";
+echo -e "\n*** DO NOT use 'nodejs-update' as part of a regular update process! ***\n";
 unset LC_ALL;
 if [[ -f "/var/run/reboot-required" ]];
         then
@@ -349,6 +352,9 @@ fi;
                         sleep 1                 # wait 1s between "frames"
                 done;
                 echo "";
+                        echo "Removing dfsg-nodejs";
+                        eval "$DFSGREM"
+                        echo "";
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
@@ -364,19 +370,18 @@ fi;
                         echo -e "\n*** These repos are active after the adjustments:"
                         $SUDOX "$INSTALL_CMD" update;
 
-                        echo "";
-                        echo "Installing nodejs now!";
+
                         echo "";
                         if [ "$NODEINSTMAJOR" -gt "$NODE_MAJOR" ] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]
                                 then
-                                $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
+                                        $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
                                 elif
-                                [[ "$NODERECOMNF" -eq 1 ]]
+                                        [[ "$NODERECOMNF" -eq 1 ]]
                                 then
-                                NODERECOM=$NODE_MAJOR.0.0
+                                        NODERECOM=$NODE_MAJOR.0.0
 
                                 echo "Exact recommended version unknown, installing a fallback!";
-                                $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
+                                        $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1 ;
                                 echo -e "\nUpdating fallback to latest nodejs v$NODE_MAJOR release";
                                 $SUDOX $INSTALL_CMD -qq update;
                                 $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
@@ -405,7 +410,7 @@ fi;
                         fi;
                         exit;
                 else
-                        echo "Installing the nodejs!";
+                        echo "Installing nodejs!";
                         $SUDOX $INSTALL_CMD update -qq;
                         $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs;
                         echo -e "\nWe tried our best to fix your nodejs. Please run iob diag again to verify.";
