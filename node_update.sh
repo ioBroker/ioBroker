@@ -319,9 +319,9 @@ if
         then
                 echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
+                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null";
                 # Deleting nodesource.list Will be recreated later.
-                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
+                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2> /dev/null;
         else
                 echo "We are not fixing your installation. Exiting.";
 
@@ -341,7 +341,7 @@ fi;
                                 iob stop &
                                 # sudo pkill ^io;
                         else
-                                iob stop &;
+                                iob stop &
                         fi;
 
                 echo "Waiting for ioBroker to shut down - Give me a minute..."
