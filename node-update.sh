@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2024-05-23"
+VERSION="2024-06-10"
 NODE_MAJOR=20           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
@@ -119,6 +119,8 @@ then
         unset LC_ALL;
         exit;
 fi;
+
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm -qqy"; #Deinstall DFSG-Version
 
 clear;
 echo -e "ioBroker nodejs fixer $VERSION";
@@ -317,12 +319,12 @@ if
         then
                 echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
+                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null";
                 # Deleting nodesource.list Will be recreated later.
-                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
+                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2> /dev/null;
         else
                 echo "We are not fixing your installation. Exiting.";
-        
+
         if [[ -f "/var/run/reboot-required" ]];
                 then
                 echo "";
@@ -336,10 +338,10 @@ fi;
 
         if [ "$SYSTDDVIRT" != "none" ]; then
                 echo -e "\nVirtualization: $SYSTDDVIRT";
-                                iob stop
+                                iob stop &
                                 # sudo pkill ^io;
                         else
-                                iob stop;
+                                iob stop &
                         fi;
 
                 echo "Waiting for ioBroker to shut down - Give me a minute..."
@@ -349,6 +351,11 @@ fi;
                         sleep 1                 # wait 1s between "frames"
                 done;
                 echo "";
+                        echo "";
+                        echo "Removing dfsg-nodejs";
+                        eval "$DFSGREM";
+                        echo "";
+
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
