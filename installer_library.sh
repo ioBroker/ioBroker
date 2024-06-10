@@ -647,6 +647,7 @@ create_user_linux() {
 		"df"
 		"mysqldump"
 		"ldconfig"
+		"timedatectl set-timezone"
 	)
 	add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
 
