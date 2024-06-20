@@ -37,7 +37,7 @@ if [ -z "$(type -P apt-get)" ]
         exit 1;
 fi;
 
-if [[ $DEBIANRELEASE = *buster* ]];
+if [[ $DEBIANRELEASE = *buster* && $1 -ne 18 ]];
         then
         echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't install.\nPlease install the current Debian Stable"
         unset LC_ALL;
