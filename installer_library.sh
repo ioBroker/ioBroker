@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2024-05-24" # format YYYY-MM-DD
+LIBRARY_VERSION="2024-06-20" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -796,10 +796,26 @@ install_nodejs() {
 	print_bold "Node.js not found. Installing..."
 
 	if [ "$INSTALL_CMD" = "yum" ]; then
+
+ 		$SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+SYS_ARCH=$(uname -m)
+NODEJS_REPO_CONTENT="[nodesource-nodejs]
+name=Node.js Packages for Linux RPM based distros - $SYS_ARCH
+baseurl=https://rpm.nodesource.com/pub_${NODE_MAJOR}.x/nodistro/nodejs/$SYS_ARCH
+priority=9
+enabled=1
+gpgcheck=1
+gpgkey=https://rpm.nodesource.com/gpgkey/ns-operations-public.key
+module_hotfixes=1"
+		
 		if [ "$IS_ROOT" = true ]; then
-		    $INSTALL_CMD $INSTALL_CMD_ARGS https://rpm.nodesource.com/pub_$NODE_MAJOR.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm
+			echo "$NODEJS_REPO_CONTENT" | tee /etc/yum.repos.d/nodesource-nodejs.repo > /dev/null
+			$INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
+			$INSTALL_CMD $INSTALL_CMD_ARGS nodejs
         else
-			$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS https://rpm.nodesource.com/pub_$NODE_MAJOR.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm
+			echo "$NODEJS_REPO_CONTENT" | $SUDOX tee /etc/yum.repos.d/nodesource-nodejs.repo > /dev/null
+			$SUDOX $INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
+			$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS nodejs
         fi
 	elif [ "$INSTALL_CMD" = "pkg" ]; then
 		$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS node
