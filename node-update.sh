@@ -3,12 +3,13 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2024-05-23"
+VERSION="2024-06-20"
 NODE_MAJOR=20           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null);
 DOCKER=/opt/scripts/.docker_config/.thisisdocker #used to identify docker
+DEBIANRELEASE=$(cat /etc/debian_version);
 
 if [ -f "$DOCKER" ];
 then
@@ -29,12 +30,20 @@ if [[ $SYSTDDVIRT = "wsl" ]];
         exit 1;
 fi;
 
-if [ -z $(type -P apt-get) ]
+if [ -z "$(type -P apt-get)" ]
         then
         echo "Only a Debian-based Linux is supported"
         unset LC_ALL;
         exit 1;
 fi;
+
+if [[ $DEBIANRELEASE = *buster* && $1 -ne 18 ]];
+        then
+        echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't install.\nPlease install the current Debian Stable"
+        unset LC_ALL;
+        exit 1;
+fi;
+
 
 ### Starting the skript
 echo -e "ioBroker nodejs-update v$VERSION is starting. Please be patient!";
@@ -119,6 +128,8 @@ then
         unset LC_ALL;
         exit;
 fi;
+
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm -qqy"; #Deinstall DFSG-Version
 
 clear;
 echo -e "ioBroker nodejs fixer $VERSION";
@@ -291,9 +302,9 @@ then
         then
                 echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt -o -path /run \) -prune -false -o -name nodesource.[gk]* -print)";
+                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt -o -path /run \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null";
                 # Deleting nodesource.list Will be recreated later.
-                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
+                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2> /dev/null;
         else
                 echo "We are not fixing your installation. Exiting.";
                         if [[ -f "/var/run/reboot-required" ]];
@@ -317,12 +328,12 @@ if
         then
                 echo "Trying to fix your installation now. Please be patient."
                 # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)";
+                $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null";
                 # Deleting nodesource.list Will be recreated later.
-                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis*;
+                $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2> /dev/null;
         else
                 echo "We are not fixing your installation. Exiting.";
-        
+
         if [[ -f "/var/run/reboot-required" ]];
                 then
                 echo "";
@@ -336,10 +347,10 @@ fi;
 
         if [ "$SYSTDDVIRT" != "none" ]; then
                 echo -e "\nVirtualization: $SYSTDDVIRT";
-                                iob stop
+                                iob stop &
                                 # sudo pkill ^io;
                         else
-                                iob stop;
+                                iob stop &
                         fi;
 
                 echo "Waiting for ioBroker to shut down - Give me a minute..."
@@ -349,6 +360,11 @@ fi;
                         sleep 1                 # wait 1s between "frames"
                 done;
                 echo "";
+                        echo "";
+                        echo "Removing dfsg-nodejs";
+                        eval "$DFSGREM";
+                        echo "";
+
                         echo -e "\n*** These repos are active on your system:";
                         $SUDOX "$INSTALL_CMD" update;
                         echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing.";
