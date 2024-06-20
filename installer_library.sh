@@ -630,6 +630,7 @@ create_user_linux() {
 	if [ $? -ne 0 ]; then
 		# User does not exist
 		$SUDOX useradd -m -s /usr/sbin/nologin "$username"
+  		$SUDOX chmod -R 755 /home/$username
 		echo "User $username created"
 	fi
 	# Add the current non-root user to the iobroker group so he can access the iobroker dir
