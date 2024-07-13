@@ -1,4 +1,5 @@
 {
     "nodeJsAccepted": [16, 18, 20],
-    "nodeJsRecommended": 18
+    "nodeJsRecommended": 20,
+    "npmRecommended": 10
 }

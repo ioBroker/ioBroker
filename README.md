@@ -89,7 +89,7 @@ This module is distributor under the MIT License (MIT).
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2023 bluefox <dogafox@gmail.com>,
+Copyright (c) 2014-2024 bluefox <dogafox@gmail.com>,
 Copyright (c) 2014      hobbyquaker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -144,6 +144,7 @@ gulp.task('fix', () => {
     const pack = require('./package.json');
     pack.name = '@iobroker/fix';
     fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pack, null, 2));
+    return Promise.resolve();
 });
 
 gulp.task('default', gulp.series('create', 'deploy'));
