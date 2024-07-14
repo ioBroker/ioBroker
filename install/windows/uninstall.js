@@ -1,25 +1,69 @@
 'use strict';
 
-const Service = require('node-windows').Service;
 const Shortcuts = require('./shortcuts');
+const execSync = require('child_process').execSync;
+const join = require('path').join;
+const fs = require('fs');
 
-// Get environment variables from file .env 
+// Get environment variables from file .env
 require('dotenv').config();
 
 // Remove the according Windows startmenu entries
 Shortcuts.removeStartMenu();
 
-// Create a new service object
-const svc = new Service({
-    name: process.env.iobServiceName ? process.env.iobServiceName : 'ioBroker',
-    script: require('path').join(__dirname, 'controller.js')
-});
+const serviceName = process.env.iobServiceName ? process.env.iobServiceName : 'ioBroker';
+const daemonDir = join(__dirname, 'daemon');
+const serviceXml = `${serviceName.toLowerCase()}.xml`
+const serviceExe = `${serviceName.toLowerCase()}.exe`
+const serviceErrLog = `${serviceName.toLowerCase()}.err.log`
+const serviceOutLog = `${serviceName.toLowerCase()}.out.log`
+const serviceWrapperLog = `${serviceName.toLowerCase()}.wrapper.log`
+const serviceConfig = `${serviceExe}.config`
+const serviceEXEPath = join(daemonDir, serviceExe);
 
-// Listen for the "uninstall" event, so we know when it's done.
-svc.on('uninstall', () => {
-    console.log('Uninstall complete.');
-    console.log('The service exists: ', svc.exists);
-});
+// Stop the service:
+try {
+    const installResult = execSync(`${serviceEXEPath} stop`, () => { });
+    console.log(installResult.toString());
+}
+catch {
+    console.error('Stopping Windows service failed!')
+}
 
-// Uninstall the service.
-svc.uninstall();
+// Delete the service:
+try {
+    const installResult = execSync(`${serviceEXEPath} uninstall`, () => { });
+    console.log(installResult.toString());
+
+    // Remove files
+    unlinkFile(join(daemonDir, serviceXml));
+    unlinkFile(join(daemonDir, serviceErrLog));
+    unlinkFile(join(daemonDir, serviceOutLog));
+    unlinkFile(join(daemonDir, serviceWrapperLog));
+    unlinkFile(join(daemonDir, serviceConfig));
+    unlinkFile(serviceEXEPath);
+    try {
+        if (fs.existsSync(daemonDir)) {
+            fs.rmdirSync(daemonDir);
+            console.log(`Directory ${daemonDir} deleted.`)
+        }
+    }
+    catch {
+        console.warn(`Deletion of directory ${daemonDir} failed.`)
+    }
+}
+catch {
+    console.error('Deletion of Windows service failed!')
+}
+
+function unlinkFile(fileName) {
+    try {
+        if (fs.existsSync(fileName)) {
+            fs.unlinkSync(fileName);
+            console.log(`${fileName} deleted.`)
+        }
+    }
+    catch {
+        console.warn(`Deletion of file ${fileName} failed.`)
+    }
+}
