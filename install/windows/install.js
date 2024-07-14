@@ -11,12 +11,14 @@ const join = require('path').join;
 require('dotenv').config();
 
 // Create the according Windows startmenu entries
-Shortcuts.createStartMenu();
+//Shortcuts.createStartMenu();
 
 const serviceName = process.env.iobServiceName ? process.env.iobServiceName : 'ioBroker';
 const daemonDir = join(__dirname, 'daemon');
-const serviceXMLPath = join(daemonDir, `${serviceName}.xml`);
-const serviceEXEPath = join(daemonDir, `${serviceName}.exe`);
+const serviceXml = `${serviceName.toLowerCase()}.xml`
+const serviceExe = `${serviceName.toLowerCase()}.exe`
+const serviceXMLPath = join(daemonDir, serviceXml);
+const serviceEXEPath = join(daemonDir, serviceExe);
 const controllerPath = join(__dirname, 'controller.js');
 
 let serviceTimeout = 500;
@@ -24,12 +26,13 @@ let serviceTimeout = 500;
 // Check if service exists
 if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 	try {
-		const serviceStatus = execSync(`sc query state= all | find "${serviceName}.exe"`);
+		console.log(`sc query state= all | find "${serviceExe}"`);
+		const serviceStatus = execSync(`sc query state= all | find "${serviceExe}"`);
 		console.log(`Windows service already exists: ${serviceStatus.toString()} Service will be removed and recreated.`);
 		serviceTimeout = 10000;
 
 		try {
-			const startResult = execSync(`sc stop ${serviceName}.exe`, () => { });
+			const startResult = execSync(`sc stop ${serviceExe}`, () => { });
 			console.log(startResult.toString());
 		}
 		catch {
@@ -37,7 +40,7 @@ if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 		}
 
 		try {
-			const startResult = execSync(`sc delete ${serviceName}.exe`, () => { });
+			const startResult = execSync(`sc delete ${serviceExe}`, () => { });
 			console.log(startResult.toString());
 		}
 		catch {
@@ -46,6 +49,7 @@ if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 	}
 	catch {
 		// Service not existing, OK
+		console.log('!!!!!');
 	}
 }
 
@@ -63,7 +67,7 @@ setTimeout(() => {
 	});
 
 	const configFile = `<service>
-	<id>${serviceName}.exe</id>
+	<id>${serviceExe}</id>
 	<name>${serviceName}</name>
 	<description>ioBroker service ${serviceName}</description>
 	<executable>${process.execPath}</executable>
