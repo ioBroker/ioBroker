@@ -32,7 +32,7 @@ if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 		serviceTimeout = 10000;
 
 		try {
-			const startResult = execSync(`sc stop ${serviceExe}`, () => { });
+			const startResult = execSync(`sc stop ${serviceExe}`);
 			console.log(startResult.toString());
 		}
 		catch {
@@ -40,7 +40,7 @@ if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 		}
 
 		try {
-			const startResult = execSync(`sc delete ${serviceExe}`, () => { });
+			const startResult = execSync(`sc delete ${serviceExe}`);
 			console.log(startResult.toString());
 		}
 		catch {
@@ -49,7 +49,6 @@ if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 	}
 	catch {
 		// Service not existing, OK
-		console.log('!!!!!');
 	}
 }
 
