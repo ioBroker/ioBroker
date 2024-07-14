@@ -23,7 +23,7 @@ const serviceEXEPath = join(daemonDir, serviceExe);
 
 // Stop the service:
 try {
-    const installResult = execSync(`${serviceEXEPath} stop`, () => { });
+    const installResult = execSync(`${serviceEXEPath} stop`);
     console.log(installResult.toString());
 }
 catch {
@@ -32,7 +32,7 @@ catch {
 
 // Delete the service:
 try {
-    const installResult = execSync(`${serviceEXEPath} uninstall`, () => { });
+    const installResult = execSync(`${serviceEXEPath} uninstall`);
     console.log(installResult.toString());
 
     // Remove files
