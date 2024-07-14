@@ -1,8 +1,6 @@
 'use strict';
 
-const Service = require('node-windows').Service;
 const fs = require('fs-extra');
-const path = require('path');
 const Shortcuts = require('./shortcuts');
 const execSync = require('child_process').execSync;
 const join = require('path').join;
