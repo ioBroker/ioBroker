@@ -11,7 +11,7 @@ const join = require('path').join;
 require('dotenv').config();
 
 // Create the according Windows startmenu entries
-//Shortcuts.createStartMenu();
+Shortcuts.createStartMenu();
 
 const serviceName = process.env.iobServiceName ? process.env.iobServiceName : 'ioBroker';
 const daemonDir = join(__dirname, 'daemon');
