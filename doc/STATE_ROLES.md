@@ -1,11 +1,11 @@
-`STATE_ROLES.md` is now a part of the offical documentation and is maintained at https://www.iobroker.net/#en/documentation/dev/stateroles.md
+`STATE_ROLES.md` is now a part of the official documentation and is maintained at https://www.iobroker.net/#en/documentation/dev/stateroles.md
 
 # State roles
 
 ## Common
 * state - very common purpose. If you don't know which role the state has, use this one.
 * text              (common.type = string)
-* text.url          (common.type = string) state val contains a url for usage in an anchor, iframe or img
+* text.url          (common.type = string) state val contains an URL for usage in an anchor, iframe or img
 * html              (common.type = string)
 * json              (common.type = string)
 * list              (common.type = array)
@@ -23,7 +23,7 @@
 * sensor.alarm.power    - No power (voltage = 0)
 * sensor.alarm.secure   - door opened, window opened or motion detected during alarm is ON.
 * sensor.door           - door opened (true) or closed (false)
-* sensor.light          - feedback from lamp, that it is ON
+* sensor.light          - feedback from a lamp, that it is ON
 * sensor.lock           - actual position of lock
 * sensor.motion         - motion sensor
 * sensor.noise          - noise detected
@@ -89,21 +89,21 @@
 *common.type=boolean, common.write=false*
 
 The difference of *Indicators* from *Sensors* is that indicators will be shown as small icon. Sensors as a real value.
-So the indicator may not be alone in the channel. It must be some other main state inside channel.
+So the indicator may not be alone in the channel. It must be some other main state inside a channel.
 
 * indicator
 * indicator.alarm       - same as indicator.maintenance.alarm
 * indicator.alarm.fire  - fire detected
 * indicator.alarm.flood - flood detected
 * indicator.alarm.secure - door or window is opened
-* indicator.connected   - used only for instances. Use indicator.reachable for devices
+* indicator.connected   - used only for instances. Use `indicator.reachable` for devices
 * indicator.lowbat      - true if low battery
 * indicator.maintenance - indicates system warnings/errors, alarms, service messages, battery empty or stuff like that
 * indicator.maintenance.alarm
 * indicator.maintenance.lowbat
 * indicator.maintenance.unreach
 * indicator.reachable   - If device is online
-* indicator.working     - indicates that the target systems is executing something, like blinds or lock opening.
+* indicator.working     - indicates that the target systems are executing something, like blinds or lock opening.
 
 
 ## Levels (numbers, read-write)
@@ -136,7 +136,7 @@ With **levels** you can control or set some number value.
 
 ## Switches (booleans, read-write)
 
-Switch controls boolean device (true = ON, false = OFF)
+Switch controls a boolean device (true = ON, false = OFF)
 
 *common.type=boolean, common.write=true*
 
@@ -207,7 +207,7 @@ Special roles for media players
 * media.track           - (common.type=string) current play track id [0 - ~] (important the type is really "string" to be able to indicate absence of track with "")
 * media.tts             - text to speech
 * media.url             - url to play or current url
-* media.url.announcement - URL to play announcement
+* media.url.announcement - URL to play an announcement
 * switch.pause
 * switch.power.zone     - power zone
 
@@ -282,10 +282,10 @@ Special roles for media players
 * value.pressure.forecast.0       - forecast for pressure for today
 * value.pressure.forecast.1
 * value.radiation             - Actual sun radiation level
-* value.rain                  - Actual rain level in last 24 hours
+* value.rain                  - Actual rain level in the last 24 hours
 * value.rain.hour             - Actual rain level in last hour
 * value.rain.today            - Actual rain level for today (till 0:00)
-* value.snow                  - Actual snow level in last 24 hours
+* value.snow                  - Actual snow level in the last 24 hours
 * value.snow.hour             - Actual snow level in last hour
 * value.snow.today            - Actual snow level for today (till 0:00)
 * value.snowline              - Actual snow line in meters
@@ -328,7 +328,7 @@ Special roles for media players
 ## Info
 * date.end       - string or number
 * date.start     - string or number
-* info.address   - some other address (e.g. KNX)
+* info.address   - some other address (e.g., KNX)
 * info.display   - information shown on device display
 * info.ip        - ip of device
 * info.mac       - mac of device
@@ -342,9 +342,9 @@ Special roles for media players
 * text.phone             - phone number
 * url
 * url.audio              - URL for audio file
-* url.blank              - open URL in new window
+* url.blank              - open URL in a new window
 * url.cam                - web camera url
-* url.icon               - icon (additionally every object can have common.icon)
+* url.icon               - icon (additionally every object can have `common.icon`)
 * url.same               - open URL in this window
 
 * adapter.messagebox     (common.type=object, common.write=true) used to send messages to email, pushover and other adapters
