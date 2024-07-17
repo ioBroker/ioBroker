@@ -5,7 +5,7 @@
 const tools = require('./tools.js');
 const path = require('path');
 const platform = require('os').platform();
-const { execSync, exec }  = require('child_process');
+const { execSync, exec } = require('child_process');
 const pack = require('../package.json');
 const semver = require('semver');
 const fs = require('fs-extra');
@@ -39,21 +39,28 @@ if (!/^win/.test(platform) && !tools.isAutomatedInstallation()) {
     // On Linux/OSX this must be run with the installer script now!
     if (pack.name.includes('fix')) {
         runLinux(true)
-            .then(() => {});
+            .then(() => { });
     } else {
         runLinux()
-            .then(() => {});
+            .then(() => { });
     }
 
 } else {
     console.log(`Windows installation starting... (fixing = ${pack.name.includes('fix')})`);
+
+    // Cancel Windows installation/fix of ioBroker for non x64 systems
+    if (process.arch !== 'x64') {
+        console.log(`Sorry, ioBroker under Windows is only supported on x64 systems. This is an ${process.arch} system.`);
+        console.log(`You cannot install ioBroker on this system.`);
+        process.exit(5);
+    }
 
     // first of all we remove the file which indicates that the installation is completed
     // this files is used to synchronise with the Windows MSI installer.
     try {
         fs.unlinkSync('./instDone');
     }
-    catch(e) {
+    catch (e) {
         // nothing to do here, file did not exist
     }
 
