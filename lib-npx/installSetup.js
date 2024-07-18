@@ -129,7 +129,7 @@ function setupWindows(callback) {
         return;
     }
 
-    cmd = `winget install --id Git.Git -e --source winget --silent --force`;
+    cmd = `winget install --id Git.Git -e --source winget --silent --force --disable-interactivity --accept-source-agreements --accept-package-agreements`;
     console.log(cmd);
 
     try {
