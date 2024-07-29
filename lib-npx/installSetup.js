@@ -140,7 +140,7 @@ function setupWindows(callback) {
 
     console.log('Register ioBroker as Service');
 
-    // install.js will stop and remove the service, if it exists already and thebn recreate it
+    // install.js will stop and remove the service, if it exists already and then recreate it
     try {
         execSync(`node "${path.join(rootDir, 'install.js')}"`, { stdio: 'inherit' });
     } catch (error) {
