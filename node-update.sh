@@ -3,12 +3,13 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2024-06-10"
+VERSION="2024-06-20"
 NODE_MAJOR=20           #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 ## Excluding systems:
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null);
 DOCKER=/opt/scripts/.docker_config/.thisisdocker #used to identify docker
+DEBIANRELEASE=$(cat /etc/debian_version);
 
 if [ -f "$DOCKER" ];
 then
@@ -29,12 +30,20 @@ if [[ $SYSTDDVIRT = "wsl" ]];
         exit 1;
 fi;
 
-if [ -z $(type -P apt-get) ]
+if [ -z "$(type -P apt-get)" ]
         then
         echo "Only a Debian-based Linux is supported"
         unset LC_ALL;
         exit 1;
 fi;
+
+if [[ $DEBIANRELEASE = *buster* && $1 -ne 18 ]];
+        then
+        echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't install.\nPlease install the current Debian Stable"
+        unset LC_ALL;
+        exit 1;
+fi;
+
 
 ### Starting the skript
 echo -e "ioBroker nodejs-update v$VERSION is starting. Please be patient!";

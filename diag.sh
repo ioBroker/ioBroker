@@ -16,13 +16,14 @@ clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-05-22";      #version of this script
-NODE_MAJOR=20           #this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
+SKRIPTV="2024-06-24";      #version of this script
+#NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(hostname)
+source /etc/os-release
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #recommended node version
 NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext);    #recommended npm version
-NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
+#NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
 #NPMUSED=$(iobroker state getValue system.host."$HOST".versions.npmCurrent);        #current npm version in use
 XORGTEST=0;      #test for GUI
 APT=0;
@@ -52,7 +53,7 @@ read -r -n 1 -s
 echo "";
 echo -e "\033[33m======== Start marking the full check here =========\033[0m";
 echo "";
-echo "\`\`\`";
+echo "\`\`\`bash";
 echo "Skript v.$SKRIPTV"
 echo "";
 echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
@@ -64,6 +65,7 @@ echo -e "Userland        : $(getconf LONG_BIT) bit";
 echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
         hostnamectl | grep -v 'Machine\|Boot';
+        echo "OS is similar to: $ID_LIKE"
         echo "";
         grep -i model /proc/cpuinfo | tail -1;
         echo -e "Docker          : false";
@@ -261,7 +263,7 @@ echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m";
 sudo dmesg -T | grep -i ext4;
 echo "";
 echo -e "\033[32mShow mounted filesystems:\033[0m";
-findmnt;
+findmnt --real;
 echo "";
 if [[ -L "/opt/iobroker/backups" ]]; then
   echo "backups directory is linked to a different directory";
@@ -381,7 +383,7 @@ echo "";
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
 echo "";
 
-PATHAPT=$(type -P apt);
+# PATHAPT=$(type -P apt);
 PATHNODEJS=$(type -P nodejs);
 PATHNODE=$(type -P node);
 PATHNPM=$(type -P npm);
@@ -429,7 +431,7 @@ then
 
 else
         echo -e "$(type -P corepack) \t$(corepack -v)";
-        VERCOREPACK=$(corepack -v);
+        # VERCOREPACK=$(corepack -v);
 fi;
 
 
@@ -579,7 +581,7 @@ echo "";
         clear;
 echo "Copy text starting here:";
 echo "";
-echo "\`\`\`";
+echo "\`\`\`bash";
 echo "======================= SUMMARY =======================";
 echo -e "\t\t\tv.$SKRIPTV"
 echo "";
@@ -680,7 +682,7 @@ then
 
 else
         echo -e "$(type -P corepack) \t$(corepack -v)";
-        VERCOREPACK=$(corepack -v);
+        # VERCOREPACK=$(corepack -v);
 fi;
 
 echo -e "";

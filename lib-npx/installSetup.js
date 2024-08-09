@@ -141,6 +141,18 @@ function setupWindows(callback) {
         return;
     }
 
+    cmd = `winget install --id Git.Git -e --source winget --silent --force --disable-interactivity --accept-source-agreements --accept-package-agreements`;
+    console.log(cmd);
+
+    try {
+        execSync(cmd, { stdio: 'inherit' });
+    } catch (error) {
+        console.log('Error when installing GIT: ' + error);
+        callback && callback(error.code);
+        return;
+    }
+
+
     //console.log('Windows service library installed, now register ioBroker as Service');
     //console.log('node "' + path.join(rootDir, 'install.js') + '"');
 
