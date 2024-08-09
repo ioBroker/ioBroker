@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+# 2024-06-24
+* Added language information to CodeTags for copying to ioB-Forum.
+
 ## 2024-05-22
 * Added nodejs20
 * pgrep fixed for Display Server Detection

@@ -56,7 +56,7 @@ function createPackageJson() {
             'uninstall-service': 'node uninstall.js'
         },
         engines: {
-            'node': '>=12.0.0'
+            'node': '>=18.0.0'
         },
         dependencies: {
             'iobroker.js-controller': 'stable',

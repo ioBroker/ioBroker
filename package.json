@@ -2,15 +2,15 @@
   "name": "@iobroker/install",
   "version": "5.1.2",
   "optionalDependencies": {
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.5",
     "windows-shortcuts": "^0.1.6"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "fs-extra": "^11.1.1",
-    "semver": "^7.5.4",
+    "fs-extra": "^11.2.0",
+    "semver": "^7.6.3",
     "yargs": "^17.7.2"
   },
   "files": [
@@ -76,12 +76,12 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@alcalzone/release-script": "^3.6.0",
-    "@alcalzone/release-script-plugin-license": "^3.5.9",
-    "eslint": "^8.51.0",
-    "mocha": "^10.2.0",
-    "chai": "^4.3.10",
+    "@alcalzone/release-script": "^3.8.0",
+    "@alcalzone/release-script-plugin-license": "^3.7.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.7.3",
+    "chai": "^4.5.0",
     "gulp": "^4.0.2",
-    "ssh2": "^1.14.0"
+    "ssh2": "^1.15.0"
   }
 }
