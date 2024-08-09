@@ -85,7 +85,6 @@ if [%1]==[fix] (
 const debug = !!process.env.IOB_DEBUG;
 
 function setupWindows(callback) {
-    const nodeWindowsVersion = require('../package.json').optionalDependencies['node-windows'].replace(/[~^<>=]+]/g, '');
     const dotenvVersion = require('../package.json').optionalDependencies['dotenv'].replace(/[~^<>=]+]/g, '');
     const windowsShortcutsVersion = require('../package.json').optionalDependencies['windows-shortcuts'].replace(/[~^<>=]+]/g, '');
 
@@ -104,28 +103,17 @@ function setupWindows(callback) {
     // Copy the files from /install/windows to the root dir
     tools.copyFilesRecursiveSync(path.join(rootDir, 'install/windows'), rootDir);
 
-    // Call npm install node-windows, dotenv and windows-shortcuts
+    // Call npm install dotenv and windows-shortcuts
     // js-controller installed as npm
     const npmRootDir = rootDir.replace(/\\/g, '/');
 
-    let cmd = `npm install node-windows@${nodeWindowsVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
+    let cmd = `npm install dotenv@${dotenvVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
     console.log(cmd);
 
     try {
         execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-        console.log('Error when installing Windows Service Library: ' + error);
-        callback && callback(error.code);
-        return;
-    }
-
-    cmd = `npm install dotenv@${dotenvVersion} --force --loglevel error --production --save --prefix "${npmRootDir}"`;
-    console.log(cmd);
-
-    try {
-        execSync(cmd, { stdio: 'inherit' });
-    } catch (error) {
-        console.log('Error when installing dotenv Library: ' + error);
+        console.error('Error when installing dotenv Library: ' + error);
         callback && callback(error.code);
         return;
     }
@@ -136,7 +124,7 @@ function setupWindows(callback) {
     try {
         execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-        console.log('Error when installing Windows Shortcuts Library: ' + error);
+        console.error('Error when installing Windows Shortcuts Library: ' + error);
         callback && callback(error.code);
         return;
     }
@@ -147,27 +135,12 @@ function setupWindows(callback) {
     try {
         execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-        console.log('Error when installing GIT: ' + error);
-        callback && callback(error.code);
-        return;
+        console.warn('Error when installing GIT: ' + error);
     }
 
+    console.log('Register ioBroker as Service');
 
-    //console.log('Windows service library installed, now register ioBroker as Service');
-    //console.log('node "' + path.join(rootDir, 'install.js') + '"');
-
-    // stop instance if batch existed before
-    try {
-        if (batExists) {
-            execSync('serviceIoBroker.bat stop', {
-                stdio: 'inherit',
-                cwd: process.cwd(),
-            });
-        }
-    } catch (error) {
-        // ignore
-    }
-
+    // install.js will stop and remove the service, if it exists already and then recreate it
     try {
         execSync(`node "${path.join(rootDir, 'install.js')}"`, { stdio: 'inherit' });
     } catch (error) {

@@ -2,7 +2,6 @@
   "name": "@iobroker/install",
   "version": "5.1.2",
   "optionalDependencies": {
-    "node-windows": "1.0.0-beta.8",
     "dotenv": "^16.3.1",
     "windows-shortcuts": "^0.1.6"
   },
@@ -79,7 +78,7 @@
   "devDependencies": {
     "@alcalzone/release-script": "^3.6.0",
     "@alcalzone/release-script-plugin-license": "^3.5.9",
-    "eslint": "^8.56.0",
+    "eslint": "^8.51.0",
     "mocha": "^10.2.0",
     "chai": "^4.3.10",
     "gulp": "^4.0.2",
