@@ -180,6 +180,11 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
+		DOCKER=/opt/scripts/.docker_config/.thisisdocker
+		if [ "$(id -u)" = 0 ] && [ ! -f "$DOCKER" ] && [[ $* != *--allow-root* ]]; then
+		echo -e "*** ioBroker must not be run as root! ***\nOnly a member of iobroker group can execute ioBroker commands.\nRead the documentation on how such a user can be created, if not done yet.\nIn special cases you can use the --allow-root option" 
+		exit;
+		fi;
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
@@ -216,6 +221,11 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
+		DOCKER=/opt/scripts/.docker_config/.thisisdocker
+		if [ "$(id -u)" = 0 ] && [ ! -f "$DOCKER" ] && [[ $* != *--allow-root* ]]; then
+		echo -e "*** ioBroker must not be run as root! ***\nOnly a member of iobroker group can execute ioBroker commands.\nRead the documentation on how such a user can be created, if not done yet.\nIn special cases you can use the --allow-root option" 
+		exit;
+		fi;
 		if [ "\$1" = "fix" ]; then
 			curl -sL $FIXER_URL | bash -
 		elif [ "\$1" = "nodejs-update" ]; then
