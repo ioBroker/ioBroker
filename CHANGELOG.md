@@ -1,8 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-
-## __WORK IN PROGRESS__
+## 6.0.0 (2024-08-10)
 * Adjust minimum Node.js version to 18 of new main package which match to the minimum version of js-controller 6.0.x
 * Rebuild Windows install logic to use the new installer script
 * Windows: Ensure that git installations runs without user interaction
