@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+### 2024-08-10
+* root/sudo locked out for systemd based installations
+* --allow-root Option enabled (Just for a transition time)
+
 ### 2024-01-04
 * Fix package installation issues on Debian
 
