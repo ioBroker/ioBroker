@@ -1,7 +1,9 @@
 # Changelog for Node.js Updater Script
 
-# 2024-06-20
+## 2024-06-20
 * Prevent nodejs-update on Buster, except installing nodejs@18
+* Added removal of dfsg-nodejs version
+* Suppressed some error messages
 
 ## 2024-05-23
 * Added nodejs20 as the default version
