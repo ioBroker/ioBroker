@@ -1,7 +1,9 @@
 # Changelog for Linux-Diag-Script
 
-# 2024-06-24
+## 2024-06-24
 * Added language information to CodeTags for copying to ioB-Forum.
+* Only show mounted filesystems that are real
+* Deactivated some VAR that were not used anyway
 
 ## 2024-05-22
 * Added nodejs20

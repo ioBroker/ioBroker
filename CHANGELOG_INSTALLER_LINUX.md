@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+### 2024-06-20
+* Install nodesource rpm package via yum
+
 ### 2024-05-24
 * Install Node.js 20 by default for installer
 
