@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2024-08-10" # format YYYY-MM-DD
+INSTALLER_VERSION="2024-08-11" # format YYYY-MM-DD
+
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -9,6 +10,19 @@ then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
+
+# Check for sane environment, especially on LXC
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+read -r -s -n 1 char;
+        if
+                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+        then
+                                $SUDOX dpkg-reconfigure tzdata;
+        fi;
+fi;
+
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
@@ -154,7 +168,7 @@ print_step "Finalizing installation" 4 "$NUM_STEPS"
 INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
-elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
+elif [[ `ps -p 1 -o comm=` = "systemd" ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"

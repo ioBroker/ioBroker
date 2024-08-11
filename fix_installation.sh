@@ -35,7 +35,7 @@ read -r -s -n 1 char;
         if
                                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                                sudo dpkg-reconfigure tzdata;
+                                $SUDOX dpkg-reconfigure tzdata;
         fi;
 fi;
 
