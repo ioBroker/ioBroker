@@ -26,6 +26,19 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
+# Check and fix timezone
+
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+read -r -s -n 1 char;
+        if
+                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+        then
+                                sudo dpkg-reconfigure tzdata;
+        fi;
+fi;
+
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"

@@ -1,6 +1,9 @@
 # Changelog for Linux-Diag-Script
 
-# 2024-06-24
+## 2024-08-11
+* Implemented reconfiguring time zone if none is set
+
+## 2024-06-24
 * Added language information to CodeTags for copying to ioB-Forum.
 
 ## 2024-05-22
