@@ -692,6 +692,23 @@ create_user_linux() {
 	for grp in "${groups[@]}"; do
 		getent group $grp &> /dev/null && $SUDOX usermod -a -G $grp $username
 	done
+	USEREXIST=$(grep -c ":100[0-9]:" /etc/passwd);
+	if [[ $EUID -eq 0 ]] && [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ USEREXIST -eq 1 ]]; then
+	echo "No default user found. Do you want to create one now? (y/n)";
+	read -r -s -n 1 charpaths;
+    if
+                [[ "$charpaths" = "y" ]] || [[ "$charpaths" = "Y" ]];
+                then
+                echo "Enter the new username:"
+                read newusername
+                adduser $newusername
+
+                if $newusername != ""; then
+                usermod -aG adm,dialout,sudo,audio,video,plugdev,users,iobroker $newusername;
+                echo "User $newusername created\nPlease do not login in as root but use $newusername instead"
+                fi;
+    fi;
+	fi;
 }
 
 create_user_freebsd() {

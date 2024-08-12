@@ -27,8 +27,6 @@ ROOT_GROUP="root"
 USER_GROUP="$USER"
 
 # Check and fix timezone
-
-
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
 echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
 read -r -s -n 1 char;
@@ -37,6 +35,25 @@ read -r -s -n 1 char;
         then
                                 $SUDOX dpkg-reconfigure tzdata;
         fi;
+fi;
+
+# Check user setup
+
+USEREXIST=$(grep -c ":100[0-9]:" /etc/passwd);
+if [[ $EUID -eq 0 ]] && [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ USEREXIST -eq 1 ]]; then
+echo "No default user found. Do you want to create one now? (y/n)";
+read -r -s -n 1 charpaths;
+	if
+		[[ "$charpaths" = "y" ]] || [[ "$charpaths" = "Y" ]];
+		then
+			echo "Enter the new username:"
+			read newusername
+			adduser $newusername
+			if 	$newusername != ""; then
+				usermod -aG adm,dialout,sudo,audio,video,plugdev,users,iobroker $newusername;
+                echo "User $newusername created\nPlease do not login in as root but use $newusername instead"
+			fi;
+	fi;
 fi;
 
 # get and load the LIB => START
