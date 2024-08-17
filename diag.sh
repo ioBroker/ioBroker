@@ -8,15 +8,15 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
-                        sleep 5;
+                        echo -e "You should not be root on your system!\nBetter use your standard user!\n\n";
+                        sleep 15;
 
 fi
 clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-06-24";      #version of this script
+SKRIPTV="2024-08-17";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(hostname)
@@ -33,6 +33,18 @@ SYSTDDVIRT="";
 NODENOTCORR=0;
 IOBLISTINST=$(iobroker list instances);
 NPMLS=$(cd /opt/iobroker && npm ls -a)
+
+#Debian and Ubuntu releases and their status
+EOLDEB="buzz rex bo hamm slink potato woody sarge etch lenny squeeze wheezy jessie stretch buster";
+EOLUBU="bionic xenial trusty mantic lunar kinetic impish hirsute groovy eoan disco cosmic artful zesty yakkety wily vivid utopic saucy raring quantal precise oneiric natty maverick lucid karmic jaunty intrepid hardy gutsy feisty edgy dapper breezy hoary warty";
+DEBSTABLE="bookworm";
+UBULTS="noble"
+OLDLTS="jammy focal";
+TESTING="trixie oracular"
+OLDSTABLE="bullseye";
+CODENAME=$(lsb_release -sc);
+UNKNOWNRELEASE=1
+
 clear;
 echo "";
 echo -e "\033[34;107m*** ioBroker Diagnosis ***\033[0m";
@@ -70,13 +82,59 @@ else
         grep -i model /proc/cpuinfo | tail -1;
         echo -e "Docker          : false";
 fi;
-# Alternativer DockerCheck - Nicht getestet:
-#
-# if [ -f /.dockerenv ]; then
-#    echo "I'm inside matrix ;(";
-# else
-#    echo "I'm living in a real world!";
-# fi
+for x in $EOLDEB; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[31mDebian Release '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $EOLUBU; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[31mUbuntu Release '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $DEBSTABLE; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[32mYour Operating System is the current Debian stable version '$DEBSTABLE'!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $UBULTS; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[32mYour Operating System is the current Ubuntu LTS release '$UBULTS'!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $OLDLTS; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[1;33mYour Operating System '$OLDLTS' is an aging Ubuntu LTS release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $TESTING; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[1;33mYour Operating System codenamed '$CODENAME' is not released yet! Please use it only for testing purposes!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $OLDSTABLE; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+if [ $UNKNOWNRELEASE -eq 1 ]; then
+    echo "Unknown release name: $CODENAME. Please check yourself if your Operating System is maintained."
+fi;
+
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
 if [ "$SYSTDDVIRT" != "" ]; then
@@ -192,6 +250,17 @@ if [ -f "$DOCKER" ]; then
 else
     timedatectl;
 fi;
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+read -r -s -n 1 char;
+        if
+                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+        then
+                                sudo dpkg-reconfigure tzdata;
+        fi;
+fi;
+
 
 echo "";
 echo -e "\033[34;107m*** Users and Groups ***\033[0m";
@@ -768,6 +837,60 @@ then
 else
         echo ""
 fi;
+
+for x in $EOLDEB; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[31mDebian Release '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $EOLUBU; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[31mUbuntu Release '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $DEBSTABLE; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[32mYour Operating System is the current Debian stable version '$DEBSTABLE'!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $UBULTS; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[32mYour Operating System is the current Ubuntu LTS release '$UBULTS'!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $OLDLTS; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[1;33mYour Operating System '$OLDLTS' is an aging Ubuntu LTS release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $TESTING; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[1;33mYour Operating System codenamed '$CODENAME' is not released yet! Please use it only for testing purposes!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for x in $OLDSTABLE; do
+    if [ $x = "$CODENAME" ]; then
+        echo -e "\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+if [ $UNKNOWNRELEASE -eq 1 ]; then
+    echo "Unknown release name: $CODENAME. Please check yourself if your Operating System is maintained."
+fi;
+
 
 echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
