@@ -1,6 +1,6 @@
 freebsd_instance:
-  image_family: freebsd-12-2
- 
+  image_family: freebsd-14-0
+
 task:
   prepare_install_script:
     - pkg install -y bash node npm libnghttp2 python sudo

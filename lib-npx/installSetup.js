@@ -2,7 +2,7 @@
  *
  *  ioBroker installer from npm
  *
- *  Copyright 1'2015-2022 bluefox <dogafox@gmail.com>
+ *  Copyright 1'2015-2024 bluefox <dogafox@gmail.com>
  *
  *
  */
@@ -13,18 +13,17 @@
 'use strict';
 
 const yargs = require('yargs')
-    .usage('Commands:\n' +
-        '$0 [--objects <host>] [--states <host>] [custom]\n')
+    .usage(`Commands:\n$0 [--objects <host>] [--states <host>] [custom]\n`)
     .default('objects', '127.0.0.1')
     .default('states', '127.0.0.1')
     .default('lang', 'en');
 
 const fs = require('fs-extra');
-const path = require('path');
-const { execSync } = require('child_process');
+const path = require('node:path');
+const { execSync } = require('node:child_process');
 const tools = require('./tools.js');
 
-/** The location of this module's root dir. E.g. /opt/iobroker */
+/** The location of this module's root dir. E.g., /opt/iobroker */
 const rootDir = process.cwd();
 /** The location of the js-controller module. E.g. /opt/iobroker/node_modules/iobroker.js-controller */
 const controllerDir = path.join(rootDir, 'node_modules/iobroker.js-controller/');
@@ -88,16 +87,16 @@ function setupWindows(callback) {
     const dotenvVersion = require('../package.json').optionalDependencies['dotenv'].replace(/[~^<>=]+]/g, '');
     const windowsShortcutsVersion = require('../package.json').optionalDependencies['windows-shortcuts'].replace(/[~^<>=]+]/g, '');
 
-    const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
-    fs.writeFileSync(iobrokerRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
-    fs.writeFileSync(iobRootExecutable + '.bat', commandLine.replace(/\$/g, '%'));
+    // const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
+    fs.writeFileSync(`${iobrokerRootExecutable}.bat`, commandLine.replace(/\$/g, '%'));
+    fs.writeFileSync(`${iobRootExecutable}.bat`, commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
 
-    if (!fs.existsSync(process.env['APPDATA'] + '/npm')) {
-        fs.mkdirSync(process.env['APPDATA'] + '/npm');
+    if (!fs.existsSync(`${process.env['APPDATA']}/npm`)) {
+        fs.mkdirSync(`${process.env['APPDATA']}/npm`);
     }
-    if (!fs.existsSync(process.env['APPDATA'] + '/npm-cache')) {
-        fs.mkdirSync(process.env['APPDATA'] + '/npm-cache');
+    if (!fs.existsSync(`${process.env['APPDATA']}/npm-cache`)) {
+        fs.mkdirSync(`${process.env['APPDATA']}/npm-cache`);
     }
 
     // Copy the files from /install/windows to the root dir
@@ -113,7 +112,7 @@ function setupWindows(callback) {
     try {
         execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-        console.error('Error when installing dotenv Library: ' + error);
+        console.error(`Error when installing dotenv Library: ${error}`);
         callback && callback(error.code);
         return;
     }
@@ -124,7 +123,7 @@ function setupWindows(callback) {
     try {
         execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-        console.error('Error when installing Windows Shortcuts Library: ' + error);
+        console.error(`Error when installing Windows Shortcuts Library: ${error}`);
         callback && callback(error.code);
         return;
     }
@@ -135,7 +134,7 @@ function setupWindows(callback) {
     try {
         execSync(cmd, { stdio: 'inherit' });
     } catch (error) {
-        console.warn('Error when installing GIT: ' + error);
+        console.warn(`Error when installing GIT: ${error}`);
     }
 
     console.log('Register ioBroker as Service');
@@ -144,7 +143,7 @@ function setupWindows(callback) {
     try {
         execSync(`node "${path.join(rootDir, 'install.js')}"`, { stdio: 'inherit' });
     } catch (error) {
-        console.log('Error when registering ioBroker as service: ' + error);
+        console.log(`Error when registering ioBroker as service: ${error}`);
         return callback && callback(error.code);
     }
 
@@ -157,7 +156,7 @@ function setupWindows(callback) {
             cwd: process.cwd(),
         });
 
-        // we create a file to signalize to the Windows MSI installer, that the installation process ran til the end
+        // we create a file to signalize to the Windows MSI installer, that the installation process ran till the end
         fs.createFileSync('./instDone');
 
         console.log('ioBroker service installed and started. Go to http://localhost:8081 to open the admin UI.');
@@ -167,7 +166,7 @@ function setupWindows(callback) {
 }
 
 function log(text) {
-    debug && console.log('[INSTALL] ' + text);
+    debug && console.log(`[INSTALL] ${text}`);
 }
 
 /**
@@ -176,7 +175,7 @@ function log(text) {
  */
 function setup(callback) {
     let config;
-    const platform = require('os').platform();
+    const platform = require('node:os').platform();
 
     // We no longer create package.json and delete package-lock.json here
     // When the installation routine is run correctly, these will be in sync
@@ -210,7 +209,7 @@ function setup(callback) {
             case 'linux':
             case 'freebsd':
             case 'darwin':
-                // Linux and FreeBSD is handled with the installer script
+                // Linux and FreeBSD are handled with the installer script
                 break;
             default: {
                 if (/^win/.test(platform)) {
@@ -222,7 +221,7 @@ function setup(callback) {
             }
         }
     } catch (e) {
-        console.log('Non-critical error: ' + e.message);
+        console.log(`Non-critical error: ${e.message}`);
     }
 
     typeof callback === 'function' && callback();

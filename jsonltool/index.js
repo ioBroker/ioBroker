@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const { JsonlDB } = require('@alcalzone/jsonl-db');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 async function compressDB(dbPath) {
     const db = new JsonlDB(dbPath);

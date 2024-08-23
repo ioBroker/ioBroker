@@ -2,13 +2,13 @@
 
 const fs = require('fs-extra');
 const Shortcuts = require('./shortcuts');
-const execSync = require('child_process').execSync;
-const join = require('path').join;
+const execSync = require('node:child_process').execSync;
+const join = require('node:path').join;
 
 // Get environment variables from file .env
 require('dotenv').config();
 
-// Create the according Windows startmenu entries
+// Create the according Windows start menu entries
 Shortcuts.createStartMenu();
 
 const serviceName = process.env.iobServiceName ? process.env.iobServiceName : 'ioBroker';
@@ -19,30 +19,39 @@ const serviceXMLPath = join(daemonDir, serviceXml);
 const serviceEXEPath = join(daemonDir, serviceExe);
 const controllerPath = join(__dirname, 'controller.js');
 
-let serviceTimeout = 500;
+const startTimeout = 2000;
+const installTimeout = 2000;
+let creationTimeout = 500;
 
-// Check if service exists
+// Check if the service exists
 if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 	try {
-		console.log(`sc query state= all | find "${serviceExe}"`);
-		const serviceStatus = execSync(`sc query state= all | find "${serviceExe}"`);
+		const cmd = `sc query state= all | find "${serviceExe}"`;
+		console.debug(`Executing "${cmd}"`);
+		const serviceStatus = execSync(cmd);
 		console.log(`Windows service already exists: ${serviceStatus.toString()} Service will be removed and recreated.`);
-		serviceTimeout = 10000;
+		creationTimeout = 10000;
 
 		try {
-			const startResult = execSync(`sc stop ${serviceExe}`);
-			console.log(startResult.toString());
+			const cmd = `sc stop ${serviceExe}`;
+			console.debug(`Executing "${cmd}"`);
+			const stopResult = execSync(cmd);
+			console.log(stopResult.toString());
 		}
-		catch {
-			console.error('Stopping Windows service failed!')
+		catch (e){
+			console.log('Stopping Windows service failed!')
+			console.log(e.toString());
 		}
 
 		try {
-			const startResult = execSync(`sc delete ${serviceExe}`);
-			console.log(startResult.toString());
+			const cmd = `sc delete ${serviceExe}`;
+			console.debug(`Executing "${cmd}"`);
+			const deleteResult = execSync(cmd);
+			console.log(deleteResult.toString());
 		}
-		catch {
+		catch (e){
 			console.error('Deleting Windows service failed!')
+			console.warn(e.toString());
 		}
 	}
 	catch {
@@ -59,7 +68,7 @@ setTimeout(() => {
 	// Copy service executable
 	fs.copyFile('install\\windows\\WinSW3.exe', serviceEXEPath, (err) => {
 		if (err) {
-			console.error('Error when copying service executable: ' + err);
+			console.error(`Error when copying service executable: ${err}`);
 		}
 	});
 
@@ -75,23 +84,40 @@ setTimeout(() => {
 	<workingdirectory>${__dirname}</workingdirectory>
 </service>`;
 
-	fs.writeFileSync(serviceXMLPath, configFile);
-
-	// Install the service:
 	try {
-		const installResult = execSync(`${serviceEXEPath} install`, () => { });
-		console.log(installResult.toString());
+		console.debug(`Writing file ${serviceXMLPath}`);
+		fs.writeFileSync(serviceXMLPath, configFile);
 	}
-	catch {
-		console.error('Creation of Windows service failed!')
+	catch (e){
+		console.error('Creation of configuration file failed!')
+		console.warn(e.toString());
 	}
 
-	// Start the service
-	try {
-		const startResult = execSync(`${serviceEXEPath} start`, () => { });
-		console.log(startResult.toString());
-	}
-	catch {
-		console.error('Starting Windows service failed!')
-	}
-}, serviceTimeout);
+	setTimeout(() => {
+		// Install the service:
+		try {
+			const cmd = `${serviceEXEPath} install`;
+			console.debug(`Executing "${cmd}"`);
+			const installResult = execSync(cmd, () => { });
+			console.log(installResult.toString());
+		}
+		catch (e){
+			console.error('Creation of Windows service failed!')
+			console.warn(e.toString());
+		}
+
+		setTimeout(() => {
+			// Start the service
+			try {
+				const cmd = `${serviceEXEPath} start`;
+				console.debug(`Executing "${cmd}"`);
+				const startResult = execSync(cmd, () => { });
+				console.log(startResult.toString());
+			}
+			catch (e){
+				console.error('Starting Windows service failed!')
+				console.warn(e.toString());
+			}
+		}, startTimeout);
+	}, installTimeout);
+}, creationTimeout);

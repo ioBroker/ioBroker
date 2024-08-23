@@ -27,6 +27,7 @@ ROOT_GROUP="root"
 USER_GROUP="$USER"
 
 # Check and fix timezone
+
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
 echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
 read -r -s -n 1 char;
