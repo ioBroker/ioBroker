@@ -1,7 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-## __WORK IN PROGRESS__
+## 6.0.1 (2024-08-23)
 * Windows: Fix service installation error on very slow PCs
 
 ## 6.0.0 (2024-08-10)
