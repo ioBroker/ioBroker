@@ -2,13 +2,13 @@
 
 const fs = require('fs-extra');
 const Shortcuts = require('./shortcuts');
-const execSync = require('child_process').execSync;
-const join = require('path').join;
+const execSync = require('node:child_process').execSync;
+const join = require('node:path').join;
 
 // Get environment variables from file .env
 require('dotenv').config();
 
-// Create the according Windows startmenu entries
+// Create the according Windows start menu entries
 Shortcuts.createStartMenu();
 
 const serviceName = process.env.iobServiceName ? process.env.iobServiceName : 'ioBroker';
@@ -23,7 +23,7 @@ const startTimeout = 2000;
 const installTimeout = 2000;
 let creationTimeout = 500;
 
-// Check if service exists
+// Check if the service exists
 if (fs.existsSync(serviceEXEPath) && fs.existsSync(serviceXMLPath)) {
 	try {
 		const cmd = `sc query state= all | find "${serviceExe}"`;
@@ -68,7 +68,7 @@ setTimeout(() => {
 	// Copy service executable
 	fs.copyFile('install\\windows\\WinSW3.exe', serviceEXEPath, (err) => {
 		if (err) {
-			console.error('Error when copying service executable: ' + err);
+			console.error(`Error when copying service executable: ${err}`);
 		}
 	});
 

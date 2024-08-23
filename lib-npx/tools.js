@@ -3,9 +3,9 @@
 
 const fs = require('fs-extra');
 //const semver = require('semver');
-const path = require('path');
+const path = require('node:path');
 const semver = require('semver');
-const child_process = require('child_process');
+const child_process = require('node:child_process');
 //const { URLSearchParams } = require('url');
 //let axios;
 /*
@@ -525,13 +525,12 @@ function getDefaultDataDir() {
     // dataDir = dataDir.split('/');
 
     // If installed with npm
-    if (fs.existsSync(__dirname + '/../../../node_modules/iobroker.js-controller')) {
+    if (fs.existsSync(`${__dirname}/../../../node_modules/iobroker.js-controller`)) {
         return '../../iobroker-data/';
-    } else {
-        // dataDir.splice(dataDir.length - 1, 1);
-        // dataDir = dataDir.join('/');
-        return './data/';
     }
+    // dataDir.splice(dataDir.length - 1, 1);
+    // dataDir = dataDir.join('/');
+    return './data/';
 }
 
 function getConfigFileName() {
@@ -540,22 +539,21 @@ function getConfigFileName() {
     configDir = configDir.split('/');
 
     // If installed with npm
-    if (fs.existsSync(__dirname + '/../../../node_modules/iobroker.js-controller') ||
-        fs.existsSync(__dirname + '/../../../node_modules/ioBroker.js-controller')) {
+    if (fs.existsSync(`${__dirname}/../../../node_modules/iobroker.js-controller`) ||
+        fs.existsSync(`${__dirname}/../../../node_modules/ioBroker.js-controller`)) {
         // remove /node_modules/ioBroker.js-controller/lib
         configDir.splice(configDir.length - 3, 3);
         configDir = configDir.join('/');
-        return configDir + '/iobroker-data/iobroker.json';
-    } else {
-        // Remove /lib
-        configDir.splice(configDir.length - 1, 1);
-        configDir = configDir.join('/');
-        if (fs.existsSync(__dirname + '/../conf/iobroker.json')) {
-            return configDir + '/conf/iobroker.json';
-        } else {
-            return configDir + '/data/iobroker.json';
-        }
+        return `${configDir}/iobroker-data/iobroker.json`;
     }
+
+    // Remove /lib
+    configDir.splice(configDir.length - 1, 1);
+    configDir = configDir.join('/');
+    if (fs.existsSync(`${__dirname}/../conf/iobroker.json`)) {
+        return `${configDir}/conf/iobroker.json`;
+    }
+    return `${configDir}/data/iobroker.json`;
 }
 
 /**
@@ -628,13 +626,13 @@ function getSystemVersions() {
     // Run npm -v and extract the version string
     const ret = {
         npm: undefined,
-        node: undefined
+        node: undefined,
     };
     try {
         let npmVersion;
         ret.node = semver.valid(process.version);
         try {
-            // remove local node_modules\.bin dir from path
+            // remove local node_modules\.bin dir from a path
             // or we potentially get a wrong npm version
             const newEnv = Object.assign({}, process.env);
             newEnv.PATH = (newEnv.PATH || newEnv.Path || newEnv.path)
@@ -647,13 +645,13 @@ function getSystemVersions() {
 
             npmVersion = child_process.execSync('npm -v', { encoding: 'utf8', env: newEnv });
             if (npmVersion) npmVersion = semver.valid(npmVersion.trim());
-            console.log('NPM version: ' + npmVersion);
+            console.log(`NPM version: ${npmVersion}`);
             ret.npm = npmVersion;
         } catch (e) {
-            console.error('Error trying to check npm version: ' + e.message);
+            console.error(`Error trying to check npm version: ${e.message}`);
         }
     } catch (e) {
-        console.error('Could not check npm version: ' + e.message);
+        console.error(`Could not check npm version: ${e.message}`);
         console.error('Assuming that correct version is installed.');
     }
     return ret;
@@ -674,5 +672,5 @@ module.exports = {
     getConfigFileName,
     copyFilesRecursiveSync,
     isAutomatedInstallation,
-    getSystemVersions
+    getSystemVersions,
 };

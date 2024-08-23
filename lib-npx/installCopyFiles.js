@@ -3,7 +3,7 @@
 
 // fs doesn't have sync copy prior to node 8.5
 const fs = require('fs-extra');
-const path = require('path');
+const path = require('node:path');
 const tools = require('./tools.js');
 
 const thisPackageRoot = path.join(__dirname, '..');
@@ -16,7 +16,7 @@ try {
     createPackageJson();
 } catch (e) {
     console.error('Please make sure to run this process in the directory where ioBroker should be installed, e.g. C:\\iobroker\\!');
-    console.error('Cannot install: ' + e);
+    console.error(`Cannot install: ${e}`);
     process.exit(1);
 }
 
@@ -27,7 +27,7 @@ function copyFilesToRootDir() {
         if (noCopyDirs.includes(filename)) {
             return false;
         }
-        // Don't copy files starting with .
+        // Don't copy files starting with "."
         if (/^\./.test(filename)) {
             return false;
         }
@@ -53,16 +53,16 @@ function createPackageJson() {
         // Copy scripts and required engine from our own package.json
         scripts: {
             'install-service': 'node install.js',
-            'uninstall-service': 'node uninstall.js'
+            'uninstall-service': 'node uninstall.js',
         },
         engines: {
-            'node': '>=18.0.0'
+            'node': '>=18.0.0',
         },
         dependencies: {
             'iobroker.js-controller': 'stable',
             'iobroker.admin': 'stable',
             'iobroker.discovery': 'stable',
-            'iobroker.backitup': 'stable'
+            'iobroker.backitup': 'stable',
         },
         optionalDependencies: ownPackage.optionalDependencies
     };

@@ -1,4 +1,4 @@
-const http = require('http');
+const http = require('node:http');
 
 function checkAdmin() {
     return new Promise(resolve => http.get('http://localhost:8081')

@@ -1,8 +1,8 @@
 'use strict';
 
 const ws = require('windows-shortcuts');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // Get environment variables from file .env
 require('dotenv').config();
@@ -15,17 +15,17 @@ function getFullLinkFileName(menuDir, linkFileName, serviceName) {
 }
 
 //
-// Create one startmenu entry and the according folder if not already created
+// Create one start menu entry and the according folder if not already created
 //
 function createStartMenuEntry(menuDir, linkFileName, serviceName, target, workingDir, args, desc, iconFileName, admin) {
 
     if (!fs.existsSync(menuDir)) {
         try {
             fs.mkdirSync(menuDir);
-            console.log(`Startmenu folder ${sMenuDir} created!`);
+            console.log(`Start menu folder ${sMenuDir} created!`);
         }
         catch (err) {
-            console.error(`Error occurred when reating startmenu folder ${sMenuDir}!`);
+            console.error(`Error occurred when creating a start menu folder ${sMenuDir}!`);
             console.error(err);
         }
     }
@@ -72,10 +72,9 @@ function createStartMenuEntry(menuDir, linkFileName, serviceName, target, workin
 }
 
 //
-// Remove one startmenu entry
+// Remove one start menu entry
 //
 async function removeStartMenuEntry(menuDir, linkFileName, serviceName) {
-
     const fullLinkFileName = getFullLinkFileName(menuDir, linkFileName, serviceName);
     try {
         fs.rmSync(fullLinkFileName);
@@ -105,7 +104,7 @@ const iconPath = path.join(process.cwd(), '\\node_modules\\iobroker.admin\\admin
 const servicePath = path.join(process.cwd(), 'serviceiobroker.bat');
 
 //
-// Create all startmenu entries and the startmenu folder
+// Create all start menu entries and the start menu folder
 //
 function createStartMenu() {
     const content = '@echo off\n' +
@@ -131,19 +130,19 @@ function createStartMenu() {
     }
 
     createStartMenuEntry(
-        sMenuDir,                    // Directory in start menu
+        sMenuDir,                    // Directory in the start menu
         linkCmdLine,                 // Shortcut filename
         iobServiceName,              // Servicename, empty string for standard name iobroker
         process.env.ComSpec,         // target, in this case cmd.exe
         process.cwd(),               // ioBroker root directory
-        '/k "' + ioNodeVarsBat + '"',// parameter of shortcut, in this case path to nodevars.bat
+        `/k "${ioNodeVarsBat}"`,// parameter of shortcut, in this case, path to nodevars.bat
         'ioBroker Command line.',    // description
         iconPath,
         true
     );
 
     createStartMenuEntry(
-        sMenuDir,                             // Directory in start menu
+        sMenuDir,                             // Directory in the start menu
         linkAdmin,                            // Shortcut filename
         iobServiceName,                       // Servicename, empty string for standard name iobroker
         'http://127.0.0.1:8081',              // target
@@ -155,7 +154,7 @@ function createStartMenu() {
     );
 
     createStartMenuEntry(
-        sMenuDir,                    // Directory in start menu
+        sMenuDir,                    // Directory in the start menu
         linkStartService,            // Shortcut filename
         iobServiceName,              // Servicename, empty string for standard name iobroker
         servicePath,  // target
@@ -167,7 +166,7 @@ function createStartMenu() {
     );
 
     createStartMenuEntry(
-        sMenuDir,                    // Directory in start menu
+        sMenuDir,                    // Directory in the start menu
         linkStopService,             // Shortcut filename
         iobServiceName,              // Servicename, empty string for standard name iobroker
         servicePath, // target
@@ -179,7 +178,7 @@ function createStartMenu() {
     );
 
     createStartMenuEntry(
-        sMenuDir,                      // Directory in start menu
+        sMenuDir,                      // Directory in the start menu
         linkRestartService,            // Shortcut filename
         iobServiceName,                // Servicename, empty string for standard name iobroker
         servicePath,                   // target
@@ -192,7 +191,7 @@ function createStartMenu() {
 }
 
 //
-// Remove all startmenu entries and the startmenu folder
+// Remove all start menu entries and the start menu folder
 //
 async function removeStartMenu() {
     await removeStartMenuEntry(sMenuDir, linkAdmin, iobServiceName);
@@ -202,14 +201,14 @@ async function removeStartMenu() {
     await removeStartMenuEntry(sMenuDir, linkRestartService, iobServiceName);
     try {
         fs.rmdirSync(sMenuDir);
-        console.log(`Startmenu folder ${sMenuDir} removed!`);
+        console.log(`Start menu folder ${sMenuDir} removed!`);
     }
     catch (err) {
         if (err.code === 'ENOTEMPTY') {
-            console.log(`Startmenu folder ${sMenuDir} not removed because it is not empty!`);
+            console.log(`Start menu folder ${sMenuDir} not removed because it is not empty!`);
         }
         else {
-            console.error(`Error occurred when removing startmenu folder ${sMenuDir}!`);
+            console.error(`Error occurred when removing the start menu folder ${sMenuDir}!`);
             console.error(err);
         }
     }
