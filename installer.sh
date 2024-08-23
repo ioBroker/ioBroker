@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2024-01-04" # format YYYY-MM-DD
+INSTALLER_VERSION="2024-08-12" # format YYYY-MM-DD
+
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -9,6 +10,19 @@ then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
+
+# Check for sane environment, especially on LXC
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+read -r -s -n 1 char;
+        if
+                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+        then
+                                $SUDOX dpkg-reconfigure tzdata;
+        fi;
+fi;
+
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
@@ -154,7 +168,7 @@ print_step "Finalizing installation" 4 "$NUM_STEPS"
 INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
-elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
+elif [[ `ps -p 1 -o comm=` = "systemd" ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
 	INITSYSTEM="init.d"
@@ -180,6 +194,10 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
+				if [ "$(id -u)" = 0 ] && [[ $* != *--allow-root* ]]; then
+			echo -e "\n*** ioBroker is not supposed to be run as root. Sorry ***\nOnly a user that is member of iobroker group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker with --allow-root option.\nPlease note that this option may be disabled soon, so please change your setup accordingly now."
+			exit;
+		fi;
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then

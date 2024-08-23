@@ -8,15 +8,15 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "You should not use root directly on your system!\nBetter use your standard user!\n\n";
-                        sleep 5;
+                        echo -e "You should not be root on your system!\nBetter use your standard user!\n\n";
+                        sleep 15;
 
 fi
 clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-06-24";      #version of this script
+SKRIPTV="2024-08-12";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(hostname)
@@ -192,6 +192,17 @@ if [ -f "$DOCKER" ]; then
 else
     timedatectl;
 fi;
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+read -r -s -n 1 char;
+        if
+                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+        then
+                                sudo dpkg-reconfigure tzdata;
+        fi;
+fi;
+
 
 echo "";
 echo -e "\033[34;107m*** Users and Groups ***\033[0m";
