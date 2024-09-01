@@ -27,6 +27,7 @@ set_valid_redis_locale() {
         # Check if the redis service file contains the LC_ALL setting
         if ! grep -q "Environment" "/lib/systemd/system/redis-server.service"; then
           sed -i '/\[Service\]/a Environment="LC_ALL=C"' /lib/systemd/system/redis-server.service
+          $SUDOX systemctl restart redis-server
         fi
       fi
     fi
