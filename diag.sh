@@ -8,7 +8,7 @@ then
         echo "";
         elif [ "$(id -u)" = 0 ];
                 then
-                        echo -e "You should not be root on your system!\nBetter use your standard user!\n\n";
+                        echo -e "You should not be root on your system!\nBetter use your standard user!\n\nGiving you 15 seconds idle time to think about the advantages of a non-root account...";
                         sleep 15;
 
 fi
@@ -16,11 +16,11 @@ clear;
 echo "*** iob diag is starting up, please wait ***";
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-08-12";      #version of this script
+SKRIPTV="2024-09-06";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
-HOST=$(hostname)
-source /etc/os-release
+HOST=$(hostname);
+ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs);
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #recommended node version
 NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext);    #recommended npm version
 #NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
@@ -33,6 +33,18 @@ SYSTDDVIRT="";
 NODENOTCORR=0;
 IOBLISTINST=$(iobroker list instances);
 NPMLS=$(cd /opt/iobroker && npm ls -a)
+
+#Debian and Ubuntu releases and their status
+EOLDEB="buzz rex bo hamm slink potato woody sarge etch lenny squeeze wheezy jessie stretch buster";
+EOLUBU="bionic xenial trusty mantic lunar kinetic impish hirsute groovy eoan disco cosmic artful zesty yakkety wily vivid utopic saucy raring quantal precise oneiric natty maverick lucid karmic jaunty intrepid hardy gutsy feisty edgy dapper breezy hoary warty";
+DEBSTABLE="bookworm";
+UBULTS="noble"
+OLDLTS="jammy focal";
+TESTING="trixie oracular"
+OLDSTABLE="bullseye";
+CODENAME=$(lsb_release -sc);
+UNKNOWNRELEASE=1
+
 clear;
 echo "";
 echo -e "\033[34;107m*** ioBroker Diagnosis ***\033[0m";
@@ -70,13 +82,6 @@ else
         grep -i model /proc/cpuinfo | tail -1;
         echo -e "Docker          : false";
 fi;
-# Alternativer DockerCheck - Nicht getestet:
-#
-# if [ -f /.dockerenv ]; then
-#    echo "I'm inside matrix ;(";
-# else
-#    echo "I'm living in a real world!";
-# fi
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
 if [ "$SYSTDDVIRT" != "" ]; then
@@ -91,6 +96,64 @@ echo "Systemuptime and Load:";
         uptime;
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo "";
+echo "";
+echo -e "\033[34;107m*** LIFE CYCLE STATUS ***\033[0m";
+
+for RELEASE in $EOLDEB; do
+    if [ "$RELEASE" = "$CODENAME" ]; then
+        RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for RELEASE in $EOLUBU; do
+    if [ "$RELEASE" == "$CODENAME" ]; then
+        RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for RELEASE in $DEBSTABLE; do
+    if [ "$RELEASE" == "$CODENAME" ]; then
+        RELEASESTATUS="\e[32mYour Operating System is the current Debian stable version codenamed '$DEBSTABLE'!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for RELEASE in $UBULTS; do
+    if [ "$RELEASE" == "$CODENAME" ]; then
+        RELEASESTATUS="\e[32mYour Operating System is the current Ubuntu LTS release codenamed '$UBULTS'!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for RELEASE in $OLDLTS; do
+    if [ "$RELEASE" == "$CODENAME" ]; then
+        RELEASESTATUS="\e[1;33mYour Operating System codenamed '$CODENAME' is an aging Ubuntu LTS release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for RELEASE in $TESTING; do
+    if [ "$RELEASE" == "$CODENAME" ]; then
+        RELEASESTATUS="\e[1;33mYour Operating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+for RELEASE in $OLDSTABLE; do
+    if [ "$RELEASE" == "$CODENAME" ]; then
+        RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m";
+        UNKNOWNRELEASE=0;
+    fi;
+done;
+
+if [ $UNKNOWNRELEASE -eq 1 ]; then
+    RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if your Operating System is maintained."
+fi;
+
+echo -e "$RELEASESTATUS";
+
 # RASPBERRY only
 if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
 #        echo "Raspberry only:";
@@ -193,13 +256,26 @@ else
     timedatectl;
 fi;
 
-if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
 echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
 read -r -s -n 1 char;
         if
-                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
         then
-                                sudo dpkg-reconfigure tzdata;
+                if command -v dpkg-reconfigure > /dev/null; then
+                sudo dpkg-reconfigure tzdata;
+                else
+                # Setup the timezone for the server (Default value is "Europe/Berlin")
+                echo "Setting up timezone";
+                read -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
+                TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
+                timedatectl set-timezone $TIMEZONE;
+                fi;
+                # Set up time synchronization with systemd-timesyncd
+                echo "Setting up time synchronization with systemd-timesyncd"
+                systemctl enable systemd-timesyncd
+                systemctl start systemd-timesyncd
+
         fi;
 fi;
 
@@ -223,6 +299,35 @@ echo -e "\033[34;107m*** Users and Groups ***\033[0m";
         fi;
 
 echo "";
+
+if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+
+# Prompt for username
+read -p "Enter the username for the a new user (Not 'root' and not 'iobroker'!): " USERNAME
+
+# Check if the user already exists
+if id "$USERNAME" &>/dev/null; then
+    echo "User $USERNAME already exists. Skipping user creation."
+else
+    # Prompt for password
+    read -s -p "Enter the password for the new user: " PASSWORD
+    echo
+    read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
+    echo
+
+    # Check if passwords match
+    if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+        echo "Passwords do not match. Exiting."
+        exit 1
+    fi
+
+    # Add a new user account with sudo access and set the password
+    echo "Adding new user account..."
+    useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker $USERNAME
+    echo "$USERNAME:$PASSWORD" | chpasswd
+fi
+
+fi;
 
 echo -e "\033[34;107m*** Display-Server-Setup ***\033[0m";
 XORGTEST=$(pgrep -cf '[X]|[w]ayland|X11|wayfire')
@@ -267,6 +372,13 @@ echo "";
 systemctl list-units --failed --no-pager;
 echo "";
 fi;
+
+echo "";
+echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m";
+echo "";
+sudo dmesg --level=emerg,alert,crit -T;
+echo "";
+
 echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
         df -PTh;
 echo "";
@@ -504,12 +616,12 @@ fi
 # echo "";
 
 ANZNPMTMP=$(find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l);
-echo -e "\033[32mTemp directories causing npm8 problem:\033[0m ""$ANZNPMTMP""";
-if [[ $ANZNPMTMP -gt 0 ]]
+echo -e "\033[32mTemp directories causing deletion problem:\033[0m ""$ANZNPMTMP""";
+if [[ $ANZNPMTMP -gt 0 ]];
 then
         echo -e "Some problems detected, please run \e[031miob fix\e[0m";
 else
-        echo "No problems detected"
+        echo "No problems detected";
 fi;
 
 # echo "";
@@ -517,9 +629,16 @@ fi;
 # find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \ &> /dev/null;
 # echo -e "\033[32m1 - Temp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium'>e;
 echo "";
-echo "Errors in npm tree:";
-echo "$NPMLS" | grep ERR;
-echo "";
+if [[ $(echo "$NPMLS" | grep ERR -wc -l) -gt 0 ]];
+then
+        echo -e "\033[322mErrors in npm tree:\033[0m";
+        echo "$NPMLS" | grep ERR;
+        echo "";
+else
+        echo -e "\033[32mErrors in npm tree:\033[0m 0";
+        echo "No problems detected";
+        echo "";
+fi;
 echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
 echo -e "\033[32mioBroker Status\033[0m";
@@ -741,7 +860,7 @@ if [[ $NODENOTCORR -eq 1 ]];
 then
                 echo "";
                 echo "Please execute";
-                echo "iobroker nodejs-update";
+                echo -e "\e[031miob nodejs-update\e[0m";
                 echo "to fix these errors."
 fi;
 echo "";
@@ -776,9 +895,9 @@ then
         echo -e "Some problems detected, please run \e[031miob fix\e[0m and try to have them fixed";
         echo -e "*********************************************************************";
         echo -e "";
-else
-        echo ""
 fi;
+echo -e "$RELEASESTATUS";
+echo "";
 
 echo "=================== END OF SUMMARY ===================="
 echo -e "\`\`\`";
