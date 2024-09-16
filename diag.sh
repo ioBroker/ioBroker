@@ -17,7 +17,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
 fi;
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-09-15";      #version of this script
+SKRIPTV="2024-09-16";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(uname -n);
@@ -391,26 +391,28 @@ else
                 timedatectl;
 fi;
 
-if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+        if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
                 echo "Timezone is probably wrong. Do you want to reconfigure it? (y/n)"
                 read -r -s -n 1 char;
-        if
+                if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-        then
-                if command -v dpkg-reconfigure > /dev/null; then
+                then
+                        if command -v dpkg-reconfigure > /dev/null; then
                         sudo dpkg-reconfigure tzdata;
-                else
+                        else
                         # Setup the timezone for the server (Default value is "Europe/Berlin")
                         echo "Setting up timezone";
                         read -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
                         TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
                         sudo timedatectl set-timezone "$TIMEZONE";
-                fi;
+                        fi;
                         # Set up time synchronization with systemd-timesyncd
                         echo "Setting up time synchronization with systemd-timesyncd"
                         sudo systemctl enable systemd-timesyncd
                         sudo systemctl start systemd-timesyncd
 
+                fi;
         fi;
 fi;
 fi;
@@ -533,7 +535,8 @@ else
 fi;
 
 
-        if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(systemctl get-default) == "graphical.target" ]]; then
+        if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+                if [[ $(systemctl get-default) == "graphical.target" ]]; then
                 if [[ "$SKRPTLANG" = "--de" ]]; then
                         echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Soll das boot target jetzt auf 'multi-user.target'geändert werden? (j/n)";
                         read -r -s -n 1 char;
@@ -555,6 +558,7 @@ fi;
                                 sudo systemctl set-default multi-user.target;
                         fi;
                 fi;
+        fi;
         fi;
 echo "";
 echo -e "\033[34;107m*** MEMORY ***\033[0m";
@@ -587,7 +591,6 @@ fi;
 
 echo "";
 echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m";
-echo "";
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l);
 if [[ "$CRITERROR" -gt 0 ]]; then
         if [[ "$SKRPTLANG" = "--de" ]]; then
