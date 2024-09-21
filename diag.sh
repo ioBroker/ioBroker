@@ -17,7 +17,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
 fi;
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-09-16";      #version of this script
+SKRIPTV="2024-09-21";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(uname -n);
@@ -440,7 +440,7 @@ echo "";
 if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
 
 # Prompt for username
-echo "Es sollte ein Standarduser angelegt werden! Dieser user kann dann auch mittels 'sudo' temporär root-Rechte erlangen!"
+echo "Es sollte ein Standarduser angelegt werden! Dieser user kann dann auch mittels 'sudo' temporär root-Rechte erlangen."
 echo "Ein permanentes Login als root ist nicht vorgesehen."
 read -p "Neuer Nutzername (Nicht 'root' und nicht 'iobroker'!): " USERNAME;
 
@@ -519,7 +519,7 @@ fi
 fi;
 fi;
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m";
-XORGTEST=$(pgrep -cf '[X]|[w]ayland|X11|wayfire')
+XORGTEST=$(pgrep -cf 'ayland|X11|wayfire')
 if [[ "$XORGTEST" -gt 0 ]];
         then
                 echo -e "Display-Server: true"
@@ -528,9 +528,7 @@ if [[ "$XORGTEST" -gt 0 ]];
 fi
 echo -e "Desktop: \t$DESKTOP_SESSION";
 echo -e "Terminal: \t$XDG_SESSION_TYPE";
-if [ -f "$DOCKER" ]; then
-        echo -e "";
-else
+if [ -z "$DOCKER" ]; then
         echo -e "Boot Target: \t$(systemctl get-default)";
 fi;
 
@@ -544,7 +542,7 @@ fi;
                                 [[ "$char" = "j" ]] || [[ "$char" = "J" ]];
                         then
                                 # Set up multi-user.target
-                                echo "Das boot target wird auf multi-user gesetzt. Das System muss im Anschluß neugestartet werden.";
+                                echo "Das boot target wird auf multi-user gesetzt. Das System muss im Anschluss neugestartet werden.";
                                 sudo systemctl set-default multi-user.target;
                         fi;
                 else
