@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2024-08-12" # format YYYY-MM-DD
-
+INSTALLER_VERSION="2024-08-11" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
