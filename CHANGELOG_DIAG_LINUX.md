@@ -1,5 +1,15 @@
 # Changelog for Linux-Diag-Script
 
+## 2024-09-21
+* Added option to set multi-user.target on systemd-based machines
+* With option '--de' some output will be in German language
+* Avoided sourcing /etc/os-release for security reasons
+* Implemented Debian & Ubuntu Lifecycle check
+* Made setting timezone more generic on non-Debian systemd
+* Implemented check for a default user and offer to create one if missing
+* Added check for 'critical errors' in dmesg
+* Added 'iob list hosts' command
+
 ## 2024-06-24
 * Added language information to CodeTags for copying to ioB-Forum.
 * Only show mounted filesystems that are real
