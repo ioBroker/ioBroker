@@ -194,6 +194,10 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
+				if [ "$(id -u)" = 0 ] && [[ $* != *--allow-root* ]]; then
+			echo -e "\n*** ioBroker is not supposed to be run as root. Sorry ***\nOnly a user that is member of iobroker group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker with --allow-root option.\nPlease note that this option may be disabled soon, so please change your setup accordingly now."
+			exit;
+		fi;
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
