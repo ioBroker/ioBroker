@@ -1,6 +1,6 @@
 # Changelog for Linux-Installer-Script
 
-### 2024-08-10
+### 2024-09-xx
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
 

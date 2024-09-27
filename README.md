@@ -8,7 +8,7 @@
 
 *Automate your life!*
 
-To install on Linux just run: `npx @iobroker/install`
+To install on Linux, just run: `npx @iobroker/install`
 
 To install on Windows: `mkdir C:\iobroker && cd C:\iobroker && npx @iobroker/install` or use [installer](https://github.com/ioBroker/ioBroker.build)
 
@@ -45,10 +45,10 @@ It's used to maintain and publish all states of connected systems.
 
 Systems are attached to ioBrokers databases via so-called adapters, technically processes running anywhere
 in the network and connecting all kinds of systems to ioBrokers databases. 
-A connection to ioBrokers databases can be implemented in nearly any programming language on nearly any platform 
+A connection to ioBrokers databases can be implemented in nearly any programming language on nearly any platform, 
 and an adapter can run on any host that is able to reach the databases via ip networking.
 
-See actual list of adapters on [iobroker.net](https://www.iobroker.net/#en/adapters)
+See the actual list of adapters on [iobroker.net](https://www.iobroker.net/#en/adapters)
 
 ### Security
 
@@ -58,7 +58,7 @@ adapters or any smart home devices directly to the internet or, in general,
 to an environment where untrusted clients can directly access these network services. 
 Adapters that offer services supposed to be exposed to the internet should be handled with care. 
 You should always activate **HTTPS** and use valid certificates for web, admin if open it for internet or 
-for example use it with additional security measures like VPN, VLAN and reverse proxies.
+for example, use it with additional security measures like VPN, VLAN and reverse proxies.
 
 ## Getting Started
 ### Operating System and Hardware
@@ -85,7 +85,7 @@ Please request permission via info@iobroker.net
 ## License
 
 This module is distributor under the MIT License (MIT). 
-**Please notice, that other ioBroker adapters can have different licenses.**
+**Please notice that other ioBroker adapters can have different licenses.**
 
 The MIT License (MIT)
 

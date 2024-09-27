@@ -1,8 +1,8 @@
 'use strict';
 
 const gulp   = require('gulp');
-const fs     = require('fs');
-const Stream = require('stream');
+const fs     = require('node:fs');
+const Stream = require('node:stream');
 const Client = require('ssh2').Client;
 
 const dist = `${__dirname}/dist/`;
@@ -46,7 +46,7 @@ function writeSftp(sftp, fileName, data, cb) {
         }
     });
 
-    // initiate transfer of file
+    // initiate transfer of a file
     readStream.pipe(writeStream);
 }
 
@@ -64,7 +64,7 @@ function uploadOneFile(fileName, data) {
                     return resolve();
                 }
 
-                // file must be deleted, because of the new file smaller, the rest of old file will stay.
+                // The file must be deleted, because of the new file smaller; the rest of the old file will stay.
                 checkAndDeleteIfExist(sftp, fileName, () =>
                     writeSftp(sftp, fileName, data, () => {
                         sftp.end();
@@ -132,9 +132,9 @@ gulp.task('create', () => {
         // LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
 
         fs.writeFileSync(`${dist}install.sh`, replaceLib(install, lib));
-        fs.writeFileSync(`${dist}fix.sh`,     replaceLib(fix, lib));
-        fs.writeFileSync(`${dist}diag.sh`,    diag);
-        fs.writeFileSync(`${dist}node-update.sh`,    nodeUpdate);
+        fs.writeFileSync(`${dist}fix.sh`, replaceLib(fix, lib));
+        fs.writeFileSync(`${dist}diag.sh`, diag);
+        fs.writeFileSync(`${dist}node-update.sh`, nodeUpdate);
 
         resolve();
     });

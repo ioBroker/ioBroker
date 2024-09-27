@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2024-06-20" # format YYYY-MM-DD
+LIBRARY_VERSION="2024-08-11" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -807,7 +807,7 @@ enabled=1
 gpgcheck=1
 gpgkey=https://rpm.nodesource.com/gpgkey/ns-operations-public.key
 module_hotfixes=1"
-		
+
 		if [ "$IS_ROOT" = true ]; then
 			echo "$NODEJS_REPO_CONTENT" | tee /etc/yum.repos.d/nodesource-nodejs.repo > /dev/null
 			$INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"

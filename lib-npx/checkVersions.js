@@ -2,7 +2,7 @@
 'use strict';
 
 /*
- * This script checks the installed versions of NodeJS and npm
+ * This script checks the installed versions of Node.js and npm
  * to make sure they are compatible with ioBroker.
  */
 
@@ -10,7 +10,7 @@ const { getSystemVersions } = require('./tools.js');
 const semver = require('semver');
 
 // DEFINE minimum versions here:
-/** The minimum required Node.JS version - should be the current LTS */
+/** The minimum required Node.js version - should be the current LTS */
 const MIN_NODE_VERSION = '16.20.0';
 /** The recommended npm version - should be the one bundled with MIN_NODE_VERSION */
 const RECOMMENDED_NPM_VERSION = '8.19.4';

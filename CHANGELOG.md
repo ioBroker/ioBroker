@@ -1,6 +1,9 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## 6.0.1 (2024-08-23)
+* Windows: Fix service installation error on very slow PCs
+
 ## 6.0.0 (2024-08-10)
 * Adjust minimum Node.js version to 18 of new main package which match to the minimum version of js-controller 6.0.x
 * Rebuild Windows install logic to use the new installer script
