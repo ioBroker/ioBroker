@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2024-08-11" # format YYYY-MM-DD
+FIXER_VERSION="2024-09-27" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -211,8 +211,8 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
-		if [ "$(id -u)" = 0 ] && [[ $* != *--allow-root* ]]; then
-			echo -e "\n*** For security reasons ioBroker should not be run or administrated as root. ***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
+		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit;
 		fi;
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then

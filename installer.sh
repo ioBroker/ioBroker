@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2024-08-12" # format YYYY-MM-DD
+INSTALLER_VERSION="2024-09-27" # format YYYY-MM-DD
 
 
 # Test if this script is being run as root or not
@@ -195,8 +195,9 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
-				if [ "$(id -u)" = 0 ] && [[ $* != *--allow-root* ]]; then
-			echo -e "\n*** ioBroker is not supposed to be run as root. Sorry ***\nOnly a user that is member of iobroker group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker with --allow-root option.\nPlease note that this option may be disabled soon, so please change your setup accordingly now."
+				if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
+      			exit;
 			exit;
 		fi;
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
