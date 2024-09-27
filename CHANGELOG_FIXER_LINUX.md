@@ -3,10 +3,6 @@
 ### 2024-08-11
 * Implemented reconfiguring time zone if none is set
 
-### 2024-08-10
-* root/sudo locked out for systemd based installations
-* --allow-root Option enabled (Just for a transition time)
-
 ### 2024-01-04
 * Fix package installation issues on Debian
 

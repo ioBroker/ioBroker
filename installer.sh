@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2024-08-12" # format YYYY-MM-DD
-
+INSTALLER_VERSION="2024-08-10" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -14,13 +13,14 @@ USER_GROUP="$USER"
 # Check for sane environment, especially on LXC
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
-read -r -s -n 1 char;
-        if
-                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-        then
-                                $SUDOX dpkg-reconfigure tzdata;
-        fi;
+  echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+  read -r -s -n 1 char;
+
+  if
+    [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+  then
+    $SUDOX dpkg-reconfigure tzdata;
+  fi;
 fi;
 
 

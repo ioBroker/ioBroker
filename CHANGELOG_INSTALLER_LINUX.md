@@ -1,9 +1,5 @@
 # Changelog for Linux-Installer-Script
 
-### 2024-08-10
-* root/sudo locked out for systemd based installations
-* --allow-root Option enabled (Just for a transition time)
-
 ### 2024-06-20
 * Install nodesource rpm package via yum
 
