@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+### 2024-08-11
+* Implemented reconfiguring time zone if none is set
+
 ### 2024-06-20
 * Install nodesource rpm package via yum
 
