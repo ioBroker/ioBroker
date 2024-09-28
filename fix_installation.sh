@@ -94,19 +94,19 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
                 if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
                 then
-                        if command -v dpkg-reconfigure > /dev/null; then
-                        sudo dpkg-reconfigure tzdata;
+                        if $(command -v dpkg-reconfigure) > /dev/null; then
+                        $(sudo dpkg-reconfigure tzdata);
                         else
                         # Setup the timezone for the server (Default value is "Europe/Berlin")
                         echo "Setting up timezone";
                         read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
                         TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-                        sudo timedatectl set-timezone "$TIMEZONE";
+                        $(sudo timedatectl set-timezone "$TIMEZONE");
                         fi;
                         # Set up time synchronization with systemd-timesyncd
                         echo "Setting up time synchronization with systemd-timesyncd"
-                        sudo systemctl enable systemd-timesyncd
-                        sudo systemctl start systemd-timesyncd
+                        $(sudo systemctl enable systemd-timesyncd);
+                        $(sudo systemctl start systemd-timesyncd);
 
                 fi;
         fi;
