@@ -94,7 +94,7 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
                 if
                 [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
                 then
-                        if $(command -v dpkg-reconfigure) > /dev/null; then
+                        if [ "$(command -v dpkg-reconfigure)" ]; then
                         $(sudo dpkg-reconfigure tzdata);
                         else
                         # Setup the timezone for the server (Default value is "Europe/Berlin")
