@@ -32,6 +32,14 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoam
 # Prompt for username
 echo "A default user should be created! This user will be enabled to temporarily switch to root via 'sudo'!"
 echo "A root login is not required in most Linux Distributions."
+
+
+                echo "Do you want to setup a user now? (y/n)"
+                read -r -s -n 1 char;
+                if
+                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+                then
+
 read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
 
 # Check if the user already exists
@@ -54,8 +62,8 @@ else
     echo "Adding new user account..."
     useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
     echo "$USERNAME:$PASSWORD" | chpasswd
-fi
-
+fi;
+fi;
 fi;
 
 # Check and fix boot.target on systemd
