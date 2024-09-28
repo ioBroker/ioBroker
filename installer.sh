@@ -85,7 +85,7 @@ case "$MIRROR" in
 		REGISTRY_URL="https://registry.npm.taobao.org"
 		;;
 esac
-if [ $(npm config get registry) != "$REGISTRY_URL" ]; then
+if [ "$(npm config get registry)" != "$REGISTRY_URL" ]; then
 	echo "Changing npm registry to $REGISTRY_URL"
 	npm config set registry $REGISTRY_URL
 fi

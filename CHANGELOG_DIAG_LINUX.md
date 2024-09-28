@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2024-09-28
+* Moved options to fix configurations to 'iob fix'
+
 ## 2024-09-21
 * Added option to set multi-user.target on systemd-based machines
 * With option '--de' some output will be in German language

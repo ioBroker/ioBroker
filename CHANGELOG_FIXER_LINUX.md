@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+### 2024-09-28
+* Implemented adding default user if none is available
+* Implemented setting multi-user.target on systemd Linux
+
 ### 2024-09-27
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)

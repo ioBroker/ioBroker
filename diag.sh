@@ -17,7 +17,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
 fi;
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-09-21";      #version of this script
+SKRIPTV="2024-09-28";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(uname -n);
@@ -332,13 +332,13 @@ fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
         if [[ -f "/var/run/reboot-required" ]]; then
                 echo "";
-                echo "This system needs to be REBOOTED!";
+                echo "Dieses System benötigt einen NEUSTART";
                 echo "";
         fi
         else
         if [[ -f "/var/run/reboot-required" ]]; then
                 echo "";
-                echo "Dieses System benötigt einen NEUSTART!";
+                echo "This system needs to be REBOOTED!";
                 echo "";
         fi
 fi;
@@ -358,25 +358,7 @@ echo -e "\033[34;107m*** ZEIT UND ZEITZONEN ***\033[0m";
         fi;
 
         if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-                echo "Die gesetzte Zeitzone ist vermutlich falsch. Soll sie jetzt geändert werden? (j/n)"
-                read -r -s -n 1 char;
-                if
-                [[ "$char" = "j" ]] || [[ "$char" = "J" ]]
-                then
-                        if command -v dpkg-reconfigure > /dev/null; then
-                        sudo dpkg-reconfigure tzdata;
-                        else
-                # Setup the timezone for the server (Default value is "Europe/Berlin")
-                echo "Setzen der Zeitzone";
-                read -p "Eingabe der Zeitzone (Voreinstellung ist Europe/Berlin): " TIMEZONE;
-                TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-                sudo timedatectl set-timezone "$TIMEZONE";
-                        fi;
-                # Set up time synchronization with systemd-timesyncd
-                echo "Zeitsynchronisierung mittels systemd-timesyncd wird eingerichtet"
-                sudo systemctl enable systemd-timesyncd
-                sudo systemctl start systemd-timesyncd
-                fi;
+                echo "Die gesetzte Zeitzone ist vermutlich falsch. Bitte die Zeitzone mit den Mitteln des Betriebssystems ändern oder per 'iobroker fix' setzen.";
         fi;
 else
 
@@ -393,26 +375,7 @@ fi;
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
         if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-                echo "Timezone is probably wrong. Do you want to reconfigure it? (y/n)"
-                read -r -s -n 1 char;
-                if
-                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-                then
-                        if command -v dpkg-reconfigure > /dev/null; then
-                        sudo dpkg-reconfigure tzdata;
-                        else
-                        # Setup the timezone for the server (Default value is "Europe/Berlin")
-                        echo "Setting up timezone";
-                        read -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
-                        TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-                        sudo timedatectl set-timezone "$TIMEZONE";
-                        fi;
-                        # Set up time synchronization with systemd-timesyncd
-                        echo "Setting up time synchronization with systemd-timesyncd"
-                        sudo systemctl enable systemd-timesyncd
-                        sudo systemctl start systemd-timesyncd
-
-                fi;
+                echo "Timezone is probably wrong. Please configure it with system admin tools or by running 'iobroker fix'";
         fi;
 fi;
 fi;
@@ -440,31 +403,9 @@ echo "";
 if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
 
 # Prompt for username
-echo "Es sollte ein Standarduser angelegt werden! Dieser user kann dann auch mittels 'sudo' temporär root-Rechte erlangen."
+echo "Es sollte ein Standarduser angelegt werden! Dieser user kann auch mittels 'sudo' temporär root-Rechte erlangen."
 echo "Ein permanentes Login als root ist nicht vorgesehen."
-read -p "Neuer Nutzername (Nicht 'root' und nicht 'iobroker'!): " USERNAME;
-
-# Check if the user already exists
-if id "$USERNAME" &>/dev/null; then
-    echo "Nutzer $USERNAME existiert bereits. Überspringe die Neuanlage."
-else
-    # Prompt for password
-    read -s -p "Passwort für den neuen Nutzer: " PASSWORD;
-    echo;
-    read -s -p "Passwort für den neuen Nutzer nochmal eingeben: " PASSWORD_CONFIRM;
-    echo;
-
-    # Check if passwords match
-    if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
-        echo "Passwort stimmt nicht überein. Breche ab."
-        exit 1
-    fi
-
-    # Add a new user account with sudo access and set the password
-    echo "Neuer Nutzer wird angelegt. Bitte künftig nur noch diesen Nutzer verwenden."
-    useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
-    echo "$USERNAME:$PASSWORD" | chpasswd
-fi
+echo "Bitte den 'iobroker fix' ausführen oder manuell eine entsprechenden User anlegen."
 
 fi;
 else
@@ -487,34 +428,12 @@ echo -e "\033[34;107m*** Users and Groups ***\033[0m";
 
 echo "";
 
-if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
 
 # Prompt for username
 echo "A default user should be created! This user will be enabled to temporarily switch to root via 'sudo'!"
 echo "A root login is not required in most Linux Distributions."
-read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
-
-# Check if the user already exists
-if id "$USERNAME" &>/dev/null; then
-    echo "User $USERNAME already exists. Skipping user creation."
-else
-    # Prompt for password
-    read -s -p "Enter the password for the new user: " PASSWORD
-    echo
-    read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
-    echo
-
-    # Check if passwords match
-    if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
-        echo "Passwords do not match. Exiting."
-        exit 1
-    fi
-
-    # Add a new user account with sudo access and set the password
-    echo "Adding new user account..."
-    useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
-    echo "$USERNAME:$PASSWORD" | chpasswd
-fi
+echo "Run 'iobroker fix' or use the system tools to create a user."
 
 fi;
 fi;
@@ -536,27 +455,11 @@ fi;
         if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
                 if [[ $(systemctl get-default) == "graphical.target" ]]; then
                 if [[ "$SKRPTLANG" = "--de" ]]; then
-                        echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Soll das boot target jetzt auf 'multi-user.target'geändert werden? (j/n)";
-                        read -r -s -n 1 char;
-                        if
-                                [[ "$char" = "j" ]] || [[ "$char" = "J" ]];
-                        then
-                                # Set up multi-user.target
-                                echo "Das boot target wird auf multi-user gesetzt. Das System muss im Anschluss neugestartet werden.";
-                                sudo systemctl set-default multi-user.target;
-                        fi;
+                        echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen.";
                 else
-                        echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Do you want to switch to 'multi-user.target'? (y/n)";
-                        read -r -s -n 1 char;
-                        if
-                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
-                                then
-                                # Set up multi-user.target
-                                echo "New boot target is multi-user now! The system needs to be restarted.";
-                                sudo systemctl set-default multi-user.target;
-                        fi;
+                        echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Please set BootTarget to 'multi-user.target' or run 'iobroker fix'";
                 fi;
-        fi;
+                fi;
         fi;
 echo "";
 echo -e "\033[34;107m*** MEMORY ***\033[0m";
