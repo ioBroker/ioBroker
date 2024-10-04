@@ -29,7 +29,7 @@ USER_GROUP="$USER"
 # Check for user names and create a default user if necessary
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
     # Prompt for username
-    echo "it seems you run ioBroker as root or the iobroker user. This is not recommended."
+    echo "It seems you run ioBroker as root or the iobroker user. This is not recommended."
     echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
     echo "A root login is not required in most Linux Distributions."
     echo "Do you want to setup a user now? (y/N)"
