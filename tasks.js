@@ -1,9 +1,6 @@
-'use strict';
-
-const gulp   = require('gulp');
-const fs     = require('node:fs');
+const { readFileSync, writeFileSync, existsSync, mkdirSync } = require('node:fs');
 const Stream = require('node:stream');
-const Client = require('ssh2').Client;
+const { Client } = require('ssh2');
 
 const dist = `${__dirname}/dist/`;
 
@@ -103,48 +100,60 @@ function replaceLib(text, lib) {
     return newLines.join('\n');
 }
 
-gulp.task('deploy', () => {
-    const install = fs.readFileSync(`${dist}install.sh`);
-    const fix = fs.readFileSync(`${dist}fix.sh`);
-    const diag = fs.readFileSync(`${dist}diag.sh`);
-    const nodeUpdate = fs.readFileSync(`${dist}node-update.sh`);
+function deploy() {
+    const install = readFileSync(`${dist}install.sh`);
+    const fix = readFileSync(`${dist}fix.sh`);
+    const diag = readFileSync(`${dist}diag.sh`);
+    const nodeUpdate = readFileSync(`${dist}node-update.sh`);
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
         .then(() => uploadOneFile('/diag.sh', diag))
         .then(() => uploadOneFile('/node-update.sh', nodeUpdate));
-});
+}
 
-gulp.task('create', () => {
-    return new Promise(resolve => {
-        if (!fs.existsSync(dist)) {
-            fs.mkdirSync(dist);
-        }
+function create() {
+    if (!existsSync(dist)) {
+        mkdirSync(dist);
+    }
 
-        const install  = fs.readFileSync(`${__dirname}/installer.sh`).toString('utf8');
-        const fix      = fs.readFileSync(`${__dirname}/fix_installation.sh`).toString('utf8');
-        const lib      = fs.readFileSync(`${__dirname}/installer_library.sh`).toString('utf8');
-        const diag     = fs.readFileSync(`${__dirname}/diag.sh`).toString('utf8');
-        const nodeUpdate = fs.readFileSync(`${__dirname}/node-update.sh`).toString('utf8');
+    const install  = readFileSync(`${__dirname}/installer.sh`).toString('utf8');
+    const fix      = readFileSync(`${__dirname}/fix_installation.sh`).toString('utf8');
+    const lib      = readFileSync(`${__dirname}/installer_library.sh`).toString('utf8');
+    const diag     = readFileSync(`${__dirname}/diag.sh`).toString('utf8');
+    const nodeUpdate = readFileSync(`${__dirname}/node-update.sh`).toString('utf8');
 
-        // replace
-        // LIB_NAME="installer_library.sh"
-        // LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
+    // replace
+    // LIB_NAME="installer_library.sh"
+    // LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/stable-installer/$LIB_NAME"
 
-        fs.writeFileSync(`${dist}install.sh`, replaceLib(install, lib));
-        fs.writeFileSync(`${dist}fix.sh`, replaceLib(fix, lib));
-        fs.writeFileSync(`${dist}diag.sh`, diag);
-        fs.writeFileSync(`${dist}node-update.sh`, nodeUpdate);
+    writeFileSync(`${dist}install.sh`, replaceLib(install, lib));
+    writeFileSync(`${dist}fix.sh`, replaceLib(fix, lib));
+    writeFileSync(`${dist}diag.sh`, diag);
+    writeFileSync(`${dist}node-update.sh`, nodeUpdate);
+}
 
-        resolve();
-    });
-});
-
-gulp.task('fix', () => {
+function fix() {
     const pack = require('./package.json');
     pack.name = '@iobroker/fix';
-    fs.writeFileSync(`${__dirname}/package.json`, JSON.stringify(pack, null, 2));
-    return Promise.resolve();
-});
+    writeFileSync(`${__dirname}/package.json`, JSON.stringify(pack, null, 2));
+}
 
-gulp.task('default', gulp.series('create', 'deploy'));
+if (process.argv.includes('--deploy')) {
+    deploy()
+        .catch(e => {
+            console.error(`Cannot deploy: ${e}`);
+            process.exit(1);
+        });
+} else if (process.argv.includes('--create')) {
+    create();
+} else if (process.argv.includes('--fix')) {
+    fix();
+} else {
+    create();
+    deploy()
+        .catch(e => {
+            console.error(`Cannot deploy: ${e}`);
+            process.exit(1);
+        });
+}
