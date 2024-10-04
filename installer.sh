@@ -3,27 +3,82 @@
 # Increase this version number whenever you update the installer
 INSTALLER_VERSION="2024-09-27" # format YYYY-MM-DD
 
-
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
 then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
+DOCKER_FILE=/opt/scripts/.docker_config/.thisisdocker
 
-# Check for sane environment, especially on LXC
+# use --automated-run to skip all user prompts
+if [[ "$*" != *--automated-run* ]] || [[ ! -f "DOCKER_FILE" ]]; then
+    if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+        # Prompt for username
+        echo "You started the installer as root or the iobroker user. This is not recommended."
+        echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
+        echo "A root login is not required in most Linux Distributions."
+        echo "Do you want to setup a user now? (y/N)"
+        read -r -s -n 1 char;
+        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+            read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
 
-if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-  echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
-  read -r -s -n 1 char;
+            # Check if the user already exists
+            if id "$USERNAME" &>/dev/null; then
+                echo "User '$USERNAME' already exists. Please login as this user and restart the installer."
+                exit 1;
+            else
+                # Prompt for password
+                read -s -p "Enter the password for the new user: " PASSWORD
+                echo
+                read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
+                echo
 
-  if
-    [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-  then
-    $SUDOX dpkg-reconfigure tzdata;
-  fi;
+                # Check if passwords match
+                if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+                    echo "Passwords do not match. Exiting."
+                    exit 1
+                fi
+
+                # Add a new user account with sudo access and set the password
+                echo "Adding new user account..."
+                useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users "$USERNAME"
+                echo "$USERNAME:$PASSWORD" | chpasswd
+                echo "Please login with this newly created user account and restart the installer."
+                exit 1
+            fi;
+        fi;
+    fi;
+
+    # Check and fix boot.target on systemd
+
+    if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+        if [[ $(systemctl get-default) == "graphical.target" ]]; then
+        echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
+        read -r -s -n 1 char;
+            if
+                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
+            then
+                # Set up multi-user.target
+                echo "New boot target is multi-user now! The system needs to be restarted. Please restart the installer afterwards.";
+                sudo systemctl set-default multi-user.target;
+                exit 1
+            fi;
+        fi;
+    fi;
+
+    # Check and fix timezone
+
+    TIMEZONE=$(timedatectl show)
+    if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+        echo "Your timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
+        read -r -s -n 1 char;
+
+        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+            $SUDOX dpkg-reconfigure tzdata;
+        fi;
+    fi;
 fi;
-
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
