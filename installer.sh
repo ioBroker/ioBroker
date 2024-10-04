@@ -12,7 +12,7 @@ USER_GROUP="$USER"
 DOCKER_FILE=/opt/scripts/.docker_config/.thisisdocker
 
 # use --automated-run to skip all user prompts
-if [[ "$*" != *--automated-run* ]] || [[ ! -f "DOCKER_FILE" ]]; then
+if [[ "$*" != *--silent* ]] || [[ ! -f "DOCKER_FILE" ]]; then
     if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
         # Prompt for username
         echo "You started the installer as root or the iobroker user. This is not recommended."
