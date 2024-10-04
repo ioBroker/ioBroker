@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2024-09-27" # format YYYY-MM-DD
+FIXER_VERSION="2024-09-28" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -12,10 +12,10 @@ compress_jsonl_databases() {
     NPMV=$(npm -v | cut -d. -f1);
     # depending on the npm version the npx call needs to be different
     if [ $NPMV -lt 7 ]; then
-            (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
-            (cd "$IOB_DIR")
+        (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
+        (cd "$IOB_DIR")
     else
-            (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
+        (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
     fi;
 }
 
@@ -26,16 +26,80 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
+# Check for user names and create a default user if necessary
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+    # Prompt for username
+    echo "A default user should be created! This user will be enabled to temporarily switch to root via 'sudo'!"
+    echo "A root login is not required in most Linux Distributions."
+    echo "Do you want to setup a user now? (y/n)"
+    read -r -s -n 1 char;
+    if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+        read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
+
+        # Check if the user already exists
+        if id "$USERNAME" &>/dev/null; then
+            echo "User $USERNAME already exists. Skipping user creation."
+        else
+            # Prompt for password
+            read -s -p "Enter the password for the new user: " PASSWORD
+            echo
+            read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
+            echo
+
+            # Check if passwords match
+            if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+                echo "Passwords do not match. Exiting."
+                exit 1
+            fi
+
+            # Add a new user account with sudo access and set the password
+            echo "Adding new user account..."
+            useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
+            echo "$USERNAME:$PASSWORD" | chpasswd
+        fi;
+    fi;
+fi;
+
+# Check and fix boot.target on systemd
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+	if [[ $(systemctl get-default) == "graphical.target" ]]; then
+    echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Do you want to switch to 'multi-user.target'? (y/n)";
+    read -r -s -n 1 char;
+		if
+			[[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
+		then
+			# Set up multi-user.target
+			echo "New boot target is multi-user now! The system needs to be restarted.";
+			sudo systemctl set-default multi-user.target;
+		fi;
+	fi;
+fi;
+
 # Check and fix timezone
 
-if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-echo "Your timezone is probably wrong. Do you want to reconfigure it? (y/n)"
-read -r -s -n 1 char;
-        if
-                                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-        then
-                                $SUDOX dpkg-reconfigure tzdata;
-        fi;
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+  if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+    echo "Timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+    read -r -s -n 1 char;
+    if
+    [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+    then
+      if [ "$(command -v dpkg-reconfigure)" ]; then
+      sudo dpkg-reconfigure tzdata;
+      else
+      # Setup the timezone for the server (Default value is "Europe/Berlin")
+      echo "Setting up timezone";
+      read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
+      TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
+      $(sudo timedatectl set-timezone "$TIMEZONE");
+      fi;
+      # Set up time synchronization with systemd-timesyncd
+      echo "Setting up time synchronization with systemd-timesyncd"
+      $(sudo systemctl enable systemd-timesyncd);
+      $(sudo systemctl start systemd-timesyncd);
+    fi;
+  fi;
 fi;
 
 # get and load the LIB => START
@@ -66,9 +130,9 @@ if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
 fi
 
 # Test if ioBroker is running
-if ps aux | grep " io\." &> /dev/null ; then
+if pgrep "^io." &> /dev/null ; then
 	echo "ioBroker or some processes are still running:"
-	ps aux | grep -o " io\.\w*\.[0-9]*"
+	pgrep -l "^io.";
 	echo "Please stop them first and try again!"
 	exit 1
 fi
@@ -110,7 +174,7 @@ if [ "$USER" != "$IOB_USER" ]; then
 	fi
 fi
 
-cd $IOB_DIR
+cd $IOB_DIR || exit;
 
 # Disable any warnings related to "npm audit fix"
 disable_npm_audit
@@ -184,7 +248,7 @@ INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
 	INITSYSTEM="rc.d"
 	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
-elif [[ `systemctl` =~ -\.mount ]] &> /dev/null; then
+elif [[ $(systemctl) =~ -\.mount ]] &> /dev/null; then
 	INITSYSTEM="systemd"
 	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then

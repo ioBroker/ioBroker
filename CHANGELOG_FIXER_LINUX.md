@@ -1,9 +1,11 @@
 # Changelog for Linux-Fixer-Script
 
 ### 2024-10-04
+* Implemented adding default user if none is available
+* Implemented setting multi-user.target on systemd Linux
+* adds "nmcli" to allowed sudo commands
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
-* adds "nmcli" to allowed sudo commands
 
 ### 2024-08-11
 * Implemented reconfiguring time zone if none is set
