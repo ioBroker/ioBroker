@@ -35,7 +35,7 @@ jobs:
         source ./installer_library.sh
 
     - name: Install ioBroker
-      run: bash ./installer.sh
+      run: bash ./installer.sh --silent
 
     - name: Test permissions
       # TODO: test this on OSX too!

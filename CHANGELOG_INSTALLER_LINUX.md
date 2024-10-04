@@ -1,7 +1,7 @@
 # Changelog for Linux-Installer-Script
 
 ### 2024-10-04
-* Code cleanup
+* Enhance root check and messaging
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
 * adds "nmcli" to allowed sudo commands

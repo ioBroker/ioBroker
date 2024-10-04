@@ -1,6 +1,7 @@
 # Changelog for Linux-Fixer-Script
 
 ### 2024-10-04
+* Enhance root check and messaging
 * Implemented adding default user if none is available
 * Implemented setting multi-user.target on systemd Linux
 * adds "nmcli" to allowed sudo commands
