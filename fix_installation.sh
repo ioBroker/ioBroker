@@ -12,10 +12,10 @@ compress_jsonl_databases() {
     NPMV=$(npm -v | cut -d. -f1);
     # depending on the npm version the npx call needs to be different
     if [ $NPMV -lt 7 ]; then
-            (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
-            (cd "$IOB_DIR")
+        (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
+        (cd "$IOB_DIR")
     else
-            (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
+        (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
     fi;
 }
 
@@ -28,42 +28,36 @@ USER_GROUP="$USER"
 
 # Check for user names and create a default user if necessary
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+    # Prompt for username
+    echo "A default user should be created! This user will be enabled to temporarily switch to root via 'sudo'!"
+    echo "A root login is not required in most Linux Distributions."
+    echo "Do you want to setup a user now? (y/n)"
+    read -r -s -n 1 char;
+    if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+        read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
 
-# Prompt for username
-echo "A default user should be created! This user will be enabled to temporarily switch to root via 'sudo'!"
-echo "A root login is not required in most Linux Distributions."
+        # Check if the user already exists
+        if id "$USERNAME" &>/dev/null; then
+            echo "User $USERNAME already exists. Skipping user creation."
+        else
+            # Prompt for password
+            read -s -p "Enter the password for the new user: " PASSWORD
+            echo
+            read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
+            echo
 
+            # Check if passwords match
+            if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+                echo "Passwords do not match. Exiting."
+                exit 1
+            fi
 
-                echo "Do you want to setup a user now? (y/n)"
-                read -r -s -n 1 char;
-                if
-                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-                then
-
-read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
-
-# Check if the user already exists
-if id "$USERNAME" &>/dev/null; then
-    echo "User $USERNAME already exists. Skipping user creation."
-else
-    # Prompt for password
-    read -s -p "Enter the password for the new user: " PASSWORD
-    echo
-    read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
-    echo
-
-    # Check if passwords match
-    if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
-        echo "Passwords do not match. Exiting."
-        exit 1
-    fi
-
-    # Add a new user account with sudo access and set the password
-    echo "Adding new user account..."
-    useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
-    echo "$USERNAME:$PASSWORD" | chpasswd
-fi;
-fi;
+            # Add a new user account with sudo access and set the password
+            echo "Adding new user account..."
+            useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
+            echo "$USERNAME:$PASSWORD" | chpasswd
+        fi;
+    fi;
 fi;
 
 # Check and fix boot.target on systemd
@@ -82,34 +76,30 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
 	fi;
 fi;
 
-
-
-
 # Check and fix timezone
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-        if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-                echo "Timezone is probably wrong. Do you want to reconfigure it? (y/n)"
-                read -r -s -n 1 char;
-                if
-                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-                then
-                        if [ "$(command -v dpkg-reconfigure)" ]; then
-                        sudo dpkg-reconfigure tzdata;
-                        else
-                        # Setup the timezone for the server (Default value is "Europe/Berlin")
-                        echo "Setting up timezone";
-                        read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
-                        TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-                        $(sudo timedatectl set-timezone "$TIMEZONE");
-                        fi;
-                        # Set up time synchronization with systemd-timesyncd
-                        echo "Setting up time synchronization with systemd-timesyncd"
-                        $(sudo systemctl enable systemd-timesyncd);
-                        $(sudo systemctl start systemd-timesyncd);
-
-                fi;
-        fi;
+  if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
+    echo "Timezone is probably wrong. Do you want to reconfigure it? (y/n)"
+    read -r -s -n 1 char;
+    if
+    [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
+    then
+      if [ "$(command -v dpkg-reconfigure)" ]; then
+      sudo dpkg-reconfigure tzdata;
+      else
+      # Setup the timezone for the server (Default value is "Europe/Berlin")
+      echo "Setting up timezone";
+      read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
+      TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
+      $(sudo timedatectl set-timezone "$TIMEZONE");
+      fi;
+      # Set up time synchronization with systemd-timesyncd
+      echo "Setting up time synchronization with systemd-timesyncd"
+      $(sudo systemctl enable systemd-timesyncd);
+      $(sudo systemctl start systemd-timesyncd);
+    fi;
+  fi;
 fi;
 
 # get and load the LIB => START
