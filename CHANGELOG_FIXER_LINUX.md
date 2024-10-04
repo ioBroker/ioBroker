@@ -1,10 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
-### 2024-09-28
+### 2024-10-04
 * Implemented adding default user if none is available
 * Implemented setting multi-user.target on systemd Linux
-
-### 2024-09-27
+* adds "nmcli" to allowed sudo commands
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
 

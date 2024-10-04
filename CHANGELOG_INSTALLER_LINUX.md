@@ -1,11 +1,10 @@
 # Changelog for Linux-Installer-Script
 
-### 2024-09-28
+### 2024-10-04
 * Code cleanup
-
-### 2024-09-27
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
+* adds "nmcli" to allowed sudo commands
 
 ### 2024-06-20
 * Install nodesource rpm package via yum
