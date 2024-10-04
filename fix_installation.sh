@@ -80,7 +80,7 @@ fi;
 
 # Check and fix timezone
 
-TIMEZONE=$(timedatectl show)
+TIMEZONE=$(timedatectl show --property=Timezone --value)
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
         echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"

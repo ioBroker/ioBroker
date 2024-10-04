@@ -65,7 +65,7 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     fi;
 
     # Check and fix timezone
-    TIMEZONE=$(timedatectl show)
+    TIMEZONE=$(timedatectl show --property=Timezone --value)
     if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
         echo "Your timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
         read -r -s -n 1 char;
