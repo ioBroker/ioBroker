@@ -9,11 +9,10 @@ then IS_ROOT=true;  SUDOX=""
 else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
-DOCKER_FILE=/opt/scripts/.docker_config/.thisisdocker
 
 # use --automated-run to skip all user prompts
-if [[ "$*" != *--silent* ]] || [[ ! -f "DOCKER_FILE" ]]; then
-    if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+    if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
         # Prompt for username
         echo "You started the installer as root or the iobroker user. This is not recommended."
         echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
@@ -52,25 +51,22 @@ if [[ "$*" != *--silent* ]] || [[ ! -f "DOCKER_FILE" ]]; then
 
     # Check and fix boot.target on systemd
 
-    if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-        if [[ $(systemctl get-default) == "graphical.target" ]]; then
-        echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
-        read -r -s -n 1 char;
-            if
-                [[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
-            then
-                # Set up multi-user.target
-                echo "New boot target is multi-user now! The system needs to be restarted. Please restart the installer afterwards.";
-                sudo systemctl set-default multi-user.target;
-                exit 1
-            fi;
+    if [[ $(systemctl get-default) == "graphical.target" ]]; then
+    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
+    read -r -s -n 1 char;
+        if
+            [[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
+        then
+            # Set up multi-user.target
+            echo "New boot target is multi-user now! The system needs to be restarted. Please restart the installer afterwards.";
+            sudo systemctl set-default multi-user.target;
+            exit 1
         fi;
     fi;
 
     # Check and fix timezone
-
     TIMEZONE=$(timedatectl show)
-    if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+    if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
         echo "Your timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
         read -r -s -n 1 char;
 
