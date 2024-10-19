@@ -49,21 +49,13 @@ NPMLS=$(cd /opt/iobroker && npm ls -a);
 
 #Debian and Ubuntu releases and their status
 EOLDEB=$(debian-distro-info --unsupported);
-#EOLDEB="buzz rex bo hamm slink potato woody sarge etch lenny squeeze wheezy jessie stretch buster";
 EOLUBU=$(ubuntu-distro-info --unsupported);
-#EOLUBU="bionic xenial trusty mantic lunar kinetic impish hirsute groovy eoan disco cosmic artful zesty yakkety wily vivid utopic saucy raring quantal precise oneiric natty maverick lucid karmic jaunty intrepid hardy gutsy feisty edgy dapper breezy hoary warty";
 DEBSTABLE=$(debian-distro-info --stable);
-#DEBSTABLE="bookworm";
 UBULTS=$(ubuntu-distro-info --lts);
-#UBULTS="noble";
 UBUSUP=$(ubuntu-distro-info --supported);
-#OLDLTS="jammy focal";
 TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null);
-##TESTING="forky trixie oracular plucky";
 OLDSTABLE=$(debian-distro-info --oldstable)
-#OLDSTABLE="bullseye";
-CODENAME="bullseye";
-#CODENAME=$(lsb_release -sc);
+CODENAME=$(lsb_release -sc);
 UNKNOWNRELEASE=1
 
 clear;
