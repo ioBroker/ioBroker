@@ -29,16 +29,18 @@ USER_GROUP="$USER"
 # Check for user names and create a default user if necessary
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
     # Prompt for username
-    echo "A default user should be created! This user will be enabled to temporarily switch to root via 'sudo'!"
+    echo "It seems you run ioBroker as root or the iobroker user. This is not recommended."
+    echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
     echo "A root login is not required in most Linux Distributions."
-    echo "Do you want to setup a user now? (y/n)"
+    echo "Do you want to setup a user now? (y/N)"
     read -r -s -n 1 char;
     if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
         read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
 
         # Check if the user already exists
         if id "$USERNAME" &>/dev/null; then
-            echo "User $USERNAME already exists. Skipping user creation."
+            echo "User '$USERNAME' already exists. Please login as this user and restart the fixer."
+            exit 1;
         else
             # Prompt for password
             read -s -p "Enter the password for the new user: " PASSWORD
@@ -56,6 +58,8 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoam
             echo "Adding new user account..."
             useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
             echo "$USERNAME:$PASSWORD" | chpasswd
+            echo "Please login with this newly created user account and restart the fixer."
+            exit 1
         fi;
     fi;
 fi;
@@ -64,13 +68,11 @@ fi;
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
 	if [[ $(systemctl get-default) == "graphical.target" ]]; then
-    echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Do you want to switch to 'multi-user.target'? (y/n)";
-    read -r -s -n 1 char;
-		if
-			[[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
-		then
+        echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
+        read -r -s -n 1 char;
+		if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
 			# Set up multi-user.target
-			echo "New boot target is multi-user now! The system needs to be restarted.";
+            echo "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards.";
 			sudo systemctl set-default multi-user.target;
 		fi;
 	fi;
@@ -78,28 +80,28 @@ fi;
 
 # Check and fix timezone
 
+TIMEZONE=$(timedatectl show --property=Timezone --value)
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-  if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
-    echo "Timezone is probably wrong. Do you want to reconfigure it? (y/n)"
-    read -r -s -n 1 char;
-    if
-    [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-    then
-      if [[ -f "/usr/sbin/dpkg-reconfigure" ]]; then
-      sudo dpkg-reconfigure tzdata;
-      else
-      # Setup the timezone for the server (Default value is "Europe/Berlin")
-      echo "Setting up timezone";
-      read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
-      TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-      $(sudo timedatectl set-timezone "$TIMEZONE");
-      fi;
-      # Set up time synchronization with systemd-timesyncd
-      echo "Setting up time synchronization with systemd-timesyncd"
-      $(sudo systemctl enable systemd-timesyncd);
-      $(sudo systemctl start systemd-timesyncd);
+
+    if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+        echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
+        read -r -s -n 1 char;
+        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+            if [ "$(command -v dpkg-reconfigure)" ]; then
+                sudo dpkg-reconfigure tzdata;
+            else
+                # Setup the timezone for the server (Default value is "Europe/Berlin")
+                echo "Setting up timezone";
+                read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
+                TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
+                $(sudo timedatectl set-timezone "$TIMEZONE");
+            fi;
+            # Set up time synchronization with systemd-timesyncd
+            echo "Setting up time synchronization with systemd-timesyncd"
+            $(sudo systemctl enable systemd-timesyncd);
+            $(sudo systemctl start systemd-timesyncd);
+        fi;
     fi;
-  fi;
 fi;
 
 # get and load the LIB => START
