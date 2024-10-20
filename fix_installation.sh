@@ -284,11 +284,11 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
-			curl -sL $FIXER_URL | bash -
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -304,11 +304,11 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		elif [ "\$1" = "fix" ]; then
-			curl -sL $FIXER_URL | bash -
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /Users/$IOB_USER/.fix.sh && bash /Users/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -318,11 +318,11 @@ else
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
 		if [ "\$1" = "fix" ]; then
-			curl -sL $FIXER_URL | bash -
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
