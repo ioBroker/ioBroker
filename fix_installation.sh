@@ -87,7 +87,7 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
         echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
         read -r -s -n 1 char;
         if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-            if [ "$(command -v dpkg-reconfigure)" ]; then
+            if [[ -f "/usr/sbin/dpkg-reconfigure" ]]; then
                 sudo dpkg-reconfigure tzdata;
             else
                 # Setup the timezone for the server (Default value is "Europe/Berlin")
