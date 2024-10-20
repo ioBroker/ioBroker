@@ -15,9 +15,20 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
         else
                 echo "*** iob diag is starting up, please wait ***";
 fi;
+
+if ! [ -x "$(command -v distro-info)" ]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
+        exit 1;
+        else
+        echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
+        exit 1;
+        fi;
+fi;
+
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-09-28";      #version of this script
+SKRIPTV="2024-10-19";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 
 HOST=$(uname -n);
@@ -33,16 +44,17 @@ INSTENV2=0;
 SYSTDDVIRT="";
 NODENOTCORR=0;
 IOBLISTINST=$(iobroker list instances);
-NPMLS=$(cd /opt/iobroker && npm ls -a)
+NPMLS=$(cd /opt/iobroker && npm ls -a);
+
 
 #Debian and Ubuntu releases and their status
-EOLDEB="buzz rex bo hamm slink potato woody sarge etch lenny squeeze wheezy jessie stretch buster";
-EOLUBU="bionic xenial trusty mantic lunar kinetic impish hirsute groovy eoan disco cosmic artful zesty yakkety wily vivid utopic saucy raring quantal precise oneiric natty maverick lucid karmic jaunty intrepid hardy gutsy feisty edgy dapper breezy hoary warty";
-DEBSTABLE="bookworm";
-UBULTS="noble"
-OLDLTS="jammy focal";
-TESTING="forky trixie oracular plucky"
-OLDSTABLE="bullseye";
+EOLDEB=$(debian-distro-info --unsupported);
+EOLUBU=$(ubuntu-distro-info --unsupported);
+DEBSTABLE=$(debian-distro-info --stable);
+UBULTS=$(ubuntu-distro-info --lts);
+UBUSUP=$(ubuntu-distro-info --supported);
+TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null);
+OLDSTABLE=$(debian-distro-info --oldstable)
 CODENAME=$(lsb_release -sc);
 UNKNOWNRELEASE=1
 
@@ -155,14 +167,14 @@ for RELEASE in $DEBSTABLE; do
 done;
 
 for RELEASE in $UBULTS; do
-    if [ "$RELEASE" == "$CODENAME" ]; then
-        RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle  Ubuntu LTS Version '$UBULTS'!\e[0m";
+    if [ "$RELEASE" == "$CODENAME" ] ; then
+        RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '$UBULTS'!\e[0m";
         UNKNOWNRELEASE=0;
     fi;
 done;
 
-for RELEASE in $OLDLTS; do
-    if [ "$RELEASE" == "$CODENAME" ]; then
+for RELEASE in $UBUSUP; do
+    if [ "$RELEASE" == "$CODENAME" ] && [ "$RELEASE" != "$UBULTS" ]; then
         RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m";
         UNKNOWNRELEASE=0;
     fi;
@@ -219,9 +231,9 @@ for RELEASE in $UBULTS; do
     fi;
 done;
 
-for RELEASE in $OLDLTS; do
-    if [ "$RELEASE" == "$CODENAME" ]; then
-        RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu LTS release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m";
+for RELEASE in $UBUSUP; do
+    if [ "$RELEASE" == "$CODENAME" ] && [ "$RELEASE" != "$UBULTS" ]; then
+        RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m";
         UNKNOWNRELEASE=0;
     fi;
 done;
