@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2024-08-11" # format YYYY-MM-DD
+LIBRARY_VERSION="2024-10-19" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -249,6 +249,7 @@ install_necessary_packages() {
 			"git"
 			"curl"
 			"unzip"
+			"distro-info"
 			# These are required for canvas
 			"libcairo2-dev"
 			"libpango1.0-dev"

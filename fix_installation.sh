@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2024-09-28" # format YYYY-MM-DD
+FIXER_VERSION="2024-10-19" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -82,6 +82,7 @@ fi;
 
 TIMEZONE=$(timedatectl show --property=Timezone --value)
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+
     if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
         echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
         read -r -s -n 1 char;

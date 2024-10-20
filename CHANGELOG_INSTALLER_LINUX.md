@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+### 2024-10-19
+* Added 'distro-info' package to prerequisites list
+
 ### 2024-10-04
 * Enhance root check and messaging
 * root/sudo locked out for systemd based installations
