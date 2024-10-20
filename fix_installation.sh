@@ -132,9 +132,9 @@ if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
 fi
 
 # Test if ioBroker is running
-if pgrep "^io." &> /dev/null ; then
+if pgrep "^io\." &> /dev/null ; then
 	echo "ioBroker or some processes are still running:"
-	pgrep -l "^io.";
+	pgrep -l "^io\.";
 	echo "Please stop them first and try again!"
 	exit 1
 fi
