@@ -10,81 +10,28 @@ else IS_ROOT=false; SUDOX="sudo "; fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
+RECOMMEND_FIXER_AFTER_INSTALL="false"
 # use --automated-run to skip all user prompts
 if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
         # Prompt for username
         echo "You started the installer as root or the iobroker user. This is not recommended."
-        echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
-        echo "A root login is not required in most Linux Distributions."
-        echo "Do you want to setup a user now? (y/N)"
-        read -r -s -n 1 char;
-        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-            read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
-
-            # Check if the user already exists
-            if id "$USERNAME" &>/dev/null; then
-                echo "User '$USERNAME' already exists. Please login as this user and restart the installer."
-                exit 1;
-            else
-                # Prompt for password
-                read -s -p "Enter the password for the new user: " PASSWORD
-                echo
-                read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
-                echo
-
-                # Check if passwords match
-                if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
-                    echo "Passwords do not match. Exiting."
-                    exit 1
-                fi
-
-                # Add a new user account with sudo access and set the password
-                echo "Adding new user account..."
-                useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users "$USERNAME"
-                echo "$USERNAME:$PASSWORD" | chpasswd
-                echo "Please login with this newly created user account and restart the installer."
-                exit 1
-            fi;
-        fi;
+        echo "For security reasons a default user should be created. Please run 'iob fix' after the installation."
+        RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 
     # Check and fix boot.target on systemd
 
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
-    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
-    read -r -s -n 1 char;
-        if
-            [[ "$char" = "y" ]] || [[ "$char" = "Y" ]];
-        then
-            # Set up multi-user.target
-            echo "New boot target is multi-user now! The system needs to be restarted. Please restart the installer afterwards.";
-            sudo systemctl set-default multi-user.target;
-            exit 1
-        fi;
+    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Please run 'iob fix' after the installationto change this.";
+        RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 
     # Check and fix timezone
     TIMEZONE=$(timedatectl show --property=Timezone --value)
     if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo "Your timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
-        read -r -s -n 1 char;
-
-        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-            if [ "$(command -v dpkg-reconfigure)" ]; then
-                sudo dpkg-reconfigure tzdata;
-            else
-                # Setup the timezone for the server (Default value is "Europe/Berlin")
-                echo "Setting up timezone";
-                read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
-                TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-                $(sudo timedatectl set-timezone "$TIMEZONE");
-            fi;
-            # Set up time synchronization with systemd-timesyncd
-            echo "Setting up time synchronization with systemd-timesyncd"
-            $(sudo systemctl enable systemd-timesyncd);
-            $(sudo systemctl start systemd-timesyncd);
-        fi;
+        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installationto change this."
+        RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 fi;
 
@@ -258,19 +205,18 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 	# Make sure to only use systemd when there is exactly 1 argument
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
-				if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
-      			exit;
 			exit;
 		fi;
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker
 		elif [ "\$1" = "fix" ]; then
-			curl -sL $FIXER_URL | bash -
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -286,11 +232,11 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		elif [ "\$1" = "fix" ]; then
-			curl -sL $FIXER_URL | bash -
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /Users/$IOB_USER/.fix.sh && bash /Users/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -300,11 +246,11 @@ else
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
 		if [ "\$1" = "fix" ]; then
-			curl -sL $FIXER_URL | bash -
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -591,4 +537,8 @@ IP=$(detect_ip_address)
 print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
+
+if [ "$RECOMMEND_FIXER_AFTER_INSTALL" = "true" ]; then
+    print_bold "${red}Please run 'iob fix' after the required re-login to fix some common issues.${normal}"
+fi
 exit 0
