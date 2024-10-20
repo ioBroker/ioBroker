@@ -539,6 +539,6 @@ print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
 
 if [ "$RECOMMEND_FIXER_AFTER_INSTALL" = "true" ]; then
-    print_msg "${red}Please run 'iob fix' after the required re-login to fix some common issues.${normal}"
+    print_bold "${red}Please run 'iob fix' after the required re-login to fix some common issues.${normal}"
 fi
 exit 0
