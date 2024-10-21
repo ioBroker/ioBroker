@@ -250,6 +250,8 @@ install_necessary_packages() {
 			"curl"
 			"unzip"
 			"distro-info"
+			"passwd"
+			"polkitd"
 			# These are required for canvas
 			"libcairo2-dev"
 			"libpango1.0-dev"

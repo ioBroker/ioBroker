@@ -210,7 +210,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			exit;
 		fi;
 		if [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
-			echo - "Invalid option --allow-root";
+			echo "Invalid option --allow-root";
 			exit;
 		elif [ "\$(id -u)" = 0 ] && (( "\$#" == 2 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ] && [ "\$2" = "--allow-root" ]); then
 			sudo systemctl \$1 iobroker;
