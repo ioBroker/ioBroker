@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+### 2024-10-21
+* Added 'polkitd' and 'passwd' to prerequisites list
+* Invalidate --allow-user option for default users
+
 ### 2024-10-19
 * Added 'distro-info' package to prerequisites list
 

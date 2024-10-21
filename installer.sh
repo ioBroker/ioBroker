@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2024-09-27" # format YYYY-MM-DD
+INSTALLER_VERSION="2024-10-21" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
@@ -23,14 +23,14 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     # Check and fix boot.target on systemd
 
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
-    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Please run 'iob fix' after the installationto change this.";
+    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to spare RAM. Please run 'iob fix' after the installation to change this.";
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 
     # Check and fix timezone
     TIMEZONE=$(timedatectl show --property=Timezone --value)
     if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installationto change this."
+        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 fi;
@@ -209,8 +209,13 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit;
 		fi;
-		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
-			sudo systemctl \$1 iobroker
+		if [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
+			echo "Invalid option --allow-root";
+			exit;
+		elif [ "\$(id -u)" = 0 ] && (( "\$#" == 2 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ] && [ "\$2" = "--allow-root" ]); then
+			sudo systemctl \$1 iobroker;
+		elif (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
+			sudo systemctl \$1 iobroker;
 		elif [ "\$1" = "fix" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then

@@ -19,9 +19,11 @@ fi;
 if ! [ -x "$(command -v distro-info)" ]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
+        echo "Alternativ das Paket 'distro-info' nachinstallieren.";
         exit 1;
         else
         echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
+        echo "Or manually install package 'distro-info'";
         exit 1;
         fi;
 fi;
