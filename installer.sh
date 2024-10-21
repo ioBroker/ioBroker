@@ -23,14 +23,14 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     # Check and fix boot.target on systemd
 
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
-    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to spare RAM. Please run 'iob fix' after the installationto change this.";
+    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to spare RAM. Please run 'iob fix' after the installation to change this.";
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 
     # Check and fix timezone
     TIMEZONE=$(timedatectl show --property=Timezone --value)
     if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installationto change this."
+        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 fi;
