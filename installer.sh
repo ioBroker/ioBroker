@@ -209,7 +209,10 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit;
 		fi;
-		if [ "\$(id -u)" = 0 ] && (( "\$#" == 2 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ] && [ "\$2" = "--allow-root" ]); then
+		if [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
+			echo - "Invalid option --allow-root";
+			exit;
+		elif [ "\$(id -u)" = 0 ] && (( "\$#" == 2 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ] && [ "\$2" = "--allow-root" ]); then
 			sudo systemctl \$1 iobroker;
 		elif (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
 			sudo systemctl \$1 iobroker;
