@@ -55,11 +55,11 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoam
             fi
 
             # Add a new user account with sudo access and set the password
-            echo "Adding new user account..."
-            useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
-            echo "$USERNAME:$PASSWORD" | chpasswd
-            echo "Please login with this newly created user account and restart the fixer."
-            exit 1
+            echo "Adding new user account...";
+            $SUDOX /usr/sbin/useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME";
+            echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd;
+            echo "Please login with this newly created user account and restart the fixer.";
+            exit 1;
         fi;
     fi;
 fi;
