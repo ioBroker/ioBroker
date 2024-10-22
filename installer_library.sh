@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2024-10-19" # format YYYY-MM-DD
+LIBRARY_VERSION="2024-10-22" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -259,6 +259,8 @@ install_necessary_packages() {
 			"libpixman-1-dev"
 			"net-tools" # To fix issue #277
 			"cmake" # https://github.com/ioBroker/ioBroker.js-controller/issues/1604
+			"polkitd" # some LXC miss it
+			"passwd" # some LXC miss it
 		)
 		for pkg in "${packages[@]}"; do
 			install_package $pkg
@@ -648,7 +650,7 @@ create_user_linux() {
 		"apt-get" "apt" "dpkg" "make"
 		"ping" "fping"
 		"arp-scan"
-		"setcap" 
+		"setcap"
                 "nmcli"
 		"vcgencmd"
 		"cat"
@@ -715,7 +717,7 @@ create_user_freebsd() {
 		"pkg" "make"
 		"ping" "fping"
 		"arp-scan"
-		"setcap" 
+		"setcap"
                 "nmcli"
 		"vcgencmd"
 		"cat"

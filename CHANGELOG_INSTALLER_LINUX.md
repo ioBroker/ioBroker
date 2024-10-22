@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+## 2024-10-22
+* Allow iob start/stop/restart also as root but log information
+* Also install passwd and polkitd packages because some lxc systems might miss it
+
 ### 2024-10-19
 * Added 'distro-info' package to prerequisites list
 
