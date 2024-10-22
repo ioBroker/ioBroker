@@ -23,14 +23,14 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     # Check and fix boot.target on systemd
 
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
-    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Please run 'iob fix' after the installationto change this.";
+    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to spare RAM. Please run 'iob fix' after the installation to change this.";
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 
     # Check and fix timezone
     TIMEZONE=$(timedatectl show --property=Timezone --value)
     if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installationto change this."
+        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi;
 fi;
@@ -215,6 +215,10 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit 1;
+		fi;
+		if [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
+			echo "Invalid option --allow-root";
+			exit;
 		fi;
 		if [ "\$1" = "fix" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
