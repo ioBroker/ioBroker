@@ -1,9 +1,13 @@
 # Changelog for Linux-Fixer-Script
 
-### 2024-10-19
+## 2024-10-22
+* Allow iob start/stop/restart also as root but log information
+* Also install passwd and polkitd packages because some lxc systems might miss it
+
+## 2024-10-19
 * Added 'distro-info' package to prerequisites list
 
-### 2024-10-04
+## 2024-10-04
 * Enhance root check and messaging
 * Implemented adding default user if none is available
 * Implemented setting multi-user.target on systemd Linux
@@ -11,20 +15,20 @@
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
 
-### 2024-08-11
+## 2024-08-11
 * Implemented reconfiguring time zone if none is set
 
-### 2024-01-04
+## 2024-01-04
 * Fix package installation issues on Debian
 
-### 2023-12-30
+## 2023-12-30
 * Fix Nodejs Update script call
 * Fixes in Nodejs installation
 
-### 2023-12-29
+## 2023-12-29
 * Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
 
-### 2023-10-13
+## 2023-10-13
 * Allow to define Node.js version as parameter for "iob nodejs-update" command
 * fix package installation error for gcc
 
