@@ -18,11 +18,18 @@ fi;
 
 if ! [ -x "$(command -v distro-info)" ]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
-        echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
-        exit 1;
+                if [ -x "$(command -v apt-get)" ]; then
+                echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
+                else echo "iob diag muss aktualisiert werden. Bitte das Paket 'distro-info' nachinstallieren.";
+                exit 1;
+                fi;
         else
-        echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
-        exit 1;
+                if [ -x "$(command -v apt-get)" ]; then
+                echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
+
+                else echo "iob diag needs to be updated. Please manually install package 'distro-info'";
+                exit 1;
+                fi;
         fi;
 fi;
 
