@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2024-10-23
++ Made /home/iobroker accessible for iobroker group
+
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
 * Also install passwd and polkitd packages because some lxc systems might miss it
