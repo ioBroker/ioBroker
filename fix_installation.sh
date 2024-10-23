@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2024-10-22" # format YYYY-MM-DD
+FIXER_VERSION="2024-10-23" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -287,7 +287,10 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit 1;
-		fi;
+		elif [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
+            echo "Invalid option --allow-root";
+            exit 1;
+        fi;
 		if [ "\$1" = "fix" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
@@ -445,7 +448,7 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 
 	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
 	if [ "$IS_ROOT" != true ]; then
-		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
+		$SUDOX chown root:$ROOT_GROUP $SERVICE_FILENAME
 	fi
 	$SUDOX chmod 644 $SERVICE_FILENAME
 	$SUDOX systemctl daemon-reload

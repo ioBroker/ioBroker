@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2024-10-23
+* Fix user creation in Fixer script
+* Block using --allow-root when not root
+
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
 * Also install passwd and polkitd packages because some lxc systems might miss it
