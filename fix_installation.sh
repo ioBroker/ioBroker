@@ -54,10 +54,11 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoam
                 exit 1
             fi
 
-            # Add a new user account with sudo access and set the password
+            # Add a new user account with sudo access, set the password and grant iobroker group access to ~/iobroker
             echo "Adding new user account...";
             $SUDOX /usr/sbin/useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME";
             echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd;
+            $SUDOX chmod 750 /home/iobroker
             echo "Please login with this newly created user account and restart the fixer.";
             exit 1;
         fi;
