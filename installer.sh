@@ -13,26 +13,26 @@ USER_GROUP="$USER"
 RECOMMEND_FIXER_AFTER_INSTALL="false"
 # use --automated-run to skip all user prompts
 if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-    if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
-        # Prompt for username
-        echo "You started the installer as root or the iobroker user. This is not recommended."
-        echo "For security reasons a default user should be created. Please run 'iob fix' after the installation."
-        RECOMMEND_FIXER_AFTER_INSTALL="true"
-    fi;
+  if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+    # Prompt for username
+    echo "You started the installer as root or the iobroker user. This is not recommended."
+    echo "For security reasons a default user should be created. Please run 'iob fix' after the installation."
+    RECOMMEND_FIXER_AFTER_INSTALL="true"
+  fi;
 
-    # Check and fix boot.target on systemd
+  # Check and fix boot.target on systemd
 
-    if [[ $(systemctl get-default) == "graphical.target" ]]; then
-    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to save RAM. Please run 'iob fix' after the installation to change this.";
-        RECOMMEND_FIXER_AFTER_INSTALL="true"
-    fi;
+  if [[ $(systemctl get-default) == "graphical.target" ]]; then
+  echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to save RAM. Please run 'iob fix' after the installation to change this.";
+    RECOMMEND_FIXER_AFTER_INSTALL="true"
+  fi;
 
-    # Check and fix timezone
-    TIMEZONE=$(timedatectl show --property=Timezone --value)
-    if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
-        RECOMMEND_FIXER_AFTER_INSTALL="true"
-    fi;
+  # Check and fix timezone
+  TIMEZONE=$(timedatectl show --property=Timezone --value)
+  if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+    echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
+    RECOMMEND_FIXER_AFTER_INSTALL="true"
+  fi;
 fi;
 
 # get and load the LIB => START
@@ -55,9 +55,9 @@ get_platform_params
 set_some_common_params
 
 if [ "$IS_ROOT" = "true" ]; then
-	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
+  print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
 else
-	print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
+  print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 # Which npm package should be installed (default "iobroker")
@@ -75,29 +75,29 @@ $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
-	install_nodejs
+  install_nodejs
 fi
 
 # Check if npm is installed
 if [[ $(type -P "npm" 2>/dev/null) != *"/npm" ]]; then
-	# If not, try to install it
-	install_package npm
-	if [[ $(type -P "npm" 2>/dev/null) != *"/npm" ]]; then
-		echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
-		exit 1
-	fi
+  # If not, try to install it
+  install_package npm
+  if [[ $(type -P "npm" 2>/dev/null) != *"/npm" ]]; then
+    echo "${red}Cannot continue because \"npm\" is not installed and could not be installed automatically!${normal}"
+    exit 1
+  fi
 fi
 
 # Select an npm mirror, by default use npmjs.org
 REGISTRY_URL="https://registry.npmjs.org"
 case "$MIRROR" in
-	[Tt]aobao)
-		REGISTRY_URL="https://registry.npm.taobao.org"
-		;;
+  [Tt]aobao)
+    REGISTRY_URL="https://registry.npm.taobao.org"
+    ;;
 esac
 if [ "$(npm config get registry)" != "$REGISTRY_URL" ]; then
-	echo "Changing npm registry to $REGISTRY_URL"
-	npm config set registry $REGISTRY_URL
+  echo "Changing npm registry to $REGISTRY_URL"
+  npm config set registry $REGISTRY_URL
 fi
 
 # Determine the platform we operate on and select the installation routine/packages accordingly
@@ -108,21 +108,21 @@ print_step "Creating ioBroker user and directory" 2 "$NUM_STEPS"
 
 # Ensure the user "iobroker" exists and is in the correct groups
 if [ "$HOST_PLATFORM" = "linux" ]; then
-	create_user_linux $IOB_USER
+  create_user_linux $IOB_USER
 elif [ "$HOST_PLATFORM" = "freebsd" ]; then
-	create_user_freebsd $IOB_USER
+  create_user_freebsd $IOB_USER
 fi
 
 # Ensure the installation directory exists and take control of it
 $SUDOX mkdir -p $IOB_DIR
 if [ "$IS_ROOT" != true ]; then
-	# During the installation we need to give the current user access to the install dir
-	# On Linux, we'll fix this at the end. On OSX this is okay
-	if [ "$HOST_PLATFORM" = "osx" ]; then
-		sudo chown -R $USER $IOB_DIR
-	else
-		sudo chown -R $USER:$USER_GROUP $IOB_DIR
-	fi
+  # During the installation we need to give the current user access to the install dir
+  # On Linux, we'll fix this at the end. On OSX this is okay
+  if [ "$HOST_PLATFORM" = "osx" ]; then
+    sudo chown -R $USER $IOB_DIR
+  else
+    sudo chown -R $USER:$USER_GROUP $IOB_DIR
+  fi
 fi
 cd $IOB_DIR
 echo "Directory $IOB_DIR created"
@@ -178,18 +178,18 @@ print_step "Finalizing installation" 4 "$NUM_STEPS"
 # Test which init system is used:
 INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
-	INITSYSTEM="rc.d"
+  INITSYSTEM="rc.d"
 elif [[ `ps -p 1 -o comm=` = "systemd" ]] &> /dev/null; then
-	INITSYSTEM="systemd"
+  INITSYSTEM="systemd"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
-	INITSYSTEM="init.d"
+  INITSYSTEM="init.d"
 elif [[ "$HOST_PLATFORM" = "osx" ]]; then
-	INITSYSTEM="launchctl"
-	PLIST_FILE_LABEL="org.ioBroker.LaunchAtLogin"
-	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
+  INITSYSTEM="launchctl"
+  PLIST_FILE_LABEL="org.ioBroker.LaunchAtLogin"
+  SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 fi
 if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
-	INITSYSTEM="init.d"
+  INITSYSTEM="init.d"
 fi
 echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 
@@ -198,7 +198,7 @@ echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
 if [ "$IOB_USER" != "$USER" ]; then
-	IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
+  IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
 fi
 if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
@@ -267,9 +267,9 @@ else
 	)
 fi
 if [ "$HOST_PLATFORM" = "linux" ]; then
-	IOB_BIN_PATH=/usr/bin
+  IOB_BIN_PATH=/usr/bin
 elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
-	IOB_BIN_PATH=/usr/local/bin
+  IOB_BIN_PATH=/usr/local/bin
 fi
 
 # Symlink the global binaries iob and iobroker
@@ -291,14 +291,14 @@ make_executable "$IOB_DIR/iobroker"
 # #############################
 # Enable autostart
 # From https://unix.stackexchange.com/questions/18209/detect-init-system-using-the-shell/326213
-	# if [[ `/sbin/init --version` =~ upstart ]]; then echo using upstart;
-	# elif [[ `systemctl` =~ -\.mount ]]; then echo using systemd;
-	# elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then echo using sysv-init;
-	# else echo cannot tell; fi
+  # if [[ `/sbin/init --version` =~ upstart ]]; then echo using upstart;
+  # elif [[ `systemctl` =~ -\.mount ]]; then echo using systemd;
+  # elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then echo using sysv-init;
+  # else echo cannot tell; fi
 
 # Enable autostart
 if [[ "$INITSYSTEM" = "init.d" ]]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
 	INITD_FILE=$(cat <<- EOF
@@ -344,21 +344,21 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 		EOF
 	)
 
-	# Create the startup file, give it the correct permissions and start ioBroker
-	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
-	write_to_file "$INITD_FILE" $SERVICE_FILENAME
-	set_root_permissions $SERVICE_FILENAME
-	$SUDOX bash $SERVICE_FILENAME
+  # Create the startup file, give it the correct permissions and start ioBroker
+  SERVICE_FILENAME="/etc/init.d/iobroker.sh"
+  write_to_file "$INITD_FILE" $SERVICE_FILENAME
+  set_root_permissions $SERVICE_FILENAME
+  $SUDOX bash $SERVICE_FILENAME
 
-	echo "Autostart enabled!"
-	# Remember what we did
-	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
-		echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
-	else
-		echo "Autostart: init.d" >> "$INSTALLER_INFO_FILE"
-	fi
+  echo "Autostart enabled!"
+  # Remember what we did
+  if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
+    echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
+  else
+    echo "Autostart: init.d" >> "$INSTALLER_INFO_FILE"
+  fi
 elif [ "$INITSYSTEM" = "systemd" ]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	# Write an systemd service that automatically detects the correct node executable and runs ioBroker
 	SYSTEMD_FILE=$(cat <<- EOF
@@ -381,23 +381,23 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		EOF
 	)
 
-	# Create the startup file and give it the correct permissions
-	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
-	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
-	if [ "$IS_ROOT" != true ]; then
-		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
-	fi
-	$SUDOX chmod 644 $SERVICE_FILENAME
-	$SUDOX systemctl daemon-reload
-	$SUDOX systemctl enable iobroker
-	$SUDOX systemctl start iobroker
-	echo "Autostart enabled!"
-	echo "Autostart: systemd" >> "$INSTALLER_INFO_FILE"
+  # Create the startup file and give it the correct permissions
+  SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
+  write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
+  if [ "$IS_ROOT" != true ]; then
+    sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
+  fi
+  $SUDOX chmod 644 $SERVICE_FILENAME
+  $SUDOX systemctl daemon-reload
+  $SUDOX systemctl enable iobroker
+  $SUDOX systemctl start iobroker
+  echo "Autostart enabled!"
+  echo "Autostart: systemd" >> "$INSTALLER_INFO_FILE"
 
 elif [ "$INITSYSTEM" = "rc.d" ]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
-	PIDFILE="$CONTROLLER_DIR/lib/iobroker.pid"
+  PIDFILE="$CONTROLLER_DIR/lib/iobroker.pid"
 
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
@@ -443,24 +443,24 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		EOF
 	)
 
-	# Create the startup file, give it the correct permissions and start ioBroker
-	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
-	write_to_file "$RCD_FILE" $SERVICE_FILENAME
-	set_root_permissions $SERVICE_FILENAME
+  # Create the startup file, give it the correct permissions and start ioBroker
+  SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
+  write_to_file "$RCD_FILE" $SERVICE_FILENAME
+  set_root_permissions $SERVICE_FILENAME
 
-	# Make sure that $IOB_USER may access the pidfile
-	$SUDOX touch "$PIDFILE"
-	$SUDOX chown $IOB_USER:$IOB_USER $PIDFILE
+  # Make sure that $IOB_USER may access the pidfile
+  $SUDOX touch "$PIDFILE"
+  $SUDOX chown $IOB_USER:$IOB_USER $PIDFILE
 
-	# Enable startup and start the service
-	sysrc iobroker_enable=YES
-	service iobroker start
+  # Enable startup and start the service
+  sysrc iobroker_enable=YES
+  service iobroker start
 
-	echo "Autostart enabled!"
-	echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
+  echo "Autostart enabled!"
+  echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
 
 elif [ "$INITSYSTEM" = "launchctl" ]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	NODECMD=$(which node)
 	# osx use launchd.plist init system.
@@ -491,34 +491,34 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 		EOF
 	)
 
-	# Create the startup file, give it the correct permissions and start ioBroker
-	echo "$PLIST_FILE" > $SERVICE_FILENAME
+  # Create the startup file, give it the correct permissions and start ioBroker
+  echo "$PLIST_FILE" > $SERVICE_FILENAME
 
-	# Enable startup and start the service
-	launchctl list ${PLIST_FILE_LABEL} &> /dev/null
-	if [ $? -eq 0 ]; then
-		echo "Reloading service ${PLIST_FILE_LABEL}"
-		launchctl unload -w $SERVICE_FILENAME
-	fi
-	launchctl load -w $SERVICE_FILENAME
+  # Enable startup and start the service
+  launchctl list ${PLIST_FILE_LABEL} &> /dev/null
+  if [ $? -eq 0 ]; then
+    echo "Reloading service ${PLIST_FILE_LABEL}"
+    launchctl unload -w $SERVICE_FILENAME
+  fi
+  launchctl load -w $SERVICE_FILENAME
 
-	echo "Autostart enabled!"
-	echo "Autostart: launchctl" >> "$INSTALLER_INFO_FILE"
+  echo "Autostart enabled!"
+  echo "Autostart: launchctl" >> "$INSTALLER_INFO_FILE"
 
 else
-	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
-	echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
+  echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
+  echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
 fi
 
 # Raspberry image has as last line in /etc/rc.local the ioBroker installer. It must be removed
 if [ -f /etc/rc.local ]; then
-	if [ -w /etc/rc.local ]; then
-		if [ "$IS_ROOT" != true ]; then
-			sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
-		else
-			sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
-		fi
-	fi
+  if [ -w /etc/rc.local ]; then
+    if [ "$IS_ROOT" != true ]; then
+      sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+    else
+      sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+    fi
+  fi
 fi
 
 # Enable auto-completion for ioBroker commands
@@ -531,11 +531,11 @@ get_platform_params
 # Make sure that the app dir belongs to the correct user
 # Don't do it on OSX, because we'll install as the current user anyways
 if [ "$HOST_PLATFORM" != "osx" ]; then
-	fix_dir_permissions
+  fix_dir_permissions
 fi
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
-	change_npm_command_user
+  change_npm_command_user
 fi
 change_npm_command_root
 

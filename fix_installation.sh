@@ -67,15 +67,15 @@ fi;
 # Check and fix boot.target on systemd
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-	if [[ $(systemctl get-default) == "graphical.target" ]]; then
+  if [[ $(systemctl get-default) == "graphical.target" ]]; then
     echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
     read -r -s -n 1 char;
-		if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-			# Set up multi-user.target
+    if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+      # Set up multi-user.target
       echo "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards.";
-			sudo systemctl set-default multi-user.target;
-		fi;
-	fi;
+      sudo systemctl set-default multi-user.target;
+    fi;
+  fi;
 fi;
 
 # Check and fix timezone
@@ -127,31 +127,31 @@ set_some_common_params
 
 # Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
-	echo "ioBroker is not installed in $IOB_DIR! Cannot fix anything..."
-	exit 1
+  echo "ioBroker is not installed in $IOB_DIR! Cannot fix anything..."
+  exit 1
 fi
 
 # Test if ioBroker is running
 if pgrep "^io(broker\.|\.)" &> /dev/null ; then
-	echo "ioBroker or some processes are still running:"
-	pgrep -l "^io(broker\.|\.)";
-	echo "Please stop them first and try again!"
-	exit 1
+  echo "ioBroker or some processes are still running:"
+  pgrep -l "^io(broker\.|\.)";
+  echo "Please stop them first and try again!"
+  exit 1
 fi
 
 # Create the log file if it doesn't exist
 if [ ! -f "$INSTALLER_INFO_FILE" ]; then
-	touch $INSTALLER_INFO_FILE
-	chmod 777 $INSTALLER_INFO_FILE
+  touch $INSTALLER_INFO_FILE
+  chmod 777 $INSTALLER_INFO_FILE
 fi
 echo "Fixer version: $FIXER_VERSION" >> $INSTALLER_INFO_FILE
 echo "Fix date $(date +%F)" >> $INSTALLER_INFO_FILE
 
 
 if [ "$IS_ROOT" = true ]; then
-	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
+  print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
 else
-	print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
+  print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 NUM_STEPS=5
@@ -168,12 +168,12 @@ install_necessary_packages
 # ########################################################
 print_step "Checking ioBroker user and directory permissions" 2 "$NUM_STEPS"
 if [ "$USER" != "$IOB_USER" ]; then
-	# Ensure the user "iobroker" exists and is in the correct groups
-	if [ "$HOST_PLATFORM" = "linux" ]; then
-		create_user_linux $IOB_USER
-	elif [ "$HOST_PLATFORM" = "freebsd" ]; then
-		create_user_freebsd $IOB_USER
-	fi
+  # Ensure the user "iobroker" exists and is in the correct groups
+  if [ "$HOST_PLATFORM" = "linux" ]; then
+    create_user_linux $IOB_USER
+  elif [ "$HOST_PLATFORM" = "freebsd" ]; then
+    create_user_freebsd $IOB_USER
+  fi
 fi
 
 cd $IOB_DIR || exit;
@@ -192,7 +192,7 @@ force_strict_npm_version_checks
 
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
-	change_npm_command_user
+  change_npm_command_user
 fi
 change_npm_command_root
 
@@ -218,50 +218,50 @@ print_step "Checking autostart" 5 "$NUM_STEPS"
 # First delete all possible remains of an old installation
 INITD_FILE="/etc/init.d/iobroker.sh"
 if [ -f "$INITD_FILE" ]; then
-	$SUDOX rm "$INITD_FILE"
+  $SUDOX rm "$INITD_FILE"
 fi
 
 SYSTEMD_FILE="/lib/systemd/system/iobroker.service"
 if [ -f "$SYSTEMD_FILE" ]; then
-	$SUDOX rm "$SYSTEMD_FILE"
-	systemctl stop iobroker &> /dev/null
-	$SUDOX systemctl daemon-reload
+  $SUDOX rm "$SYSTEMD_FILE"
+  systemctl stop iobroker &> /dev/null
+  $SUDOX systemctl daemon-reload
 fi
 
 RCD_FILE="/usr/local/etc/rc.d/iobroker"
 if [ -f "$RCD_FILE" ]; then
-	$SUDOX rm "$RCD_FILE"
-	sysrc iobroker_enable-=YES
+  $SUDOX rm "$RCD_FILE"
+  sysrc iobroker_enable-=YES
 fi
 
 PLIST_FILE_LABEL="org.ioBroker.LaunchAtLogin"
 LAUNCHCTL_FILE="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 if [ -f "$LAUNCHCTL_FILE" ]; then
-	# Enable startup and start the service
-	launchctl list ${PLIST_FILE_LABEL} &> /dev/null
-	if [ $? -eq 0 ]; then
-		launchctl unload -w $LAUNCHCTL_FILE
-	fi
-	rm "$LAUNCHCTL_FILE"
+  # Enable startup and start the service
+  launchctl list ${PLIST_FILE_LABEL} &> /dev/null
+  if [ $? -eq 0 ]; then
+    launchctl unload -w $LAUNCHCTL_FILE
+  fi
+  rm "$LAUNCHCTL_FILE"
 fi
 
 # Test which init system is used:
 INITSYSTEM="unknown"
 if [[ "$HOST_PLATFORM" = "freebsd" && -d "/usr/local/etc/rc.d" ]]; then
-	INITSYSTEM="rc.d"
-	SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
+  INITSYSTEM="rc.d"
+  SERVICE_FILENAME="/usr/local/etc/rc.d/iobroker"
 elif [[ $(systemctl) =~ -\.mount ]] &> /dev/null; then
-	INITSYSTEM="systemd"
-	SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
+  INITSYSTEM="systemd"
+  SERVICE_FILENAME="/lib/systemd/system/iobroker.service"
 elif [[ -f /etc/init.d/cron && ! -h /etc/init.d/cron ]]; then
-	INITSYSTEM="init.d"
-	SERVICE_FILENAME="/etc/init.d/iobroker.sh"
+  INITSYSTEM="init.d"
+  SERVICE_FILENAME="/etc/init.d/iobroker.sh"
 elif [[ "$HOST_PLATFORM" = "osx" ]]; then
-	INITSYSTEM="launchctl"
-	SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
+  INITSYSTEM="launchctl"
+  SERVICE_FILENAME="/Users/${IOB_USER}/Library/LaunchAgents/${PLIST_FILE_LABEL}.plist"
 fi
 if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
-	INITSYSTEM="init.d"
+  INITSYSTEM="init.d"
 fi
 echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 
@@ -270,7 +270,7 @@ echo "init system: $INITSYSTEM" >> $INSTALLER_INFO_FILE
 # If possible, try to always execute the iobroker CLI as the correct user
 IOB_NODE_CMDLINE="node"
 if [ "$IOB_USER" != "$USER" ]; then
-	IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
+  IOB_NODE_CMDLINE="sudo -H -u $IOB_USER node"
 fi
 if [ "$INITSYSTEM" = "systemd" ]; then
 	# systemd needs a special executable that reroutes iobroker start/stop to systemctl
@@ -335,9 +335,9 @@ else
 	)
 fi
 if [ "$HOST_PLATFORM" = "linux" ]; then
-	IOB_BIN_PATH=/usr/bin
+  IOB_BIN_PATH=/usr/bin
 elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
-	IOB_BIN_PATH=/usr/local/bin
+  IOB_BIN_PATH=/usr/local/bin
 fi
 # First remove the old binaries and symlinks
 $SUDOX rm -f $IOB_DIR/iobroker
@@ -361,7 +361,7 @@ change_owner $IOB_USER "$IOB_DIR/iob"
 
 # Enable autostart
 if [[ "$INITSYSTEM" = "init.d" ]]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	# Write a script into init.d that automatically detects the correct node executable and runs ioBroker
 	INITD_FILE=$(cat <<- EOF
@@ -407,18 +407,18 @@ if [[ "$INITSYSTEM" = "init.d" ]]; then
 		EOF
 	)
 
-	# Create the startup file, give it the correct permissions and start ioBroker
-	write_to_file "$INITD_FILE" $SERVICE_FILENAME
-	set_root_permissions $SERVICE_FILENAME
+  # Create the startup file, give it the correct permissions and start ioBroker
+  write_to_file "$INITD_FILE" $SERVICE_FILENAME
+  set_root_permissions $SERVICE_FILENAME
 
-	# Remember what we did
-	if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
-		echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
-	else
-		echo "Autostart: init.d" >> "$INSTALLER_INFO_FILE"
-	fi
+  # Remember what we did
+  if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
+    echo "Autostart: init.d (forced)" >> "$INSTALLER_INFO_FILE"
+  else
+    echo "Autostart: init.d" >> "$INSTALLER_INFO_FILE"
+  fi
 elif [ "$INITSYSTEM" = "systemd" ]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	# Write an systemd service that automatically detects the correct node executable and runs ioBroker
 	SYSTEMD_FILE=$(cat <<- EOF
@@ -441,21 +441,21 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		EOF
 	)
 
-	# Create the startup file and give it the correct permissions
+  # Create the startup file and give it the correct permissions
 
-	write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
-	if [ "$IS_ROOT" != true ]; then
-		sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
-	fi
-	$SUDOX chmod 644 $SERVICE_FILENAME
-	$SUDOX systemctl daemon-reload
-	$SUDOX systemctl enable iobroker
+  write_to_file "$SYSTEMD_FILE" $SERVICE_FILENAME
+  if [ "$IS_ROOT" != true ]; then
+    sudo chown root:$ROOT_GROUP $SERVICE_FILENAME
+  fi
+  $SUDOX chmod 644 $SERVICE_FILENAME
+  $SUDOX systemctl daemon-reload
+  $SUDOX systemctl enable iobroker
 
-	echo "Autostart enabled!"
-	echo "Autostart: systemd" >> "$INSTALLER_INFO_FILE"
+  echo "Autostart enabled!"
+  echo "Autostart: systemd" >> "$INSTALLER_INFO_FILE"
 
 elif [ "$INITSYSTEM" = "rc.d" ]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	# Write an rc.d service that automatically detects the correct node executable and runs ioBroker
 	RCD_FILE=$(cat <<- EOF
@@ -503,18 +503,18 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 		EOF
 	)
 
-	# Create the startup file, give it the correct permissions and start ioBroker
-	write_to_file "$RCD_FILE" $SERVICE_FILENAME
-	set_root_permissions $SERVICE_FILENAME
+  # Create the startup file, give it the correct permissions and start ioBroker
+  write_to_file "$RCD_FILE" $SERVICE_FILENAME
+  set_root_permissions $SERVICE_FILENAME
 
-	# Enable startup
-	sysrc iobroker_enable=YES
+  # Enable startup
+  sysrc iobroker_enable=YES
 
-	echo "Autostart enabled!"
-	echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
+  echo "Autostart enabled!"
+  echo "Autostart: rc.d" >> "$INSTALLER_INFO_FILE"
 
 elif [ "$INITSYSTEM" = "launchctl" ]; then
-	echo "Enabling autostart..."
+  echo "Enabling autostart..."
 
 	NODECMD=$(which node)
 	# osx use launchd.plist init system.
@@ -545,23 +545,23 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 		EOF
 	)
 
-	# Create the startup file, give it the correct permissions and start ioBroker
-	echo "$PLIST_FILE" > $SERVICE_FILENAME
+  # Create the startup file, give it the correct permissions and start ioBroker
+  echo "$PLIST_FILE" > $SERVICE_FILENAME
 
-	# Enable startup and start the service
-	launchctl list ${PLIST_FILE_LABEL} &> /dev/null
-	if [ $? -eq 0 ]; then
-		echo "Reloading service ${PLIST_FILE_LABEL}"
-		launchctl unload -w $SERVICE_FILENAME
-	fi
-	launchctl load -w $SERVICE_FILENAME
+  # Enable startup and start the service
+  launchctl list ${PLIST_FILE_LABEL} &> /dev/null
+  if [ $? -eq 0 ]; then
+    echo "Reloading service ${PLIST_FILE_LABEL}"
+    launchctl unload -w $SERVICE_FILENAME
+  fi
+  launchctl load -w $SERVICE_FILENAME
 
-	echo "Autostart enabled!"
-	echo "Autostart: launchctl" >> "$INSTALLER_INFO_FILE"
+  echo "Autostart enabled!"
+  echo "Autostart: launchctl" >> "$INSTALLER_INFO_FILE"
 
 else
-	echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
-	echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
+  echo "${yellow}Unsupported init system, cannot enable autostart!${normal}"
+  echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
 fi
 
 print_bold "${green}Your installation was fixed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker again!"
