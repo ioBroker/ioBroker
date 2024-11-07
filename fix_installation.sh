@@ -16,7 +16,7 @@ compress_jsonl_databases() {
     (cd "$IOB_DIR")
   else
     (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
-  fi;
+  fi
 }
 
 # Test if this script is being run as root or not
@@ -60,9 +60,9 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoam
       echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd;
       echo "Please login with this newly created user account and restart the fixer.";
       exit 1;
-    fi;
-  fi;
-fi;
+    fi
+  fi
+fi
 
 # Check and fix boot.target on systemd
 
@@ -74,9 +74,9 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
       # Set up multi-user.target
       echo "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards.";
       sudo systemctl set-default multi-user.target;
-    fi;
-  fi;
-fi;
+    fi
+  fi
+fi
 
 # Check and fix timezone
 
@@ -95,14 +95,14 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
         read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
         TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
         $(sudo timedatectl set-timezone "$TIMEZONE");
-      fi;
+      fi
       # Set up time synchronization with systemd-timesyncd
       echo "Setting up time synchronization with systemd-timesyncd"
       $(sudo systemctl enable systemd-timesyncd);
       $(sudo systemctl start systemd-timesyncd);
-    fi;
-  fi;
-fi;
+    fi
+  fi
+fi
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
@@ -280,14 +280,14 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
             if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
                 echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease execute 'iob fix'to create an appropriate setup!"
-            fi;
+            fi
 			sudo systemctl \$1 iobroker
 			exit \$?
 		fi
 		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit 1;
-		fi;
+		fi
 		if [ "\$1" = "fix" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then

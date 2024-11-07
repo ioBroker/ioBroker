@@ -4,9 +4,13 @@
 INSTALLER_VERSION="2024-10-22" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
-if [[ $EUID -eq 0 ]];
-then IS_ROOT=true;  SUDOX=""
-else IS_ROOT=false; SUDOX="sudo "; fi
+if [[ $EUID -eq 0 ]]; then
+  IS_ROOT=true
+  SUDOX=""
+else
+  IS_ROOT=false
+  SUDOX="sudo "
+fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
@@ -18,22 +22,22 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     echo "You started the installer as root or the iobroker user. This is not recommended."
     echo "For security reasons a default user should be created. Please run 'iob fix' after the installation."
     RECOMMEND_FIXER_AFTER_INSTALL="true"
-  fi;
+  fi
 
   # Check and fix boot.target on systemd
 
   if [[ $(systemctl get-default) == "graphical.target" ]]; then
   echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to save RAM. Please run 'iob fix' after the installation to change this.";
     RECOMMEND_FIXER_AFTER_INSTALL="true"
-  fi;
+  fi
 
   # Check and fix timezone
   TIMEZONE=$(timedatectl show --property=Timezone --value)
   if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
     echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
     RECOMMEND_FIXER_AFTER_INSTALL="true"
-  fi;
-fi;
+  fi
+fi
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
@@ -208,18 +212,18 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
             if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
                 echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease execute 'iob fix'to create an appropriate setup!"
-            fi;
+            fi
 			sudo systemctl \$1 iobroker
 			exit \$?
 		fi
 		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit 1;
-		fi;
+		fi
 		if [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
 			echo "Invalid option --allow-root";
 			exit;
-		fi;
+		fi
 		if [ "\$1" = "fix" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then

@@ -6,14 +6,14 @@ DOCKER=/opt/scripts/.docker_config/.thisisdocker
 if [ "$(id -u)" = 0 ] && [ ! -f "$DOCKER" ]; then
   echo -e "You should not be root on your system!\nBetter use your standard user!\n\n";
   sleep 15;
-fi;
+fi
 clear;
 SKRPTLANG=$1;
 if [[ "$SKRPTLANG" = "--de" ]]; then
   echo "*** iog diag startet, bitte etwas warten ***"
 else
   echo "*** iob diag is starting up, please wait ***";
-fi;
+fi
 
 if ! [ -x "$(command -v distro-info)" ]; then
   if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -21,16 +21,16 @@ if ! [ -x "$(command -v distro-info)" ]; then
       echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen.";
     else echo "iob diag muss aktualisiert werden. Bitte das Paket 'distro-info' nachinstallieren.";
       exit 1;
-    fi;
+    fi
   else
     if [ -x "$(command -v apt-get)" ]; then
       echo "iob diag needs to be updated. Please execute 'iobroker fix' first.";
 
     else echo "iob diag needs to be updated. Please manually install package 'distro-info'";
       exit 1;
-    fi;
-  fi;
-fi;
+    fi
+  fi
+fi
 
 # VARIABLES
 export LC_ALL=C;
@@ -101,7 +101,7 @@ else
   read -r -n 1 -s
   clear;
   echo "";
-fi;
+fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
   echo -e "\033[33m========== Langfassung ab hier markieren und kopieren ===========\033[0m";
@@ -117,7 +117,7 @@ else
   echo "Script v.$SKRIPTV"
   echo "";
   echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m";
-fi;
+fi
 
 if [ -f "$DOCKER" ]; then
   echo -e "Hardware Vendor : $(cat /sys/devices/virtual/dmi/id/sys_vendor)";
@@ -130,14 +130,14 @@ else
   echo "";
   grep -i model /proc/cpuinfo | tail -1;
   echo -e "Docker          : false";
-fi;
+fi
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
 if [ "$SYSTDDVIRT" != "" ]; then
   echo -e "Virtualization  : $(systemd-detect-virt)"
 else
   echo "Virtualization  : Docker"
-fi;
+fi
 echo -e "Kernel          : $(uname -m)";
 echo -e "Userland        : $(getconf LONG_BIT) bit";
 echo "";
@@ -154,54 +154,54 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     if [ "$RELEASE" = "$CODENAME" ]; then
       RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '$DEBSTABLE' gebracht werden!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $EOLUBU; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $DEBSTABLE; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '$DEBSTABLE'!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $UBULTS; do
     if [ "$RELEASE" == "$CODENAME" ] ; then
       RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '$UBULTS'!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $UBUSUP; do
     if [ "$RELEASE" == "$CODENAME" ] && [ "$RELEASE" != "$UBULTS" ]; then
       RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $TESTING; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[1;33mDas Betriebssystem mit dem Codenamen '$CODENAME' ist eine Testversion! Es sollte nur zu Testzwecken eingesetzt werden!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $OLDSTABLE; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '$DEBSTABLE' gebracht werden!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   if [ $UNKNOWNRELEASE -eq 1 ]; then
     RELEASESTATUS="Das Betriebssystem mit dem Codenamen '$CODENAME' ist unbekannt. Bitte den Status der Unterstützung eigenständig prüfen."
-  fi;
+  fi
 
   echo -e "$RELEASESTATUS";
 
@@ -212,57 +212,57 @@ else
     if [ "$RELEASE" = "$CODENAME" ]; then
       RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $EOLUBU; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $DEBSTABLE; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '$DEBSTABLE'!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $UBULTS; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '$UBULTS'!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $UBUSUP; do
     if [ "$RELEASE" == "$CODENAME" ] && [ "$RELEASE" != "$UBULTS" ]; then
       RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $TESTING; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   for RELEASE in $OLDSTABLE; do
     if [ "$RELEASE" == "$CODENAME" ]; then
       RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m";
       UNKNOWNRELEASE=0;
-    fi;
+    fi
   done;
 
   if [ $UNKNOWNRELEASE -eq 1 ]; then
     RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
-  fi;
+  fi
 
   echo -e "$RELEASESTATUS";
-fi;
+fi
 # RASPBERRY only
 if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
   #        echo "Raspberry only:";
@@ -343,7 +343,6 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
       fi
     done
   fi
-
 fi
 
 if [[ "$SKRPTLANG" = "--de" ]]; then
@@ -358,7 +357,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "This system needs to be REBOOTED!";
     echo "";
   fi
-fi;
+fi
 
 echo "";
 
@@ -372,11 +371,11 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     cat /etc/timezone;
   else
     timedatectl;
-  fi;
+  fi
 
   if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
     echo "Die gesetzte Zeitzone ist vermutlich falsch. Bitte die Zeitzone mit den Mitteln des Betriebssystems ändern oder per 'iobroker fix' setzen.";
-  fi;
+  fi
 else
 
   echo -e "\033[34;107m*** TIME AND TIMEZONES ***\033[0m";
@@ -388,14 +387,14 @@ else
     cat /etc/timezone;
   else
     timedatectl;
-  fi;
+  fi
 
   if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(timedatectl show) == *Etc/UTC* ]] || [[ $(timedatectl show) == *Europe/London* ]]; then
       echo "Timezone is probably wrong. Please configure it with system admin tools or by running 'iobroker fix'";
-    fi;
-  fi;
-fi;
+    fi
+  fi
+fi
 
 echo "";
 if [[ "$SKRPTLANG" = "--de" ]]; then
@@ -414,7 +413,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "GROUPS=$(sudo -u "$IOUSER" groups)"
   else
     echo "js-controller läuft nicht";
-  fi;
+  fi
   echo "";
 
 if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
@@ -424,7 +423,7 @@ if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]];
   echo "Ein permanentes Login als root ist nicht vorgesehen."
   echo "Bitte den 'iobroker fix' ausführen oder manuell eine entsprechenden User anlegen."
 
-fi;
+fi
 else
   echo -e "\033[34;107m*** Users and Groups ***\033[0m";
   echo "User that called 'iob diag':";
@@ -441,7 +440,7 @@ else
     echo "GROUPS=$(sudo -u "$IOUSER" groups)"
   else
    echo "js-controller is not running";
-  fi;
+  fi
 
   echo "";
 
@@ -452,8 +451,8 @@ else
     echo "A root login is not required in most Linux Distributions."
     echo "Run 'iobroker fix' or use the system tools to create a user."
 
-  fi;
-fi;
+  fi
+fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m";
 XORGTEST=$(pgrep -cf 'ayland|X11|wayfire')
 if [[ "$XORGTEST" -gt 0 ]]; then
@@ -465,7 +464,7 @@ echo -e "Desktop: \t$DESKTOP_SESSION";
 echo -e "Terminal: \t$XDG_SESSION_TYPE";
 if [ -z "$DOCKER" ]; then
   echo -e "Boot Target: \t$(systemctl get-default)";
-fi;
+fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
   if [[ $(systemctl get-default) == "graphical.target" ]]; then
@@ -473,9 +472,9 @@ if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
       echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen.";
     else
       echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Please set BootTarget to 'multi-user.target' or run 'iobroker fix'";
-    fi;
-  fi;
-fi;
+    fi
+  fi
+fi
 echo "";
 echo -e "\033[34;107m*** MEMORY ***\033[0m";
 free -th --mega;
@@ -489,7 +488,7 @@ vmstat -S M -s | head -n 10;
 #        echo "";
 #        echo "Raspberry only:";
 #        vcgencmd mem_oom;
-#fi;
+#fi
 
 echo "";
 echo -e "\033[34;107m*** top - Table Of Processes  ***\033[0m";
@@ -503,7 +502,7 @@ else
   echo "";
   systemctl list-units --failed --no-pager;
   echo "";
-fi;
+fi
 
 echo "";
 echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m";
@@ -513,14 +512,14 @@ if [[ "$CRITERROR" -gt 0 ]]; then
     echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
   else
     echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details";
-  fi;
+  fi
 else
   if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "Es wurden keine kritischen Fehler gefunden"
   else
     echo "No critical errors detected"
-  fi;
-fi;
+  fi
+fi
 echo "";
 
 echo -e "\033[34;107m*** FILESYSTEM ***\033[0m";
@@ -543,7 +542,7 @@ sudo du -h /var/ | sort -rh | head -5;
 echo -e "";
 if [ ! -f "$DOCKER" ]; then
   journalctl --disk-usage;
-fi;
+fi
 echo "";
 echo -e "\033[32m/opt/iobroker/backups:\033[0m";
         du -h /opt/iobroker/backups/ | sort -rh | head -5;
@@ -569,7 +568,7 @@ SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null);
 #                 echo "$SYSZIGBEEPORT";
 #         else
 #                 echo "No Devices found 'by-id'";
-# fi;
+# fi
 #
 # readarray IOBZIGBEEPORT < <( iob list instances | grep system.adapter.zigbee | awk -F ':' '{print $4}' );
 # for i in  ${IOBZIGBEEPORT[@]}; do
@@ -598,7 +597,7 @@ if [[ -n "$SYSZIGBEEPORT" ]];
     echo "$SYSZIGBEEPORT";
   else
     echo "No Devices found 'by-id'";
-fi;
+fi
 
 if  [[ -n "$IOBZIGBEEPORT0" ]]; then
   if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT0"* ]]
@@ -611,8 +610,8 @@ if  [[ -n "$IOBZIGBEEPORT0" ]]; then
     echo "Your zigbee.0 COM-Port is NOT matching 'by-id'. Please check your setting:";
     echo "$IOBZIGBEEPORT0";
     # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
-  fi;
-fi;
+  fi
+fi
 if  [[ -n "$IOBZIGBEEPORT1" ]]; then
   if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT1"* ]]
   then
@@ -624,8 +623,8 @@ if  [[ -n "$IOBZIGBEEPORT1" ]]; then
     echo "Your zigbee.1 COM-Port is NOT matching 'by-id'. Please check your setting:";
     echo "$IOBZIGBEEPORT1";
     # diff -y --left-column <(echo "$IOBZIGBEEPORT1") <(echo "$SYSZIGBEEPORT");
-  fi;
-fi;
+  fi
+fi
 if  [[ -n "$IOBZIGBEEPORT2" ]]; then
   if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT2"* ]]
   then
@@ -637,8 +636,8 @@ if  [[ -n "$IOBZIGBEEPORT2" ]]; then
     echo "Your zigbee.2 COM-Port is NOT matching 'by-id'. Please check your setting:";
     echo "$IOBZIGBEEPORT2";
     # diff -y --left-column <(echo "$IOBZIGBEEPORT2") <(echo "$SYSZIGBEEPORT");
-  fi;
-fi;
+  fi
+fi
 if  [[ -n "$IOBZIGBEEPORT3" ]]; then
   if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT3"* ]]
   then
@@ -650,8 +649,8 @@ if  [[ -n "$IOBZIGBEEPORT3" ]]; then
     echo "Your zigbee.3 COM-Port is NOT matching 'by-id'. Please check your setting:";
     echo "$IOBZIGBEEPORT3";
     # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
-  fi;
-fi;
+  fi
+fi
 
 echo "";
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m";
@@ -671,7 +670,7 @@ then
 else
   echo -e "$(type -P nodejs) \t$(nodejs -v)";
   VERNODEJS=$(nodejs -v);
-fi;
+fi
 
 if [[ -z "$PATHNODE"  ]];
 then
@@ -680,7 +679,7 @@ then
 else
   echo -e "$(type -P node) \t\t$(node -v)";
   VERNODE=$(node -v);
-fi;
+fi
 
 if [[ -z "$PATHNPM" ]];
 then
@@ -688,7 +687,7 @@ then
 else
   echo -e "$(type -P npm) \t\t$(npm -v)";
   VERNPM=$(npm -v);
-fi;
+fi
 
 if [[ -z "$PATHNPX" ]];
 then
@@ -697,7 +696,7 @@ then
 else
   echo -e "$(type -P npx) \t\t$(npx -v)";
   VERNPX=$(npx -v);
-fi;
+fi
 
 if [[ -z "$PATHCOREPACK" ]];
 then
@@ -706,7 +705,7 @@ then
 else
   echo -e "$(type -P corepack) \t$(corepack -v)";
   # VERCOREPACK=$(corepack -v);
-fi;
+fi
 
 if
   [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
@@ -716,7 +715,7 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
+    fi
   elif
   [[ $PATHNODE != "/usr/bin/node" ]];
   then
@@ -725,7 +724,7 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
+    fi
   elif
   [[ $PATHNPM != "/usr/bin/npm" ]];
   then
@@ -734,7 +733,7 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
+    fi
   elif
   [[ $PATHNPX != "/usr/bin/npx" ]];
   then
@@ -743,7 +742,7 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
+    fi
   elif
   [[ $VERNODEJS != "$VERNODE" ]];
   then
@@ -752,7 +751,7 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
+    fi
   elif
   [[ $VERNPM != "$VERNPX" ]];
   then
@@ -761,7 +760,7 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
+    fi
   elif
   [[ $PATHCOREPACK != "/usr/bin/corepack" ]];
   then
@@ -770,15 +769,15 @@ if
       echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m";
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
-    fi;
-fi;
+    fi
+fi
 
 echo "";
 if [ -f /usr/bin/apt-cache ];
 then
   apt-cache policy nodejs;
   echo "";
-fi;
+fi
 
 ANZNPMTMP=$(find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l);
 echo -e "\033[32mTemp directories causing deletion problem:\033[0m ""$ANZNPMTMP""";
@@ -787,7 +786,7 @@ then
   echo -e "Some problems detected, please run \e[031miob fix\e[0m";
 else
   echo "No problems detected";
-fi;
+fi
 
 # echo "";
 # echo -e "Temp directories being cleaned up now `find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \;`";
@@ -803,7 +802,7 @@ else
   echo -e "\033[32mErrors in npm tree:\033[0m 0";
   echo "No problems detected";
   echo "";
-fi;
+fi
 echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
 echo -e "\033[32mioBroker Status\033[0m";
@@ -850,14 +849,14 @@ then
       echo -e "Offene Systemupdates: $APT";
     else
       echo -e "Pending Updates: $APT";
-    fi;
+    fi
 else
     if [[ "$SKRPTLANG" = "--de" ]]; then
       echo "Es wurde kein auf Debian basierendes System erkannt";
     else
       echo "No Debian-based Linux detected.";
-    fi;
-fi;
+    fi
+fi
 
 
 echo "";
@@ -888,7 +887,7 @@ else
   echo "";
   echo "";
   echo "Press any key for a summary";
-fi;
+fi
 read -r -n 1 -s
 echo "";
 clear;
@@ -908,14 +907,14 @@ else
   echo -e "\t\t\tv.$SKRIPTV"
   echo "";
   echo "";
-fi;
+fi
 if [ -f "$DOCKER" ]; then
   INSTENV=2
 elif [ "$SYSTDDVIRT" != "none" ]; then
   INSTENV=1
 else
   INSTENV=0
-fi;
+fi
 INSTENV2=$(
 if [[ $INSTENV -eq 2 ]]; then
   echo "Docker";
@@ -923,7 +922,7 @@ elif [ $INSTENV -eq 1 ]; then
   echo "$SYSTDDVIRT";
 else
   echo "native";
-fi;)
+fi)
 if [ -f "$DOCKER" ]; then
   grep -i model /proc/cpuinfo | tail -1;
   echo -e "Kernel          : $(uname -m)";
@@ -932,11 +931,11 @@ if [ -f "$DOCKER" ]; then
     echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
   else
     echo -e "Docker          : false"
-  fi;
+  fi
 
 else
   hostnamectl | grep -v 'Machine\|Boot';
-fi;
+fi
 echo "";
 echo -e "Installation: \t\t$INSTENV2";
 echo -e "Kernel: \t\t$(uname -m)";
@@ -945,14 +944,14 @@ if [ -f "$DOCKER" ]; then
   echo -e "Timezone: \t\t$(date +"%Z %z")"
 else
   echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)";
-fi;
+fi
 echo -e "User-ID: \t\t$EUID";
 echo -e "Display-Server: \t$(if [[ $XORGTEST -gt 0 ]]; then echo "true";else echo "false";fi)";
 if [ -f "$DOCKER" ]; then
   echo -e "";
 else
   echo -e "Boot Target: \t\t$(systemctl get-default)";
-fi;
+fi
 
 echo "";
 if [[ "$SKRPTLANG" = "--de" ]]; then
@@ -961,7 +960,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
 else
   echo -e "Pending OS-Updates: \t$APT";
   echo -e "Pending iob updates: \t$(iob update -u | grep -c 'Updatable\|Updateable')";
-fi;
+fi
 if [[ -f "/var/run/reboot-required" ]]; then
   if [[ "$SKRPTLANG" = "--de" ]]; then
     echo -e "\nDas System muss JETZT neugestartet werden!";
@@ -969,8 +968,8 @@ if [[ -f "/var/run/reboot-required" ]]; then
   else
     echo -e "\nThis system needs to be REBOOTED NOW!";
     echo "";
-  fi;
-fi;
+  fi
+fi
 echo -e "\nNodejs-Installation:";
 if [[ -z "$PATHNODEJS" ]];
 then
@@ -978,7 +977,7 @@ then
 else
   echo -e "$(type -P nodejs) \t$(nodejs -v)";
   VERNODEJS=$(nodejs -v);
-fi;
+fi
 
 if [[ -z "$PATHNODE" ]];
 then
@@ -987,7 +986,7 @@ then
 else
   echo -e "$(type -P node) \t\t$(node -v)";
   VERNODE=$(node -v);
-fi;
+fi
 
 if [[ -z "$PATHNPM" ]];
 then
@@ -995,7 +994,7 @@ then
 else
   echo -e "$(type -P npm) \t\t$(npm -v)";
   VERNPM=$(npm -v);
-fi;
+fi
 
 if [[ -z "$PATHNPX" ]];
 then
@@ -1004,7 +1003,7 @@ then
 else
   echo -e "$(type -P npx) \t\t$(npx -v)";
   VERNPX=$(npx -v);
-fi;
+fi
 
 if [[ -z "$PATHCOREPACK" ]];
 then
@@ -1012,12 +1011,12 @@ then
 
 else
   echo -e "$(type -P corepack) \t$(corepack -v)";
-fi;
+fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
   echo -e "\nEmpfohlene Versionen sind zurzeit nodejs ""$NODERECOM"" und npm ""$NPMRECOM""";
 else
   echo -e "\nRecommended versions are nodejs ""$NODERECOM"" and npm ""$NPMRECOM""";
-fi;
+fi
 if
   [[ $PATHNODEJS != "/usr/bin/nodejs" ]];
   then
@@ -1027,7 +1026,7 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "Wrong installation path detected. This needs to be fixed.";
-    fi;
+    fi
   elif
   [[ $PATHNODE != "/usr/bin/node" ]];
   then
@@ -1037,7 +1036,7 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "Wrong installation path detected. This needs to be fixed.";
-    fi;
+    fi
   elif
   [[ $PATHNPM != "/usr/bin/npm" ]];
   then
@@ -1047,7 +1046,7 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "Wrong installation path detected. This needs to be fixed.";
-    fi;
+    fi
   elif
   [[ $PATHNPX != "/usr/bin/npx" ]];
   then
@@ -1057,7 +1056,7 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "Wrong installation path detected. This needs to be fixed.";
-    fi;
+    fi
    elif
   [[ $PATHCOREPACK != "/usr/bin/corepack" ]];
   then
@@ -1067,7 +1066,7 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "Wrong installation path detected. This needs to be fixed.";
-    fi;
+    fi
   elif
   [[ $VERNODEJS != "$VERNODE" ]];
   then
@@ -1077,7 +1076,7 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "nodejs and node versions do not match. This needs to be fixed.";
-    fi;
+    fi
 
   elif
   [[ $VERNPM != "$VERNPX" ]];
@@ -1088,13 +1087,13 @@ if
     else
       echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m";
       echo "npm and npx versions do not match. This needs to be fixed.";
-    fi;
+    fi
   else
     if [[ "$SKRPTLANG" = "--de" ]]; then
       echo "nodeJS ist korrekt installiert"
     else
       echo "nodeJS installation is correct";
-    fi;
+    fi
 fi
 if [[ $NODENOTCORR -eq 1 ]];
 then
@@ -1108,8 +1107,8 @@ then
     echo "Please execute";
     echo -e "\e[031miob nodejs-update\e[0m";
     echo "to fix these errors."
-  fi;
-fi;
+  fi
+fi
 echo "";
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
 echo "MEMORY: ";
@@ -1148,15 +1147,15 @@ then
     echo -e "Some problems detected, please run \e[031miob fix\e[0m and try to have them fixed";
     echo "**********************************************************************";
     echo "";
-  fi;
-fi;
+  fi
+fi
 if [[ "$CRITERROR" -gt 0 ]]; then
   if [[ "$SKRPTLANG" = "--de" ]]; then
     echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
   else
     echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details";
-  fi;
-fi;
+  fi
+fi
 echo -e "$RELEASESTATUS";
 echo "";
 if [[ "$SKRPTLANG" = "--de" ]]; then
@@ -1169,5 +1168,5 @@ else
   echo -e "\`\`\`";
   echo "";
   echo "=== Mark text until here for copying ===";
-fi;
+fi
 exit;
