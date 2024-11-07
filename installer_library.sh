@@ -79,12 +79,12 @@ enable_colored_output
 get_platform_params() {
 	# Test which platform this script is being run on
 	# When adding another supported platform, also add detection for the install command
-	# HOST_PLATFORM:  Name of the platform
-	# INSTALL_CMD:      comand for package installation
-	# INSTALL_CMD_ARGS: arguments for $INSTALL_CMD to install something
-	# INSTALL_CMD_UPD_ARGS: arguments for $INSTALL_CMD to update something
-	# IOB_DIR:	  Directory where iobroker should be installed
-	# IOB_USER:	  The user to run ioBroker as
+	# HOST_PLATFORM:    Name of the platform
+	# INSTALL_CMD:      Command for package installation
+	# INSTALL_CMD_ARGS: Arguments for $INSTALL_CMD to install something
+	# INSTALL_CMD_UPD_ARGS: Arguments for $INSTALL_CMD to update something
+	# IOB_DIR:	        Directory where iobroker should be installed
+	# IOB_USER:	        The user to run ioBroker as
 
 	INSTALL_CMD_UPD_ARGS=""
 
@@ -651,7 +651,7 @@ create_user_linux() {
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
-                "nmcli"
+    "nmcli"
 		"vcgencmd"
 		"cat"
 		"df"
@@ -688,7 +688,7 @@ create_user_linux() {
 		dialout
 		gpio
 		i2c
-  		plugdev
+  	plugdev
 		redis
 		tty
 		video
@@ -718,7 +718,7 @@ create_user_freebsd() {
 		"ping" "fping"
 		"arp-scan"
 		"setcap"
-                "nmcli"
+    "nmcli"
 		"vcgencmd"
 		"cat"
 		"df"
@@ -756,7 +756,7 @@ create_user_freebsd() {
 		dialout
 		gpio
 		i2c
-  		plugdev
+  	plugdev
 		redis
 		tty
 		video
@@ -801,7 +801,6 @@ install_nodejs() {
 	print_bold "Node.js not found. Installing..."
 
 	if [ "$INSTALL_CMD" = "yum" ]; then
-
  		$SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
 SYS_ARCH=$(uname -m)
 NODEJS_REPO_CONTENT="[nodesource-nodejs]
@@ -817,11 +816,11 @@ module_hotfixes=1"
 			echo "$NODEJS_REPO_CONTENT" | tee /etc/yum.repos.d/nodesource-nodejs.repo > /dev/null
 			$INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
 			$INSTALL_CMD $INSTALL_CMD_ARGS nodejs
-        else
+    else
 			echo "$NODEJS_REPO_CONTENT" | $SUDOX tee /etc/yum.repos.d/nodesource-nodejs.repo > /dev/null
 			$SUDOX $INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
 			$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS nodejs
-        fi
+    fi
 	elif [ "$INSTALL_CMD" = "pkg" ]; then
 		$SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS node
 	elif [ "$INSTALL_CMD" = "brew" ]; then
@@ -832,19 +831,19 @@ module_hotfixes=1"
 	else
 		if [ "$IS_ROOT" = true ]; then
 			$INSTALL_CMD update 2>&1 > /dev/null
-            $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
-            mkdir -p /etc/apt/keyrings
-            rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+      $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
+      mkdir -p /etc/apt/keyrings
+      rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
+      curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+      echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		else
 			$SUDOX $INSTALL_CMD update 2>&1 > /dev/null
-            $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
-            $SUDOX mkdir -p /etc/apt/keyrings
-            $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
+      $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 > /dev/null
+      $SUDOX mkdir -p /etc/apt/keyrings
+      $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 > /dev/null
+      curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+      echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
 			echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
 		fi
 	fi

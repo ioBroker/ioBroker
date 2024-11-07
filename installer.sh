@@ -510,7 +510,7 @@ else
 	echo "Autostart: false" >> "$INSTALLER_INFO_FILE"
 fi
 
-# Raspbery image has as last line in /etc/rc.local the ioBroker installer. It must be removed
+# Raspberry image has as last line in /etc/rc.local the ioBroker installer. It must be removed
 if [ -f /etc/rc.local ]; then
 	if [ -w /etc/rc.local ]; then
 		if [ "$IS_ROOT" != true ]; then

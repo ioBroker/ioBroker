@@ -6,17 +6,17 @@ FIXER_VERSION="2024-10-22" # format YYYY-MM-DD
 export DEBIAN_FRONTEND=noninteractive
 
 compress_jsonl_databases() {
-    echo "Checking for uncompressed JSONL databases... This might take a while!"
-    echo ""
+  echo "Checking for uncompressed JSONL databases... This might take a while!"
+  echo ""
 
-    NPMV=$(npm -v | cut -d. -f1);
-    # depending on the npm version the npx call needs to be different
-    if [ $NPMV -lt 7 ]; then
-        (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
-        (cd "$IOB_DIR")
-    else
-        (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
-    fi;
+  NPMV=$(npm -v | cut -d. -f1);
+  # depending on the npm version the npx call needs to be different
+  if [ $NPMV -lt 7 ]; then
+    (cd "$IOB_DIR/iobroker-data" && sudo -H -u iobroker npx @iobroker/jsonltool@latest)
+    (cd "$IOB_DIR")
+  else
+    (sudo -H -u iobroker npm x --yes @iobroker/jsonltool@latest "$IOB_DIR/iobroker-data")
+  fi;
 }
 
 # Test if this script is being run as root or not
@@ -28,51 +28,51 @@ USER_GROUP="$USER"
 
 # Check for user names and create a default user if necessary
 if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
-    # Prompt for username
-    echo "It seems you run ioBroker as root or the iobroker user. This is not recommended."
-    echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
-    echo "A root login is not required in most Linux Distributions."
-    echo "Do you want to setup a user now? (y/N)"
-    read -r -s -n 1 char;
-    if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-        read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
+  # Prompt for username
+  echo "It seems you run ioBroker as root or the iobroker user. This is not recommended."
+  echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
+  echo "A root login is not required in most Linux Distributions."
+  echo "Do you want to setup a user now? (y/N)"
+  read -r -s -n 1 char;
+  if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+    read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
 
-        # Check if the user already exists
-        if id "$USERNAME" &>/dev/null; then
-            echo "User '$USERNAME' already exists. Please login as this user and restart the fixer."
-            exit 1;
-        else
-            # Prompt for password
-            read -s -p "Enter the password for the new user: " PASSWORD
-            echo
-            read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
-            echo
+    # Check if the user already exists
+    if id "$USERNAME" &>/dev/null; then
+      echo "User '$USERNAME' already exists. Please login as this user and restart the fixer."
+      exit 1;
+    else
+      # Prompt for password
+      read -s -p "Enter the password for the new user: " PASSWORD
+      echo
+      read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
+      echo
 
-            # Check if passwords match
-            if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
-                echo "Passwords do not match. Exiting."
-                exit 1
-            fi
+      # Check if passwords match
+      if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+          echo "Passwords do not match. Exiting."
+          exit 1
+      fi
 
-            # Add a new user account with sudo access and set the password
-            echo "Adding new user account...";
-            $SUDOX /usr/sbin/useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME";
-            echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd;
-            echo "Please login with this newly created user account and restart the fixer.";
-            exit 1;
-        fi;
+      # Add a new user account with sudo access and set the password
+      echo "Adding new user account...";
+      $SUDOX /usr/sbin/useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME";
+      echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd;
+      echo "Please login with this newly created user account and restart the fixer.";
+      exit 1;
     fi;
+  fi;
 fi;
 
 # Check and fix boot.target on systemd
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
 	if [[ $(systemctl get-default) == "graphical.target" ]]; then
-        echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
-        read -r -s -n 1 char;
+    echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)";
+    read -r -s -n 1 char;
 		if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
 			# Set up multi-user.target
-            echo "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards.";
+      echo "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards.";
 			sudo systemctl set-default multi-user.target;
 		fi;
 	fi;
@@ -83,25 +83,25 @@ fi;
 TIMEZONE=$(timedatectl show --property=Timezone --value)
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
 
-    if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
-        read -r -s -n 1 char;
-        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-            if [[ -f "/usr/sbin/dpkg-reconfigure" ]]; then
-                sudo dpkg-reconfigure tzdata;
-            else
-                # Setup the timezone for the server (Default value is "Europe/Berlin")
-                echo "Setting up timezone";
-                read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
-                TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
-                $(sudo timedatectl set-timezone "$TIMEZONE");
-            fi;
-            # Set up time synchronization with systemd-timesyncd
-            echo "Setting up time synchronization with systemd-timesyncd"
-            $(sudo systemctl enable systemd-timesyncd);
-            $(sudo systemctl start systemd-timesyncd);
-        fi;
+  if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+    echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
+    read -r -s -n 1 char;
+    if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
+      if [[ -f "/usr/sbin/dpkg-reconfigure" ]]; then
+        sudo dpkg-reconfigure tzdata;
+      else
+        # Setup the timezone for the server (Default value is "Europe/Berlin")
+        echo "Setting up timezone";
+        read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE;
+        TIMEZONE=${TIMEZONE:-"Europe/Berlin"};
+        $(sudo timedatectl set-timezone "$TIMEZONE");
+      fi;
+      # Set up time synchronization with systemd-timesyncd
+      echo "Setting up time synchronization with systemd-timesyncd"
+      $(sudo systemctl enable systemd-timesyncd);
+      $(sudo systemctl start systemd-timesyncd);
     fi;
+  fi;
 fi;
 
 # get and load the LIB => START
@@ -322,7 +322,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 else
 	IOB_EXECUTABLE=$(cat <<- EOF
 		#!$BASH_CMDLINE
-        if [ "\$1" = "fix" ]; then
+    if [ "\$1" = "fix" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
