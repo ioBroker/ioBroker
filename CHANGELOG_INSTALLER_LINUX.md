@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-02-02
+* Updated iob logic
+
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
 * Also install passwd and polkitd packages because some lxc systems might miss it
