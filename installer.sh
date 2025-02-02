@@ -159,7 +159,7 @@ PACKAGE_JSON_FILE=$(cat <<- EOF
 		"private": true,
 		"description": "Automate your Life",
 		"engines": {
-			"node": ">=16.0.0"
+			"node": ">=18.0.0"
 		},
 		"dependencies": {
 			"iobroker.js-controller": "stable",
