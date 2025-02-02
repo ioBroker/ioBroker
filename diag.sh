@@ -3,7 +3,7 @@
 # written to help getting information about the environment the ioBroker installation is running in
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
-if [ "$(id -u)" = 0 ] && [ ! -f "$DOCKER" ]; then
+if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
   echo -e "You should not be root on your system!\nBetter use your standard user!\n\n";
   sleep 15;
 fi
@@ -34,13 +34,14 @@ fi
 
 # VARIABLES
 export LC_ALL=C;
-SKRIPTV="2024-10-19";      #version of this script
+SKRIPTV="2025-02-02";      #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
-
+ALLOWROOT="";
+if [ "$*" = "--allow-root" ];then ALLOWROOT=$"--allow-root"; fi;
 HOST=$(uname -n);
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs);
-NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext);  #recommended node version
-NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext);    #recommended npm version
+NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT);  #recommended node version
+NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext $ALLOWROOT);    #recommended npm version
 #NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
 #NPMUSED=$(iobroker state getValue system.host."$HOST".versions.npmCurrent);        #current npm version in use
 XORGTEST=0;      #test for GUI
@@ -49,9 +50,8 @@ INSTENV=0;
 INSTENV2=0;
 SYSTDDVIRT="";
 NODENOTCORR=0;
-IOBLISTINST=$(iobroker list instances);
+IOBLISTINST=$(iobroker list instances $ALLOWROOT);
 NPMLS=$(cd /opt/iobroker && npm ls -a);
-
 
 #Debian and Ubuntu releases and their status
 EOLDEB=$(debian-distro-info --unsupported);
@@ -806,17 +806,17 @@ fi
 echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m";
 echo "";
 echo -e "\033[32mioBroker Status\033[0m";
-iob status;
+iob status $ALLOWROOT;
 echo -e "\nHosts:";
-iob list hosts;
+iob list hosts $ALLOWROOT;
 echo "";
 # multihost detection - wip
 # iobroker multihost status
 # iobroker status all | grep MULTIHOSTSERVICE/enabled
 echo -e "\033[32mCore adapters versions\033[0m"
-echo -e "js-controller: \t$(iob -v)";
-echo -e "admin: \t\t$(iob version admin)";
-echo -e "javascript: \t$(iob version javascript)";
+echo -e "js-controller: \t$(iob -v $ALLOWROOT)";
+echo -e "admin: \t\t$(iob version admin $ALLOWROOT)";
+echo -e "javascript: \t$(iob version javascript $ALLOWROOT)";
 echo "";
 echo -e "nodejs modules from github: \t$(echo "$NPMLS" | grep -c 'github.com')";
 echo "$NPMLS" | grep 'github.com';
@@ -828,16 +828,16 @@ echo -e "\033[32mEnabled adapters with bindings\033[0m";
 echo "$IOBLISTINST" | grep enabled | grep port ;
 echo "";
 echo -e "\033[32mioBroker-Repositories\033[0m";
-        iob repo list;
+        iob repo list $ALLOWROOT;
 echo "";
 echo -e "\033[32mInstalled ioBroker-Instances\033[0m";
-        iob update -i;
+        iob update -i $ALLOWROOT;
 echo "";
 echo -e "\033[32mObjects and States\033[0m";
 echo "Please stand by - This may take a while";
-IOBOBJECTS=$(iob list objects 2>/dev/null | wc -l);
+IOBOBJECTS=$(iob list objects  $ALLOWROOT 2>/dev/null | wc -l);
 echo -e "Objects: \t$IOBOBJECTS";
-IOBSTATES=$(iob list states 2>/dev/null | wc -l);
+IOBSTATES=$(iob list states $ALLOWROOT 2>/dev/null | wc -l);
 echo -e "States: \t$IOBSTATES";
 echo "";
 echo -e "\033[34;107m*** OS-Repositories and Updates ***\033[0m";
@@ -956,10 +956,10 @@ fi
 echo "";
 if [[ "$SKRPTLANG" = "--de" ]]; then
   echo -e "Offene OS-Updates: \t$APT";
-  echo -e "Offene iob updates: \t$(iob update -u | grep -c 'Updatable\|Updateable')";
+  echo -e "Offene iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')";
 else
   echo -e "Pending OS-Updates: \t$APT";
-  echo -e "Pending iob updates: \t$(iob update -u | grep -c 'Updatable\|Updateable')";
+  echo -e "Pending iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')";
 fi
 if [[ -f "/var/run/reboot-required" ]]; then
   if [[ "$SKRPTLANG" = "--de" ]]; then
@@ -1115,12 +1115,12 @@ echo "MEMORY: ";
 free -ht --mega;
 echo "";
 echo -e "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)";
-iob repo list | tail -n1;
+iob repo list $ALLOWROOT | tail -n1;
 echo "";
-echo -e "ioBroker Core: \t\tjs-controller \t\t$(iob -v)";
-echo -e "\t\t\tadmin \t\t\t$(iob version admin)";
+echo -e "ioBroker Core: \t\tjs-controller \t\t$(iob -v $ALLOWROOT)";
+echo -e "\t\t\tadmin \t\t\t$(iob version admin $ALLOWROOT)";
 echo "";
-echo -e "ioBroker Status: \t$(iobroker status)";
+echo -e "ioBroker Status: \t$(iobroker status $ALLOWROOT)";
 echo "";
 # iobroker status all | grep MULTIHOSTSERVICE/enabled;
 echo "Status admin and web instance:";
