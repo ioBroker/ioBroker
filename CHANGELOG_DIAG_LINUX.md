@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2024-02-02
+* Made iob diag compatible with --allow-root-Option
+
 ## 2024-10-19
 * Included 'dist-info' for Lifecycle status of Debian/Ubuntu releases
 
