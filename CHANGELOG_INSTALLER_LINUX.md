@@ -2,6 +2,7 @@
 
 ## 2025-02-02
 * Updated iob logic
+* Make Node.js 18 the minimum version as required by js-controller 7
 
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
