@@ -19,6 +19,20 @@ compress_jsonl_databases() {
   fi
 }
 
+set_valid_redis_locale() {
+    # Check if redis installed
+    if [ -f "/lib/systemd/system/redis-server.service" ]; then
+      # Check if the redis used by iobroker
+      if grep -q "\"type\": \"redis\"" "$IOB_DIR/iobroker-data/iobroker.json"; then
+        # Check if the redis service file contains the LC_ALL setting
+        if ! grep -q "Environment" "/lib/systemd/system/redis-server.service"; then
+          sed -i '/\[Service\]/a Environment="LC_ALL=C"' /lib/systemd/system/redis-server.service
+          $SUDOX systemctl restart redis-server
+        fi
+      fi
+    fi
+}
+
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]];
 then IS_ROOT=true;  SUDOX=""
@@ -110,15 +124,15 @@ LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 # get and load the LIB
 curl -sL $LIB_URL > ~/$LIB_NAME
-if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit -2; fi
+if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit 2; fi
 # Delete the lib again. We have sourced it so we don't need it anymore
 rm ~/$LIB_NAME
 # get and load the LIB => END
 
 # test one function of the library
 RET=$(get_lib_version)
-if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit -2; fi
-if [ "$RET" == "" ]; then echo "Installer/Fixer: library $LIB_NAME does not work."; exit -2; fi
+if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit 3; fi
+if [ "$RET" == "" ]; then echo "Installer/Fixer: library $LIB_NAME does not work."; exit 4; fi
 echo "Library version=$RET"
 
 
@@ -362,6 +376,9 @@ make_executable "$IOB_DIR/iobroker"
 # and give them the correct ownership
 change_owner $IOB_USER "$IOB_DIR/iobroker"
 change_owner $IOB_USER "$IOB_DIR/iob"
+
+# Modify redis locale if used by ioBroker
+set_valid_redis_locale
 
 # Enable autostart
 if [[ "$INITSYSTEM" = "init.d" ]]; then

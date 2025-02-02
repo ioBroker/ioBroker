@@ -43,15 +43,15 @@ fi
 LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 curl -sL $LIB_URL > ~/$LIB_NAME
-if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit -2; fi
+if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else echo "Installer/Fixer: library not found"; exit 2; fi
 # Delete the lib again. We have sourced it so we don't need it anymore
 rm ~/$LIB_NAME
 # get and load the LIB => END
 
 # test one function of the library
 RET=$(get_lib_version)
-if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit -2; fi
-if [ "$RET" == "" ]; then echo "Installer/Fixer: library $LIB_NAME does not work."; exit -2; fi
+if [ $? -ne 0 ]; then echo "Installer/Fixer: library $LIB_NAME could not be loaded!"; exit 3; fi
+if [ "$RET" == "" ]; then echo "Installer/Fixer: library $LIB_NAME does not work."; exit 4; fi
 echo "Library version=$RET"
 
 # Test which platform this script is being run on
