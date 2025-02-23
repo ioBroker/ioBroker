@@ -11,9 +11,9 @@ if [[ -z "$1" ]]; then
     echo "No specific version given, installing recommend version $NODE_MAJOR"
 elif [ $1 -gt 18 ]; then
     echo "Valid major version"
-    else
-    echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR";
-    exit 1;
+else
+    echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR"
+    exit 1
 fi
 
 ## Excluding systems:
