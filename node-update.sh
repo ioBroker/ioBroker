@@ -6,7 +6,7 @@
 VERSION="2025-02-23"
 NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
-# Check if version option is valid
+# Check if version option is a valid one
 if [[ -z "$1" ]]; then
     echo "No specific version given, installing recommend version $NODE_MAJOR"
 elif [ $1 -gt 18 ]; then
