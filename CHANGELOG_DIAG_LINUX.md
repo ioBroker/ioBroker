@@ -1,5 +1,9 @@
 # Changelog for Linux-Diag-Script
 
+## 2025-02-23
+* Added diag for Zigbee-Settings (default output is masked)
+* Added --unmask Option
+
 ## 2024-02-02
 * Made iob diag compatible with --allow-root-Option
 

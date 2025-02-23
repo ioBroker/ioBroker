@@ -10,7 +10,7 @@ fi
 clear
 SKRPTLANG=$1
 if [[ "$SKRPTLANG" = "--de" ]]; then
-    echo "*** iog diag startet, bitte etwas warten ***"
+    echo "*** iob diag startet, bitte etwas warten ***"
 else
     echo "*** iob diag is starting up, please wait ***"
 fi
@@ -82,7 +82,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "masked: \"$MASKED\""
         echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
 
-    echo ""
+        echo ""
     fi
     # read -p "Press <Enter> to continue";
     echo -e "\nBitte eine Taste drücken"
@@ -101,7 +101,7 @@ else
     echo ""
     echo "Just copy and paste the Summary Page, including the \`\`\` characters at start and end."
     echo "It helps us to help you!"
-        if [[ "$MASKED" != "unmasked" ]]; then
+    if [[ "$MASKED" != "unmasked" ]]; then
         echo ""
         echo "**************************************************************************"
         echo "* Some output is masked. For full results please use 'iob diag --unmask' *"
@@ -462,7 +462,7 @@ else
     fi
 fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
-XORGTEST=$(pgrep -cf 'ayland|X11|wayfire')
+XORGTEST=$(pgrep -cf 'ayland|X11|wayfire|labwc')
 if [[ "$XORGTEST" -gt 0 ]]; then
     echo -e "Display-Server: true"
 else
@@ -873,7 +873,7 @@ echo ""
 echo -e "\033[32mioBroker-Repositories\033[0m"
 iob repo list $ALLOWROOT
 echo ""
-echo -e "\033[32mInstalled ioBroker-Instances\033[0m"
+echo -e "\033[32mInstalled ioBroker-Adapters\033[0m"
 iob update -i $ALLOWROOT
 echo ""
 echo -e "\033[32mObjects and States\033[0m"
