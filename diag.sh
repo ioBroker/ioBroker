@@ -40,7 +40,7 @@ if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
 MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
-if [[ "$*" = *--summary* ]]; then SUMMARY="summary"; fi
+if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] ; then SUMMARY="summary"; fi
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -81,9 +81,10 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "Bitte die vollständige Ausgabe, einschließlich der \`\`\` Zeichen am Anfang und am Ende markieren und kopieren."
     echo "Es hilft beim helfen!"
     if [[ "$MASKED" != "unmasked" ]]; then
-        echo "masked: \"$MASKED\""
-        echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
-
+        echo ""
+        echo "******************************************************************************************************"
+        echo "* Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen. *"
+        echo "******************************************************************************************************"
         echo ""
     fi
     # read -p "Press <Enter> to continue";
@@ -922,7 +923,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "iob diag hat das System inspiziert."
     echo ""
     echo ""
-        if [[ $SUMMARY != "summary" ]]; then
+    if [[ $SUMMARY != "summary" ]]; then
     exit
     else
     echo "Beliebige Taste für eine Zusammenfassung drücken"
