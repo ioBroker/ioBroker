@@ -8,7 +8,7 @@ if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
     sleep 15
 fi
 clear
-SKRPTLANG=$1
+if [[ "$*" = *--de* ]]; then SKRPTLANG="--de"; fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "*** iob diag startet, bitte etwas warten ***"
 else
@@ -33,12 +33,14 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-02-23" #version of this script
+SKRIPTV="2025-02-24" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
 MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
+SUMMARY=""
+if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] ; then SUMMARY="summary"; fi
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -79,9 +81,10 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "Bitte die vollständige Ausgabe, einschließlich der \`\`\` Zeichen am Anfang und am Ende markieren und kopieren."
     echo "Es hilft beim helfen!"
     if [[ "$MASKED" != "unmasked" ]]; then
-        echo "masked: \"$MASKED\""
-        echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
-
+        echo ""
+        echo "******************************************************************************************************"
+        echo "* Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen. *"
+        echo "******************************************************************************************************"
         echo ""
     fi
     # read -p "Press <Enter> to continue";
@@ -920,17 +923,25 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "iob diag hat das System inspiziert."
     echo ""
     echo ""
+    if [[ $SUMMARY != "summary" ]]; then
+    exit
+    else
     echo "Beliebige Taste für eine Zusammenfassung drücken"
+    fi
 else
     echo -e "\033[33m============ Mark until here for C&P =============\033[0m"
     echo ""
     echo "iob diag has finished."
     echo ""
     echo ""
+    if [[ $SUMMARY != "summary" ]]; then
+    exit
+    else
     echo "Press any key for a summary"
-fi
+    fi
 read -r -n 1 -s
 echo ""
+fi
 clear
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "Zusammfassung ab hier markieren und kopieren:"
