@@ -8,8 +8,8 @@ NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if t
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then
-    echo "No specific version given, installing recommend version $NODE_MAJOR"
-elif [ $1 -gt 18 ]; then
+    echo "No specific version given, installing recommended version $NODE_MAJOR"
+elif [ $1 -ge 18 ]; then
     echo "Valid major version"
 else
     echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR"
