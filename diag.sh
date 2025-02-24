@@ -8,7 +8,7 @@ if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
     sleep 15
 fi
 clear
-SKRPTLANG=$1
+if [[ "$*" = *--de* ]]; then SKRPTLANG="--de"; fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "*** iob diag startet, bitte etwas warten ***"
 else
@@ -39,6 +39,8 @@ ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
 MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
+SUMMARY=""
+if [[ "$*" = *--summary* ]]; then SUMMARY="summary"; fi
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -927,10 +929,14 @@ else
     echo "iob diag has finished."
     echo ""
     echo ""
+    if [[ $SUMMARY != "summary" ]]; then
+    exit
+    else
     echo "Press any key for a summary"
-fi
+    fi
 read -r -n 1 -s
 echo ""
+fi
 clear
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "Zusammfassung ab hier markieren und kopieren:"
