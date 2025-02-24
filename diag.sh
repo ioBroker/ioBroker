@@ -922,7 +922,11 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "iob diag hat das System inspiziert."
     echo ""
     echo ""
+        if [[ $SUMMARY != "summary" ]]; then
+    exit
+    else
     echo "Beliebige Taste für eine Zusammenfassung drücken"
+    fi
 else
     echo -e "\033[33m============ Mark until here for C&P =============\033[0m"
     echo ""
