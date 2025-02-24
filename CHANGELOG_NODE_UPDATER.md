@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2025-02-23
+* Check for illegal version option 
+
 ## 2024-10-10
 * Fix buster / Debian 10 detection
 

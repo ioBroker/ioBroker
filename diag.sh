@@ -10,7 +10,7 @@ fi
 clear
 SKRPTLANG=$1
 if [[ "$SKRPTLANG" = "--de" ]]; then
-    echo "*** iog diag startet, bitte etwas warten ***"
+    echo "*** iob diag startet, bitte etwas warten ***"
 else
     echo "*** iob diag is starting up, please wait ***"
 fi
@@ -21,25 +21,24 @@ if ! [ -x "$(command -v distro-info)" ]; then
             echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen."
         else
             echo "iob diag muss aktualisiert werden. Bitte das Paket 'distro-info' nachinstallieren."
-            exit 1
         fi
     else
         if [ -x "$(command -v apt-get)" ]; then
             echo "iob diag needs to be updated. Please execute 'iobroker fix' first."
-
         else
             echo "iob diag needs to be updated. Please manually install package 'distro-info'"
-            exit 1
         fi
     fi
 fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-02-02" #version of this script
+SKRIPTV="2025-02-23" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
+MASKED=""
+if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -79,9 +78,14 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo ""
     echo "Bitte die vollständige Ausgabe, einschließlich der \`\`\` Zeichen am Anfang und am Ende markieren und kopieren."
     echo "Es hilft beim helfen!"
-    echo ""
+    if [[ "$MASKED" != "unmasked" ]]; then
+        echo "masked: \"$MASKED\""
+        echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
+
+        echo ""
+    fi
     # read -p "Press <Enter> to continue";
-    echo "Bitte eine Taste drücken"
+    echo -e "\nBitte eine Taste drücken"
     read -r -n 1 -s
     clear
     echo ""
@@ -97,9 +101,13 @@ else
     echo ""
     echo "Just copy and paste the Summary Page, including the \`\`\` characters at start and end."
     echo "It helps us to help you!"
-    echo ""
-    # read -p "Press <Enter> to continue";
-    echo "Press any key to continue"
+    if [[ "$MASKED" != "unmasked" ]]; then
+        echo ""
+        echo "**************************************************************************"
+        echo "* Some output is masked. For full results please use 'iob diag --unmask' *"
+        echo "**************************************************************************"
+    fi
+    echo -e "\nPress any key to continue"
     read -r -n 1 -s
     clear
     echo ""
@@ -454,7 +462,7 @@ else
     fi
 fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
-XORGTEST=$(pgrep -cf 'ayland|X11|wayfire')
+XORGTEST=$(pgrep -cf 'ayland|X11|wayfire|labwc')
 if [[ "$XORGTEST" -gt 0 ]]; then
     echo -e "Display-Server: true"
 else
@@ -597,8 +605,17 @@ else
     echo "No Devices found 'by-id'"
 fi
 
+echo ""
+
+for d in /opt/iobroker/iobroker-data/zigbee_*; do
+    if [ -d "$d" ]; then
+        echo -e "\033[34;107m*** ZigBee Settings ***\033[0m"
+    fi
+    break
+done
+
 if [[ -n "$IOBZIGBEEPORT0" ]]; then
-    if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT0"* ]]; then
+    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT0" ]; then
         echo ""
         echo "Your zigbee.0 COM-Port is matching 'by-id'. Very good!"
     else
@@ -610,7 +627,7 @@ if [[ -n "$IOBZIGBEEPORT0" ]]; then
     fi
 fi
 if [[ -n "$IOBZIGBEEPORT1" ]]; then
-    if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT1"* ]]; then
+    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT1" ]; then
         echo ""
         echo "Your zigBee.1 COM-Port is matching 'by-id'. Very good!"
     else
@@ -622,7 +639,7 @@ if [[ -n "$IOBZIGBEEPORT1" ]]; then
     fi
 fi
 if [[ -n "$IOBZIGBEEPORT2" ]]; then
-    if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT2"* ]]; then
+    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT2" ]; then
         echo ""
         echo "Your zigBee.2 COM-Port is matching 'by-id'. Very good!"
     else
@@ -634,7 +651,7 @@ if [[ -n "$IOBZIGBEEPORT2" ]]; then
     fi
 fi
 if [[ -n "$IOBZIGBEEPORT3" ]]; then
-    if [[ "$SYSZIGBEEPORT" == *"$IOBZIGBEEPORT3"* ]]; then
+    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT3" ]; then
         echo ""
         echo "Your zigbee.3 COM-Port is matching 'by-id'. Very good!"
     else
@@ -645,7 +662,48 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
         # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
     fi
 fi
+# masked output
+if [[ "$MASKED" != "unmasked" ]]; then
+    for d in /opt/iobroker/iobroker-data/zigbee_*; do
 
+        echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
+        echo ""
+        echo "zigbee.X"
+        echo "Extended Pan ID:"
+        echo "*** MASKED ***"
+        #echo "OR";
+        #echo "*** MASKED ***";
+        echo "Pan ID:"
+        echo "*** MASKED ***"
+        echo "Channel:"
+        echo "*** MASKED ***"
+        echo "Network Key:"
+        echo "*** MASKED ***"
+        echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
+        break
+    done
+
+else
+    echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
+
+    for d in /opt/iobroker/iobroker-data/zigbee_*; do
+        if [ -d "$d" ]; then
+            echo -e "\nzigbee.$(echo "$d" | tail -c 2)"
+            #echo "Extended Pan ID:";
+            #grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38;
+            echo "Extended Pan ID:"
+            grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38
+            #echo "OR";
+            #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
+            echo "Pan ID:"
+            printf "%d" 0x"$(grep \"pan_id\" "$d"/nvbackup.json | cut -c 14-17)"
+            echo -e "\nChannel:"
+            grep \"channel\" "$d"/nvbackup.json | cut -c 14-15
+            echo "Network Key:"
+            grep \"key\" "$d"/nvbackup.json | cut -c 13-44
+        fi
+    done
+fi
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
@@ -815,7 +873,7 @@ echo ""
 echo -e "\033[32mioBroker-Repositories\033[0m"
 iob repo list $ALLOWROOT
 echo ""
-echo -e "\033[32mInstalled ioBroker-Instances\033[0m"
+echo -e "\033[32mInstalled ioBroker-Adapters\033[0m"
 iob update -i $ALLOWROOT
 echo ""
 echo -e "\033[32mObjects and States\033[0m"

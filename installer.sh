@@ -238,7 +238,8 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		elif [ "\$1" = "nodejs-update" ]; then
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+			sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && sudo -u $IOB_USER bash /home/$IOB_USER/.diag.sh "\$2" &> /home/$IOB_USER/iob_diag.log
+
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi

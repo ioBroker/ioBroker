@@ -3,8 +3,18 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2024-10-10"
+VERSION="2025-02-23"
 NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
+
+# Check if version option is a valid one
+if [[ -z "$1" ]]; then
+    echo "No specific version given, installing recommended version $NODE_MAJOR"
+elif [ $1 -ge 18 ]; then
+    echo "Valid major version"
+else
+    echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR"
+    exit 1
+fi
 
 ## Excluding systems:
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
