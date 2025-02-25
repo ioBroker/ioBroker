@@ -1,6 +1,20 @@
 #!/bin/bash
 # iobroker diagnostics
 # written to help getting information about the environment the ioBroker installation is running in
+
+## --help
+
+if [[ "$*" = *-h* ]]; then
+echo "OPTIONS:";
+echo "--de                      Ausgabe (teilweise) deutsch";
+echo "--unmask                  Show otherwise masked output";
+echo "-s, --short, -k, --kurz   Show summary / Zusammenfassung ausgeben";
+echo "-h, --help, --hilfe       display this help and exit";
+exit;
+fi;
+
+
+
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
 if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
@@ -33,7 +47,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-02-24" #version of this script
+SKRIPTV="2025-02-25" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
