@@ -1,5 +1,12 @@
 # Changelog for Linux-Diag-Script
 
+
+
+## 2025-02-25
+* Added -h / --help Option
+* Summary is optional. Use Options --summary --short --zusammenfassung --kurz to show it. 
+* Default output is the full diag 
+
 ## 2025-02-23
 * Added diag for Zigbee-Settings (default output is masked)
 * Added --unmask Option
