@@ -54,7 +54,7 @@ if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
 MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
-if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] ; then SUMMARY="summary"; fi
+if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]] ; then SUMMARY="summary"; fi
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
