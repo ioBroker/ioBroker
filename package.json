@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "fs-extra": "^11.3.0",
-    "semver": "^7.7.0",
+    "semver": "^7.7.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
