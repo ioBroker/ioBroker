@@ -707,7 +707,7 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
         if [[ "$MASKED" = "unmasked" ]]; then
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo "$d";
-        echo -e "\nzigbee.$(echo "$d" | tail -c 2)"
+        echo -e "\nzigbee.$(printf '%s\n' "$d" | cut -c36)"
         echo "Extended Pan ID:"
         grep extended_pan_id "$d" | cut -c 23-38
         echo "Pan ID:"
