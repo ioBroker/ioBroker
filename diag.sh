@@ -708,13 +708,13 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo -e "\nzigbee.$(echo "$d" | tail -c 2)"
         echo "Extended Pan ID:"
-        grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38
+        grep extended_pan_id "$d" | cut -c 23-38
         echo "Pan ID:"
-        printf "%d" 0x"$(grep \"pan_id\" "$d"/nvbackup.json | cut -c 14-17)"
+        printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
         echo -e "\nChannel:"
-        grep \"channel\" "$d"/nvbackup.json | cut -c 14-15
+        grep \"channel\" "$d" | cut -c 14-15
         echo "Network Key:"
-        grep \"key\" "$d"/nvbackup.json | cut -c 13-44
+        grep \"key\" "$d" | cut -c 13-44
         fi
     done
 echo ""
