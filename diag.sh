@@ -680,7 +680,7 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
     fi
 fi
 # masked output
-if [[ "$MASKED" != "unmasked" ]]; then
+if [[ "$MASKED" != "unmasked" ]] && [[ -d "/opt/iobroker/iobroker-data/zigbee_*" ]]; then
     for d in /opt/iobroker/iobroker-data/zigbee_*; do
 
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
