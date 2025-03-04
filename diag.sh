@@ -680,9 +680,10 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
     fi
 fi
 # masked output
-if [[ "$MASKED" != "unmasked" ]] && [[ -d /opt/iobroker/iobroker-data/zigbee_* ]]; then
-    for d in /opt/iobroker/iobroker-data/zigbee_*; do
 
+for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackkup.json
+    do
+        if [[ "$MASKED" != "unmasked" ]]; then
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo ""
         echo "zigbee.X"
@@ -698,28 +699,24 @@ if [[ "$MASKED" != "unmasked" ]] && [[ -d /opt/iobroker/iobroker-data/zigbee_* ]
         echo "*** MASKED ***"
         echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
         break
-    done
-elif [[ -d /opt/iobroker/iobroker-data/zigbee_* ]]; then
-    echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
-
-    for d in /opt/iobroker/iobroker-data/zigbee_*; do
-        if [ -d "$d" ]; then
-            echo -e "\nzigbee.$(echo "$d" | tail -c 2)"
-            #echo "Extended Pan ID:";
-            #grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38;
-            echo "Extended Pan ID:"
-            grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38
-            #echo "OR";
-            #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
-            echo "Pan ID:"
-            printf "%d" 0x"$(grep \"pan_id\" "$d"/nvbackup.json | cut -c 14-17)"
-            echo -e "\nChannel:"
-            grep \"channel\" "$d"/nvbackup.json | cut -c 14-15
-            echo "Network Key:"
-            grep \"key\" "$d"/nvbackup.json | cut -c 13-44
         fi
     done
-fi
+
+for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackkup.json
+    do
+        if [[ "$MASKED" = "unmasked" ]]; then
+        echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
+        echo -e "\nzigbee.$(echo "$d" | tail -c 2)"
+        echo "Extended Pan ID:"
+        grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38
+        echo "Pan ID:"
+        printf "%d" 0x"$(grep \"pan_id\" "$d"/nvbackup.json | cut -c 14-17)"
+        echo -e "\nChannel:"
+        grep \"channel\" "$d"/nvbackup.json | cut -c 14-15
+        echo "Network Key:"
+        grep \"key\" "$d"/nvbackup.json | cut -c 13-44
+        fi
+    done
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
