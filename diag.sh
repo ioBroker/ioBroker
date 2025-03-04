@@ -47,7 +47,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-02-25" #version of this script
+SKRIPTV="2025-03-04" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -680,7 +680,7 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
     fi
 fi
 # masked output
-if [[ "$MASKED" != "unmasked" ]] && [[ -d "/opt/iobroker/iobroker-data/zigbee_*" ]]; then
+if [[ "$MASKED" != "unmasked" ]] && [[ -d "/opt/iobroker/iobroker-data/zigbee_*" cd ]]; then
     for d in /opt/iobroker/iobroker-data/zigbee_*; do
 
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"

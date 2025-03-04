@@ -1,6 +1,7 @@
 # Changelog for Linux-Diag-Script
 
-
+## 2025-03-04
+* Only show zigbee settings when zigbee-Adapter is installed 
 
 ## 2025-02-25
 * Added -h / --help Option
