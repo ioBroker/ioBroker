@@ -47,7 +47,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-03-04" #version of this script
+SKRIPTV="2025-03-08" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -479,7 +479,7 @@ else
     fi
 fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
-XORGTEST=$(pgrep -cf 'ayland|X11|wayfire|labwc')
+XORGTEST=$(pgrep -cf 'ayland|X11|Xorg|wayfire|labwc')
 if [[ "$XORGTEST" -gt 0 ]]; then
     echo -e "Display-Server: true"
 else
@@ -705,8 +705,8 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
 for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
     do
         if [[ "$MASKED" = "unmasked" ]]; then
-        echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
-        echo -e "\nzigbee.$(printf '%s\n' "$d" | cut -c36)"
+        echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
+        echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
         echo "Extended Pan ID:"
         grep extended_pan_id "$d" | cut -c 23-38
         echo "Pan ID:"

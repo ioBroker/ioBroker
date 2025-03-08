@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2025-03-08
+* Added test for Xorg Display Server
+
 ## 2025-03-04
 * Only show zigbee settings when zigbee-Adapter is installed 
 
