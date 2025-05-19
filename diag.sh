@@ -1,6 +1,20 @@
 #!/bin/bash
 # iobroker diagnostics
 # written to help getting information about the environment the ioBroker installation is running in
+
+## --help
+
+if [[ "$*" = *-h* ]]; then
+echo "OPTIONS:";
+echo "--de                      Ausgabe (teilweise) deutsch";
+echo "--unmask                  Show otherwise masked output";
+echo "-s, --short, -k, --kurz   Show summary / Zusammenfassung ausgeben";
+echo "-h, --help, --hilfe       display this help and exit";
+exit;
+fi;
+
+
+
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
 if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
@@ -8,7 +22,7 @@ if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
     sleep 15
 fi
 clear
-SKRPTLANG=$1
+if [[ "$*" = *--de* ]]; then SKRPTLANG="--de"; fi
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "*** iob diag startet, bitte etwas warten ***"
 else
@@ -33,12 +47,14 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-02-23" #version of this script
+SKRIPTV="2025-03-08" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
 MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
+SUMMARY=""
+if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]] ; then SUMMARY="summary"; fi
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -79,9 +95,10 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "Bitte die vollständige Ausgabe, einschließlich der \`\`\` Zeichen am Anfang und am Ende markieren und kopieren."
     echo "Es hilft beim helfen!"
     if [[ "$MASKED" != "unmasked" ]]; then
-        echo "masked: \"$MASKED\""
-        echo "Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen."
-
+        echo ""
+        echo "******************************************************************************************************"
+        echo "* Einige Testergebnisse sind maskiert. Um alle Ausgaben zu sehen bitte 'iob diag --unmask' aufrufen. *"
+        echo "******************************************************************************************************"
         echo ""
     fi
     # read -p "Press <Enter> to continue";
@@ -462,7 +479,7 @@ else
     fi
 fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
-XORGTEST=$(pgrep -cf 'ayland|X11|wayfire|labwc')
+XORGTEST=$(pgrep -cf 'ayland|X11|Xorg|wayfire|labwc')
 if [[ "$XORGTEST" -gt 0 ]]; then
     echo -e "Display-Server: true"
 else
@@ -663,9 +680,10 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
     fi
 fi
 # masked output
-if [[ "$MASKED" != "unmasked" ]]; then
-    for d in /opt/iobroker/iobroker-data/zigbee_*; do
 
+for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
+    do
+        if [[ "$MASKED" != "unmasked" ]]; then
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo ""
         echo "zigbee.X"
@@ -681,29 +699,24 @@ if [[ "$MASKED" != "unmasked" ]]; then
         echo "*** MASKED ***"
         echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
         break
-    done
-
-else
-    echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
-
-    for d in /opt/iobroker/iobroker-data/zigbee_*; do
-        if [ -d "$d" ]; then
-            echo -e "\nzigbee.$(echo "$d" | tail -c 2)"
-            #echo "Extended Pan ID:";
-            #grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38;
-            echo "Extended Pan ID:"
-            grep extended_pan_id "$d"/nvbackup.json | cut -c 23-38
-            #echo "OR";
-            #grep extended_pan_id /opt/iobroker/iobroker-data/zigbee_0/nvbackup.json | cut -c 23-38 | tac -rs .. | tr -d '\n';
-            echo "Pan ID:"
-            printf "%d" 0x"$(grep \"pan_id\" "$d"/nvbackup.json | cut -c 14-17)"
-            echo -e "\nChannel:"
-            grep \"channel\" "$d"/nvbackup.json | cut -c 14-15
-            echo "Network Key:"
-            grep \"key\" "$d"/nvbackup.json | cut -c 13-44
         fi
     done
-fi
+
+for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
+    do
+        if [[ "$MASKED" = "unmasked" ]]; then
+        echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
+        echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
+        echo "Extended Pan ID:"
+        grep extended_pan_id "$d" | cut -c 23-38
+        echo "Pan ID:"
+        printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
+        echo -e "\nChannel:"
+        grep \"channel\" "$d" | cut -c 14-15
+        echo "Network Key:"
+        grep \"key\" "$d" | cut -c 13-44
+        fi
+    done
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
@@ -920,17 +933,25 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "iob diag hat das System inspiziert."
     echo ""
     echo ""
+    if [[ $SUMMARY != "summary" ]]; then
+    exit
+    else
     echo "Beliebige Taste für eine Zusammenfassung drücken"
+    fi
 else
     echo -e "\033[33m============ Mark until here for C&P =============\033[0m"
     echo ""
     echo "iob diag has finished."
     echo ""
     echo ""
+    if [[ $SUMMARY != "summary" ]]; then
+    exit
+    else
     echo "Press any key for a summary"
-fi
+    fi
 read -r -n 1 -s
 echo ""
+fi
 clear
 if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "Zusammfassung ab hier markieren und kopieren:"

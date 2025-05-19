@@ -1,5 +1,16 @@
 # Changelog for Linux-Diag-Script
 
+## 2025-03-08
+* Added test for Xorg Display Server
+
+## 2025-03-04
+* Only show zigbee settings when zigbee-Adapter is installed 
+
+## 2025-02-25
+* Added -h / --help Option
+* Summary is optional. Use Options --summary --short --zusammenfassung --kurz to show it. 
+* Default output is the full diag 
+
 ## 2025-02-23
 * Added diag for Zigbee-Settings (default output is masked)
 * Added --unmask Option
