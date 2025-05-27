@@ -1,5 +1,9 @@
 # Changelog for Node.js Updater Script
 
+## 2025-05-28
+* Added basic compatibility check
+* Set nodejs@22 as the fallback version 
+
 ## 2025-02-23
 * Check for illegal version option 
 
