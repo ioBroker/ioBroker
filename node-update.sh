@@ -4,7 +4,7 @@
 
 #To be manually changed:
 VERSION="2025-05-28"
-NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
+NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then
