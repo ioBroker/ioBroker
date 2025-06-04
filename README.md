@@ -37,7 +37,7 @@ There are two types of storage:
 
 Objects and states can be stored in "in memory" or in Redis.
 
-[Redis](https://redis.io/) is an in-memory key-value data store and also a message broker with publish/subscribe pattern.
+[Redis](https://redis.io/) is an in-memory key-value data store and also a message broker with a publish/subscribe pattern.
 
 It's used to maintain and publish all states of connected systems.
 
@@ -89,7 +89,7 @@ This module is distributor under the MIT License (MIT).
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2024 bluefox <dogafox@gmail.com>,
+Copyright (c) 2014-2025 bluefox <dogafox@gmail.com>,
 Copyright (c) 2014      hobbyquaker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
