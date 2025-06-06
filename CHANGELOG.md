@@ -5,15 +5,15 @@
 * Windows: Fix service installation error on very slow PCs
 
 ## 6.0.0 (2024-08-10)
-* Adjust minimum Node.js version to 18 of new main package which match to the minimum version of js-controller 6.0.x
+* Adjust a minimum Node.js version to 18 of the new main package which match to the minimum version of js-controller 6.0.x
 * Rebuild Windows install logic to use the new installer script
-* Windows: Ensure that git installations runs without user interaction
+* Windows: Ensure that git installations run without user interaction
 
 ## 5.1.2 (2024-05-23)
 * Create the correct `controller.js` file on windows to work with controller v6
 
 ## 5.0.0 (2023-09-14)
-* Adjust minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
+* Adjust a minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
 
 ## 4.3.4 (2023-04-20)
 * Handle restart properly in iob.bat and iobroker.bat for Windows
@@ -30,7 +30,7 @@
 * Do JSONL DB compression earlier in the Windows installer flow
 
 ## 4.2.1 (2022-12-22)
-* Caught some errors when executed in wrong directory on windows
+* Caught some errors when executed in the wrong directory on windows
 
 ## 4.2.0 (2022-12-09)
 * Sync Windows installer with Linux installer
