@@ -21,8 +21,8 @@
 * Moved options to fix configurations to 'iob fix'
 
 ## 2024-09-21
-* Added option to set multi-user.target on systemd-based machines
-* With option '--de' some output will be in German language
+* Added option to set `multi-user.target` on systemd-based machines
+* With option '--de' some output will be in the German language
 * Avoided sourcing /etc/os-release for security reasons
 * Implemented Debian & Ubuntu Lifecycle check
 * Made setting timezone more generic on non-Debian systemd

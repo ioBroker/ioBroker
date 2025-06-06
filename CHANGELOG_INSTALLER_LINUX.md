@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-06-04
+* Allowed passwordless sudo for `docker` commands
+
 ## 2025-02-02
 * Updated iob logic
 * Make Node.js 18 the minimum version as required by js-controller 7
@@ -9,7 +12,7 @@
 * Also install passwd and polkitd packages because some lxc systems might miss it
 
 ### 2024-10-19
-* Added 'distro-info' package to prerequisites list
+* Added 'distro-info' package to prerequisite list
 
 ### 2024-10-04
 * Enhance root check and messaging
@@ -28,14 +31,14 @@
 
 ### 2023-12-30
 * Fix Nodejs Update script call
-* Fixes in Nodejs installation
+* Fixes in Node.js installation
 * Fixes IP display after installation
 
 ### 2023-12-29
-* Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
+* Make sure installation also proceeds on new Ubuntu versions when package installations require service restarts
 
 ### 2023-10-13
-* Allow to define Node.js version as parameter for "iob nodejs-update" command
+* Allow defining Node.js version as parameter for "iob nodejs-update" command
 * fix package installation error for gcc 
 
 ## 2023-10-12
@@ -44,10 +47,10 @@
 ## 2023-10-10
 * IMPORTANT: Node.js v16+ is required at least for installation
 * Update node.js installation after nodesource repo changes and update node Node.js 18
-* Add command "iob nodejs-update" to update Node.js to latest recommended version (or any when major given as parameter)
+* Add command "iob nodejs-update" to update Node.js to the latest recommended version (or any when major given as parameter)
 
 ## 2023-09-13
-* Adjust minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
+* Adjust the minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
 
 ## 2023-04-16
 * Install Node.js 18.x by default if no Node.js is installed
