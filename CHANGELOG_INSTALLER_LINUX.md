@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-06-07
+* Install Node.js 22 by default for installer
+* Added lsb-release package because some lxc systems miss it 
+
 ## 2025-02-02
 * Updated iob logic
 * Make Node.js 18 the minimum version as required by js-controller 7

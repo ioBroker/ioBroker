@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2025-06-07
+* Added 'lsb-release' package to prerequisites list
+
 ## 2025-02-02
 * Fix user creation in Fixer script
 * Block using --allow-root when not root

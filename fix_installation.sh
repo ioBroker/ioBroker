@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="205-02-02" # format YYYY-MM-DD
+FIXER_VERSION="2025-06-07" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
