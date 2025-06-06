@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-02-23"
+VERSION="2025-05-31"
 NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 # Check if version option is a valid one
@@ -67,6 +67,15 @@ fi
 # ------------------------------
 # functions for ioBroker nodejs-update - Code borrowed from 'iob installer' ;-)
 # ------------------------------
+
+# COMPATIBILITY CHECK
+
+compatibility_check() {
+    echo -e "\nCOMPATIBILITY CHECK IN PROGRESS"
+    cd /opt/iobroker || exit
+    npm i --dry-run
+}
+
 
 # Test which platform this script is being run on
 # When adding another supported platform, also add detection for the install command
@@ -361,7 +370,7 @@ echo "Removing dfsg-nodejs"
 eval "$DFSGREM"
 echo ""
 
-echo -e "\n*** These repos are active on your system:"
+echo -e "\n\n*** These repos are active on your system:"
 $SUDOX "$INSTALL_CMD" update
 echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing."
 $SUDOX "$INSTALL_CMD" install -qq ca-certificates curl gnupg
@@ -381,6 +390,7 @@ echo "Installing nodejs now!"
 echo ""
 if [ "$NODEINSTMAJOR" -gt "$NODE_MAJOR" ] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; then
     $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1
+    compatibility_check
 elif
     [[ "$NODERECOMNF" -eq 1 ]]
 then
@@ -393,18 +403,21 @@ then
     $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
     VERNODE=$(node -v)
     echo -e "$VERNODE has been installed! You are using the latest version now!"
+    compatibility_check
 fi
 
 if [ "$NODEINSTMAJOR" -lt "$NODE_MAJOR" ]; then
     $SUDOX $INSTALL_CMD -qq update
     $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
+    compatibility_check
 fi
 
 if [ "$SYSTDDVIRT" != "none" ]; then
     echo "Installing nodejs now!"
     $SUDOX $INSTALL_CMD update -qq
     $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
-    echo -e "\n*** You need to manually restart your container/virtual machine now! *** "
+    compatibility_check
+    echo -e "\n\n*** You need to manually restart your container/virtual machine now! *** "
     echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify."
     unset LC_ALL
     if [[ -f "/var/run/reboot-required" ]]; then
@@ -414,10 +427,11 @@ if [ "$SYSTDDVIRT" != "none" ]; then
     fi
     exit
 else
-    echo "Installing the nodejs!"
+    echo "Installing nodejs!"
     $SUDOX $INSTALL_CMD update -qq
     $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
-    echo -e "\nWe tried our best to fix your nodejs. Please run iob diag again to verify."
+    compatibility_check
+    echo -e "\n\nWe tried our best to fix your nodejs. Please run iob diag again to verify."
     echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments."
     iob restart
 fi
