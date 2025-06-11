@@ -867,7 +867,7 @@ fi
 if [[ $NODENOTCORR -eq 0 ]]; then
 echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
 cd /home/iobroker
-sudo -H -u iobroker npm i is-my-node-vulnerable
+sudo -H -u iobroker npm i --silent is-my-node-vulnerable
 sudo -H -u iobroker npx is-my-node-vulnerable
 cd
 fi;
