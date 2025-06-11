@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2025-06-09
+* Added nodejs vulnerability check 
+
 ## 2025-05-24
 * Added test for Xorg Display Server
 * Only show zigbee settings when zigbee-Adapter is installed 
