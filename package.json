@@ -11,7 +11,7 @@
   "dependencies": {
     "fs-extra": "^11.3.0",
     "semver": "^7.7.2",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@alcalzone/release-script": "^3.8.0",
