@@ -1,7 +1,9 @@
 # Changelog for Node.js Updater Script
 
-## 2025-05-31
-* Added basic compatibility check
+## 2025-07-22
+* nodejs@22 is the default installation target when no other option set
+* Added basic compatibility check - Only --dry-run, no changes
+* Code cleanup
 
 ## 2025-02-23
 * Check for illegal version option 
