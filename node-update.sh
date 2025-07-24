@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-07-22"
+VERSION="2025-07-25"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
@@ -349,7 +349,7 @@ then
     then
         echo "Trying to fix your installation now. Please be patient."
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null"
+        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
         # Deleting nodesource.list Will be recreated later.
         $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2>/dev/null
     else
@@ -365,20 +365,31 @@ then
     fi
 fi
 
-if [ "$SYSTDDVIRT" != "none" ]; then
-    echo -e "\nVirtualization: $SYSTDDVIRT"
-    iob stop &
-    # sudo pkill ^io;
-else
-    iob stop &
-fi
+# Function for the progress bar
+progress_bar() {
+    while kill -0 $1 2>/dev/null; do
+        echo -n "#"
+        sleep 1
+    done
+    echo ""
+}
 
-echo "Waiting for ioBroker to shut down - Give me a minute..."
-BAR='############################################################' # this is full bar, e.g. 60 chars
-for i in {1..60}; do
-    echo -ne "\r${BAR:0:$i}" # print $i chars of $BAR from 0 position
-    sleep 1                  # wait 1s between "frames"
-done
+# Excecute in the background
+echo "Stopping ioBroker now"
+iob stop &
+
+# Save the PID of the background process
+command_pid=$!
+
+# Start progressbar with PID
+progress_bar $command_pid &
+
+# Wait until iobroker had been shutdown
+wait $command_pid
+
+echo -e "\nioBroker has been stopped"
+
+
 echo ""
 echo ""
 echo "Removing dfsg-nodejs"
