@@ -18,7 +18,7 @@
     "@alcalzone/release-script-plugin-license": "^3.7.0",
     "eslint": "^9.27.0",
     "mocha": "^11.5.0",
-    "chai": "^4.5.0",
+    "chai": "^5.2.1",
     "ssh2": "^1.16.0"
   },
   "files": [
