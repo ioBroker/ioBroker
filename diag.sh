@@ -152,7 +152,7 @@ if [ -f "$DOCKER" ]; then
     echo -e "Userland        : $(getconf LONG_BIT) bit"
     echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
-    hostnamectl | grep -v 'Machine\|Boot'
+    hostnamectl | grep -v 'Machine\|Boot\|Operating'
     echo "OS is similar to: $ID_LIKE"
     echo ""
     grep -i model /proc/cpuinfo | tail -1
