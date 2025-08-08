@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-06-09" #version of this script
+SKRIPTV="2025-08-09" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -54,7 +54,7 @@ if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
 if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
 HOST=$(uname -n)
-ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
+ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
 NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext $ALLOWROOT)   #recommended npm version
 #NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
@@ -76,7 +76,8 @@ UBULTS=$(ubuntu-distro-info --lts)
 UBUSUP=$(ubuntu-distro-info --supported)
 TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)
 OLDSTABLE=$(debian-distro-info --oldstable)
-CODENAME=$(lsb_release -sc)
+#CODENAME=$(lsb_release -sc)
+CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
 clear
@@ -862,10 +863,10 @@ fi
 ### Is my nodejs vulnerable?
 if [[ $NODENOTCORR -eq 0 ]]; then
     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
-    cd /home/iobroker
+    cd /home/iobroker || exit
     sudo -H -u iobroker npm i --silent is-my-node-vulnerable
     sudo -H -u iobroker npx is-my-node-vulnerable
-    cd
+    cd || exit
 fi
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
