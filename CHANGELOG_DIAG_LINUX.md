@@ -2,6 +2,7 @@
 
 ## 2025-08-09
 * Added nodejs vulnerability check 
+* Removed references to static release names 
 
 ## 2025-05-24
 * Added test for Xorg Display Server
