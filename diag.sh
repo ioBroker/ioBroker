@@ -47,7 +47,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-03-08" #version of this script
+SKRIPTV="2025-08-09" #version of this script
 #NODE_MAJOR=20           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -78,7 +78,7 @@ UBULTS=$(ubuntu-distro-info --lts)
 UBUSUP=$(ubuntu-distro-info --supported)
 TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)
 OLDSTABLE=$(debian-distro-info --oldstable)
-CODENAME=$(lsb_release -sc)
+CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
 clear
@@ -152,7 +152,8 @@ if [ -f "$DOCKER" ]; then
     echo -e "Userland        : $(getconf LONG_BIT) bit"
     echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
-    hostnamectl | grep -v 'Machine\|Boot'
+    source /usr/lib/os-release && echo "Operating System: $PRETTY_NAME"
+    hostnamectl | grep -v 'Machine\|Boot\|Operating'
     echo "OS is similar to: $ID_LIKE"
     echo ""
     grep -i model /proc/cpuinfo | tail -1
