@@ -1,6 +1,6 @@
 # Changelog for Linux-Installer-Script
 
-## 2025-06-04
+## 2025-08-09
 * Allowed passwordless sudo for `docker` commands
 
 ## 2025-02-02
