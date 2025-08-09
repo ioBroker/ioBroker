@@ -7,6 +7,9 @@
 * Fixed finding the nodesource repo keys
 * Code cleanup
 
+## 2025-05-31
+* Added basic compatibility check
+
 ## 2025-02-23
 * Check for illegal version option 
 

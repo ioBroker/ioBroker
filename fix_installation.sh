@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="205-02-02" # format YYYY-MM-DD
+FIXER_VERSION="2025-08-09" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -292,7 +292,7 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		#!$BASH_CMDLINE
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
             if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
-                echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease execute 'iob fix'to create an appropriate setup!"
+                echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease execute 'iob fix --allow-root' to create an appropriate setup!"
             fi
 			sudo systemctl \$1 iobroker
 			exit \$?
