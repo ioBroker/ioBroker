@@ -1,13 +1,13 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2024-10-22" # format YYYY-MM-DD
+LIBRARY_VERSION="2025-08-09" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
-NODE_MAJOR=20
-NODE_JS_BREW_URL="https://nodejs.org/dist/v20.13.1/node-v20.13.1.pkg"
+NODE_MAJOR=22
+NODE_JS_BREW_URL="https://nodejs.org/dist/v22.18.0/node-v22.18.0.pkg"
 
 # ------------------------------
 # test function of the library
@@ -257,10 +257,11 @@ install_necessary_packages() {
             "libgif-dev"
             "librsvg2-dev"
             "libpixman-1-dev"
-            "net-tools" # To fix issue #277
-            "cmake"     # https://github.com/ioBroker/ioBroker.js-controller/issues/1604
-            "polkitd"   # some LXC miss it
-            "passwd"    # some LXC miss it
+            "net-tools"     # To fix issue #277
+            "cmake"         # https://github.com/ioBroker/ioBroker.js-controller/issues/1604
+            "polkitd"       # some LXC miss it
+            "passwd"        # some LXC miss it
+            "lsb-release"   # some LXC miss it
         )
         for pkg in "${packages[@]}"; do
             install_package $pkg

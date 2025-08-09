@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2025-08-09
+* Added nodejs22 as the default version
+
 ## 2025-05-31
 * Added basic compatibility check
 

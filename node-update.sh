@@ -3,8 +3,8 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-05-31"
-NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
+VERSION="2025-08-09"
+NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then

@@ -1,6 +1,8 @@
 # Changelog for Linux-Installer-Script
 
 ## 2025-08-09
+* Install Node.js 22 by default for installer
+* Added lsb-release package because some lxc systems miss it 
 * Allowed passwordless sudo for `docker` commands
 
 ## 2025-02-02

@@ -1,6 +1,7 @@
 # Changelog for Linux-Fixer-Script
 
 ## 2025-08-09
+* Added 'lsb-release' package to prerequisites list
 * Allowed passwordless sudo for `docker` commands
 
 ## 2025-02-02
