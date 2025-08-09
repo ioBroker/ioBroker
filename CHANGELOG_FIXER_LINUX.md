@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2025-08-09
+* Allowed passwordless sudo for `docker` commands
+
 ## 2025-02-02
 * Fix user creation in a Fixer script
 * Block using --allow-root when not root
