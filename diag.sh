@@ -482,12 +482,15 @@ fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
 XORGTEST=$(pgrep -cf 'ayland|X11|Xorg|wayfire|labwc')
 if [[ "$XORGTEST" -gt 0 ]]; then
-    echo -e "Display-Server: true"
+    echo -e "Display-Server: \ttrue"
 else
-    echo -e "Display-Server: false"
+    echo -e "Display-Server: \tfalse"
 fi
-echo -e "Desktop: \t$DESKTOP_SESSION"
-echo -e "Terminal: \t$XDG_SESSION_TYPE"
+
+echo -e "Display-Manager: \t$(systemctl status display-manager --no-pager | head -n 1)"
+
+echo -e "Desktop: \t\t$DESKTOP_SESSION"
+echo -e "Session: \t\t$XDG_SESSION_TYPE"
 if [ -z "$DOCKER" ]; then
     echo -e "Boot Target: \t$(systemctl get-default)"
 fi
@@ -860,7 +863,17 @@ else
     echo "No problems detected"
     echo ""
 fi
-echo -e "\033[34;107m*** ioBroker-Installation ***\033[0m"
+
+### Is my nodejs vulnerable?
+if [[ $NODENOTCORR -eq 0 ]]; then
+echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
+cd /home/iobroker
+sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+sudo -H -u iobroker npx is-my-node-vulnerable
+cd
+fi;
+
+echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
 echo ""
 echo -e "\033[32mioBroker Status\033[0m"
 iob status $ALLOWROOT
