@@ -7,7 +7,7 @@ LIBRARY_VERSION="2025-08-09" # format YYYY-MM-DD
 # Supported and suggested node versions
 # ------------------------------
 NODE_MAJOR=22
-NODE_JS_BREW_URL="https://nodejs.org/dist/v22.16.01/node-v22.16.0.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v22.18.0/node-v22.18.0.pkg"
 
 # ------------------------------
 # test function of the library
