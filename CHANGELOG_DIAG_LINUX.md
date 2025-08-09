@@ -1,6 +1,8 @@
 # Changelog for Linux-Diag-Script
 
-## 2025-06-09
+## 2025-08-09
+* Added nodejs vulnerability check
+* Removed references to static release names 
 * Added nodejs vulnerability check 
 
 ## 2025-05-24
