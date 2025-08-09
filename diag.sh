@@ -5,15 +5,13 @@
 ## --help
 
 if [[ "$*" = *-h* ]]; then
-echo "OPTIONS:";
-echo "--de                      Ausgabe (teilweise) deutsch";
-echo "--unmask                  Show otherwise masked output";
-echo "-s, --short, -k, --kurz   Show summary / Zusammenfassung ausgeben";
-echo "-h, --help, --hilfe       display this help and exit";
-exit;
-fi;
-
-
+    echo "OPTIONS:"
+    echo "--de                      Ausgabe (teilweise) deutsch"
+    echo "--unmask                  Show otherwise masked output"
+    echo "-s, --short, -k, --kurz   Show summary / Zusammenfassung ausgeben"
+    echo "-h, --help, --hilfe       display this help and exit"
+    exit
+fi
 
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
@@ -54,9 +52,9 @@ if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
 MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
-if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]] ; then SUMMARY="summary"; fi
+if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
 HOST=$(uname -n)
-ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /etc/os-release | xargs)
+ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
 NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext $ALLOWROOT)   #recommended npm version
 #NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
@@ -78,6 +76,7 @@ UBULTS=$(ubuntu-distro-info --lts)
 UBUSUP=$(ubuntu-distro-info --supported)
 TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)
 OLDSTABLE=$(debian-distro-info --oldstable)
+#CODENAME=$(lsb_release -sc)
 CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
@@ -685,9 +684,8 @@ if [[ -n "$IOBZIGBEEPORT3" ]]; then
 fi
 # masked output
 
-for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
-    do
-        if [[ "$MASKED" != "unmasked" ]]; then
+for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
+    if [[ "$MASKED" != "unmasked" ]]; then
         echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
         echo ""
         echo "zigbee.X"
@@ -703,12 +701,11 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
         echo "*** MASKED ***"
         echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
         break
-        fi
-    done
+    fi
+done
 
-for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
-    do
-        if [[ "$MASKED" = "unmasked" ]]; then
+for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
+    if [[ "$MASKED" = "unmasked" ]]; then
         echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
         echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
         echo "Extended Pan ID:"
@@ -719,8 +716,8 @@ for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json
         grep \"channel\" "$d" | cut -c 14-15
         echo "Network Key:"
         grep \"key\" "$d" | cut -c 13-44
-        fi
-    done
+    fi
+done
 echo ""
 echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
@@ -866,12 +863,12 @@ fi
 
 ### Is my nodejs vulnerable?
 if [[ $NODENOTCORR -eq 0 ]]; then
-echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
-cd /home/iobroker
-sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-sudo -H -u iobroker npx is-my-node-vulnerable
-cd
-fi;
+    echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
+    cd /home/iobroker || exit
+    sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+    sudo -H -u iobroker npx is-my-node-vulnerable
+    cd || exit
+fi
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
 echo ""
@@ -948,9 +945,9 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo ""
     echo ""
     if [[ $SUMMARY != "summary" ]]; then
-    exit
+        exit
     else
-    echo "Beliebige Taste für eine Zusammenfassung drücken"
+        echo "Beliebige Taste für eine Zusammenfassung drücken"
     fi
 else
     echo -e "\033[33m============ Mark until here for C&P =============\033[0m"
@@ -959,12 +956,12 @@ else
     echo ""
     echo ""
     if [[ $SUMMARY != "summary" ]]; then
-    exit
+        exit
     else
-    echo "Press any key for a summary"
+        echo "Press any key for a summary"
     fi
-read -r -n 1 -s
-echo ""
+    read -r -n 1 -s
+    echo ""
 fi
 clear
 if [[ "$SKRPTLANG" = "--de" ]]; then
