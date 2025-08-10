@@ -1,9 +1,13 @@
 # Changelog for Linux-Fixer-Script
 
+## 2025-08-09
+* Added 'lsb-release' package to prerequisites list
+* Allowed passwordless sudo for `docker` commands
+
 ## 2025-02-02
-* Fix user creation in Fixer script
+* Fix user creation in a Fixer script
 * Block using --allow-root when not root
-* Made /home/iobroker accessible for iobroker group
+* Made /home/iobroker accessible for an iobroker group
 
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
@@ -15,7 +19,7 @@
 ## 2024-10-04
 * Enhance root check and messaging
 * Implemented adding default user if none is available
-* Implemented setting multi-user.target on systemd Linux
+* Implemented setting `multi-user.target` on systemd Linux
 * adds "nmcli" to allowed sudo commands
 * root/sudo locked out for systemd based installations
 * --allow-root Option enabled (Just for a transition time)
@@ -28,10 +32,10 @@
 
 ## 2023-12-30
 * Fix Nodejs Update script call
-* Fixes in Nodejs installation
+* Fixes in Node.js installation
 
 ## 2023-12-29
-* Make sure installation also proceed on new Ubuntu versions when package installations require service restarts
+* Make sure installation also proceeds on new Ubuntu versions when package installations require service restarts
 
 ## 2023-10-13
 * Allow to define Node.js version as parameter for "iob nodejs-update" command

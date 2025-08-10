@@ -1,5 +1,12 @@
 # Changelog for Node.js Updater Script
 
+## 2025-08-09
+* nodejs@22 is the default installation target when no other option set
+* Added basic compatibility check - Only --dry-run, no changes
+* Progressbar is shown only as long as the ioBroker shutdown takes
+* Fixed finding the nodesource repo keys
+* Code cleanup
+
 ## 2025-05-31
 * Added basic compatibility check
 

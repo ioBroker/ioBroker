@@ -3,12 +3,12 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-05-31"
-NODE_MAJOR=20 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This is only the target for fallback.
+VERSION="2025-08-09"
+NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then
-    echo "No specific version given, installing recommended version $NODE_MAJOR"
+    echo "No specific version given, installing recommended version from nodejs v.$NODE_MAJOR tree"
 elif [ "$1" -ge 18 ]; then
     echo "Valid major version"
 else
@@ -44,7 +44,7 @@ if [ -z "$(type -P apt-get)" ]; then
 fi
 
 if [[ $DEBIANRELEASE = *buster* ]] || [[ $DEBIANRELEASE = 10.* ]] && [[ $1 -ne 18 ]]; then
-    echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't install.\nPlease install the current Debian Stable"
+    echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't run.\nPlease install the current Debian Stable"
     unset LC_ALL
     exit 1
 fi
@@ -68,14 +68,29 @@ fi
 # functions for ioBroker nodejs-update - Code borrowed from 'iob installer' ;-)
 # ------------------------------
 
-# COMPATIBILITY CHECK
+# INSTALL NODEJS
+nodejs_installation() {
+    echo -e "\nInstalling latest nodejs v$NODE_MAJOR release"
+    $SUDOX $INSTALL_CMD -qq update
+    $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
+    VERNODE=$(node -v)
+    echo -e "\n\033[32mSUCCESS!\033[0m"
+    echo -e "$VERNODE has been installed! You are using the latest nodejs@$NODE_MAJOR release now!"
+}
 
+# COMPATIBILITY CHECK
 compatibility_check() {
-    echo -e "\nCOMPATIBILITY CHECK IN PROGRESS"
+    echo -e "\nCOMPATIBILITY CHECK IN PROGRESS (Only a --dry-run! No modules are really changed or added!)"
     cd /opt/iobroker || exit
     npm i --dry-run
 }
 
+# RESTART IOBROKER
+restart_iob() {
+    echo -e "\n\nWe tried our best to fix your nodejs. Please run iob diag again to verify."
+    echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments."
+    iob restart
+}
 
 # Test which platform this script is being run on
 # When adding another supported platform, also add detection for the install command
@@ -289,9 +304,9 @@ fi
 VERNODE=$(node -v)
 if [[ "$VERNODE" = "v$NODERECOM" ]]; then
     echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one."
-    echo -e "\n***You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
+    echo -e "\n*** You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
     echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
-    echo -e "\n *** DO NOT use 'nodejs-update' as part of a regular update process! ***"
+    echo -e "\n*** DO NOT use 'nodejs-update' as part of your regular update process! ***"
     unset LC_ALL
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
@@ -334,11 +349,11 @@ then
     then
         echo "Trying to fix your installation now. Please be patient."
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null"
+        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
         # Deleting nodesource.list Will be recreated later.
         $SUDOX rm /etc/apt/sources.list.d/nodesource.lis* 2>/dev/null
     else
-        echo "We are not fixing your installation. Exiting."
+        echo "Not fixing your installation. Exiting."
 
         if [[ -f "/var/run/reboot-required" ]]; then
             echo ""
@@ -350,20 +365,31 @@ then
     fi
 fi
 
-if [ "$SYSTDDVIRT" != "none" ]; then
-    echo -e "\nVirtualization: $SYSTDDVIRT"
-    iob stop &
-    # sudo pkill ^io;
-else
-    iob stop &
-fi
+# Function for the progress bar
+progress_bar() {
+    while kill -0 $1 2>/dev/null; do
+        echo -n "#"
+        sleep 1
+    done
+    echo ""
+}
 
-echo "Waiting for ioBroker to shut down - Give me a minute..."
-BAR='############################################################' # this is full bar, e.g. 60 chars
-for i in {1..60}; do
-    echo -ne "\r${BAR:0:$i}" # print $i chars of $BAR from 0 position
-    sleep 1                  # wait 1s between "frames"
-done
+# Excecute in the background
+echo "Stopping ioBroker now"
+iob stop &
+
+# Save the PID of the background process
+command_pid=$!
+
+# Start progressbar with PID
+progress_bar $command_pid &
+
+# Wait until iobroker had been shutdown
+wait $command_pid
+
+echo -e "\nioBroker has been stopped"
+
+
 echo ""
 echo ""
 echo "Removing dfsg-nodejs"
@@ -385,37 +411,10 @@ echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | 
 echo -e "\n*** These repos are active after the adjustments:"
 $SUDOX "$INSTALL_CMD" update
 
-echo ""
-echo "Installing nodejs now!"
-echo ""
-if [ "$NODEINSTMAJOR" -gt "$NODE_MAJOR" ] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; then
-    $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1
-    compatibility_check
-elif
-    [[ "$NODERECOMNF" -eq 1 ]]
-then
-    NODERECOM=$NODE_MAJOR.0.0
-
-    echo "Exact recommended version unknown, installing a fallback!"
-    $SUDOX $INSTALL_CMD install --reinstall --allow-downgrades -qq nodejs="$NODERECOM"-1nodesource1
-    echo -e "\nUpdating fallback to latest nodejs v$NODE_MAJOR release"
-    $SUDOX $INSTALL_CMD -qq update
-    $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
-    VERNODE=$(node -v)
-    echo -e "$VERNODE has been installed! You are using the latest version now!"
-    compatibility_check
-fi
-
-if [ "$NODEINSTMAJOR" -lt "$NODE_MAJOR" ]; then
-    $SUDOX $INSTALL_CMD -qq update
-    $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
-    compatibility_check
-fi
+echo -e "\nInstalling nodejs now!"
 
 if [ "$SYSTDDVIRT" != "none" ]; then
-    echo "Installing nodejs now!"
-    $SUDOX $INSTALL_CMD update -qq
-    $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
+    nodejs_installation
     compatibility_check
     echo -e "\n\n*** You need to manually restart your container/virtual machine now! *** "
     echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify."
@@ -427,21 +426,9 @@ if [ "$SYSTDDVIRT" != "none" ]; then
     fi
     exit
 else
-    echo "Installing nodejs!"
-    $SUDOX $INSTALL_CMD update -qq
-    $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
+    nodejs_installation
     compatibility_check
-    echo -e "\n\nWe tried our best to fix your nodejs. Please run iob diag again to verify."
-    echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments."
-    iob restart
+    restart_iob
 fi
 
-echo ""
-
-if [[ -f "/var/run/reboot-required" ]]; then
-    echo ""
-    echo "This system needs to be REBOOTED NOW!"
-    echo ""
-fi
-unset LC_ALL
 exit
