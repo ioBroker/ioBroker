@@ -4,6 +4,7 @@
 * Install Node.js 22 by default for installer
 * Added lsb-release package because some lxc systems miss it 
 * Allowed passwordless sudo for `docker` commands
+* Allowed 'iobroker' group to access /home/iobroker
 
 ## 2025-02-02
 * Updated iob logic
