@@ -8,6 +8,7 @@
 * Fix user creation in a Fixer script
 * Block using --allow-root when not root
 * Made /home/iobroker accessible for an iobroker group
+* Also consider `redis-states` and `redis-objects` services in systemd
 
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
