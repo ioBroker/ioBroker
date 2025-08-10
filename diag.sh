@@ -76,7 +76,6 @@ UBULTS=$(ubuntu-distro-info --lts)
 UBUSUP=$(ubuntu-distro-info --supported)
 TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)
 OLDSTABLE=$(debian-distro-info --oldstable)
-#CODENAME=$(lsb_release -sc)
 CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 

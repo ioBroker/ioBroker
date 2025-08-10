@@ -3,6 +3,7 @@
 ## 2025-08-09
 * Added 'lsb-release' package to prerequisites list
 * Allowed passwordless sudo for `docker` commands
+* Allowed 'iobroker' group to access /home/iobroker
 
 ## 2025-02-02
 * Fix user creation in a Fixer script
