@@ -445,8 +445,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 		[Unit]
 		Description=ioBroker Server
 		Documentation=http://iobroker.net
-		After=network.target redis.service influxdb.service mysql-server.service mariadb-server.service
-		Wants=redis.service influxdb.service mysql-server.service mariadb-server.service
+		After=network.target redis.service redis-objects.service redis-states.service influxdb.service mysql-server.service mariadb-server.service
+		Wants=redis.service redis-objects.service redis-states.service influxdb.service mysql-server.service mariadb-server.service
 
 		[Service]
 		Type=simple
