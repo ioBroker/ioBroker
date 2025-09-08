@@ -253,6 +253,20 @@ When using the shell installer:
 - Automatic platform detection
 - Creates system user and service setup
 
+## Environment Variables
+
+Some installation behavior can be controlled via environment variables:
+
+### IOB_FORCE_INITD
+```bash
+export IOB_FORCE_INITD=true
+./installer.sh
+```
+Forces the installer to use init.d instead of systemd, even if systemd is available.
+
+### AUTOMATED_INSTALLER
+This is automatically set by the installer to indicate an automated installation is in progress. Not intended for manual use.
+
 ## Security Considerations
 
 - **Never run as root** unless absolutely necessary for repairs
