@@ -2,7 +2,6 @@
 
 ## 2025-09-08
 * Added --no-update flag to skip system package repository updates during fix process
-* Improves performance for systems with slow or expensive internet connections
 
 ## 2025-08-09
 * Added 'lsb-release' package to prerequisites list

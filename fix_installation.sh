@@ -140,7 +140,7 @@ set_some_common_params
 
 # Check for --no-update flag to skip system package updates
 SKIP_UPDATE=false
-if [ "$1" = "--no-update" ]; then
+if [[ "$*" == *--no-update* ]]; then
     SKIP_UPDATE=true
 fi
 
