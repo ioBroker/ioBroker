@@ -132,6 +132,44 @@ versions.json        # Supported Node.js/npm versions
 - Verify CI compatibility: Check that changes work with GitHub Actions workflows
 - Update documentation: Update README.md if installation process changes
 
+## Changelog and Version Management
+
+### Script-to-Changelog Mapping
+When making changes to shell scripts, **ALWAYS** update the corresponding changelog file:
+
+- `diag.sh` → `CHANGELOG_DIAG_LINUX.md`
+- `fix_installation.sh` → `CHANGELOG_FIXER_LINUX.md`
+- `installer.sh` → `CHANGELOG_INSTALLER_LINUX.md`
+- `node-update.sh` → `CHANGELOG_NODE_UPDATER.md`
+
+### Version Variables in Scripts
+When modifying shell scripts, **ALWAYS** update the version variable to current date (YYYY-MM-DD format):
+
+- `diag.sh`: Update `SKRIPTV="YYYY-MM-DD"`
+- `fix_installation.sh`: Update `FIXER_VERSION="YYYY-MM-DD"`
+- `installer.sh`: Update `INSTALLER_VERSION="YYYY-MM-DD"`
+- `node-update.sh`: Update `VERSION="YYYY-MM-DD"`
+
+### Changelog Update Process
+1. **Before making script changes**: Note the current date in YYYY-MM-DD format
+2. **When editing scripts**: Update the version variable to current date
+3. **Document changes**: Add new entry at the top of corresponding changelog file:
+   ```markdown
+   ## YYYY-MM-DD
+   * Description of changes made
+   * Separate entry for each significant change
+   ```
+4. **Follow existing format**: Use same markdown style and bullet points as existing entries
+5. **Be specific**: Describe what was changed, not just "updated script"
+
+### Example Changelog Entry
+```markdown
+## 2025-09-08
+* Updated GitHub Copilot integration instructions
+* Enhanced error handling for SSL certificate issues
+* Fixed compatibility with newer Ubuntu versions
+```
+
 ## Critical Warnings
 - **NEVER CANCEL BUILDS OR INSTALLATIONS** - They take 6-10 minutes minimum
 - **ALWAYS SET LONG TIMEOUTS** - Use 15+ minutes for installation commands
