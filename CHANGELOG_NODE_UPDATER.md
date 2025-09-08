@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2025-08-14
+* Avoid having two pinning files and bumping the pin priority to 1001 
+
 ## 2025-08-09
 * nodejs@22 is the default installation target when no other option set
 * Added basic compatibility check - Only --dry-run, no changes

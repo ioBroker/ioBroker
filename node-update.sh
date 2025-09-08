@@ -3,14 +3,16 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-08-09"
+VERSION="2025-08-14"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then
     echo "No specific version given, installing recommended version from nodejs v.$NODE_MAJOR tree"
+    sleep 2
 elif [ "$1" -ge 18 ]; then
     echo "Valid major version"
+    sleep 2
 else
     echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR"
     exit 1
@@ -367,7 +369,7 @@ fi
 
 # Function for the progress bar
 progress_bar() {
-    while kill -0 $1 2>/dev/null; do
+    while kill -0 "$1" 2>/dev/null; do
         echo -n "#"
         sleep 1
     done
@@ -407,7 +409,7 @@ curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gp
 echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
 echo ""
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs.pref
+echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs
 echo -e "\n*** These repos are active after the adjustments:"
 $SUDOX "$INSTALL_CMD" update
 
