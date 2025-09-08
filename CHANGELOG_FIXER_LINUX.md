@@ -1,7 +1,7 @@
 # Changelog for Linux-Fixer-Script
 
 ## 2025-09-08
-* Added --no-update flag to skip system package repository updates during fix process
+* Added `--no-update` flag to skip system package repository updates during fix process
 
 ## 2025-08-09
 * Added 'lsb-release' package to prerequisites list
