@@ -161,6 +161,7 @@ When modifying shell scripts, **ALWAYS** update the version variable to current 
 4. **One line per PR**: Each PR must have exactly ONE bullet point entry in the changelog - combine related changes into a single descriptive line
 5. **Follow existing format**: Use same markdown style and bullet points as existing entries
 6. **Be specific**: Describe what was changed, not just "updated script"
+7. **Preserve technical terms**: Keep parameters, command-line flags, and technical names in their original form (e.g., `--no-update` stays as `--no-update`, not translated)
 
 ### Example Changelog Entry
 ```markdown
