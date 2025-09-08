@@ -19,7 +19,7 @@
     "eslint": "^9.32.0",
     "mocha": "^11.7.1",
     "chai": "^4.5.0",
-    "ssh2": "^1.16.0"
+    "ssh2": "^1.17.0"
   },
   "files": [
     "img/logos/ioBroker_Logo_Long_Vector.svg",
