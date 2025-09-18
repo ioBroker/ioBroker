@@ -1,6 +1,9 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## 2025-09-18
+* Remove legacy iobroker.bat and iob.bat file creation for js-controller 5.0+ compatibility
+
 ## 6.0.1 (2024-08-23)
 * Windows: Fix service installation error on very slow PCs
 
