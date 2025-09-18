@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-02-02" # format YYYY-MM-DD
+INSTALLER_VERSION="2025-09-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -15,6 +15,11 @@ ROOT_GROUP="root"
 USER_GROUP="$USER"
 
 RECOMMEND_FIXER_AFTER_INSTALL="false"
+# Check for --no-autostart flag to skip starting ioBroker after installation
+SKIP_IOBROKER_START="false"
+if [[ "$*" == *--no-autostart* ]]; then
+    SKIP_IOBROKER_START="true"
+fi
 # use --automated-run to skip all user prompts
 if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
@@ -408,7 +413,9 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
     $SUDOX chmod 644 $SERVICE_FILENAME
     $SUDOX systemctl daemon-reload
     $SUDOX systemctl enable iobroker
-    $SUDOX systemctl start iobroker
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        $SUDOX systemctl start iobroker
+    fi
     echo "Autostart enabled!"
     echo "Autostart: systemd" >>"$INSTALLER_INFO_FILE"
 
@@ -473,7 +480,9 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
     # Enable startup and start the service
     sysrc iobroker_enable=YES
-    service iobroker start
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        service iobroker start
+    fi
 
     echo "Autostart enabled!"
     echo "Autostart: rc.d" >>"$INSTALLER_INFO_FILE"
@@ -520,7 +529,9 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
         echo "Reloading service ${PLIST_FILE_LABEL}"
         launchctl unload -w $SERVICE_FILENAME
     fi
-    launchctl load -w $SERVICE_FILENAME
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        launchctl load -w $SERVICE_FILENAME
+    fi
 
     echo "Autostart enabled!"
     echo "Autostart: launchctl" >>"$INSTALLER_INFO_FILE"
@@ -563,7 +574,11 @@ unset AUTOMATED_INSTALLER
 
 # Detect IP address
 IP=$(detect_ip_address)
-print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
+if [ "$SKIP_IOBROKER_START" = "true" ]; then
+    print_bold "${green}ioBroker was installed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker, then open http://$IP:8081 in a browser and start configuring!"
+else
+    print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
+fi
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
 
