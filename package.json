@@ -26,8 +26,6 @@
     "img/architecture.png",
     "lib-npx",
     "install",
-    "iob.bat",
-    "iobroker.bat",
     "LICENSE"
   ],
   "main": "./lib-npx/install.js",

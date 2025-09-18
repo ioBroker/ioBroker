@@ -47,35 +47,7 @@ const commandLine = `@echo off
 if [%1]==[fix] (
     npx @iobroker/fix
 ) else (
-    if exist serviceIoBroker.bat (
-        if [%1]==[start] (
-            if [%2]==[] (
-                call serviceIoBroker.bat start
-            ) else (
-                node ${jsControllerMainModule} %*
-            )
-        ) else (
-            if [%1]==[stop] (
-                if [%2]==[] (
-                    call serviceIoBroker.bat stop
-                ) else (
-                    node ${jsControllerMainModule} %*
-                )
-            ) else (
-				if [%1]==[restart] (
-					if [%2]==[] (
-						call serviceIoBroker.bat restart
-					) else (
-						node ${jsControllerMainModule} %*
-					)
-				) else (
-					node ${jsControllerMainModule} %*
-				)
-            )
-        )
-    ) else (
-        node ${jsControllerMainModule} %*
-    )
+    node ${jsControllerMainModule} %*
 )`;
 
 /** The command line to execute ioBroker (absolute path) */
@@ -88,8 +60,6 @@ function setupWindows(callback) {
     const windowsShortcutsVersion = require('../package.json').optionalDependencies['windows-shortcuts'].replace(/[~^<>=]+]/g, '');
 
     // const batExists = fs.existsSync(path.join(rootDir, 'serviceIoBroker.bat'));
-    fs.writeFileSync(`${iobrokerRootExecutable}.bat`, commandLine.replace(/\$/g, '%'));
-    fs.writeFileSync(`${iobRootExecutable}.bat`, commandLine.replace(/\$/g, '%'));
     console.log('Write "iobroker start" to start the ioBroker');
 
     if (!fs.existsSync(`${process.env['APPDATA']}/npm`)) {
