@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2025-09-18
+* Fixed system package update on Fedora and RPM-based distributions to use makecache instead of update
+* Added support for dnf package manager (modern Fedora) alongside existing yum support
+
 ## 2025-09-08
 * Added `--no-update` flag to skip system package repository updates during fix process
 

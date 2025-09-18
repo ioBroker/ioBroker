@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-02-02" # format YYYY-MM-DD
+INSTALLER_VERSION="2025-09-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -84,7 +84,11 @@ NUM_STEPS=4
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS makecache
+else
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+fi
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then

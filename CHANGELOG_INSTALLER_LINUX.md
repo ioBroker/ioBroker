@@ -1,5 +1,9 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-09-18
+* Fixed system package update on Fedora and RPM-based distributions to use makecache instead of update
+* Added support for dnf package manager (modern Fedora) alongside existing yum support
+
 ## 2025-08-09
 * Install Node.js 22 by default for installer
 * Added lsb-release package because some lxc systems miss it 
