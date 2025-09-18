@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-02-02" # format YYYY-MM-DD
+INSTALLER_VERSION="2025-09-18" # format YYYY-MM-DD
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -560,6 +560,35 @@ fi
 change_npm_command_root
 
 unset AUTOMATED_INSTALLER
+
+# Set recommended versions in system states
+set_version_states() {
+    local npm_version
+    local node_version
+    
+    npm_version=$(get_version_from_json "npmRecommended")
+    node_version=$(get_version_from_json "nodeJsRecommended")
+    
+    if [ -n "$npm_version" ] && [ -x "$IOB_DIR/iobroker" ]; then
+        echo "Setting npmNewestNext state to $npm_version..."
+        # Wait a moment for ioBroker to fully start
+        sleep 5
+        
+        HOST=$(hostname)
+        # Try to set the state, but don't fail if it doesn't work
+        $IOB_NODE_CMDLINE "$IOB_DIR/iobroker" state setValue "system.host.$HOST.versions.npmNewestNext" "$npm_version" >/dev/null 2>&1 || true
+        
+        if [ -n "$node_version" ]; then
+            echo "Setting nodeNewestNext state to $node_version..."
+            $IOB_NODE_CMDLINE "$IOB_DIR/iobroker" state setValue "system.host.$HOST.versions.nodeNewestNext" "$node_version" >/dev/null 2>&1 || true
+        fi
+    fi
+}
+
+# Set version states if ioBroker was successfully installed
+if [ -x "$IOB_DIR/iobroker" ]; then
+    set_version_states
+fi
 
 # Detect IP address
 IP=$(detect_ip_address)

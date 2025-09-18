@@ -8,14 +8,39 @@
 
 const { getSystemVersions } = require('./tools.js');
 const semver = require('semver');
+const fs = require('node:fs');
+const path = require('node:path');
 
-// DEFINE minimum versions here:
+// Load versions from versions.json
+function getVersionsConfig() {
+    const versionsPath = path.join(__dirname, '../versions.json');
+    let config = {
+        nodeJsRecommended: 22,
+        npmRecommended: 10,
+        nodeJsAccepted: [18, 20, 22, 24]
+    };
+    
+    try {
+        if (fs.existsSync(versionsPath)) {
+            const data = JSON.parse(fs.readFileSync(versionsPath, 'utf8'));
+            config = { ...config, ...data };
+        }
+    } catch (e) {
+        console.warn('Warning: Could not read versions.json, using defaults');
+    }
+    
+    return config;
+}
+
+const versionsConfig = getVersionsConfig();
+
+// DEFINE minimum versions here using versions.json:
 /** The minimum required Node.js version - should be the current LTS */
-const MIN_NODE_VERSION = '16.20.0';
-/** The recommended npm version - should be the one bundled with MIN_NODE_VERSION */
-const RECOMMENDED_NPM_VERSION = '8.19.4';
+const MIN_NODE_VERSION = `${Math.min(...versionsConfig.nodeJsAccepted)}.0.0`;
+/** The recommended npm version from versions.json */
+const RECOMMENDED_NPM_VERSION = `${versionsConfig.npmRecommended}.0.0`;
 /** The minimum supported npm version - should probably be the same major version as RECOMMENDED_NPM_VERSION*/
-const MIN_NPM_VERSION = '8.0.0';
+const MIN_NPM_VERSION = `${versionsConfig.npmRecommended}.0.0`;
 
 const versions = getSystemVersions();
 

@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2025-09-18
+* Replace hard-coded Node.js version with value from versions.json
+
 ## 2025-08-14
 * Avoid having two pinning files and bumping the pin priority to 1001 
 

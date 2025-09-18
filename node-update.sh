@@ -3,8 +3,35 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-08-14"
-NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
+VERSION="2025-09-18"
+
+# Function to get version values from versions.json
+get_version_from_json() {
+    local key="$1"
+    local versions_url="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
+    local versions_file="/tmp/versions.json"
+    
+    # Download versions.json if not already present
+    if [ ! -f "$versions_file" ]; then
+        curl -sL "$versions_url" > "$versions_file" 2>/dev/null
+    fi
+    
+    # Read value using jq if available, otherwise fallback to default values
+    if command -v jq >/dev/null 2>&1 && [ -f "$versions_file" ]; then
+        jq -r ".${key} // empty" "$versions_file" 2>/dev/null
+    else
+        # Fallback values if jq is not available or file missing
+        case "$key" in
+            "nodeJsRecommended") echo "22" ;;
+            *) echo "" ;;
+        esac
+    fi
+}
+
+# Get Node.js recommended version from versions.json
+NODE_MAJOR=$(get_version_from_json "nodeJsRecommended")
+# Fallback to 22 if empty
+NODE_MAJOR=${NODE_MAJOR:-22}
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then
