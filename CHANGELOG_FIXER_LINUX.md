@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2025-09-18
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
+
 ## 2025-09-08
 * Added `--no-update` flag to skip system package repository updates during fix process
 

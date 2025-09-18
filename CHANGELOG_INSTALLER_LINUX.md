@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-09-18
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
+
 ## 2025-08-09
 * Install Node.js 22 by default for installer
 * Added lsb-release package because some lxc systems miss it 
