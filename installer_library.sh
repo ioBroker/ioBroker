@@ -880,4 +880,92 @@ detect_ip_address() {
     echo $IP
 }
 
+install_redis() {
+    echo "Installing and configuring Redis..."
+    
+    # Install Redis server
+    if [ "$HOST_PLATFORM" = "linux" ]; then
+        install_package redis-server
+        
+        # Configure Redis
+        REDIS_CONF="/etc/redis/redis.conf"
+        if [ -f "$REDIS_CONF" ]; then
+            echo "Configuring Redis..."
+            
+            # Backup original config
+            $SUDOX cp "$REDIS_CONF" "$REDIS_CONF.backup"
+            
+            # Configure bind to localhost and potentially other interfaces
+            $SUDOX sed -i 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' "$REDIS_CONF"
+            
+            # Set locale-related settings (Redis uses system locale)
+            echo "# ioBroker Redis configuration" | $SUDOX tee -a "$REDIS_CONF"
+            echo "# Added by ioBroker installer" | $SUDOX tee -a "$REDIS_CONF"
+            
+            # Detect init system and enable/start Redis service
+            if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
+                $SUDOX systemctl enable redis-server
+                $SUDOX systemctl start redis-server
+            elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
+                $SUDOX service redis-server start
+                $SUDOX update-rc.d redis-server defaults
+            fi
+            
+            echo "Redis installed and configured successfully"
+        else
+            echo "Warning: Redis configuration file not found at $REDIS_CONF"
+        fi
+    elif [ "$HOST_PLATFORM" = "osx" ]; then
+        # macOS installation
+        if command -v brew >/dev/null 2>&1; then
+            brew install redis
+            echo "Redis installed on macOS"
+        else
+            echo "Homebrew not found. Please install Redis manually on macOS"
+        fi
+    elif [ "$HOST_PLATFORM" = "freebsd" ]; then
+        # FreeBSD installation
+        install_package redis
+        echo "Redis installed on FreeBSD"
+    fi
+}
+
+configure_iobroker_redis() {
+    echo "Configuring ioBroker to use Redis..."
+    
+    # Create Redis configuration for ioBroker
+    local IOB_REDIS_CONFIG=$(cat <<-EOF
+{
+  "objects": {
+    "type": "redis",
+    "host": "127.0.0.1",
+    "port": 6379,
+    "options": {
+      "db": 0
+    }
+  },
+  "states": {
+    "type": "redis", 
+    "host": "127.0.0.1",
+    "port": 6379,
+    "options": {
+      "db": 1
+    }
+  }
+}
+EOF
+)
+
+    # Write Redis configuration to ioBroker config
+    local IOB_CONFIG_FILE="$IOB_DIR/iobroker-data/iobroker.json"
+    if [ ! -d "$IOB_DIR/iobroker-data" ]; then
+        mkdir -p "$IOB_DIR/iobroker-data"
+    fi
+    
+    echo "$IOB_REDIS_CONFIG" > "$IOB_CONFIG_FILE"
+    change_owner "$IOB_USER" "$IOB_CONFIG_FILE"
+    
+    echo "ioBroker configured to use Redis backend"
+}
+
 echo "library: loaded"

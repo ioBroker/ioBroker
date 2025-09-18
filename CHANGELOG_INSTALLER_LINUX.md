@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-09-18
+* Added `--redis` flag to install and configure Redis server for ioBroker states and objects storage
+
 ## 2025-08-09
 * Install Node.js 22 by default for installer
 * Added lsb-release package because some lxc systems miss it 
