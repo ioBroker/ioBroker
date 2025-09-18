@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2025-09-18
+* Fixed IP detection to prevent multiple IP addresses in final installation message when both ethernet and WiFi interfaces are active
+
 ## 2025-08-09
 * Install Node.js 22 by default for installer
 * Added lsb-release package because some lxc systems miss it 

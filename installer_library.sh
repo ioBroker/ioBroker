@@ -869,7 +869,7 @@ module_hotfixes=1"
 }
 
 detect_ip_address() {
-    # Detect IP address
+    # Detect IP address - ensure only one IP is returned
     local IP
     IP_COMMAND=$(type "ip" &>/dev/null && echo "ip addr show" || echo "ifconfig")
     if [ "$HOST_PLATFORM" = "osx" ]; then
@@ -877,7 +877,9 @@ detect_ip_address() {
     else
         IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1 | head -1)
     fi
-    echo $IP
+    # Ensure we return only the first IP address, removing any potential newlines or extra content
+    IP=$(echo "$IP" | head -1 | tr -d '\n\r' | awk '{print $1}')
+    echo "$IP"
 }
 
 echo "library: loaded"
