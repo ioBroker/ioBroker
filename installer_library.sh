@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2025-08-09" # format YYYY-MM-DD
+LIBRARY_VERSION="2025-12-29" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -450,8 +450,8 @@ function append_to_file() {
 }
 
 running_in_docker() {
-    # Test if we're running inside a docker container or as github actions job while building docker container image
-    if awk -F/ '$2 == "docker"' /proc/self/cgroup | read || awk -F/ '$2 == "buildkit"' /proc/self/cgroup | read || test -f /.dockerenv || test -f /opt/scripts/.docker_config/.thisisdocker; then
+    # Test if we're running inside a container or as github actions job while building docker container image
+    if awk -F/ '$2 == "docker"' /proc/self/cgroup | read || awk -F/ '$2 == "buildkit"' /proc/self/cgroup | read || test -f /.dockerenv || test -f /run/.containerenv || test -f /opt/scripts/.docker_config/.thisisdocker; then
         return 0
     else
         return 1
