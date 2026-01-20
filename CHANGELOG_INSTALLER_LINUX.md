@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-01-20
+* Adjusted nodejs installation to nodesource defaults
+
 ## 2025-08-09
 * Install Node.js 22 by default for installer
 * Added lsb-release package because some lxc systems miss it 
