@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-01-20" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-01-23" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -841,7 +841,7 @@ module_hotfixes=1"
     else
         if [ "$IS_ROOT" = true ]; then
             $INSTALL_CMD update 2>&1 >/dev/null
-            $INSTALL_CMD $INSTALL_CMD_ARGS apt-transport-https ca-certificates curl gnupg 2>&1 >/dev/null
+            $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
             mkdir -p /usr/share/keyrings
             rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
@@ -851,7 +851,7 @@ module_hotfixes=1"
             echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs
         else
             $SUDOX $INSTALL_CMD update 2>&1 >/dev/null
-            $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS apt-transport-https ca-certificates curl gnupg 2>&1 >/dev/null
+            $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
             $SUDOX mkdir -p /usr/share/keyrings
             $SUDOX rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
