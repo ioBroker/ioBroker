@@ -447,7 +447,7 @@ $SUDOX rm -f /etc/apt/sources.list.d/nodesource.* || true
 echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
 echo ""
 
-arch=$(dpkg --print-architecture)
+    arch=$(dpkg --print-architecture)
     if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ] && [ "$arch" != "armhf" ]; then
       handle_error "1" "Unsupported architecture: $arch. Only amd64, arm64, and armhf are supported."
     fi

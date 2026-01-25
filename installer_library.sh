@@ -1,13 +1,13 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2025-08-09" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-01-23" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # ------------------------------
 NODE_MAJOR=22
-NODE_JS_BREW_URL="https://nodejs.org/dist/v22.18.0/node-v22.18.0.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v22.22.0/node-v22.22.0.pkg"
 
 # ------------------------------
 # test function of the library
@@ -842,19 +842,23 @@ module_hotfixes=1"
         if [ "$IS_ROOT" = true ]; then
             $INSTALL_CMD update 2>&1 >/dev/null
             $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
-            mkdir -p /etc/apt/keyrings
+            mkdir -p /usr/share/keyrings
+            rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+            arch=$(dpkg --print-architecture)
+            echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs
         else
             $SUDOX $INSTALL_CMD update 2>&1 >/dev/null
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
-            $SUDOX mkdir -p /etc/apt/keyrings
+            $SUDOX mkdir -p /usr/share/keyrings
+            $SUDOX rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+            arch=$(dpkg --print-architecture)
+            echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
+            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs
         fi
     fi
     install_package nodejs
@@ -864,7 +868,7 @@ module_hotfixes=1"
         echo "${red}Cannot install Node.js! Please install it manually.${normal}"
         exit 1
     else
-        echo "${bold}Node.js Installed successfully!${normal}"
+        echo "${bold}Node.js installed successfully!${normal}"
     fi
 }
 
