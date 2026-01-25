@@ -53,6 +53,7 @@ MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
 if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
+ARCH=$(dpkg --print-architecture)
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -166,12 +167,19 @@ else
 fi
 echo -e "Kernel          : $(uname -m)"
 echo -e "Userland        : $(getconf LONG_BIT) bit"
+
+
+if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
+    echo -e "/nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
+fi
+
 echo ""
 echo "Systemuptime and Load:"
 uptime
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo ""
 echo ""
+
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
@@ -553,7 +561,7 @@ echo -e "\033[34;107m*** FILESYSTEM ***\033[0m"
 df -PTh
 echo ""
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m"
-sudo dmesg -T | grep -i ext4
+sudo dmesg -T | grep -i ext4 | grep -v -e 'Modules linked in:' -e 'Kernel command line:'
 echo ""
 echo -e "\033[32mShow mounted filesystems:\033[0m"
 findmnt --real
@@ -812,6 +820,10 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     sudo -H -u iobroker npm i --silent is-my-node-vulnerable
     sudo -H -u iobroker npx is-my-node-vulnerable
     cd || exit
+fi
+
+if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
+    echo -e "\nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported for current nodejs versions. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
 fi
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
