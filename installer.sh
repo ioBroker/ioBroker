@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-02-02" # format YYYY-MM-DD
+INSTALLER_VERSION="2025-11-09" # format YYYY-MM-DD
+
+# Check if this is a pure 64bit architecture
+
+if [[ $(getconf LONG_BIT) -eq 32 ]]; then
+	echo "ioBroker can only be installed on 64Bit-Systems. Please reinstall your OS or upgrade your hardware."
+	exit
+fi
 
 # Test if this script is being run as root or not
 if [[ $EUID -eq 0 ]]; then
@@ -45,7 +52,7 @@ LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 curl -sL $LIB_URL >~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else
     echo "Installer/Fixer: library not found"
-    exit -2
+    exit 1
 fi
 # Delete the lib again. We have sourced it so we don't need it anymore
 rm ~/$LIB_NAME
@@ -55,11 +62,11 @@ rm ~/$LIB_NAME
 RET=$(get_lib_version)
 if [ $? -ne 0 ]; then
     echo "Installer/Fixer: library $LIB_NAME could not be loaded!"
-    exit -2
+    exit 1
 fi
 if [ "$RET" == "" ]; then
     echo "Installer/Fixer: library $LIB_NAME does not work."
-    exit -2
+    exit 1
 fi
 echo "Library version=$RET"
 
@@ -84,7 +91,7 @@ NUM_STEPS=4
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+$SUDOX "$INSTALL_CMD" "$INSTALL_CMD_UPD_ARGS" update
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
@@ -121,31 +128,31 @@ print_step "Creating ioBroker user and directory" 2 "$NUM_STEPS"
 
 # Ensure the user "iobroker" exists and is in the correct groups
 if [ "$HOST_PLATFORM" = "linux" ]; then
-    create_user_linux $IOB_USER
+    create_user_linux "$IOB_USER"
 elif [ "$HOST_PLATFORM" = "freebsd" ]; then
-    create_user_freebsd $IOB_USER
+    create_user_freebsd "$IOB_USER"
 fi
 
 # Ensure the installation directory exists and take control of it
-$SUDOX mkdir -p $IOB_DIR
+$SUDOX mkdir -p "$IOB_DIR"
 if [ "$IS_ROOT" != true ]; then
     # During the installation we need to give the current user access to the install dir
     # On Linux, we'll fix this at the end. On OSX this is okay
     if [ "$HOST_PLATFORM" = "osx" ]; then
-        sudo chown -R $USER $IOB_DIR
+        sudo chown -R "$USER" "$IOB_DIR"
     else
-        sudo chown -R $USER:$USER_GROUP $IOB_DIR
+        sudo chown -R "$USER":"$USER_GROUP" "$IOB_DIR"
     fi
 fi
-cd $IOB_DIR
+cd "$IOB_DIR" || exit
 echo "Directory $IOB_DIR created"
 
 # Log some information about the installer
-touch $INSTALLER_INFO_FILE
-chmod 777 $INSTALLER_INFO_FILE
-echo "Installer version: $INSTALLER_VERSION" >>$INSTALLER_INFO_FILE
-echo "Installation date $(date +%F)" >>$INSTALLER_INFO_FILE
-echo "Platform: $HOST_PLATFORM" >>$INSTALLER_INFO_FILE
+touch "$INSTALLER_INFO_FILE"
+chmod 777 ""
+echo "Installer version: $INSTALLER_VERSION" >>"$INSTALLER_INFO_FILE"
+echo "Installation date $(date +%F)" >>"$INSTALLER_INFO_FILE"
+echo "Platform: $HOST_PLATFORM" >>"$INSTALLER_INFO_FILE"
 
 # ########################################################
 print_step "Installing ioBroker" 3 "$NUM_STEPS"
@@ -182,7 +189,7 @@ PACKAGE_JSON_FILE=$(
 
 # Create package.json and install all dependencies
 PACKAGE_JSON_FILENAME="$IOB_DIR/package.json"
-write_to_file "$PACKAGE_JSON_FILE" $PACKAGE_JSON_FILENAME
+write_to_file "$PACKAGE_JSON_FILE" "$PACKAGE_JSON_FILENAME"
 npm i --production --loglevel error --unsafe-perm >/dev/null
 
 # ########################################################
@@ -204,7 +211,7 @@ fi
 if [[ $IOB_FORCE_INITD && ${IOB_FORCE_INITD-x} ]]; then
     INITSYSTEM="init.d"
 fi
-echo "init system: $INITSYSTEM" >>$INSTALLER_INFO_FILE
+echo "init system: $INITSYSTEM" >>"$INSTALLER_INFO_FILE"
 
 # #############################
 # Create "iob" and "iobroker" executables
@@ -289,14 +296,14 @@ elif [ "$HOST_PLATFORM" = "freebsd" ] || [ "$HOST_PLATFORM" = "osx" ]; then
 fi
 
 # Symlink the global binaries iob and iobroker
-$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iobroker
-$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_BIN_PATH/iob
+$SUDOX ln -sfn "$IOB_DIR"/iobroker "$IOB_BIN_PATH"/iobroker
+$SUDOX ln -sfn "$IOB_DIR"/iobroker "$IOB_BIN_PATH"/iob
 # Symlink the local binary iob
-$SUDOX ln -sfn $IOB_DIR/iobroker $IOB_DIR/iob
+$SUDOX ln -sfn "$IOB_DIR"/iobroker "$IOB_DIR"/iob
 
 # Create executables in the ioBroker directory
 # TODO: check if this must be fixed like in in the FIXER for #216
-write_to_file "$IOB_EXECUTABLE" $IOB_DIR/iobroker
+write_to_file "$IOB_EXECUTABLE" "$IOB_DIR"/iobroker
 make_executable "$IOB_DIR/iobroker"
 
 # TODO: check if this is necessary, like in the FIXER
@@ -407,8 +414,8 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
     fi
     $SUDOX chmod 644 $SERVICE_FILENAME
     $SUDOX systemctl daemon-reload
-    $SUDOX systemctl enable iobroker
-    $SUDOX systemctl start iobroker
+    $SUDOX systemctl enable iobroker.service
+    $SUDOX systemctl start iobroker.service
     echo "Autostart enabled!"
     echo "Autostart: systemd" >>"$INSTALLER_INFO_FILE"
 
@@ -469,7 +476,7 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
     # Make sure that $IOB_USER may access the pidfile
     $SUDOX touch "$PIDFILE"
-    $SUDOX chown $IOB_USER:$IOB_USER $PIDFILE
+    $SUDOX chown "$IOB_USER":"$IOB_USER" "$PIDFILE"
 
     # Enable startup and start the service
     sysrc iobroker_enable=YES
@@ -512,7 +519,7 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
     )
 
     # Create the startup file, give it the correct permissions and start ioBroker
-    echo "$PLIST_FILE" >$SERVICE_FILENAME
+    echo "$PLIST_FILE" >"$SERVICE_FILENAME"
 
     # Enable startup and start the service
     launchctl list ${PLIST_FILE_LABEL} &>/dev/null
