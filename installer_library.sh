@@ -22,7 +22,7 @@ enable_colored_output() {
     # Enable colored output
     if test -t 1; then                                  # if terminal
         ncolors=$(which tput >/dev/null && tput colors) # supports color
-        if test -n "$ncolors" && test $ncolors -ge 8; then
+        if test -n "$ncolors" && test "$ncolors" -ge 8; then
             termcols=$(tput cols)
             bold="$(tput bold)"
             underline="$(tput smul)"
@@ -170,10 +170,10 @@ install_package_linux() {
     if [ $? -ne 0 ]; then
         if [ "$INSTALL_CMD" = "yum" ]; then
             # Install it
-            errormessage=$($SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS $package >/dev/null 2>&1)
+            errormessage=$($SUDOX "$INSTALL_CMD" "$INSTALL_CMD_ARGS" "$package" >/dev/null 2>&1)
         else
             # Install it
-            errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
+            errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD "$INSTALL_CMD_ARGS" --no-install-recommends -yqq $package)
         fi
 
         # Hide "Error: Nothing to do"
