@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2025-10-29"
+VERSION="2026-01-20"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
@@ -11,7 +11,7 @@ if [[ -z "$1" ]]; then
     echo "No specific version given, installing recommended version from nodejs v.$NODE_MAJOR tree"
     sleep 2
 elif [ "$1" -ge 18 ]; then
-    echo "Valid major version"
+    echo "Valid major version. CUSTOM installation of nodejs v$1"
     sleep 2
 else
     echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR"
@@ -69,6 +69,26 @@ fi
 # ------------------------------
 # functions for ioBroker nodejs-update - Code borrowed from 'iob installer' ;-)
 # ------------------------------
+
+# Error handler function
+handle_error() {
+  local exit_code=$1
+  local error_message="$2"
+  log "Error: $error_message (Exit Code: $exit_code)" "error"
+  exit "$exit_code"
+}
+
+# Function to check for command availability
+command_exists() {
+  command -v "$1" &> /dev/null
+}
+
+check_os() {
+    if ! [ -f "/etc/debian_version" ]; then
+        echo "Error: This script is only supported on Debian-based systems."
+        exit 1
+    fi
+}
 
 # INSTALL NODEJS
 nodejs_installation() {
@@ -285,7 +305,7 @@ then
     exit
 fi
 VERNODE=$(node -v)
-if [[ "$VERNODE" = "v$NODERECOM" ]]; then
+if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.list ]; then
     echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one."
     echo -e "\n*** You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
     echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
@@ -298,8 +318,18 @@ if [[ "$VERNODE" = "v$NODERECOM" ]]; then
     fi
     exit
 fi
-if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; then
-    echo -e "\nYou are running nodejs $VERNODE. Do you want to install recommended version $NODERECOM? "
+
+
+if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.nodesource.list ]; then
+    echo -e "\nYou are missinng the nodesource.list or"
+    echo -e "you want to change your current nodejs version: $VERNODE ?"
+
+    elif [[ $1 -gt 18 ]]; then
+    echo "Do you want to install nodejs $1 or fix the source?"
+    else
+    echo "Do you want to intall nodejs v$NODERECOM ?"
+fi
+
     echo -e "\nPress <y> to continue or any other key to quit"
     read -r -s -n 1 char
     if
@@ -319,7 +349,6 @@ if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit
         fi
         exit
     fi
-fi
 
 if
     [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]
@@ -348,6 +377,7 @@ then
     fi
 fi
 
+
 # Function for the progress bar
 progress_bar() {
     while kill -0 "$1" 2>/dev/null; do
@@ -364,13 +394,21 @@ iob stop &
 # Save the PID of the background process
 command_pid=$!
 
-# Start progressbar with PID
-progress_bar $command_pid &
+# Check if process is running
+if ! kill -0 "$command_pid" 2>/dev/null; then
+    echo "ioBroker is not running or could not be stopped."
+    else
+    # Start progressbar with PID
+    progress_bar $command_pid &
 
-# Wait until iobroker had been shutdown
-wait $command_pid
+    # Wait until iobroker had been shutdown
+    wait $command_pid
 
-echo -e "\nioBroker has been stopped"
+    echo -e "\nioBroker has been stopped"
+fi
+
+
+
 
 
 echo ""
@@ -381,15 +419,47 @@ echo ""
 
 echo -e "\n\n*** These repos are active on your system:"
 $SUDOX "$INSTALL_CMD" update
-echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing."
-$SUDOX "$INSTALL_CMD" install -qq ca-certificates curl gnupg
+echo -e "\n*** Installing apt-transport-https ca-certificates, curl and gnupg, just in case they are missing."
+if ! $SUDOX "$INSTALL_CMD" install -y -qq apt-transport-https ca-certificates curl gnupg; then
+    handle_error "$?" "Failed to install packages"
+fi
 # Installing the key for nodesource repository
-$SUDOX mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
+
+if ! $SUDOX mkdir -p /usr/share/keyrings; then
+    handle_error "$?" "Makes sure the path /usr/share/keyrings exist or run ' mkdir -p /usr/share/keyrings' with sudo"
+fi
+
+$SUDOX rm -f /usr/share/keyrings/nodesource.gpg || true
+$SUDOX rm -f /etc/apt/keyrings/nodesource.gpg || true
+$SUDOX rm -f /etc/apt/sources.list.d/nodesource.* || true
+
+    # Run 'curl' and 'gpg' to download and import the NodeSource signing key
+    if ! curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg; then
+      handle_error "$?" "Failed to download and import the NodeSource signing key"
+    fi
+
+    # Explicitly set the permissions to ensure the file is readable by all
+    if ! $SUDOX chmod 644 /usr/share/keyrings/nodesource.gpg; then
+        handle_error "$?" "Failed to set correct permissions on /usr/share/keyrings/nodesource.gpg"
+    fi
+
 # Setting up a fresh & clean nodesource.list
 echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
 echo ""
-echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
+
+arch=$(dpkg --print-architecture)
+    if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ] && [ "$arch" != "armhf" ]; then
+      handle_error "1" "Unsupported architecture: $arch. Only amd64, arm64, and armhf are supported."
+    fi
+
+    echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+
+
+
+
+#echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
+
+
 echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs
 echo -e "\n*** These repos are active after the adjustments:"
 $SUDOX "$INSTALL_CMD" update

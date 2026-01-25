@@ -1,6 +1,9 @@
 # Changelog for Node.js Updater Script
 
-## 2025-10-29
+## 2026-01-20
+* Adjustments due to new package signature keys
+* General fixes
+* Fixing endless stop loop when iob was not even running
 * Removed check for corepack
 * Remove any exiting nodesource source files 
 
