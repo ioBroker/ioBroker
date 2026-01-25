@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2026-01-23"
+VERSION="2026-01-20"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
@@ -337,9 +337,9 @@ fi
     then
         echo "Trying to fix your installation now. Please be patient."
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-        $SUDOX rm "$($SUDOX find / \( -path /usr/share -o -path /etc/apt \) -prune -false -o -name nodesource.[gk]* -print)"
-        # Deleting nodesource.list and nodesource.sources - Will be recreated later.
-        $SUDOX rm /etc/apt/sources.list.d/nodesource.*
+        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt -o -path /run \) -prune -false -o -name nodesource.[gk]* -print) 2> /dev/null"
+        # Deleting nodesource.list Will be recreated later.
+        $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     else
         echo "We are not fixing your installation. Exiting."
         if [[ -f "/var/run/reboot-required" ]]; then
@@ -361,9 +361,9 @@ then
     then
         echo "Trying to fix your installation now. Please be patient."
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-        $SUDOX rm "$($SUDOX find / \( -path /usr/share -o -path /etc/apt \) -prune -false -o -name nodesource.[gk]* -print)"
-        # Deleting nodesource.list and nodesource.sources - Will be recreated later.
-        $SUDOX rm /etc/apt/sources.list.d/nodesource.*
+        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
+        # Deleting nodesource.list Will be recreated later.
+        $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     else
         echo "Not fixing your installation. Exiting."
 
@@ -419,8 +419,8 @@ echo ""
 
 echo -e "\n\n*** These repos are active on your system:"
 $SUDOX "$INSTALL_CMD" update
-echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing."
-if ! $SUDOX "$INSTALL_CMD" install -y -qq ca-certificates curl gnupg; then
+echo -e "\n*** Installing apt-transport-https ca-certificates, curl and gnupg, just in case they are missing."
+if ! $SUDOX "$INSTALL_CMD" install -y -qq apt-transport-https ca-certificates curl gnupg; then
     handle_error "$?" "Failed to install packages"
 fi
 # Installing the key for nodesource repository

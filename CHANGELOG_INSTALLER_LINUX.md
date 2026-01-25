@@ -2,6 +2,7 @@
 
 ## 2026-01-20
 * Adjusted nodejs installation to nodesource defaults
+* Restrict installations to 64bit (amd64 and arm64) architecture
 
 ## 2025-08-09
 * Install Node.js 22 by default for installer
