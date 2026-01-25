@@ -675,12 +675,6 @@ done
 # Ende des optimierten ZigBee-Blocks
 # ============================================================================
 
-# PATHAPT=$(type -P apt);
-PATHNODEJS=$(type -P nodejs)
-PATHNODE=$(type -P node)
-PATHNPM=$(type -P npm)
-PATHNPX=$(type -P npx)
-
 # masked output
 
 if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
