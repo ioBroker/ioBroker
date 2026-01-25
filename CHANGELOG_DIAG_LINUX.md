@@ -1,6 +1,6 @@
 # Changelog for Linux-Diag-Script
 
-## 2025-11-08
+## 2026-01-20
 * Only architectures amd64 and arm64 are supported for current nodejs versions
 * Removed check for corepack
 * Removed generic messages concerning EXT4 file system
