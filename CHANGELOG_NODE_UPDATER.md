@@ -1,5 +1,12 @@
 # Changelog for Node.js Updater Script
 
+## 2026-01-20
+* Adjustments due to new package signature keys
+* General fixes
+* Fixing endless stop loop when iob was not even running
+* Removed check for corepack
+* Remove any exiting nodesource source files 
+
 ## 2025-08-14
 * Avoid having two pinning files and bumping the pin priority to 1001 
 
