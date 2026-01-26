@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-01-26
+* Extend docker detection by adding .containerenv for Podman or CRI-O
+
 ## 2025-09-08
 * Added `--no-update` flag to skip system package repository updates during fix process
 

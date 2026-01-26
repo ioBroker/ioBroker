@@ -1,6 +1,6 @@
 # Changelog for Node.js Updater Script
 
-## 2026-01-20
+## 2026-01-26
 * Adjustments due to new package signature keys
 * General fixes
 * Fixing endless stop loop when iob was not even running
