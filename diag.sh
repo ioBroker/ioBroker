@@ -45,7 +45,7 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-12-30" #version of this script
+SKRIPTV="2026-01-30" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -53,7 +53,7 @@ MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
 if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
-ARCH=$(dpkg --print-architecture)
+ARCH=$(getconf LONG_BIT);
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -168,10 +168,13 @@ fi
 echo -e "Kernel          : $(uname -m)"
 echo -e "Userland        : $(getconf LONG_BIT) bit"
 
+check_architecture() {
+    if [ "$ARCH" -eq 32 ]; then
+        echo -e "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
+    fi
+}
 
-if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
-    echo -e "/nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
-fi
+check_architecture
 
 echo ""
 echo "Systemuptime and Load:"
@@ -816,9 +819,7 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     cd || exit
 fi
 
-if [ "$ARCH" != "amd64" ] && [ "$ARCH" != "arm64" ]; then
-    echo -e "\nUnsupported architecture: $ARCH. Only amd64 and arm64 are supported for current nodejs versions. You have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware."
-fi
+check_architecture
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
 echo ""

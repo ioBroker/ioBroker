@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2026-01-30
+* Minor fixes
+
 ## 2026-01-26
 * Only architectures amd64 and arm64 are supported for current nodejs versions
 * Removed check for corepack
