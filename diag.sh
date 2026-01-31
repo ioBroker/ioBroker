@@ -1,16 +1,41 @@
 #!/bin/bash
 # iobroker diagnostics
+SKRIPTV="2026-01-31" #version of this script
+
 # written to help getting information about the environment the ioBroker installation is running in
 
 ## --help
+# Funktion zur Anzeige der Hilfe
+show_help() {
+    cat <<EOF
+ioBroker Diagnose-Skript - Hilfe
 
-if [[ "$*" = *-h* ]]; then
-    echo "OPTIONS:"
-    echo "--de                      Ausgabe (teilweise) deutsch"
-    echo "--unmask                  Show otherwise masked output"
-    echo "-s, --short, -k, --kurz   Show summary / Zusammenfassung ausgeben"
-    echo "-h, --help, --hilfe       display this help and exit"
-    exit
+Verwendung: $0 [OPTIONEN]
+
+Optionen:
+  --help            Zeigt diese Hilfe an.
+  --de              Ausgabe auf Deutsch (teilweise).
+  --unmask          Zeigt maskierte Ausgaben im Klartext an.
+  --summary / -s    Zeigt eine kurze Zusammenfassung der wichtigsten Informationen.
+  --short / -s      Alias für --summary.
+  --kurz / -k       Alias für --summary.
+  --zusammenfassung Alias für --summary (deutsch).
+  --allow-root      Erlaubt die Ausführung als Root (nicht empfohlen).
+
+Beispiele:
+  $0 --de              # Deutsche Ausgabe
+  $0 --unmask          # Unmaskierte Ausgabe
+  $0 --summary         # Kurze Zusammenfassung
+  $0 --help            # Diese Hilfe anzeigen
+
+Hinweis: Für eine vollständige Diagnose sollten keine Optionen außer --de oder --unmask verwendet werden.
+EOF
+}
+
+# Prüfe, ob --help übergeben wurde
+if [[ "$*" == *"--help"* ]]; then
+    show_help
+    exit 0
 fi
 
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
@@ -45,7 +70,6 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2026-01-30" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi

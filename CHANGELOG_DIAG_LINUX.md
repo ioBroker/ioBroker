@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2026-01-31
+* Improved --help option
+
 ## 2026-01-30
 * Minor fixes
 
