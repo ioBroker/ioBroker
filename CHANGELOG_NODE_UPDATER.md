@@ -1,5 +1,10 @@
 # Changelog for Node.js Updater Script
 
+## 2026-01-31
+* Fixed finding repo signature keys
+* Removed deprecated dependency
+* Minor fixes
+
 ## 2026-01-26
 * Adjustments due to new package signature keys
 * General fixes
