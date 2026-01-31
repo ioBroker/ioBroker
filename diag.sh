@@ -513,17 +513,31 @@ else
     fi
 fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
-XORGTEST=$(pgrep -cf 'ayland|X11|Xorg|wayfire|labwc')
-if [[ "$XORGTEST" -gt 0 ]]; then
-    echo -e "Display-Server: \ttrue"
+# XORGTEST=$(pgrep -cf 'ayland|X11|Xorg|wayfire|labwc')
+# if [[ "$XORGTEST" -gt 0 ]]; then
+#     echo -e "Display-Server: \ttrue"
+# else
+#     echo -e "Display-Server: \tfalse"
+# fi
+if [ -n "$WAYLAND_DISPLAY" ]; then
+    echo -e "Display-Server: \tWayland"
+elif [ -n "$DISPLAY" ]; then
+    echo -e "Display-Server: \tX11"
 else
-    echo -e "Display-Server: \tfalse"
+    if command -v loginctl &> /dev/null; then
+        session_type=$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type 2>/dev/null | awk -F= '{print $2}')
+        if [ "$session_type" = "x11" ] || [ "$session_type" = "wayland" ]; then
+            echo -e "Session: \t\t$session_type" | tr '[:lower:]' '[:upper:]'
+        fi
+    fi
+    echo -e "Display-Server: \tUnknown"
 fi
-
 echo -e "Display-Manager: \t$(systemctl status display-manager --no-pager | head -n 1)"
 
 echo -e "Desktop: \t\t$DESKTOP_SESSION"
 echo -e "Session: \t\t$XDG_SESSION_TYPE"
+
+
 if [ -z "$DOCKER" ]; then
     echo -e "Boot Target: \t$(systemctl get-default)"
 fi
