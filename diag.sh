@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-01-31" #version of this script
+SKRIPTV="2026-02-01" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
