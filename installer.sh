@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-01-20" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-02-01 FORKED" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -91,7 +91,7 @@ NUM_STEPS=4
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX "$INSTALL_CMD" "$INSTALL_CMD_UPD_ARGS" update
+$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
