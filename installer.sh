@@ -150,7 +150,7 @@ echo "Directory $IOB_DIR created"
 
 # Log some information about the installer
 touch "$INSTALLER_INFO_FILE"
-chmod 777 ""
+chmod 777 "$INSTALLER_INFO_FILE"
 echo "Installer version: $INSTALLER_VERSION" >>"$INSTALLER_INFO_FILE"
 echo "Installation date $(date +%F)" >>"$INSTALLER_INFO_FILE"
 echo "Platform: $HOST_PLATFORM" >>"$INSTALLER_INFO_FILE"
