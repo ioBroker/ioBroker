@@ -513,12 +513,7 @@ else
     fi
 fi
 echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
-# XORGTEST=$(pgrep -cf 'ayland|X11|Xorg|wayfire|labwc')
-# if [[ "$XORGTEST" -gt 0 ]]; then
-#     echo -e "Display-Server: \ttrue"
-# else
-#     echo -e "Display-Server: \tfalse"
-# fi
+
 if [ -n "$WAYLAND_DISPLAY" ]; then
     echo -e "Display-Server: \tWayland"
 elif [ -n "$DISPLAY" ]; then
