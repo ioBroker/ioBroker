@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-02-01 FORKED" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-02-01" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
