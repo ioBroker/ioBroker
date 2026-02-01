@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-01-31" #version of this script
+SKRIPTV="2026-02-01" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -835,11 +835,16 @@ else
 fi
 
 ### Is my nodejs vulnerable?
+
 if [[ $NODENOTCORR -eq 0 ]]; then
     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
-    cd /home/iobroker || exit
-    sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-    sudo -H -u iobroker npx is-my-node-vulnerable
+    if [ -d "/home/iobroker" ]; then
+        cd /home/iobroker || exit
+    else
+        cd ~ || exit
+    fi
+    sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
+    sudo -H -u "$(whoami)" npx is-my-node-vulnerable
     cd || exit
 fi
 
