@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2026-01-31"
+VERSION="2026-02-14"
 NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
 
 # Check if version option is a valid one
@@ -444,23 +444,33 @@ $SUDOX rm -f /etc/apt/sources.list.d/nodesource.* || true
     fi
 
 # Setting up a fresh & clean nodesource.list
-echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
+echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.sources and pinning source"
 echo ""
 
     arch=$(dpkg --print-architecture)
-    if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ] && [ "$arch" != "armhf" ]; then
-      handle_error "1" "Unsupported architecture: $arch. Only amd64, arm64, and armhf are supported."
+    if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ]; then
+      handle_error "1" "Unsupported architecture: $arch. Only amd64 and arm64 are supported."
     fi
 
-    echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+#   echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+
+    cat <<EOF | $SUDOX tee /etc/apt/sources.list.d/nodesource.sources > /dev/null
+Types: deb
+URIs: https://deb.nodesource.com/node_$NODE_MAJOR.x
+Suites: nodistro
+Components: main
+Architectures: $arch
+Signed-By: /usr/share/keyrings/nodesource.gpg
+EOF
+
+
+    # Nodejs Config
+    echo "Package: nodejs" | $SUDOX tee /etc/apt/preferences.d/nodejs > /dev/null
+    echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs > /dev/null
+    echo "Pin-Priority: 1001" | $SUDOX tee -a /etc/apt/preferences.d/nodejs > /dev/null
 
 
 
-
-#echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-
-
-echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs
 echo -e "\n*** These repos are active after the adjustments:"
 $SUDOX "$INSTALL_CMD" update
 
