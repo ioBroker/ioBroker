@@ -1,5 +1,8 @@
 # Changelog for Linux-Diag-Script
 
+## 2026-02-16
+* Added check for running malware process 'pawns-cli'
+
 ## 2026-01-31
 * Improved --help option
 
