@@ -922,7 +922,7 @@ sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
 
 # Check if malware process pawns-cli is running
 if pgrep "pawns-cli" > /dev/null; then
-    if [ "$LANG" = "de" ]; then
+    if [ "$SKRPTLANG" == "--de" ]; then
         echo -e "${RED}WARNUNG: Der Prozess 'pawns-cli' läuft auf diesem System!${NC}"
         echo -e "${RED}Dies könnte ein Hinweis auf Malwarebefall sein.${NC}"
         echo -e "${RED}Bitte überprüfen Sie das System und entfernen Sie den Prozess, falls er nicht legitim ist.${NC}"
