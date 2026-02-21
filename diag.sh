@@ -840,13 +840,32 @@ else
 fi
 
 ### Is my nodejs vulnerable?
+# if [[ $NODENOTCORR -eq 0 ]]; then
+#     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
+#     cd /home/iobroker || exit
+#     sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+#     sudo -H -u iobroker npx is-my-node-vulnerable
+#     cd || exit
+# fi
+
+
 if [[ $NODENOTCORR -eq 0 ]]; then
     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
-    cd /home/iobroker || exit
-    sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-    sudo -H -u iobroker npx is-my-node-vulnerable
-    cd || exit
+    if [ -d "/home/iobroker" ]; then
+        cd /home/iobroker || { echo -e "\033[33mDirectory /home/iobroker does not exist, skipping check.\033[0m"; }
+        sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+        sudo -H -u iobroker npx is-my-node-vulnerable
+        cd || { echo -e "\033[33mCould not leave directory, proceeding anyway.\033[0m"; }
+    else
+        echo -e "\033[33mDirectory /home/iobroker does not exist, skipping check.\033[0m"
+    fi
 fi
+
+
+
+
+
+
 
 check_architecture
 
