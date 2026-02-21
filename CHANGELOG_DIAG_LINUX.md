@@ -1,6 +1,7 @@
 # Changelog for Linux-Diag-Script
 
-## 2026-02-16
+## 2026-02-21
+* Changed output of netstat - Use ss if available.
 * Added check for running malware process 'pawns-cli'
 
 ## 2026-01-31

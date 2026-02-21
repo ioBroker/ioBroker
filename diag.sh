@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-02-16" #version of this script
+SKRIPTV="2026-02-21" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -916,9 +916,11 @@ fi
 echo ""
 
 echo -e "\033[34;107m*** Listening Ports ***\033[0m"
-sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
-# Alternativ - ss ist nicht ueberall installiert
-# sudo ss -tulwp | grep LISTEN;
+if command -v ss &> /dev/null; then
+    sudo ss -tulp
+else
+sudo netstat -tulpn
+fi
 
 # Check if malware process pawns-cli is running
 if pgrep "pawns-cli" > /dev/null; then
