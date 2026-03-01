@@ -21,6 +21,13 @@ fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
+# Check for Redis installation flag
+INSTALL_REDIS="false"
+if [[ "$*" == *--redis* ]]; then
+    INSTALL_REDIS="true"
+    echo "Redis installation requested"
+fi
+
 RECOMMEND_FIXER_AFTER_INSTALL="false"
 # Check for --no-autostart flag to skip starting ioBroker after installation
 SKIP_IOBROKER_START="false"
@@ -91,7 +98,13 @@ INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
 
 export AUTOMATED_INSTALLER="true"
 export DEBIAN_FRONTEND=noninteractive
-NUM_STEPS=4
+
+# Adjust number of steps based on Redis installation
+if [ "$INSTALL_REDIS" = "true" ]; then
+    NUM_STEPS=5
+else
+    NUM_STEPS=4
+fi
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
@@ -198,8 +211,16 @@ PACKAGE_JSON_FILENAME="$IOB_DIR/package.json"
 write_to_file "$PACKAGE_JSON_FILE" "$PACKAGE_JSON_FILENAME"
 npm i --production --loglevel error --unsafe-perm >/dev/null
 
+# Install and configure Redis if requested
+if [ "$INSTALL_REDIS" = "true" ]; then
+    print_step "Installing and configuring Redis" 4 "$NUM_STEPS"
+    install_redis
+    configure_iobroker_redis
+    set_valid_redis_locale
+fi
+
 # ########################################################
-print_step "Finalizing installation" 4 "$NUM_STEPS"
+print_step "Finalizing installation" "$NUM_STEPS" "$NUM_STEPS"
 
 # Test which init system is used:
 INITSYSTEM="unknown"
