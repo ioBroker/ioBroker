@@ -4,7 +4,8 @@
 * Changed output of netstat - Use ss if available.
 * Added check for running malware process 'pawns-cli'
 
-## 2026-01-31
+## 2026-02-01
+* Display-Server detection is more robust now
 * Improved --help option
 
 ## 2026-01-30
