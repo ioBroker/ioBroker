@@ -305,7 +305,7 @@ then
     exit
 fi
 VERNODE=$(node -v)
-if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.* ]; then
     echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one."
     echo -e "\n*** You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
     echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
@@ -320,8 +320,8 @@ if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.l
 fi
 
 
-if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.nodesource.list ]; then
-    echo -e "\nYou are missing the nodesource.list or"
+if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.nodesource.* ]; then
+    echo -e "\nYou are missing the nodesource repo file or"
     echo -e "you want to change your current nodejs version: $VERNODE ?"
 
     elif [[ $1 -gt 18 ]]; then
@@ -362,7 +362,7 @@ then
         echo "Trying to fix your installation now. Please be patient."
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
         $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
-        # Deleting nodesource.list Will be recreated later.
+        # Deleting nodesource repo file. Will be recreated later.
         $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     else
         echo "Not fixing your installation. Exiting."
@@ -443,7 +443,7 @@ $SUDOX rm -f /etc/apt/sources.list.d/nodesource.* || true
         handle_error "$?" "Failed to set correct permissions on /usr/share/keyrings/nodesource.gpg"
     fi
 
-# Setting up a fresh & clean nodesource.list
+# Setting up a fresh & clean nodesource repo file
 echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.sources and pinning source"
 echo ""
 

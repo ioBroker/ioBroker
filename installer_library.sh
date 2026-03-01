@@ -846,13 +846,14 @@ module_hotfixes=1"
             rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+            chmod 644 /usr/share/keyrings/nodesource.gpg
             arch=$(dpkg --print-architecture)
             if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ]; then
                 echo -e "Unsupported architecture: $arch. Only amd64 and arm64 are supported."
             fi
 
 #   echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
-
+rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     cat <<EOF | tee /etc/apt/sources.list.d/nodesource.sources > /dev/null
 Types: deb
 URIs: https://deb.nodesource.com/node_$NODE_MAJOR.x
@@ -882,7 +883,7 @@ echo "Pin-Priority: 1001" | tee -a /etc/apt/preferences.d/nodejs > /dev/null
     fi
 
 #   echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
-
+$SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     cat <<EOF | $SUDOX tee /etc/apt/sources.list.d/nodesource.sources > /dev/null
 Types: deb
 URIs: https://deb.nodesource.com/node_$NODE_MAJOR.x
