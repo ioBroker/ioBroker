@@ -1,7 +1,7 @@
 # Changelog for Node.js Updater Script
 
 ## 2026-02-14
-* Use deb822 format for sources in accordance with nodesource installer skript
+* Use deb822 format for sources in accordance with nodesource installer script
 
 ## 2026-01-31
 * Fixed finding repo signature keys
