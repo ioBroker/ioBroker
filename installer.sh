@@ -211,6 +211,7 @@ if [ "$INSTALL_REDIS" = "true" ]; then
     print_step "Installing and configuring Redis" 4 "$NUM_STEPS"
     install_redis
     configure_iobroker_redis
+    set_valid_redis_locale
 fi
 
 # ########################################################

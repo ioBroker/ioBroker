@@ -901,11 +901,7 @@ install_redis() {
             
             # Configure bind to localhost and potentially other interfaces
             $SUDOX sed -i 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' "$REDIS_CONF"
-            
-            # Set locale-related settings (Redis uses system locale)
-            echo "# ioBroker Redis configuration" | $SUDOX tee -a "$REDIS_CONF"
-            echo "# Added by ioBroker installer" | $SUDOX tee -a "$REDIS_CONF"
-            
+
             # Detect init system and enable/start Redis service
             if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
                 $SUDOX systemctl enable redis-server
@@ -970,6 +966,24 @@ EOF
     change_owner "$IOB_USER" "$IOB_CONFIG_FILE"
     
     echo "ioBroker configured to use Redis backend"
+}
+
+set_valid_redis_locale() {
+    # Dynamically detect the redis-server service file path
+    local REDIS_SERVICE_FILE
+    REDIS_SERVICE_FILE=$(systemctl show -p FragmentPath redis-server 2>/dev/null | cut -d= -f2)
+    # Check if redis is installed
+    if [ -n "$REDIS_SERVICE_FILE" ] && [ -f "$REDIS_SERVICE_FILE" ]; then
+        # Check if redis is used by ioBroker
+        if grep -q "\"type\": \"redis\"" "$IOB_DIR/iobroker-data/iobroker.json" 2>/dev/null; then
+            # Check if the redis service file already contains the LC_ALL setting
+            if ! grep -q "LC_ALL" "$REDIS_SERVICE_FILE"; then
+                $SUDOX sed -i '/\[Service\]/a Environment="LC_ALL=C"' "$REDIS_SERVICE_FILE"
+                $SUDOX systemctl daemon-reload
+                $SUDOX systemctl restart redis-server
+            fi
+        fi
+    fi
 }
 
 echo "library: loaded"
