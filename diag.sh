@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-02-01" #version of this script
+SKRIPTV="2026-03-01" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -771,6 +771,7 @@ check_nodejs_installation() {
     # Wenn Probleme gefunden wurden
     if [[ ${#problems[@]} -gt 0 ]]; then
         if [[ "$show_messages" == "true" ]]; then
+            NODENOTCORR=1
             if [[ "$SKRPTLANG" == "--de" ]]; then
                 echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
                 echo "Probleme: ${problems[*]}"
