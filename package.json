@@ -2,7 +2,7 @@
   "name": "@iobroker/install",
   "version": "6.0.1",
   "optionalDependencies": {
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "windows-shortcuts": "^0.1.6"
   },
   "publishConfig": {
@@ -10,12 +10,12 @@
   },
   "dependencies": {
     "fs-extra": "^11.3.3",
-    "semver": "^7.7.3",
+    "semver": "^7.7.4",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@alcalzone/release-script": "^5.0.0",
-    "@alcalzone/release-script-plugin-license": "^4.0.0",
+    "@alcalzone/release-script": "^5.1.1",
+    "@alcalzone/release-script-plugin-license": "^5.1.1",
     "eslint": "^9.39.2",
     "mocha": "^11.7.5",
     "chai": "^4.5.0",
