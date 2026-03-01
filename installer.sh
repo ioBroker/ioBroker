@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-01-20" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-02-01" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -49,6 +49,7 @@ fi
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
+
 curl -sL $LIB_URL >~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else
     echo "Installer/Fixer: library not found"
@@ -91,7 +92,7 @@ NUM_STEPS=4
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX "$INSTALL_CMD" "$INSTALL_CMD_UPD_ARGS" update
+$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
