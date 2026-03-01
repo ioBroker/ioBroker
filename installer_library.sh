@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-01-23" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-02-01" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -93,7 +93,7 @@ get_platform_params() {
     "Linux")
         HOST_PLATFORM="linux"
         INSTALL_CMD="apt-get"
-        INSTALL_CMD_ARGS="install -yq"
+        INSTALL_CMD_ARGS="install -y -q"
         if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
             INSTALL_CMD="yum"
             # The args -y and -q have to be separate
@@ -173,7 +173,7 @@ install_package_linux() {
             errormessage=$($SUDOX "$INSTALL_CMD" "$INSTALL_CMD_ARGS" "$package" >/dev/null 2>&1)
         else
             # Install it
-            errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD "$INSTALL_CMD_ARGS" --no-install-recommends -yqq $package)
+            errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
         fi
 
         # Hide "Error: Nothing to do"
@@ -882,6 +882,108 @@ detect_ip_address() {
         IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1 | head -1)
     fi
     echo $IP
+}
+
+install_redis() {
+    echo "Installing and configuring Redis..."
+    
+    # Install Redis server
+    if [ "$HOST_PLATFORM" = "linux" ]; then
+        install_package redis-server
+        
+        # Configure Redis
+        REDIS_CONF="/etc/redis/redis.conf"
+        if [ -f "$REDIS_CONF" ]; then
+            echo "Configuring Redis..."
+            
+            # Backup original config
+            $SUDOX cp "$REDIS_CONF" "$REDIS_CONF.backup"
+            
+            # Configure bind to localhost and potentially other interfaces
+            $SUDOX sed -i 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' "$REDIS_CONF"
+
+            # Detect init system and enable/start Redis service
+            if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
+                $SUDOX systemctl enable redis-server
+                $SUDOX systemctl start redis-server
+            elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
+                $SUDOX service redis-server start
+                $SUDOX update-rc.d redis-server defaults
+            fi
+            
+            echo "Redis installed and configured successfully"
+        else
+            echo "Warning: Redis configuration file not found at $REDIS_CONF"
+        fi
+    elif [ "$HOST_PLATFORM" = "osx" ]; then
+        # macOS installation
+        if command -v brew >/dev/null 2>&1; then
+            brew install redis
+            echo "Redis installed on macOS"
+        else
+            echo "Homebrew not found. Please install Redis manually on macOS"
+        fi
+    elif [ "$HOST_PLATFORM" = "freebsd" ]; then
+        # FreeBSD installation
+        install_package redis
+        echo "Redis installed on FreeBSD"
+    fi
+}
+
+configure_iobroker_redis() {
+    echo "Configuring ioBroker to use Redis..."
+    
+    # Create Redis configuration for ioBroker
+    local IOB_REDIS_CONFIG=$(cat <<-EOF
+{
+  "objects": {
+    "type": "redis",
+    "host": "127.0.0.1",
+    "port": 6379,
+    "options": {
+      "db": 0
+    }
+  },
+  "states": {
+    "type": "redis", 
+    "host": "127.0.0.1",
+    "port": 6379,
+    "options": {
+      "db": 1
+    }
+  }
+}
+EOF
+)
+
+    # Write Redis configuration to ioBroker config
+    local IOB_CONFIG_FILE="$IOB_DIR/iobroker-data/iobroker.json"
+    if [ ! -d "$IOB_DIR/iobroker-data" ]; then
+        mkdir -p "$IOB_DIR/iobroker-data"
+    fi
+    
+    echo "$IOB_REDIS_CONFIG" > "$IOB_CONFIG_FILE"
+    change_owner "$IOB_USER" "$IOB_CONFIG_FILE"
+    
+    echo "ioBroker configured to use Redis backend"
+}
+
+set_valid_redis_locale() {
+    # Dynamically detect the redis-server service file path
+    local REDIS_SERVICE_FILE
+    REDIS_SERVICE_FILE=$(systemctl show -p FragmentPath redis-server 2>/dev/null | cut -d= -f2)
+    # Check if redis is installed
+    if [ -n "$REDIS_SERVICE_FILE" ] && [ -f "$REDIS_SERVICE_FILE" ]; then
+        # Check if redis is used by ioBroker
+        if grep -q "\"type\": \"redis\"" "$IOB_DIR/iobroker-data/iobroker.json" 2>/dev/null; then
+            # Check if the redis service file already contains the LC_ALL setting
+            if ! grep -q "LC_ALL" "$REDIS_SERVICE_FILE"; then
+                $SUDOX sed -i '/\[Service\]/a Environment="LC_ALL=C"' "$REDIS_SERVICE_FILE"
+                $SUDOX systemctl daemon-reload
+                $SUDOX systemctl restart redis-server
+            fi
+        fi
+    fi
 }
 
 echo "library: loaded"

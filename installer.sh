@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2025-01-20" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-02-01" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -21,7 +21,19 @@ fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
+# Check for Redis installation flag
+INSTALL_REDIS="false"
+if [[ "$*" == *--redis* ]]; then
+    INSTALL_REDIS="true"
+    echo "Redis installation requested"
+fi
+
 RECOMMEND_FIXER_AFTER_INSTALL="false"
+# Check for --no-autostart flag to skip starting ioBroker after installation
+SKIP_IOBROKER_START="false"
+if [[ "$*" == *--no-autostart* ]]; then
+    SKIP_IOBROKER_START="true"
+fi
 # use --automated-run to skip all user prompts
 if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
@@ -49,6 +61,7 @@ fi
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
+
 curl -sL $LIB_URL >~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else
     echo "Installer/Fixer: library not found"
@@ -85,13 +98,19 @@ INSTALL_TARGET=${INSTALL_TARGET-"iobroker"}
 
 export AUTOMATED_INSTALLER="true"
 export DEBIAN_FRONTEND=noninteractive
-NUM_STEPS=4
+
+# Adjust number of steps based on Redis installation
+if [ "$INSTALL_REDIS" = "true" ]; then
+    NUM_STEPS=5
+else
+    NUM_STEPS=4
+fi
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX "$INSTALL_CMD" "$INSTALL_CMD_UPD_ARGS" update
+$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
@@ -192,8 +211,16 @@ PACKAGE_JSON_FILENAME="$IOB_DIR/package.json"
 write_to_file "$PACKAGE_JSON_FILE" "$PACKAGE_JSON_FILENAME"
 npm i --production --loglevel error --unsafe-perm >/dev/null
 
+# Install and configure Redis if requested
+if [ "$INSTALL_REDIS" = "true" ]; then
+    print_step "Installing and configuring Redis" 4 "$NUM_STEPS"
+    install_redis
+    configure_iobroker_redis
+    set_valid_redis_locale
+fi
+
 # ########################################################
-print_step "Finalizing installation" 4 "$NUM_STEPS"
+print_step "Finalizing installation" "$NUM_STEPS" "$NUM_STEPS"
 
 # Test which init system is used:
 INITSYSTEM="unknown"
@@ -415,7 +442,9 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
     $SUDOX chmod 644 $SERVICE_FILENAME
     $SUDOX systemctl daemon-reload
     $SUDOX systemctl enable iobroker.service
-    $SUDOX systemctl start iobroker.service
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        $SUDOX systemctl start iobroker.service
+    fi
     echo "Autostart enabled!"
     echo "Autostart: systemd" >>"$INSTALLER_INFO_FILE"
 
@@ -480,7 +509,9 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
 
     # Enable startup and start the service
     sysrc iobroker_enable=YES
-    service iobroker start
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        service iobroker start
+    fi
 
     echo "Autostart enabled!"
     echo "Autostart: rc.d" >>"$INSTALLER_INFO_FILE"
@@ -527,7 +558,9 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
         echo "Reloading service ${PLIST_FILE_LABEL}"
         launchctl unload -w $SERVICE_FILENAME
     fi
-    launchctl load -w $SERVICE_FILENAME
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        launchctl load -w $SERVICE_FILENAME
+    fi
 
     echo "Autostart enabled!"
     echo "Autostart: launchctl" >>"$INSTALLER_INFO_FILE"
@@ -570,7 +603,11 @@ unset AUTOMATED_INSTALLER
 
 # Detect IP address
 IP=$(detect_ip_address)
-print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
+if [ "$SKIP_IOBROKER_START" = "true" ]; then
+    print_bold "${green}ioBroker was installed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker, then open http://$IP:8081 in a browser and start configuring!"
+else
+    print_bold "${green}ioBroker was installed successfully${normal}" "Open http://$IP:8081 in a browser and start configuring!"
+fi
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
 

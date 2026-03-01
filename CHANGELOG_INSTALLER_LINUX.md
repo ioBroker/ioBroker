@@ -1,5 +1,10 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-02-01
+* Added --no-autostart flag to prevent ioBroker from starting automatically after installation
+* Removed some quotations to make instakller work again on some systems
+* Added `--redis` flag to install and configure Redis server for ioBroker states and objects storage
+
 ## 2026-01-26
 * Adjusted nodejs installation to nodesource defaults
 * Restrict installations to 64bit (amd64 and arm64) architecture

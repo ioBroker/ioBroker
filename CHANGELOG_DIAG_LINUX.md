@@ -1,6 +1,6 @@
 # Changelog for Linux-Diag-Script
 
-## 2026-02-21
+## 2026-03-01
 * nodejs vulnerability check is more robust
 
 ## 2026-01-31
