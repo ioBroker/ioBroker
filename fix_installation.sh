@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2025-08-09" # format YYYY-MM-DD
+FIXER_VERSION="2025-09-08" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -138,6 +138,12 @@ echo "Library version=$RET"
 get_platform_params
 set_some_common_params
 
+# Check for --no-update flag to skip system package updates
+SKIP_UPDATE=false
+if [[ "$*" == *--no-update* ]]; then
+    SKIP_UPDATE=true
+fi
+
 # Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
     echo "ioBroker is not installed in $IOB_DIR! Cannot fix anything..."
@@ -172,7 +178,11 @@ NUM_STEPS=5
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+if [ "$SKIP_UPDATE" = true ]; then
+    echo "Skipping system package repository update (--no-update flag specified)"
+else
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+fi
 
 # Determine the platform we operate on and select the installation routine/packages accordingly
 install_necessary_packages
