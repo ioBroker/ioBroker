@@ -1,6 +1,8 @@
 # Changelog for Linux-Diag-Script
 
-## 2026-01-31
+
+## 2026-02-01
+* Display-Server detection is more robust now
 * Improved --help option
 
 ## 2026-01-30
