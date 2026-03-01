@@ -1,10 +1,10 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-02-14
-* Use deb822 format for nodesource.sources in accordance with nodesource installer skript
+* Use deb822 format for nodesource.sources in accordance with nodesource installer script
 
 ## 2026-02-01
-* Removed some quotations to make instakller work again on some systems
+* Removed some quotations to make installer work again on some systems
 
 ## 2026-01-26
 * Adjusted nodejs installation to nodesource defaults
