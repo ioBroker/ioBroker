@@ -1,7 +1,13 @@
 # Changelog for Linux-Installer-Script
 
-## 2025-09-18
+## 2026-02-01
 * Added --no-autostart flag to prevent ioBroker from starting automatically after installation
+* Removed some quotations to make instakller work again on some systems
+
+## 2026-01-26
+* Adjusted nodejs installation to nodesource defaults
+* Restrict installations to 64bit (amd64 and arm64) architecture
+* Extend docker detection by adding .containerenv for Podman or CRI-O
 
 ## 2025-08-09
 * Install Node.js 22 by default for installer

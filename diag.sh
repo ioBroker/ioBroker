@@ -1,16 +1,41 @@
 #!/bin/bash
 # iobroker diagnostics
+SKRIPTV="2026-01-31" #version of this script
+
 # written to help getting information about the environment the ioBroker installation is running in
 
 ## --help
+# Funktion zur Anzeige der Hilfe
+show_help() {
+    cat <<EOF
+ioBroker Diagnose-Skript - Hilfe
 
-if [[ "$*" = *-h* ]]; then
-    echo "OPTIONS:"
-    echo "--de                      Ausgabe (teilweise) deutsch"
-    echo "--unmask                  Show otherwise masked output"
-    echo "-s, --short, -k, --kurz   Show summary / Zusammenfassung ausgeben"
-    echo "-h, --help, --hilfe       display this help and exit"
-    exit
+Verwendung: $0 [OPTIONEN]
+
+Optionen:
+  --help            Zeigt diese Hilfe an.
+  --de              Ausgabe auf Deutsch (teilweise).
+  --unmask          Zeigt maskierte Ausgaben im Klartext an.
+  --summary / -s    Zeigt eine kurze Zusammenfassung der wichtigsten Informationen.
+  --short / -s      Alias für --summary.
+  --kurz / -k       Alias für --summary.
+  --zusammenfassung Alias für --summary (deutsch).
+  --allow-root      Erlaubt die Ausführung als Root (nicht empfohlen).
+
+Beispiele:
+  $0 --de              # Deutsche Ausgabe
+  $0 --unmask          # Unmaskierte Ausgabe
+  $0 --summary         # Kurze Zusammenfassung
+  $0 --help            # Diese Hilfe anzeigen
+
+Hinweis: Für eine vollständige Diagnose sollten keine Optionen außer --de oder --unmask verwendet werden.
+EOF
+}
+
+# Prüfe, ob --help übergeben wurde
+if [[ "$*" == *"--help"* ]]; then
+    show_help
+    exit 0
 fi
 
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
@@ -21,7 +46,7 @@ if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
 fi
 clear
 if [[ "$*" = *--de* ]]; then SKRPTLANG="--de"; fi
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "*** iob diag startet, bitte etwas warten ***"
 else
     echo "*** iob diag is starting up, please wait ***"
@@ -45,7 +70,6 @@ fi
 
 # VARIABLES
 export LC_ALL=C
-SKRIPTV="2025-08-09" #version of this script
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
 if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
@@ -53,6 +77,7 @@ MASKED=""
 if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
 SUMMARY=""
 if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
+ARCH=$(getconf LONG_BIT);
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -166,12 +191,22 @@ else
 fi
 echo -e "Kernel          : $(uname -m)"
 echo -e "Userland        : $(getconf LONG_BIT) bit"
+
+check_architecture() {
+    if [ "$ARCH" -eq 32 ]; then
+        echo -e "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
+    fi
+}
+
+check_architecture
+
 echo ""
 echo "Systemuptime and Load:"
 uptime
 echo "CPU threads: $(grep -c processor /proc/cpuinfo)"
 echo ""
 echo ""
+
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
@@ -341,7 +376,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
     CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
     if [ "$CURRENT_HEX" == "0" ] || [ -z "$CURRENT_HEX" ]; then
-        echo "No throttling issues detected."
+        echo -e "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=0
         for ((i = ${#CURRENT_BIN} - 1; i >= 0; i--)); do
@@ -359,7 +394,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     PAST_HEX=${THROTTLED_CODE_HEX:0:1}
     PAST_BIN=${HEX_BIN_MAP[$PAST_HEX]}
     if [ "$PAST_HEX" = "0" ]; then
-        echo "No throttling issues detected."
+        echo -e "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=16
         for ((i = ${#PAST_BIN} - 1; i >= 0; i--)); do
@@ -371,23 +406,23 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     fi
 fi
 
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
-        echo "Dieses System benötigt einen NEUSTART"
+        echo -e "\e[31mDieses System benötigt einen NEUSTART\e[0m"
         echo ""
     fi
 else
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
-        echo "This system needs to be REBOOTED!"
+        echo -e "\e[31mThis system needs to be REBOOTED!\e[0m"
         echo ""
     fi
 fi
 
 echo ""
 
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** ZEIT UND ZEITZONEN ***\033[0m"
 
     if [ -f "$DOCKER" ]; then
@@ -423,7 +458,7 @@ else
 fi
 
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** User und Gruppen ***\033[0m"
     echo "User der 'iob diag' aufgerufen hat:"
     whoami
@@ -431,8 +466,8 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
     echo "GROUPS=$(groups)"
     echo ""
     echo "User der den 'js-controller' ausführt:"
-    if [[ $(pidof iobroker.js-controller) -gt 0 ]]; then
-        IOUSER=$(ps -o user= -p "$(pidof iobroker.js-controller)")
+    if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
+        IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
         echo "GROUPS=$(sudo -u "$IOUSER" groups)"
@@ -446,7 +481,7 @@ if [[ "$SKRPTLANG" = "--de" ]]; then
         # Prompt for username
         echo "Es sollte ein Standarduser angelegt werden! Dieser user kann auch mittels 'sudo' temporär root-Rechte erlangen."
         echo "Ein permanentes Login als root ist nicht vorgesehen."
-        echo "Bitte den 'iobroker fix' ausführen oder manuell eine entsprechenden User anlegen."
+        echo "Bitte den 'iobroker fix' ausführen oder manuell einen entsprechenden User anlegen."
 
     fi
 else
@@ -457,8 +492,8 @@ else
     echo "GROUPS=$(groups)"
     echo ""
     echo "User that is running 'js-controller':"
-    if [[ $(pidof iobroker.js-controller) -gt 0 ]]; then
-        IOUSER=$(ps -o user= -p "$(pidof iobroker.js-controller)")
+    if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
+        IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
         echo "GROUPS=$(sudo -u "$IOUSER" groups)"
@@ -495,7 +530,7 @@ fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
-        if [[ "$SKRPTLANG" = "--de" ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
             echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen."
         else
             echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Please set BootTarget to 'multi-user.target' or run 'iobroker fix'"
@@ -535,16 +570,16 @@ echo ""
 echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
 if [[ "$CRITERROR" -gt 0 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo -e "\e[31mEs wurden $CRITERROR KRITISCHE FEHLER gefunden.\e[0m \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
-        echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
+        echo -e "\e[31m$CRITERROR CRITICAL ERRORS DETECTED!\e[0m \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo "Es wurden keine kritischen Fehler gefunden"
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo -e "\e[32mEs wurden keine kritischen Fehler gefunden\e[0m"
     else
-        echo "No critical errors detected"
+        echo -e "\e[32mNo critical errors detected\e[0m"
     fi
 fi
 echo ""
@@ -553,7 +588,7 @@ echo -e "\033[34;107m*** FILESYSTEM ***\033[0m"
 df -PTh
 echo ""
 echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m"
-sudo dmesg -T | grep -i ext4
+sudo dmesg -T | grep -i ext4 | grep -v -e 'Modules linked in:' -e 'Kernel command line:'
 echo ""
 echo -e "\033[32mShow mounted filesystems:\033[0m"
 findmnt --real
@@ -580,256 +615,195 @@ echo ""
 echo -e "\033[32mThe five largest files in iobroker-data are:\033[0m"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 echo ""
-# Detecting dev-links in /dev/serial/by-id
+
+# ============================================================================
+# ZigBee Port Checking - Optimierte Version
+# ============================================================================
+
+# Funktion für ZigBee Port Check
+check_zigbee_port() {
+    local instance=$1
+    local configured_port
+
+    # Hole konfigurierten Port für diese Instanz
+    configured_port=$(echo "$IOBLISTINST" |
+        grep "system.adapter.zigbee.$instance" |
+        awk -F ':' '{print $4}' |
+        cut -c 2-)
+
+    # Wenn kein Port konfiguriert, überspringe diese Instanz
+    [[ -z "$configured_port" ]] && return 0
+
+    # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
+    if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
+        echo ""
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            echo -e "\e[32m✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!\e[0m"
+        else
+            echo -e "\e[32m✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!\e[0m"
+        fi
+    else
+        echo ""
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            echo -e "\e[1;33m⚠ HINWEIS:"
+            echo -e "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein.\e[0m"
+            echo "Bitte überprüfe die Einstellung:"
+            echo -e "$configured_port"
+        else
+            echo -e "\e[1;33m⚠ HINT:"
+            echo -e "Your zigbee.$instance COM-Port is NOT matching 'by-id'.\e[0m"
+            echo "Please check your setting:"
+            echo -e "$configured_port"
+        fi
+    fi
+}
+
+# USB-Geräte by-id
 echo -e "\033[32mUSB-Devices by-id:\033[0m"
-echo "USB-Sticks -  Avoid direct links to /dev/tty* in your adapter setups, please always prefer the links 'by-id':"
+if [[ "$SKRPTLANG" == "--de" ]]; then
+    echo "USB-Sticks - Vermeide direkte Links zu /dev/tty* in deinen Adapter-Einstellungen,"
+    echo "bevorzuge immer die Links 'by-id':"
+else
+    echo "USB-Sticks - Avoid direct links to /dev/tty* in your adapter setups,"
+    echo "please always prefer the links 'by-id':"
+fi
 echo ""
 
+# Finde alle USB-Geräte by-id
 SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null)
-
-# echo "CODE I ";
-#
-#
-# if [[ -n "$SYSZIGBEEPORT" ]];
-#         then
-#                 echo "$SYSZIGBEEPORT";
-#         else
-#                 echo "No Devices found 'by-id'";
-# fi
-#
-# readarray IOBZIGBEEPORT < <( iob list instances | grep system.adapter.zigbee | awk -F ':' '{print $4}' );
-# for i in  ${IOBZIGBEEPORT[@]}; do
-#         if [[ "$SYSZIGBEEPORT" == *"$i"* ]]
-#                 then
-#                 echo "";
-#                 echo "Your zigbee COM-Port is matching 'by-id'. Very good!"
-#                 else
-#                 echo;
-#                 echo "HINT:";
-#                 echo "Your zigbee COM-Port is NOT matching 'by-id'. Please check your setting:";
-#                 echo "$IOBZIGBEEPORT0";
-#         fi
-#                 done;
-#
-# echo "";
-# echo "CODE II";
-IOBZIGBEEPORT0=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.0 | awk -F ':' '{print $4}' | cut -c 2-)
-IOBZIGBEEPORT1=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.1 | awk -F ':' '{print $4}' | cut -c 2-)
-IOBZIGBEEPORT2=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.2 | awk -F ':' '{print $4}' | cut -c 2-)
-IOBZIGBEEPORT3=$(echo "$IOBLISTINST" | grep system.adapter.zigbee.3 | awk -F ':' '{print $4}' | cut -c 2-)
 
 if [[ -n "$SYSZIGBEEPORT" ]]; then
     echo "$SYSZIGBEEPORT"
 else
-    echo "No Devices found 'by-id'"
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo "Keine Geräte gefunden 'by-id'"
+    else
+        echo "No Devices found 'by-id'"
+    fi
 fi
 
 echo ""
 
+# Prüfe ob überhaupt ZigBee-Daten existieren
 for d in /opt/iobroker/iobroker-data/zigbee_*; do
     if [ -d "$d" ]; then
         echo -e "\033[34;107m*** ZigBee Settings ***\033[0m"
-    fi
-    break
-done
-
-if [[ -n "$IOBZIGBEEPORT0" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT0" ]; then
-        echo ""
-        echo "Your zigbee.0 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.0 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT0"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-if [[ -n "$IOBZIGBEEPORT1" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT1" ]; then
-        echo ""
-        echo "Your zigBee.1 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.1 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT1"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT1") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-if [[ -n "$IOBZIGBEEPORT2" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT2" ]; then
-        echo ""
-        echo "Your zigBee.2 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.2 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT2"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT2") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-if [[ -n "$IOBZIGBEEPORT3" ]]; then
-    if [ "$SYSZIGBEEPORT" = "$IOBZIGBEEPORT3" ]; then
-        echo ""
-        echo "Your zigbee.3 COM-Port is matching 'by-id'. Very good!"
-    else
-        echo
-        echo "HINT:"
-        echo "Your zigbee.3 COM-Port is NOT matching 'by-id'. Please check your setting:"
-        echo "$IOBZIGBEEPORT3"
-        # diff -y --left-column <(echo "$IOBZIGBEEPORT0") <(echo "$SYSZIGBEEPORT");
-    fi
-fi
-# masked output
-
-for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
-    if [[ "$MASKED" != "unmasked" ]]; then
-        echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
-        echo ""
-        echo "zigbee.X"
-        echo "Extended Pan ID:"
-        echo "*** MASKED ***"
-        #echo "OR";
-        #echo "*** MASKED ***";
-        echo "Pan ID:"
-        echo "*** MASKED ***"
-        echo "Channel:"
-        echo "*** MASKED ***"
-        echo "Network Key:"
-        echo "*** MASKED ***"
-        echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
         break
     fi
 done
 
-for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
-    if [[ "$MASKED" = "unmasked" ]]; then
-        echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
-        echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
-        echo "Extended Pan ID:"
-        grep extended_pan_id "$d" | cut -c 23-38
-        echo "Pan ID:"
-        printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
-        echo -e "\nChannel:"
-        grep \"channel\" "$d" | cut -c 14-15
-        echo "Network Key:"
-        grep \"key\" "$d" | cut -c 13-44
-    fi
+# Prüfe alle ZigBee-Instanzen automatisch (0-9)
+# Die Funktion überspringt automatisch nicht-existente Instanzen
+for i in {0..9}; do
+    check_zigbee_port "$i"
 done
-echo ""
-echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
-echo ""
 
-# PATHAPT=$(type -P apt);
+# ============================================================================
+# Ende des optimierten ZigBee-Blocks
+# ============================================================================
+
+# masked output
+
+if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
+    for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
+        if [[ "$MASKED" != "unmasked" ]]; then
+            echo
+            echo "Zigbee Network Settings on your coordinator/in nvbackup are:"
+            echo ""
+            echo "zigbee.X"
+            echo "Extended Pan ID:"
+            echo "*** MASKED ***"
+            echo "Pan ID:"
+            echo "*** MASKED ***"
+            echo "Channel:"
+            echo "*** MASKED ***"
+            echo "Network Key:"
+            echo "*** MASKED ***"
+            echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
+            break
+        fi
+    done
+
+    for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
+        if [[ "$MASKED" = "unmasked" ]]; then
+
+            echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
+            echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
+            echo "Extended Pan ID:"
+            grep extended_pan_id "$d" | cut -c 23-38
+            echo "Pan ID:"
+            printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
+            echo -e "\nChannel:"
+            grep \"channel\" "$d" | cut -c 14-15
+            echo "Network Key:"
+            grep \"key\" "$d" | cut -c 13-44
+
+        fi
+    done
+else
+    echo "No nvbackup.json found."
+fi
+
+#### NODEJS-CHECK
+
 PATHNODEJS=$(type -P nodejs)
 PATHNODE=$(type -P node)
 PATHNPM=$(type -P npm)
 PATHNPX=$(type -P npx)
-PATHCOREPACK=$(type -P corepack)
+VERNODEJS=$(nodejs -v)
+VERNODE=$(node -v)
+VERNPM=$(npm -v)
+VERNPX=$(npx -v)
 
-if [[ -z "$PATHNODEJS" ]]; then
-    echo -e "nodejs: \t\tN/A"
-else
-    echo -e "$(type -P nodejs) \t$(nodejs -v)"
-    VERNODEJS=$(nodejs -v)
-fi
+check_nodejs_installation() {
+    local show_messages="${1:-true}" # Standard: Zeige Meldungen
 
-if [[ -z "$PATHNODE" ]]; then
-    echo -e "node: \t\tN/A"
+    # Sammle alle Probleme
+    local problems=()
 
-else
-    echo -e "$(type -P node) \t\t$(node -v)"
-    VERNODE=$(node -v)
-fi
+    [[ "$PATHNODEJS" != "/usr/bin/nodejs" ]] && problems+=(" nodejs path ")
+    [[ "$PATHNODE" != "/usr/bin/node" ]] && problems+=(" node path ")
+    [[ "$PATHNPM" != "/usr/bin/npm" ]] && problems+=(" npm path ")
+    [[ "$PATHNPX" != "/usr/bin/npx" ]] && problems+=(" npx path ")
+    [[ "$VERNODEJS" != "$VERNODE" ]] && problems+=(" nodejs/node version mismatch ")
+    [[ "$VERNPM" != "$VERNPX" ]] && problems+=(" npm/npx version mismatch ")
 
-if [[ -z "$PATHNPM" ]]; then
-    echo -e "npm: \t\t\tN/A"
-else
-    echo -e "$(type -P npm) \t\t$(npm -v)"
-    VERNPM=$(npm -v)
-fi
-
-if [[ -z "$PATHNPX" ]]; then
-    echo -e "npx: \t\t\tN/A"
-
-else
-    echo -e "$(type -P npx) \t\t$(npx -v)"
-    VERNPX=$(npx -v)
-fi
-
-if [[ -z "$PATHCOREPACK" ]]; then
-    echo -e "corepack: \tN/A"
-
-else
-    echo -e "$(type -P corepack) \t$(corepack -v)"
-    # VERCOREPACK=$(corepack -v);
-fi
-
-if
-    [[ $PATHNODEJS != "/usr/bin/nodejs" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
+    # Wenn Probleme gefunden wurden
+    if [[ ${#problems[@]} -gt 0 ]]; then
+        if [[ "$show_messages" == "true" ]]; then
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
+                echo "Probleme: ${problems[*]}"
+                echo "Führe 'iobroker nodejs-update' im Terminal aus."
+            else
+                echo -e "\033[0;31m*** Node.js is NOT correctly installed ***\033[0m"
+                echo "Issues: ${problems[*]}"
+                echo "Execute 'iob nodejs-update' in your terminal."
+            fi
+        fi
+        return 1
     else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
+        if [[ "$show_messages" == "true" ]]; then
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                echo -e "\e[32m✓ Node.js ist korrekt installiert\e[0m"
+            else
+                echo -e "\e[32m✓ Node.js installation is correct\e[0m"
+            fi
+        fi
+        return 0
     fi
-elif
-    [[ $PATHNODE != "/usr/bin/node" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHNPM != "/usr/bin/npm" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHNPX != "/usr/bin/npx" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $VERNODEJS != "$VERNODE" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $VERNPM != "$VERNPX" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-elif
-    [[ $PATHCOREPACK != "/usr/bin/corepack" ]]
-then
-    NODENOTCORR=1
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-    fi
-fi
+}
+
+echo ""
+echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
+echo ""
+echo -e "$PATHNODEJS \t$VERNODEJS"
+echo -e "$PATHNODE \t\t$VERNODE"
+echo -e "$PATHNPM \t\t$VERNPM"
+echo -e "$PATHNPX \t\t$VERNPX"
+echo ""
+
+check_nodejs_installation
 
 echo ""
 if [ -f /usr/bin/apt-cache ]; then
@@ -868,6 +842,8 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     sudo -H -u iobroker npx is-my-node-vulnerable
     cd || exit
 fi
+
+check_architecture
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
 echo ""
@@ -910,13 +886,22 @@ echo -e "\033[34;107m*** OS-Repositories and Updates ***\033[0m"
 if [ -f /usr/bin/apt-get ]; then
     sudo apt-get update 1>/dev/null && sudo apt-get update
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "Offene Systemupdates: $APT"
+
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        if [[ $APT -eq 0 ]]; then
+            echo -e "\e[32mOffene Systemupdates: $APT\e[0m"
+        else
+            echo -e "\e[31mOffene Systemupdates: $APT\e[0m"
+        fi
     else
-        echo -e "Pending Updates: $APT"
+        if [[ $APT -eq 0 ]]; then
+            echo -e "\e[32mPending systemupdates: $APT\e[0m"
+        else
+            echo -e "\e[31mPending systemupdates: $APT\e[0m"
+        fi
     fi
 else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "Es wurde kein auf Debian basierendes System erkannt"
     else
         echo "No Debian-based Linux detected."
@@ -937,7 +922,7 @@ tail -n 25 /opt/iobroker/log/iobroker.current.log
 echo ""
 echo "\`\`\`"
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[33m============ Langfassung bis hier markieren =============\033[0m"
     echo ""
     echo "iob diag hat das System inspiziert."
@@ -963,7 +948,7 @@ else
     echo ""
 fi
 clear
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "Zusammfassung ab hier markieren und kopieren:"
     echo ""
     echo "\`\`\`bash"
@@ -1027,7 +1012,7 @@ else
 fi
 
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "Offene OS-Updates: \t$APT"
     echo -e "Offene iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 else
@@ -1035,7 +1020,7 @@ else
     echo -e "Pending iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 fi
 if [[ -f "/var/run/reboot-required" ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "\nDas System muss JETZT neugestartet werden!"
         echo ""
     else
@@ -1043,142 +1028,41 @@ if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
     fi
 fi
-echo -e "\nNodejs-Installation:"
-if [[ -z "$PATHNODEJS" ]]; then
-    echo -e "nodejs: \t\tN/A"
-else
-    echo -e "$(type -P nodejs) \t$(nodejs -v)"
-    VERNODEJS=$(nodejs -v)
-fi
-
-if [[ -z "$PATHNODE" ]]; then
-    echo -e "node: \t\t\tN/A"
-
-else
-    echo -e "$(type -P node) \t\t$(node -v)"
-    VERNODE=$(node -v)
-fi
-
-if [[ -z "$PATHNPM" ]]; then
-    echo -e "npm: \t\t\tN/A"
-else
-    echo -e "$(type -P npm) \t\t$(npm -v)"
-    VERNPM=$(npm -v)
-fi
-
-if [[ -z "$PATHNPX" ]]; then
-    echo -e "npx: \t\t\tN/A"
-
-else
-    echo -e "$(type -P npx) \t\t$(npx -v)"
-    VERNPX=$(npx -v)
-fi
-
-if [[ -z "$PATHCOREPACK" ]]; then
-    echo -e "corepack: \tN/A"
-
-else
-    echo -e "$(type -P corepack) \t$(corepack -v)"
-fi
-if [[ "$SKRPTLANG" = "--de" ]]; then
-    echo -e "\nEmpfohlene Versionen sind zurzeit nodejs ""$NODERECOM"" und npm ""$NPMRECOM"""
-else
-    echo -e "\nRecommended versions are nodejs ""$NODERECOM"" and npm ""$NPMRECOM"""
-fi
-if
-    [[ $PATHNODEJS != "/usr/bin/nodejs" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHNODE != "/usr/bin/node" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHNPM != "/usr/bin/npm" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHNPX != "/usr/bin/npx" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $PATHCOREPACK != "/usr/bin/corepack" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Falsche Installationspfade erkannt. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "Wrong installation path detected. This needs to be fixed."
-    fi
-elif
-    [[ $VERNODEJS != "$VERNODE" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Die Versionen von nodejs und node stimmen nicht überein. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "nodejs and node versions do not match. This needs to be fixed."
-    fi
-
-elif
-    [[ $VERNPM != "$VERNPX" ]]
-then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo -e "\033[0;31m*** nodejs ist NICHT korrekt installiert ***\033[0m"
-        echo "Die Versionen von npm und npx stimmen nicht überein. Dies muss korrigiert werden."
-    else
-        echo -e "\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-        echo "npm and npx versions do not match. This needs to be fixed."
-    fi
-else
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo "nodeJS ist korrekt installiert"
-    else
-        echo "nodeJS installation is correct"
-    fi
-fi
-if [[ $NODENOTCORR -eq 1 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
-        echo ""
-        echo "Bitte den Befehl"
-        echo -e "\e[031miob nodejs-update\e[0m"
-        echo "zur Korrektur der Installation ausführen."
-    else
-        echo ""
-        echo "Please execute"
-        echo -e "\e[031miob nodejs-update\e[0m"
-        echo "to fix these errors."
-    fi
-fi
 echo ""
+
+echo -e "\nNodejs-Installation:"
+echo -e "$PATHNODEJS \t$VERNODEJS"
+echo -e "$PATHNODE \t\t$VERNODE"
+echo -e "$PATHNPM \t\t$VERNPM"
+echo -e "$PATHNPX \t\t$VERNPX"
+if [[ "$SKRPTLANG" == "--de" ]]; then
+    echo -e "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM"
+else
+    echo -e "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM"
+fi
+# Nutze die bereits existierende Funktion
+if check_nodejs_installation false; then
+    # Return 0 = Alles OK
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo "✓ Node.js ist korrekt installiert"
+    else
+        echo "✓ Node.js installation is correct"
+    fi
+else
+    # Return 1 = Fehler gefunden
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo ""
+        echo "⚠ Node.js ist nicht korrekt installiert!"
+        echo "Bitte den Befehl 'iob nodejs-update' zur Korrektur ausführen."
+    else
+        echo ""
+        echo "⚠ Node.js is NOT correctly installed!"
+        echo "Please execute 'iob nodejs-update' to fix these errors."
+    fi
+fi
+
 # echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
-echo "MEMORY: "
+echo -e "\nMEMORY: "
 free -ht --mega
 echo ""
 echo -e "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)"
@@ -1203,7 +1087,7 @@ find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -
 echo ""
 echo ""
 if [[ $ANZNPMTMP -gt 0 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "**********************************************************************"
         echo -e "Probleme wurden erkannt, bitte \e[031miob fix\e[0m ausführen"
         echo "**********************************************************************"
@@ -1216,7 +1100,7 @@ if [[ $ANZNPMTMP -gt 0 ]]; then
     fi
 fi
 if [[ "$CRITERROR" -gt 0 ]]; then
-    if [[ "$SKRPTLANG" = "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
         echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
@@ -1224,7 +1108,7 @@ if [[ "$CRITERROR" -gt 0 ]]; then
 fi
 echo -e "$RELEASESTATUS"
 echo ""
-if [[ "$SKRPTLANG" = "--de" ]]; then
+if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "=================== ENDE DER ZUSAMMENFASSUNG ===================="
     echo -e "\`\`\`"
     echo ""
