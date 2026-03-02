@@ -110,7 +110,11 @@ fi
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS makecache
+else
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+fi
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
