@@ -1,8 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-03-02
+* Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
+
 ## 2026-01-26
-* Fixed system package update on Fedora and RPM-based distributions to use makecache instead of update
-* Added support for dnf package manager (modern Fedora) alongside existing yum support
 * Added iobroker user to docker group if it exists to enable unix socket access to docker API
 * Extend docker detection by adding .containerenv for Podman or CRI-O
 

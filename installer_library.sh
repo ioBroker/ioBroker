@@ -171,11 +171,15 @@ function set_some_common_params() {
 install_package_linux() {
     package="$1"
     # Test if the package is installed
-    dpkg -s "$package" &>/dev/null
+    if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+        rpm -q "$package" &>/dev/null
+    else
+        dpkg -s "$package" &>/dev/null
+    fi
     if [ $? -ne 0 ]; then
         if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
             # Install it
-            errormessage=$($SUDOX "$INSTALL_CMD" "$INSTALL_CMD_ARGS" "$package" >/dev/null 2>&1)
+            errormessage=$($SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS "$package" 2>&1 >/dev/null)
         else
             # Install it
             errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
