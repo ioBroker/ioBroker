@@ -1,11 +1,17 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-03-02
+* Replace hardcoded Node.js version with dynamic lookup from `versions.json`
+
+## 2026-03-02
+* Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
+
 ## 2026-02-01
+* Fixed IP detection to prevent multiple IP addresses in final installation message when both ethernet and WiFi interfaces are active
 * Added --no-autostart flag to prevent ioBroker from starting automatically after installation
 * Removed some quotations to make instakller work again on some systems
 * Added `--redis` flag to install and configure Redis server for ioBroker states and objects storage
-
-## 2026-01-26
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
 * Adjusted nodejs installation to nodesource defaults
 * Restrict installations to 64bit (amd64 and arm64) architecture
 * Extend docker detection by adding .containerenv for Podman or CRI-O

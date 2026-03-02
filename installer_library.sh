@@ -1,13 +1,22 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-02-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-03-02" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
+# (default fallback values, overridden by versions.json if reachable)
 # ------------------------------
+VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 NODE_MAJOR=22
-NODE_JS_BREW_URL="https://nodejs.org/dist/v22.22.0/node-v22.22.0.pkg"
+VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
+if [ -n "$VERSIONS_JSON" ]; then
+    NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
+    if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
+        NODE_MAJOR=$NODE_MAJOR_FROM_JSON
+    fi
+fi
+NODE_JS_BREW_URL="https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/"
 
 # ------------------------------
 # test function of the library
@@ -93,8 +102,13 @@ get_platform_params() {
     "Linux")
         HOST_PLATFORM="linux"
         INSTALL_CMD="apt-get"
-        INSTALL_CMD_ARGS="install -y -q"
-        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
+        INSTALL_CMD_ARGS="install -yq"
+        if [[ $(which "dnf" 2>/dev/null) == *"/dnf" ]]; then
+            INSTALL_CMD="dnf"
+            # The args -y and -q have to be separate
+            INSTALL_CMD_ARGS="install -q -y"
+            INSTALL_CMD_UPD_ARGS="-y"
+        elif [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
             INSTALL_CMD="yum"
             # The args -y and -q have to be separate
             INSTALL_CMD_ARGS="install -q -y"
@@ -166,22 +180,31 @@ function set_some_common_params() {
 install_package_linux() {
     package="$1"
     # Test if the package is installed
-    dpkg -s "$package" &>/dev/null
+    if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+        rpm -q "$package" &>/dev/null
+    else
+        dpkg -s "$package" &>/dev/null
+    fi
     if [ $? -ne 0 ]; then
-        if [ "$INSTALL_CMD" = "yum" ]; then
-            # Install it
-            errormessage=$($SUDOX "$INSTALL_CMD" "$INSTALL_CMD_ARGS" "$package" >/dev/null 2>&1)
+        if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+            # Install it; capture stderr for error reporting, discard stdout
+            errormessage=$($SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS "$package" 2>&1 >/dev/null)
+            install_exit=$?
+            if [ $install_exit -eq 0 ]; then
+                echo "Installed $package"
+            elif [ "$errormessage" != "" ]; then
+                echo "$errormessage"
+            fi
         else
             # Install it
             errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
-        fi
-
-        # Hide "Error: Nothing to do"
-        if [ "$errormessage" != "Error: Nothing to do" ]; then
-            if [ "$errormessage" != "" ]; then
-                echo $errormessage
+            # Hide "Error: Nothing to do"
+            if [ "$errormessage" != "Error: Nothing to do" ]; then
+                if [ "$errormessage" != "" ]; then
+                    echo "$errormessage"
+                fi
+                echo "Installed $package"
             fi
-            echo "Installed $package"
         fi
     fi
 }
@@ -695,6 +718,7 @@ create_user_linux() {
         audio
         bluetooth
         dialout
+        docker
         gpio
         i2c
         plugdev
@@ -764,6 +788,7 @@ create_user_freebsd() {
         audio
         bluetooth
         dialout
+        docker
         gpio
         i2c
         plugdev
@@ -810,8 +835,14 @@ fix_dir_permissions() {
 install_nodejs() {
     print_bold "Node.js not found. Installing..."
 
-    if [ "$INSTALL_CMD" = "yum" ]; then
-        $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+    if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+        if [ "$INSTALL_CMD" = "yum" ]; then
+            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+            REPO_DIR="/etc/yum.repos.d"
+        else
+            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+            REPO_DIR="/etc/yum.repos.d"
+        fi
         SYS_ARCH=$(uname -m)
         NODEJS_REPO_CONTENT="[nodesource-nodejs]
 name=Node.js Packages for Linux RPM based distros - $SYS_ARCH
@@ -823,11 +854,11 @@ gpgkey=https://rpm.nodesource.com/gpgkey/ns-operations-public.key
 module_hotfixes=1"
 
         if [ "$IS_ROOT" = true ]; then
-            echo "$NODEJS_REPO_CONTENT" | tee /etc/yum.repos.d/nodesource-nodejs.repo >/dev/null
+            echo "$NODEJS_REPO_CONTENT" | tee $REPO_DIR/nodesource-nodejs.repo >/dev/null
             $INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
             $INSTALL_CMD $INSTALL_CMD_ARGS nodejs
         else
-            echo "$NODEJS_REPO_CONTENT" | $SUDOX tee /etc/yum.repos.d/nodesource-nodejs.repo >/dev/null
+            echo "$NODEJS_REPO_CONTENT" | $SUDOX tee $REPO_DIR/nodesource-nodejs.repo >/dev/null
             $SUDOX $INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS nodejs
         fi
@@ -873,7 +904,7 @@ module_hotfixes=1"
 }
 
 detect_ip_address() {
-    # Detect IP address
+    # Detect IP address - ensure only one IP is returned
     local IP
     IP_COMMAND=$(type "ip" &>/dev/null && echo "ip addr show" || echo "ifconfig")
     if [ "$HOST_PLATFORM" = "osx" ]; then
@@ -881,7 +912,9 @@ detect_ip_address() {
     else
         IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1 | head -1)
     fi
-    echo $IP
+    # Ensure we return only the first IP address, removing any potential newlines or extra content
+    IP=$(echo "$IP" | head -1 | tr -d '\n\r' | awk '{print $1}')
+    echo "$IP"
 }
 
 install_redis() {

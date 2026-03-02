@@ -110,7 +110,11 @@ fi
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS makecache
+else
+    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+fi
 
 # Install Node.js if it is not installed
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
@@ -168,7 +172,7 @@ echo "Directory $IOB_DIR created"
 
 # Log some information about the installer
 touch "$INSTALLER_INFO_FILE"
-chmod 777 ""
+chmod 664 "$INSTALLER_INFO_FILE"
 echo "Installer version: $INSTALLER_VERSION" >>"$INSTALLER_INFO_FILE"
 echo "Installation date $(date +%F)" >>"$INSTALLER_INFO_FILE"
 echo "Platform: $HOST_PLATFORM" >>"$INSTALLER_INFO_FILE"

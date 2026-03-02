@@ -3,8 +3,18 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2026-01-31"
-NODE_MAJOR=22 #recommended major nodejs version for ioBroker, please adjust if the recommendation changes. This the target when no other option is set.
+VERSION="2026-03-02"
+
+# Load recommended Node.js version from versions.json (fallback to 22 if not reachable)
+VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
+NODE_MAJOR=22
+VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
+if [ -n "$VERSIONS_JSON" ]; then
+    NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
+    if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
+        NODE_MAJOR=$NODE_MAJOR_FROM_JSON
+    fi
+fi
 
 # Check if version option is a valid one
 if [[ -z "$1" ]]; then
