@@ -427,7 +427,7 @@ echo "Removing dfsg-nodejs"
 eval "$DFSGREM"
 echo ""
 
-echo -e "\n\n*** These repos are active on your system:"
+echo -e "\n\n*** The following repos are active on your system:"
 $SUDOX "$INSTALL_CMD" update
 echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing."
 if ! $SUDOX "$INSTALL_CMD" install -y -qq ca-certificates curl gnupg; then
