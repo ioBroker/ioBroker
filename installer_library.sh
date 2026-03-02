@@ -695,6 +695,7 @@ create_user_linux() {
         audio
         bluetooth
         dialout
+        docker
         gpio
         i2c
         plugdev
@@ -764,6 +765,7 @@ create_user_freebsd() {
         audio
         bluetooth
         dialout
+        docker
         gpio
         i2c
         plugdev

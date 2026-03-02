@@ -1,6 +1,7 @@
 # Changelog for Linux-Fixer-Script
 
 ## 2026-01-26
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
 * Extend docker detection by adding .containerenv for Podman or CRI-O
 
 ## 2025-09-08

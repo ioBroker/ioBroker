@@ -4,8 +4,7 @@
 * Added --no-autostart flag to prevent ioBroker from starting automatically after installation
 * Removed some quotations to make instakller work again on some systems
 * Added `--redis` flag to install and configure Redis server for ioBroker states and objects storage
-
-## 2026-01-26
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
 * Adjusted nodejs installation to nodesource defaults
 * Restrict installations to 64bit (amd64 and arm64) architecture
 * Extend docker detection by adding .containerenv for Podman or CRI-O
