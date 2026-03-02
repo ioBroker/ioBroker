@@ -1,9 +1,8 @@
 # Changelog for Linux-Installer-Script
 
-## 2026-02-14
+## 2026-03-02
 * Use deb822 format for nodesource.sources in accordance with nodesource installer script
-
-## 2026-02-01
+* Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
 * Fixed IP detection to prevent multiple IP addresses in final installation message when both ethernet and WiFi interfaces are active
 * Added --no-autostart flag to prevent ioBroker from starting automatically after installation
 * Removed some quotations to make instakller work again on some systems
