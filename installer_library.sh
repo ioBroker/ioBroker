@@ -178,19 +178,24 @@ install_package_linux() {
     fi
     if [ $? -ne 0 ]; then
         if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
-            # Install it
+            # Install it; capture stderr for error reporting, discard stdout
             errormessage=$($SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS "$package" 2>&1 >/dev/null)
+            install_exit=$?
+            if [ $install_exit -eq 0 ]; then
+                echo "Installed $package"
+            elif [ "$errormessage" != "" ]; then
+                echo "$errormessage"
+            fi
         else
             # Install it
             errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
-        fi
-
-        # Hide "Error: Nothing to do"
-        if [ "$errormessage" != "Error: Nothing to do" ]; then
-            if [ "$errormessage" != "" ]; then
-                echo $errormessage
+            # Hide "Error: Nothing to do"
+            if [ "$errormessage" != "Error: Nothing to do" ]; then
+                if [ "$errormessage" != "" ]; then
+                    echo "$errormessage"
+                fi
+                echo "Installed $package"
             fi
-            echo "Installed $package"
         fi
     fi
 }
