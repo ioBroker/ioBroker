@@ -1,7 +1,14 @@
 # Changelog for Linux-Installer-Script
 
-## 2025-09-18
+## 2026-02-01
 * Fixed IP detection to prevent multiple IP addresses in final installation message when both ethernet and WiFi interfaces are active
+* Added --no-autostart flag to prevent ioBroker from starting automatically after installation
+* Removed some quotations to make instakller work again on some systems
+* Added `--redis` flag to install and configure Redis server for ioBroker states and objects storage
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
+* Adjusted nodejs installation to nodesource defaults
+* Restrict installations to 64bit (amd64 and arm64) architecture
+* Extend docker detection by adding .containerenv for Podman or CRI-O
 
 ## 2025-08-09
 * Install Node.js 22 by default for installer
