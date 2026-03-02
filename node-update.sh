@@ -315,7 +315,7 @@ then
     exit
 fi
 VERNODE=$(node -v)
-if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.* ]; then
+if [[ "$VERNODE" = "v$NODERECOM" ]] && ls /etc/apt/sources.list.d/nodesource.* >/dev/null 2>&1; then
     echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one."
     echo -e "\n*** You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
     echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
@@ -330,7 +330,7 @@ if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.*
 fi
 
 
-if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.d/nodesource.* ]; then
+if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || ! ls /etc/apt/sources.list.d/nodesource.* >/dev/null 2>&1; then
     echo -e "\nYou are missing the nodesource repo file or"
     echo -e "you want to change your current nodejs version: $VERNODE ?"
 
