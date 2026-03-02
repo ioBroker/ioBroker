@@ -1,13 +1,22 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-02-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-03-02" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
+# (default fallback values, overridden by versions.json if reachable)
 # ------------------------------
+VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 NODE_MAJOR=22
-NODE_JS_BREW_URL="https://nodejs.org/dist/v22.22.0/node-v22.22.0.pkg"
+VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
+if [ -n "$VERSIONS_JSON" ]; then
+    NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
+    if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
+        NODE_MAJOR=$NODE_MAJOR_FROM_JSON
+    fi
+fi
+NODE_JS_BREW_URL="https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/"
 
 # ------------------------------
 # test function of the library

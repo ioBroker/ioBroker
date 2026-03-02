@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2026-03-02
+* Replace hardcoded Node.js version with dynamic lookup from `versions.json`
+
 ## 2026-01-31
 * Fixed finding repo signature keys
 * Removed deprecated dependency

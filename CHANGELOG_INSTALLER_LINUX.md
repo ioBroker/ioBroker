@@ -1,6 +1,9 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-03-02
+* Replace hardcoded Node.js version with dynamic lookup from `versions.json`
+
+## 2026-03-02
 * Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
 
 ## 2026-02-01
