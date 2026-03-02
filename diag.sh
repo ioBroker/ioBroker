@@ -870,12 +870,6 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     fi
 fi
 
-
-
-
-
-
-
 check_architecture
 
 echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
