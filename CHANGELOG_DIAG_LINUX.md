@@ -2,6 +2,8 @@
 
 ## 2026-03-01
 * nodejs vulnerability check is more robust
+* Changed output of netstat - Use ss if available.
+* Added check for running malware process 'pawns-cli'
 
 ## 2026-01-31
 * Improved --help option
