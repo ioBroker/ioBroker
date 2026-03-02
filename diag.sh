@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-02-01" #version of this script
+SKRIPTV="2026-02-21" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -67,6 +67,11 @@ if ! [ -x "$(command -v distro-info)" ]; then
         fi
     fi
 fi
+
+# Farbdefinitionen
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 
 # VARIABLES
 export LC_ALL=C
@@ -844,12 +849,25 @@ else
 fi
 
 ### Is my nodejs vulnerable?
+# if [[ $NODENOTCORR -eq 0 ]]; then
+#     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
+#     cd /home/iobroker || exit
+#     sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+#     sudo -H -u iobroker npx is-my-node-vulnerable
+#     cd || exit
+# fi
+
+
 if [[ $NODENOTCORR -eq 0 ]]; then
     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
-    cd /home/iobroker || exit
-    sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-    sudo -H -u iobroker npx is-my-node-vulnerable
-    cd || exit
+    if [ -d "/home/iobroker" ]; then
+        cd /home/iobroker || { echo -e "\033[33mDirectory /home/iobroker does not exist, skipping check.\033[0m"; }
+        sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+        sudo -H -u iobroker npx is-my-node-vulnerable
+        cd || { echo -e "\033[33mCould not leave directory, proceeding anyway.\033[0m"; }
+    else
+        echo -e "\033[33mDirectory /home/iobroker does not exist, skipping check.\033[0m"
+    fi
 fi
 
 check_architecture
@@ -920,9 +938,32 @@ fi
 echo ""
 
 echo -e "\033[34;107m*** Listening Ports ***\033[0m"
-sudo netstat -tulpen #| sed -n '1,2p;/LISTEN/p';
-# Alternativ - ss ist nicht ueberall installiert
-# sudo ss -tulwp | grep LISTEN;
+if command -v ss &> /dev/null; then
+    sudo ss -tulp
+else
+sudo netstat -tulpn
+fi
+
+# Check if malware process pawns-cli is running
+if pgrep "pawns-cli" > /dev/null; then
+    if [ "$SKRPTLANG" == "--de" ]; then
+        echo -e "${RED}WARNUNG: Der Prozess 'pawns-cli' läuft auf diesem System!${NC}"
+        echo -e "${RED}Dies könnte ein Hinweis auf Malwarebefall sein.${NC}"
+        echo -e "${RED}Bitte überprüfen Sie das System und entfernen Sie den Prozess, falls er nicht legitim ist.${NC}"
+        echo -e "${RED}Schauen Sie im Ordner Global bei den Skripten nach verdächtigen Einträgen${NC}"
+        echo -e "${RED}Oftmals ist ein offen im Internet stehender ioBroker die Ursache. Das System muss abgesichert neuinstalliert werden.${NC}"
+        echo -e "${RED}Ein Backup muss aus der Zeit vor dem Befall stammen.${NC}"
+    else
+        echo -e "${RED}WARNING: The process 'pawns-cli' is running on this system!${NC}"
+        echo -e "${RED}This could be an indication of malware infection.${NC}"
+        echo -e "${RED}Please check the system and remove the process if it is not legitimate.${NC}"
+        echo -e "${RED}Check the scripts in the Global folder for any suspicious entries.${NC}"
+        echo -e "${RED}Often, the cause is an ioBroker installation that is openly accessible on the internet. The system must be reinstalled securely.${NC}"
+        echo -e "${RED}A backup must be from before the infection.${NC}"
+    fi
+fi
+
+
 echo ""
 echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m"
 echo ""
