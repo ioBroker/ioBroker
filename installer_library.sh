@@ -907,6 +907,7 @@ echo "Pin-Priority: 1001" | tee -a /etc/apt/preferences.d/nodejs > /dev/null
             $SUDOX rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+            $SUDOX chmod 644 /usr/share/keyrings/nodesource.gpg
             arch=$(dpkg --print-architecture)
 
     if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ]; then

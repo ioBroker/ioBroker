@@ -330,7 +330,7 @@ if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.*
 fi
 
 
-if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.nodesource.* ]; then
+if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.d/nodesource.* ]; then
     echo -e "\nYou are missing the nodesource repo file or"
     echo -e "you want to change your current nodejs version: $VERNODE ?"
 
