@@ -19,7 +19,7 @@ function getVersionsConfig() {
         npmRecommended: 10,
         nodeJsAccepted: [18, 20, 22, 24]
     };
-    
+
     try {
         if (fs.existsSync(versionsPath)) {
             const data = JSON.parse(fs.readFileSync(versionsPath, 'utf8'));
@@ -28,7 +28,7 @@ function getVersionsConfig() {
     } catch (e) {
         console.warn('Warning: Could not read versions.json, using defaults');
     }
-    
+
     return config;
 }
 

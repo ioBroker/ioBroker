@@ -71,6 +71,9 @@ A single adapter's memory fingerprint is roundabout 10 to 60 MB.
 ### Installation and first steps
 * [ioBroker Download](https://www.iobroker.net/#en/download)
 
+### Command Reference
+* [Complete Parameters Reference](PARAMETERS.md) - Comprehensive list of all available parameters for all ioBroker commands (install, fix, diag, node-update)
+
 ### Community support
 * Get help in the [ioBroker Forums](https://forum.iobroker.net) (english, german and russian languages)
 

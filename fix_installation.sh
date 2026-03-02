@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2025-09-08" # format YYYY-MM-DD
+FIXER_VERSION="2025-09-18" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -181,7 +181,11 @@ print_step "Installing prerequisites" 1 "$NUM_STEPS"
 if [ "$SKIP_UPDATE" = true ]; then
     echo "Skipping system package repository update (--no-update flag specified)"
 else
-    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+    if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+        $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS makecache
+    else
+        $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
+    fi
 fi
 
 # Determine the platform we operate on and select the installation routine/packages accordingly

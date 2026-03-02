@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2025-09-18" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-03-02" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -11,12 +11,12 @@ get_version_from_json() {
     local key="$1"
     local versions_url="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
     local versions_file="/tmp/versions.json"
-    
+
     # Download versions.json if not already present
     if [ ! -f "$versions_file" ]; then
         curl -sL "$versions_url" > "$versions_file" 2>/dev/null
     fi
-    
+
     # Read value using jq if available, otherwise fallback to default values
     if command -v jq >/dev/null 2>&1 && [ -f "$versions_file" ]; then
         jq -r ".${key} // empty" "$versions_file" 2>/dev/null
@@ -34,7 +34,7 @@ get_version_from_json() {
 NODE_MAJOR=$(get_version_from_json "nodeJsRecommended")
 # Fallback to 22 if empty
 NODE_MAJOR=${NODE_MAJOR:-22}
-NODE_JS_BREW_URL="https://nodejs.org/dist/v${NODE_MAJOR}.18.0/node-v${NODE_MAJOR}.18.0.pkg"
+NODE_JS_BREW_URL="https://nodejs.org/dist/v22.22.0/node-v22.22.0.pkg"
 
 # ------------------------------
 # test function of the library
@@ -49,7 +49,7 @@ enable_colored_output() {
     # Enable colored output
     if test -t 1; then                                  # if terminal
         ncolors=$(which tput >/dev/null && tput colors) # supports color
-        if test -n "$ncolors" && test $ncolors -ge 8; then
+        if test -n "$ncolors" && test "$ncolors" -ge 8; then
             termcols=$(tput cols)
             bold="$(tput bold)"
             underline="$(tput smul)"
@@ -121,7 +121,12 @@ get_platform_params() {
         HOST_PLATFORM="linux"
         INSTALL_CMD="apt-get"
         INSTALL_CMD_ARGS="install -yq"
-        if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
+        if [[ $(which "dnf" 2>/dev/null) == *"/dnf" ]]; then
+            INSTALL_CMD="dnf"
+            # The args -y and -q have to be separate
+            INSTALL_CMD_ARGS="install -q -y"
+            INSTALL_CMD_UPD_ARGS="-y"
+        elif [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
             INSTALL_CMD="yum"
             # The args -y and -q have to be separate
             INSTALL_CMD_ARGS="install -q -y"
@@ -193,22 +198,31 @@ function set_some_common_params() {
 install_package_linux() {
     package="$1"
     # Test if the package is installed
-    dpkg -s "$package" &>/dev/null
+    if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+        rpm -q "$package" &>/dev/null
+    else
+        dpkg -s "$package" &>/dev/null
+    fi
     if [ $? -ne 0 ]; then
-        if [ "$INSTALL_CMD" = "yum" ]; then
-            # Install it
-            errormessage=$($SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS $package >/dev/null 2>&1)
+        if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+            # Install it; capture stderr for error reporting, discard stdout
+            errormessage=$($SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS "$package" 2>&1 >/dev/null)
+            install_exit=$?
+            if [ $install_exit -eq 0 ]; then
+                echo "Installed $package"
+            elif [ "$errormessage" != "" ]; then
+                echo "$errormessage"
+            fi
         else
             # Install it
             errormessage=$($SUDOX $INSTALL_CMD update -qq && $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS --no-install-recommends -yqq $package)
-        fi
-
-        # Hide "Error: Nothing to do"
-        if [ "$errormessage" != "Error: Nothing to do" ]; then
-            if [ "$errormessage" != "" ]; then
-                echo $errormessage
+            # Hide "Error: Nothing to do"
+            if [ "$errormessage" != "Error: Nothing to do" ]; then
+                if [ "$errormessage" != "" ]; then
+                    echo "$errormessage"
+                fi
+                echo "Installed $package"
             fi
-            echo "Installed $package"
         fi
     fi
 }
@@ -477,8 +491,8 @@ function append_to_file() {
 }
 
 running_in_docker() {
-    # Test if we're running inside a docker container or as github actions job while building docker container image
-    if awk -F/ '$2 == "docker"' /proc/self/cgroup | read || awk -F/ '$2 == "buildkit"' /proc/self/cgroup | read || test -f /.dockerenv || test -f /opt/scripts/.docker_config/.thisisdocker; then
+    # Test if we're running inside a container or as github actions job while building docker container image
+    if awk -F/ '$2 == "docker"' /proc/self/cgroup | read || awk -F/ '$2 == "buildkit"' /proc/self/cgroup | read || test -f /.dockerenv || test -f /run/.containerenv || test -f /opt/scripts/.docker_config/.thisisdocker; then
         return 0
     else
         return 1
@@ -722,6 +736,7 @@ create_user_linux() {
         audio
         bluetooth
         dialout
+        docker
         gpio
         i2c
         plugdev
@@ -791,6 +806,7 @@ create_user_freebsd() {
         audio
         bluetooth
         dialout
+        docker
         gpio
         i2c
         plugdev
@@ -837,8 +853,14 @@ fix_dir_permissions() {
 install_nodejs() {
     print_bold "Node.js not found. Installing..."
 
-    if [ "$INSTALL_CMD" = "yum" ]; then
-        $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+    if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
+        if [ "$INSTALL_CMD" = "yum" ]; then
+            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+            REPO_DIR="/etc/yum.repos.d"
+        else
+            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+            REPO_DIR="/etc/yum.repos.d"
+        fi
         SYS_ARCH=$(uname -m)
         NODEJS_REPO_CONTENT="[nodesource-nodejs]
 name=Node.js Packages for Linux RPM based distros - $SYS_ARCH
@@ -850,11 +872,11 @@ gpgkey=https://rpm.nodesource.com/gpgkey/ns-operations-public.key
 module_hotfixes=1"
 
         if [ "$IS_ROOT" = true ]; then
-            echo "$NODEJS_REPO_CONTENT" | tee /etc/yum.repos.d/nodesource-nodejs.repo >/dev/null
+            echo "$NODEJS_REPO_CONTENT" | tee $REPO_DIR/nodesource-nodejs.repo >/dev/null
             $INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
             $INSTALL_CMD $INSTALL_CMD_ARGS nodejs
         else
-            echo "$NODEJS_REPO_CONTENT" | $SUDOX tee /etc/yum.repos.d/nodesource-nodejs.repo >/dev/null
+            echo "$NODEJS_REPO_CONTENT" | $SUDOX tee $REPO_DIR/nodesource-nodejs.repo >/dev/null
             $SUDOX $INSTALL_CMD makecache --disablerepo="*" --enablerepo="nodesource-nodejs"
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS nodejs
         fi
@@ -869,19 +891,23 @@ module_hotfixes=1"
         if [ "$IS_ROOT" = true ]; then
             $INSTALL_CMD update 2>&1 >/dev/null
             $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
-            mkdir -p /etc/apt/keyrings
+            mkdir -p /usr/share/keyrings
+            rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+            arch=$(dpkg --print-architecture)
+            echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs
         else
             $SUDOX $INSTALL_CMD update 2>&1 >/dev/null
             $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
-            $SUDOX mkdir -p /etc/apt/keyrings
+            $SUDOX mkdir -p /usr/share/keyrings
+            $SUDOX rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
             $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
-            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs.pref
+            curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
+            arch=$(dpkg --print-architecture)
+            echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
+            echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | $SUDOX tee /etc/apt/preferences.d/nodejs
         fi
     fi
     install_package nodejs
@@ -891,12 +917,12 @@ module_hotfixes=1"
         echo "${red}Cannot install Node.js! Please install it manually.${normal}"
         exit 1
     else
-        echo "${bold}Node.js Installed successfully!${normal}"
+        echo "${bold}Node.js installed successfully!${normal}"
     fi
 }
 
 detect_ip_address() {
-    # Detect IP address
+    # Detect IP address - ensure only one IP is returned
     local IP
     IP_COMMAND=$(type "ip" &>/dev/null && echo "ip addr show" || echo "ifconfig")
     if [ "$HOST_PLATFORM" = "osx" ]; then
@@ -904,7 +930,111 @@ detect_ip_address() {
     else
         IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1 | head -1)
     fi
-    echo $IP
+    # Ensure we return only the first IP address, removing any potential newlines or extra content
+    IP=$(echo "$IP" | head -1 | tr -d '\n\r' | awk '{print $1}')
+    echo "$IP"
+}
+
+install_redis() {
+    echo "Installing and configuring Redis..."
+    
+    # Install Redis server
+    if [ "$HOST_PLATFORM" = "linux" ]; then
+        install_package redis-server
+        
+        # Configure Redis
+        REDIS_CONF="/etc/redis/redis.conf"
+        if [ -f "$REDIS_CONF" ]; then
+            echo "Configuring Redis..."
+            
+            # Backup original config
+            $SUDOX cp "$REDIS_CONF" "$REDIS_CONF.backup"
+            
+            # Configure bind to localhost and potentially other interfaces
+            $SUDOX sed -i 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' "$REDIS_CONF"
+
+            # Detect init system and enable/start Redis service
+            if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
+                $SUDOX systemctl enable redis-server
+                $SUDOX systemctl start redis-server
+            elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
+                $SUDOX service redis-server start
+                $SUDOX update-rc.d redis-server defaults
+            fi
+            
+            echo "Redis installed and configured successfully"
+        else
+            echo "Warning: Redis configuration file not found at $REDIS_CONF"
+        fi
+    elif [ "$HOST_PLATFORM" = "osx" ]; then
+        # macOS installation
+        if command -v brew >/dev/null 2>&1; then
+            brew install redis
+            echo "Redis installed on macOS"
+        else
+            echo "Homebrew not found. Please install Redis manually on macOS"
+        fi
+    elif [ "$HOST_PLATFORM" = "freebsd" ]; then
+        # FreeBSD installation
+        install_package redis
+        echo "Redis installed on FreeBSD"
+    fi
+}
+
+configure_iobroker_redis() {
+    echo "Configuring ioBroker to use Redis..."
+    
+    # Create Redis configuration for ioBroker
+    local IOB_REDIS_CONFIG=$(cat <<-EOF
+{
+  "objects": {
+    "type": "redis",
+    "host": "127.0.0.1",
+    "port": 6379,
+    "options": {
+      "db": 0
+    }
+  },
+  "states": {
+    "type": "redis", 
+    "host": "127.0.0.1",
+    "port": 6379,
+    "options": {
+      "db": 1
+    }
+  }
+}
+EOF
+)
+
+    # Write Redis configuration to ioBroker config
+    local IOB_CONFIG_FILE="$IOB_DIR/iobroker-data/iobroker.json"
+    if [ ! -d "$IOB_DIR/iobroker-data" ]; then
+        mkdir -p "$IOB_DIR/iobroker-data"
+    fi
+    
+    echo "$IOB_REDIS_CONFIG" > "$IOB_CONFIG_FILE"
+    change_owner "$IOB_USER" "$IOB_CONFIG_FILE"
+    
+    echo "ioBroker configured to use Redis backend"
+}
+
+set_valid_redis_locale() {
+    # Dynamically detect the redis-server service file path
+    local REDIS_SERVICE_FILE
+    REDIS_SERVICE_FILE=$(systemctl show -p FragmentPath redis-server 2>/dev/null | cut -d= -f2)
+    # Check if redis is installed
+    if [ -n "$REDIS_SERVICE_FILE" ] && [ -f "$REDIS_SERVICE_FILE" ]; then
+        # Check if redis is used by ioBroker
+        if grep -q "\"type\": \"redis\"" "$IOB_DIR/iobroker-data/iobroker.json" 2>/dev/null; then
+            # Check if the redis service file already contains the LC_ALL setting
+            if ! grep -q "LC_ALL" "$REDIS_SERVICE_FILE"; then
+                $SUDOX sed -i '/\[Service\]/a Environment="LC_ALL=C"' "$REDIS_SERVICE_FILE"
+                $SUDOX systemctl daemon-reload
+                $SUDOX systemctl restart redis-server
+            fi
+        fi
+    fi
 }
 
 echo "library: loaded"
