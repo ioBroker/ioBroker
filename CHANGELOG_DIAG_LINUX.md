@@ -1,5 +1,21 @@
 # Changelog for Linux-Diag-Script
 
+## 2026-02-21
+* Changed output of netstat - Use ss if available.
+* Added check for running malware process 'pawns-cli'
+
+## 2026-02-01
+* Display-Server detection is more robust now
+* Improved --help option
+
+## 2026-01-30
+* Minor fixes
+
+## 2026-01-26
+* Only architectures amd64 and arm64 are supported for current nodejs versions
+* Removed check for corepack
+* Removed generic messages concerning EXT4 file system
+
 ## 2025-08-09
 * Added nodejs vulnerability check
 * Removed references to static release names 
