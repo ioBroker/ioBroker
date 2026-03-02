@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-02-21" #version of this script
+SKRIPTV="2026-03-01" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -785,6 +785,7 @@ check_nodejs_installation() {
     # Wenn Probleme gefunden wurden
     if [[ ${#problems[@]} -gt 0 ]]; then
         if [[ "$show_messages" == "true" ]]; then
+            NODENOTCORR=1
             if [[ "$SKRPTLANG" == "--de" ]]; then
                 echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
                 echo "Probleme: ${problems[*]}"
@@ -849,25 +850,17 @@ else
 fi
 
 ### Is my nodejs vulnerable?
-# if [[ $NODENOTCORR -eq 0 ]]; then
-#     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
-#     cd /home/iobroker || exit
-#     sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-#     sudo -H -u iobroker npx is-my-node-vulnerable
-#     cd || exit
-# fi
-
 
 if [[ $NODENOTCORR -eq 0 ]]; then
     echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
     if [ -d "/home/iobroker" ]; then
-        cd /home/iobroker || { echo -e "\033[33mDirectory /home/iobroker does not exist, skipping check.\033[0m"; }
-        sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-        sudo -H -u iobroker npx is-my-node-vulnerable
-        cd || { echo -e "\033[33mCould not leave directory, proceeding anyway.\033[0m"; }
+        cd /home/iobroker || exit
     else
-        echo -e "\033[33mDirectory /home/iobroker does not exist, skipping check.\033[0m"
+        cd ~ || exit
     fi
+    sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
+    sudo -H -u "$(whoami)" npx is-my-node-vulnerable
+    cd || exit
 fi
 
 check_architecture
