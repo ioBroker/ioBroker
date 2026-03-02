@@ -1,8 +1,10 @@
 # Changelog for Linux-Fixer-Script
 
-## 2025-09-18
+## 2026-01-26
 * Fixed system package update on Fedora and RPM-based distributions to use makecache instead of update
 * Added support for dnf package manager (modern Fedora) alongside existing yum support
+* Added iobroker user to docker group if it exists to enable unix socket access to docker API
+* Extend docker detection by adding .containerenv for Podman or CRI-O
 
 ## 2025-09-08
 * Added `--no-update` flag to skip system package repository updates during fix process
