@@ -1,6 +1,7 @@
 # Changelog for Node.js Updater Script
 
 ## 2026-03-02
+* Use deb822 format for sources in accordance with nodesource installer script
 * Replace hardcoded Node.js version with dynamic lookup from `versions.json`
 
 ## 2026-01-31

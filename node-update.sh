@@ -55,8 +55,8 @@ if [ -z "$(type -P apt-get)" ]; then
     exit 1
 fi
 
-if [[ $DEBIANRELEASE = *buster* ]] || [[ $DEBIANRELEASE = 10.* ]] && [[ $1 -ne 18 ]]; then
-    echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't run.\nPlease install the current Debian Stable"
+if ([[ $DEBIANRELEASE = *buster* ]] || [[ $DEBIANRELEASE = 10.* ]]) && [[ $1 -ne 18 ]]; then
+    echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't run.\nPlease install the current Debian Stable release"
     unset LC_ALL
     exit 1
 fi
@@ -315,7 +315,7 @@ then
     exit
 fi
 VERNODE=$(node -v)
-if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.list ]; then
+if [[ "$VERNODE" = "v$NODERECOM" ]] && ls /etc/apt/sources.list.d/nodesource.* >/dev/null 2>&1; then
     echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one."
     echo -e "\n*** You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
     echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
@@ -330,8 +330,8 @@ if [[ "$VERNODE" = "v$NODERECOM" ]] && [ -f /etc/apt/sources.list.d/nodesource.l
 fi
 
 
-if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || [ ! -f /etc/apt/sources.list.nodesource.list ]; then
-    echo -e "\nYou are missing the nodesource.list or"
+if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || ! ls /etc/apt/sources.list.d/nodesource.* >/dev/null 2>&1; then
+    echo -e "\nYou are missing the nodesource repo file or"
     echo -e "you want to change your current nodejs version: $VERNODE ?"
 
     elif [[ $1 -gt 18 ]]; then
@@ -372,7 +372,7 @@ then
         echo "Trying to fix your installation now. Please be patient."
         # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
         $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
-        # Deleting nodesource.list Will be recreated later.
+        # Deleting nodesource repo file. Will be recreated later.
         $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
     else
         echo "Not fixing your installation. Exiting."
@@ -427,7 +427,7 @@ echo "Removing dfsg-nodejs"
 eval "$DFSGREM"
 echo ""
 
-echo -e "\n\n*** These repos are active on your system:"
+echo -e "\n\n*** The following repos are active on your system:"
 $SUDOX "$INSTALL_CMD" update
 echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing."
 if ! $SUDOX "$INSTALL_CMD" install -y -qq ca-certificates curl gnupg; then
@@ -453,24 +453,34 @@ $SUDOX rm -f /etc/apt/sources.list.d/nodesource.* || true
         handle_error "$?" "Failed to set correct permissions on /usr/share/keyrings/nodesource.gpg"
     fi
 
-# Setting up a fresh & clean nodesource.list
-echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.list and pinning source"
+# Setting up a fresh & clean nodesource repo file
+echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.sources and pinning source"
 echo ""
 
     arch=$(dpkg --print-architecture)
-    if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ] && [ "$arch" != "armhf" ]; then
-      handle_error "1" "Unsupported architecture: $arch. Only amd64, arm64, and armhf are supported."
+    if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ]; then
+      handle_error "1" "Unsupported architecture: $arch. Only amd64 and arm64 are supported."
     fi
 
-    echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+#   echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+
+    cat <<EOF | $SUDOX tee /etc/apt/sources.list.d/nodesource.sources > /dev/null
+Types: deb
+URIs: https://deb.nodesource.com/node_$NODE_MAJOR.x
+Suites: nodistro
+Components: main
+Architectures: $arch
+Signed-By: /usr/share/keyrings/nodesource.gpg
+EOF
+
+
+    # Nodejs Config
+    echo "Package: nodejs" | $SUDOX tee /etc/apt/preferences.d/nodejs > /dev/null
+    echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs > /dev/null
+    echo "Pin-Priority: 1001" | $SUDOX tee -a /etc/apt/preferences.d/nodejs > /dev/null
 
 
 
-
-#echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list
-
-
-echo -e "Package: nodejs\nPin: origin deb.nodesource.com\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/nodejs
 echo -e "\n*** These repos are active after the adjustments:"
 $SUDOX "$INSTALL_CMD" update
 
