@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-03-03
+* Refactored update subcommand into `INSTALL_CMD_UPD_ARGS` and removed redundant if/else branches
+
 ## 2026-03-02
 * Use deb822 format for nodesource.sources in accordance with nodesource installer script
 * Replace hardcoded Node.js version with dynamic lookup from `versions.json`

@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-03-03
+* Refactored update subcommand into `INSTALL_CMD_UPD_ARGS` and removed redundant if/else branches
+
 ## 2026-03-02
 * Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
 
