@@ -427,6 +427,8 @@ echo "Removing nodejs packages"
 #Remove files to avoid globbing
 sudo rm /home/iobroker/node-update* >/dev/null 2>&1
 sudo rm /home/iobroker/nodejs-update* >/dev/null 2>&1
+sudo rm /home/iobroker/.node-update* >/dev/null 2>&1
+sudo rm /home/iobroker/.nodejs-update* >/dev/null 2>&1
 eval "$DFSGREM"
 echo ""
 
