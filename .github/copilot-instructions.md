@@ -29,7 +29,7 @@ ioBroker is a comprehensive home automation and IoT integration platform install
 - System diagnosis: `./diag.sh` -- comprehensive system health check
 - Language options: `./diag.sh --de` for German output, `./diag.sh --help` for options
 - Fix common issues: `./fix_installation.sh` -- repairs permissions, updates Node.js, compresses databases
-- Node.js update: `./node-update.sh` -- updates Node.js to recommended version
+- Node.js update: `./nodejs_update.sh` -- updates Node.js to recommended version
 
 ## Validation
 
@@ -64,7 +64,7 @@ npm run deploy
 - `installer.sh` + `installer_library.sh` → `dist/install.sh` (combined)
 - `fix_installation.sh` + `installer_library.sh` → `dist/fix.sh` (combined)
 - `diag.sh` → `dist/diag.sh` (copied)
-- `node-update.sh` → `dist/node-update.sh` (copied)
+- `nodejs_update.sh` → `dist/nodejs_update.sh` (copied)
 
 ### Repository Structure
 ```bash
@@ -77,7 +77,7 @@ installer.sh           # Main Linux/macOS installation script
 installer_library.sh   # Shared library functions
 fix_installation.sh    # System repair and maintenance script
 diag.sh               # Diagnostic tool
-node-update.sh        # Node.js update utility
+nodejs_update.sh        # Node.js update utility
 lib-npx/              # Windows NPX installation logic
   install.js          # Main NPX entry point
   installCopyFiles.js # File copying logic
@@ -140,7 +140,7 @@ When making changes to shell scripts, **ALWAYS** update the corresponding change
 - `diag.sh` → `CHANGELOG_DIAG_LINUX.md`
 - `fix_installation.sh` → `CHANGELOG_FIXER_LINUX.md`
 - `installer.sh` → `CHANGELOG_INSTALLER_LINUX.md`
-- `node-update.sh` → `CHANGELOG_NODE_UPDATER.md`
+- `nodejs_update.sh` → `CHANGELOG_NODE_UPDATER.md`
 
 ### Version Variables in Scripts
 When modifying shell scripts, **ALWAYS** update the version variable to current date (YYYY-MM-DD format):
@@ -148,7 +148,7 @@ When modifying shell scripts, **ALWAYS** update the version variable to current 
 - `diag.sh`: Update `SKRIPTV="YYYY-MM-DD"`
 - `fix_installation.sh`: Update `FIXER_VERSION="YYYY-MM-DD"`
 - `installer.sh`: Update `INSTALLER_VERSION="YYYY-MM-DD"`
-- `node-update.sh`: Update `VERSION="YYYY-MM-DD"`
+- `nodejs_update.sh`: Update `VERSION="YYYY-MM-DD"`
 
 ### Changelog Update Process
 1. **Before making script changes**: Note the current date in YYYY-MM-DD format

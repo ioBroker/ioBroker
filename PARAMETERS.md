@@ -198,7 +198,7 @@ iob nodejs-update 22
 ### Direct Node Update Script
 
 ```bash
-./node-update.sh [VERSION]
+./nodejs_update.sh [VERSION]
 ```
 
 Uses the same parameters as `iob nodejs-update` above.

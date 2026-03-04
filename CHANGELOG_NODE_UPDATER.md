@@ -1,4 +1,7 @@
 # Changelog for Node.js Updater Script
+## 2026-03-04
+* Skript renamed to nodejs_update.sh to avoid globbing
+* Fixed removal of nodejs package, including dfsg version
 
 ## 2026-03-02
 * Use deb822 format for sources in accordance with nodesource installer script

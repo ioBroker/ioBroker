@@ -156,7 +156,7 @@ function set_some_common_params() {
     DIAG_URL="https://iobroker.net/diag.sh"
 
     # Where the nodejs Update script is located
-    NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
+    NODE_UPDATER_URL="https://iobroker.net/nodejs_update.sh"
 
     # Remember the full path of bash
     BASH_CMDLINE=$(which bash)

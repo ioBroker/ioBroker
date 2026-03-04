@@ -104,12 +104,12 @@ function deploy() {
     const install = readFileSync(`${dist}install.sh`);
     const fix = readFileSync(`${dist}fix.sh`);
     const diag = readFileSync(`${dist}diag.sh`);
-    const nodeUpdate = readFileSync(`${dist}node-update.sh`);
+    const nodeUpdate = readFileSync(`${dist}nodejs_update.sh`);
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
         .then(() => uploadOneFile('/diag.sh', diag))
-        .then(() => uploadOneFile('/node-update.sh', nodeUpdate));
+        .then(() => uploadOneFile('/nodejs_update.sh', nodeUpdate));
 }
 
 function create() {
@@ -121,7 +121,7 @@ function create() {
     const fix      = readFileSync(`${__dirname}/fix_installation.sh`).toString('utf8');
     const lib      = readFileSync(`${__dirname}/installer_library.sh`).toString('utf8');
     const diag     = readFileSync(`${__dirname}/diag.sh`).toString('utf8');
-    const nodeUpdate = readFileSync(`${__dirname}/node-update.sh`).toString('utf8');
+    const nodeUpdate = readFileSync(`${__dirname}/nodejs_update.sh`).toString('utf8');
 
     // replace
     // LIB_NAME="installer_library.sh"
@@ -130,7 +130,7 @@ function create() {
     writeFileSync(`${dist}install.sh`, replaceLib(install, lib));
     writeFileSync(`${dist}fix.sh`, replaceLib(fix, lib));
     writeFileSync(`${dist}diag.sh`, diag);
-    writeFileSync(`${dist}node-update.sh`, nodeUpdate);
+    writeFileSync(`${dist}nodejs_update.sh`, nodeUpdate);
 }
 
 function fix() {
