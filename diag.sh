@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-03-01" #version of this script
+SKRIPTV="2026-03-06" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -45,7 +45,7 @@ if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
     sleep 15
 fi
 clear
-if [[ "$*" = *--de* ]]; then SKRPTLANG="--de"; fi
+if [[ "$*" =~ --de ]]; then SKRPTLANG="--de"; fi
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "*** iob diag startet, bitte etwas warten ***"
 else
@@ -216,56 +216,56 @@ echo ""
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
 
-    for RELEASE in $EOLDEB; do
-        if [ "$RELEASE" = "$CODENAME" ]; then
+    for RELEASE in "${EOLDEB[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '$DEBSTABLE' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $EOLUBU; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${EOLUBU[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $DEBSTABLE; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${DEBSTABLE[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '$DEBSTABLE'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $UBULTS; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${UBULTS[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '$UBULTS'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $UBUSUP; do
-        if [ "$RELEASE" == "$CODENAME" ] && [ "$RELEASE" != "$UBULTS" ]; then
+    for RELEASE in "${UBUSUP[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
             RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $TESTING; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${TESTING[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDas Betriebssystem mit dem Codenamen '$CODENAME' ist eine Testversion! Es sollte nur zu Testzwecken eingesetzt werden!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $OLDSTABLE; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${OLDSTABLE[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '$DEBSTABLE' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    if [ $UNKNOWNRELEASE -eq 1 ]; then
+    if [[ $UNKNOWNRELEASE -eq 1 ]]; then
         RELEASESTATUS="Das Betriebssystem mit dem Codenamen '$CODENAME' ist unbekannt. Bitte den Status der Unterstützung eigenständig prüfen."
     fi
 
@@ -274,56 +274,56 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 else
     echo -e "\033[34;107m*** LIFE CYCLE STATUS ***\033[0m"
 
-    for RELEASE in $EOLDEB; do
-        if [ "$RELEASE" = "$CODENAME" ]; then
+    for RELEASE in "${EOLDEB[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $EOLUBU; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${EOLUBU[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $DEBSTABLE; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${DEBSTABLE[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '$DEBSTABLE'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $UBULTS; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${UBULTS[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '$UBULTS'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $UBUSUP; do
-        if [ "$RELEASE" == "$CODENAME" ] && [ "$RELEASE" != "$UBULTS" ]; then
+    for RELEASE in "${UBUSUP[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
             RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $TESTING; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${TESTING[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    for RELEASE in $OLDSTABLE; do
-        if [ "$RELEASE" == "$CODENAME" ]; then
+    for RELEASE in "${OLDSTABLE[@]}"; do
+        if [[ "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
-    if [ $UNKNOWNRELEASE -eq 1 ]; then
+    if [[ $UNKNOWNRELEASE -eq 1 ]]; then
         RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
     fi
 
@@ -430,7 +430,7 @@ echo ""
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo -e "\033[34;107m*** ZEIT UND ZEITZONEN ***\033[0m"
 
-    if [ -f "$DOCKER" ]; then
+    if [[ -f "$DOCKER" ]]; then
         date -u
         date
         date +"%Z %z"
@@ -446,7 +446,7 @@ else
 
     echo -e "\033[34;107m*** TIME AND TIMEZONES ***\033[0m"
 
-    if [ -f "$DOCKER" ]; then
+    if [[ -f "$DOCKER" ]]; then
         date -u
         date
         date +"%Z %z"
@@ -481,7 +481,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     fi
     echo ""
 
-    if [ ! -f "$DOCKER" ] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+    if [[ ! -f "$DOCKER" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
 
         # Prompt for username
         echo "Es sollte ein Standarduser angelegt werden! Dieser user kann auch mittels 'sudo' temporär root-Rechte erlangen."
@@ -583,7 +583,7 @@ fi
 echo ""
 echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
-if [[ "$CRITERROR" -gt 0 ]]; then
+if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "\e[31mEs wurden $CRITERROR KRITISCHE FEHLER gefunden.\e[0m \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
@@ -616,7 +616,7 @@ echo ""
 echo -e "\033[32m/var:\033[0m"
 sudo du -h /var/ | sort -rh | head -5
 echo -e ""
-if [ ! -f "$DOCKER" ]; then
+if [[ ! -f "$DOCKER" ]]; then
     journalctl --disk-usage
 fi
 echo ""
@@ -640,10 +640,12 @@ check_zigbee_port() {
     local configured_port
 
     # Hole konfigurierten Port für diese Instanz
-    configured_port=$(echo "$IOBLISTINST" |
-        grep "system.adapter.zigbee.$instance" |
-        awk -F ':' '{print $4}' |
-        cut -c 2-)
+#     configured_port=$(echo "$IOBLISTINST" |
+#         grep "system.adapter.zigbee.$instance" |
+#         awk -F ':' '{print $4}' |
+#         cut -c 2-)
+
+    configured_port=$(awk -F: -v instance="$instance" '$0 ~ "system.adapter.zigbee." instance {print substr($4, 2)}' <<< "$IOBLISTINST")
 
     # Wenn kein Port konfiguriert, überspringe diese Instanz
     [[ -z "$configured_port" ]] && return 0
@@ -828,7 +830,7 @@ fi
 
 ANZNPMTMP=$(find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l)
 echo -e "\033[32mTemp directories causing deletion problem:\033[0m ""$ANZNPMTMP"""
-if [[ $ANZNPMTMP -gt 0 ]]; then
+if (( ANZNPMTMP > 0 )); then
     echo -e "Some problems detected, please run \e[031miob fix\e[0m"
 else
     echo "No problems detected"
@@ -908,13 +910,13 @@ if [ -f /usr/bin/apt-get ]; then
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        if [[ $APT -eq 0 ]]; then
+        if (( APT = 0 )); then
             echo -e "\e[32mOffene Systemupdates: $APT\e[0m"
         else
             echo -e "\e[31mOffene Systemupdates: $APT\e[0m"
         fi
     else
-        if [[ $APT -eq 0 ]]; then
+        if (( APT = 0 )); then
             echo -e "\e[32mPending systemupdates: $APT\e[0m"
         else
             echo -e "\e[31mPending systemupdates: $APT\e[0m"
@@ -1016,15 +1018,15 @@ else
     INSTENV=0
 fi
 INSTENV2=$(
-    if [[ $INSTENV -eq 2 ]]; then
+    if (( INSTENV = 2 )); then
         echo "Docker"
-    elif [ $INSTENV -eq 1 ]; then
+    elif (( INSTENV = 1 )); then
         echo "$SYSTDDVIRT"
     else
         echo "native"
     fi
 )
-if [ -f "$DOCKER" ]; then
+if [[ -f "$DOCKER" ]]; then
     grep -i model /proc/cpuinfo | tail -1
     echo -e "Kernel          : $(uname -m)"
     echo -e "Userland        : $(dpkg --print-architecture)"
@@ -1047,7 +1049,7 @@ else
     echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)"
 fi
 echo -e "User-ID: \t\t$EUID"
-echo -e "Display-Server: \t$(if [[ $XORGTEST -gt 0 ]]; then echo "true"; else echo "false"; fi)"
+echo -e "Display-Server: \t$(if (( XORGTEST > 0 )); then echo "true"; else echo "false"; fi)"
 if [ -f "$DOCKER" ]; then
     echo -e ""
 else
@@ -1129,7 +1131,7 @@ find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*objects\* -exec du 
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -sh {} + | sort -rh | head -n 5
 echo ""
 echo ""
-if [[ $ANZNPMTMP -gt 0 ]]; then
+if (( ANZNPMTMP > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "**********************************************************************"
         echo -e "Probleme wurden erkannt, bitte \e[031miob fix\e[0m ausführen"
@@ -1142,7 +1144,7 @@ if [[ $ANZNPMTMP -gt 0 ]]; then
         echo ""
     fi
 fi
-if [[ "$CRITERROR" -gt 0 ]]; then
+if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
