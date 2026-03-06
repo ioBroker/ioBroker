@@ -52,15 +52,15 @@ else
     echo "*** iob diag is starting up, please wait ***"
 fi
 
-if ! [ -x "$(command -v distro-info)" ]; then
+if ! command -v distro-info >/dev/null; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        if [ -x "$(command -v apt-get)" ]; then
+        if command -v apt-get >/dev/null; then
             echo "iob diag muss aktualisiert werden. Bitte dazu zunächst 'iobroker fix' ausführen."
         else
             echo "iob diag muss aktualisiert werden. Bitte das Paket 'distro-info' nachinstallieren."
         fi
     else
-        if [ -x "$(command -v apt-get)" ]; then
+        if command -v apt-get >/dev/null; then
             echo "iob diag needs to be updated. Please execute 'iobroker fix' first."
         else
             echo "iob diag needs to be updated. Please manually install package 'distro-info'"
@@ -471,7 +471,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "GROUPS=\"$(groups)\""
     echo ""
     echo "User der den 'js-controller' ausführt:"
-    if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
+    if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
@@ -702,7 +702,7 @@ echo ""
 
 # Prüfe ob überhaupt ZigBee-Daten existieren
 for d in /opt/iobroker/iobroker-data/zigbee_*; do
-    if [ -d "$d" ]; then
+    if [[ -d "$d" ]]; then
         echo -e "\033[34;107m*** ZigBee Settings ***\033[0m"
         break
     fi
@@ -841,7 +841,7 @@ fi
 # find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \ &> /dev/null;
 # echo -e "\033[32m1 - Temp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium'>e;
 echo ""
-if [[ $(echo "$NPMLS" | grep ERR -wc -l) -gt 0 ]]; then
+if grep -q ERR <<< "$NPMLS"; then
     echo -e "\033[322mErrors in npm tree:\033[0m"
     echo "$NPMLS" | grep ERR
     echo ""
