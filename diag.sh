@@ -189,7 +189,7 @@ else
 fi
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
-if [ "$SYSTDDVIRT" != "" ]; then
+if [[ -n "$SYSTDDVIRT" ]]; then
     echo -e "Virtualization  : $(systemd-detect-virt)"
 else
     echo "Virtualization  : Docker"
@@ -198,7 +198,7 @@ echo -e "Kernel          : $(uname -m)"
 echo -e "Userland        : $(getconf LONG_BIT) bit"
 
 check_architecture() {
-    if [ "$ARCH" -eq 32 ]; then
+    if (( ARCH == 32 )); then
         echo -e "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
     fi
 }
@@ -380,7 +380,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     echo "Current issues:"
     CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
     CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
-    if [ "$CURRENT_HEX" == "0" ] || [ -z "$CURRENT_HEX" ]; then
+    if (( CURRENT_HEX == 0 )) || [[ -z "$CURRENT_HEX" ]]; then
         echo -e "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=0
@@ -468,7 +468,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der 'iob diag' aufgerufen hat:"
     whoami
     env | grep HOME
-    echo "GROUPS=$(groups)"
+    echo "GROUPS=\"$(groups)\""
     echo ""
     echo "User der den 'js-controller' ausführt:"
     if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
@@ -910,13 +910,13 @@ if [ -f /usr/bin/apt-get ]; then
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        if (( APT = 0 )); then
+        if (( APT == 0 )); then
             echo -e "\e[32mOffene Systemupdates: $APT\e[0m"
         else
             echo -e "\e[31mOffene Systemupdates: $APT\e[0m"
         fi
     else
-        if (( APT = 0 )); then
+        if (( APT == 0 )); then
             echo -e "\e[32mPending systemupdates: $APT\e[0m"
         else
             echo -e "\e[31mPending systemupdates: $APT\e[0m"
@@ -1018,9 +1018,9 @@ else
     INSTENV=0
 fi
 INSTENV2=$(
-    if (( INSTENV = 2 )); then
+    if (( INSTENV == 2 )); then
         echo "Docker"
-    elif (( INSTENV = 1 )); then
+    elif (( INSTENV == 1 )); then
         echo "$SYSTDDVIRT"
     else
         echo "native"
