@@ -40,8 +40,8 @@ fi
 
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
-if [ "$(id -u)" -eq 0 ] && [ ! -f "$DOCKER" ]; then
-    echo -e "You should not be root on your system!\nBetter use your standard user!\n\n"
+if [[ $(id -u) -eq 0 ]] && [[ ! -f "$DOCKER" ]]; then
+    printf "You should not be root on your system!\nBetter use your standard user!\n\n"
     sleep 15
 fi
 clear
@@ -112,7 +112,7 @@ UNKNOWNRELEASE=1
 clear
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo ""
-    echo -e "\033[34;107m*** ioBroker Diagnose ***\033[0m"
+    printf "\033[34;107m*** ioBroker Diagnose ***\033[0m"
     echo ""
     echo "Das Fenster des Terminalprogramms (puTTY) bitte so groß wie möglich ziehen oder den Vollbildmodus verwenden."
     echo ""
@@ -130,13 +130,13 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         echo ""
     fi
     # read -p "Press <Enter> to continue";
-    echo -e "\nBitte eine Taste drücken"
+    printf "\nBitte eine Taste drücken"
     read -r -n 1 -s
     clear
     echo ""
 else
     echo ""
-    echo -e "\033[34;107m*** ioBroker Diagnosis ***\033[0m"
+    printf "\033[34;107m*** ioBroker Diagnosis ***\033[0m"
     echo ""
     echo "Please stretch the window of your terminal programm (puTTY) as wide as possible or switch to full screen"
     echo ""
@@ -152,54 +152,54 @@ else
         echo "* Some output is masked. For full results please use 'iob diag --unmask' *"
         echo "**************************************************************************"
     fi
-    echo -e "\nPress any key to continue"
+    printf "\nPress any key to continue"
     read -r -n 1 -s
     clear
     echo ""
 fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "\033[33m========== Langfassung ab hier markieren und kopieren ===========\033[0m"
+    printf "\033[33m========== Langfassung ab hier markieren und kopieren ===========\033[0m"
     echo ""
     echo "\`\`\`bash"
     echo "Skript v.$SKRIPTV"
     echo ""
-    echo -e "\033[34;107m*** GRUNDSYSTEM ***\033[0m"
+    printf "\033[34;107m*** GRUNDSYSTEM ***\033[0m"
 else
-    echo -e "\033[33m========== Start marking the full check here ===========\033[0m"
+    printf "\033[33m========== Start marking the full check here ===========\033[0m"
     echo ""
     echo "\`\`\`bash"
     echo "Script v.$SKRIPTV"
     echo ""
-    echo -e "\033[34;107m*** BASE SYSTEM ***\033[0m"
+    printf "\033[34;107m*** BASE SYSTEM ***\033[0m"
 fi
 
 if [ -f "$DOCKER" ]; then
-    echo -e "Hardware Vendor : $(cat /sys/devices/virtual/dmi/id/sys_vendor)"
-    echo -e "Kernel          : $(uname -m)"
-    echo -e "Userland        : $(getconf LONG_BIT) bit"
-    echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
+    printf "Hardware Vendor : $(cat /sys/devices/virtual/dmi/id/sys_vendor)"
+    printf "Kernel          : $(uname -m)"
+    printf "Userland        : $(getconf LONG_BIT) bit"
+    printf "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
     source /usr/lib/os-release && echo "Operating System: $PRETTY_NAME"
     hostnamectl | grep -v 'Machine\|Boot\|Operating'
     echo "OS is similar to: $ID_LIKE"
     echo ""
     grep -i model /proc/cpuinfo | tail -1
-    echo -e "Docker          : false"
+    printf "Docker          : false"
 fi
 
 SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
 if [[ -n "$SYSTDDVIRT" ]]; then
-    echo -e "Virtualization  : $(systemd-detect-virt)"
+    printf "Virtualization  : $(systemd-detect-virt)"
 else
     echo "Virtualization  : Docker"
 fi
-echo -e "Kernel          : $(uname -m)"
-echo -e "Userland        : $(getconf LONG_BIT) bit"
+printf "Kernel          : $(uname -m)"
+printf "Userland        : $(getconf LONG_BIT) bit"
 
 check_architecture() {
     if (( ARCH == 32 )); then
-        echo -e "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
+        printf "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
     fi
 }
 
@@ -214,7 +214,7 @@ echo ""
 
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
+    printf "\033[34;107m*** LEBENSZYKLUS STATUS ***\033[0m"
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ "$RELEASE" == "$CODENAME" ]]; then
@@ -269,10 +269,10 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         RELEASESTATUS="Das Betriebssystem mit dem Codenamen '$CODENAME' ist unbekannt. Bitte den Status der Unterstützung eigenständig prüfen."
     fi
 
-    echo -e "$RELEASESTATUS"
+    printf "$RELEASESTATUS"
 
 else
-    echo -e "\033[34;107m*** LIFE CYCLE STATUS ***\033[0m"
+    printf "\033[34;107m*** LIFE CYCLE STATUS ***\033[0m"
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ "$RELEASE" == "$CODENAME" ]]; then
@@ -327,7 +327,7 @@ else
         RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
     fi
 
-    echo -e "$RELEASESTATUS"
+    printf "$RELEASESTATUS"
 fi
 # RASPBERRY only
 if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
@@ -340,7 +340,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     #### TEST CODE  ###
 
     echo ""
-    echo -e "\033[34;107m*** RASPBERRY THROTTLING ***\033[0m"
+    printf "\033[34;107m*** RASPBERRY THROTTLING ***\033[0m"
     # CODE from https://github.com/alwye/get_throttled under MIT Licence
     ISSUES_MAP=(
         [0]="Under-voltage detected"
@@ -381,7 +381,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
     CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
     if (( CURRENT_HEX == 0 )) || [[ -z "$CURRENT_HEX" ]]; then
-        echo -e "\e[32mNo throttling issues detected.\e[0m"
+        printf "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=0
         for ((i = ${#CURRENT_BIN} - 1; i >= 0; i--)); do
@@ -399,7 +399,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     PAST_HEX=${THROTTLED_CODE_HEX:0:1}
     PAST_BIN=${HEX_BIN_MAP[$PAST_HEX]}
     if [ "$PAST_HEX" = "0" ]; then
-        echo -e "\e[32mNo throttling issues detected.\e[0m"
+        printf "\e[32mNo throttling issues detected.\e[0m"
     else
         bit_n=16
         for ((i = ${#PAST_BIN} - 1; i >= 0; i--)); do
@@ -414,13 +414,13 @@ fi
 if [[ "$SKRPTLANG" == "--de" ]]; then
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
-        echo -e "\e[31mDieses System benötigt einen NEUSTART\e[0m"
+        printf "\e[31mDieses System benötigt einen NEUSTART\e[0m"
         echo ""
     fi
 else
     if [[ -f "/var/run/reboot-required" ]]; then
         echo ""
-        echo -e "\e[31mThis system needs to be REBOOTED!\e[0m"
+        printf "\e[31mThis system needs to be REBOOTED!\e[0m"
         echo ""
     fi
 fi
@@ -428,7 +428,7 @@ fi
 echo ""
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "\033[34;107m*** ZEIT UND ZEITZONEN ***\033[0m"
+    printf "\033[34;107m*** ZEIT UND ZEITZONEN ***\033[0m"
 
     if [[ -f "$DOCKER" ]]; then
         date -u
@@ -444,7 +444,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     fi
 else
 
-    echo -e "\033[34;107m*** TIME AND TIMEZONES ***\033[0m"
+    printf "\033[34;107m*** TIME AND TIMEZONES ***\033[0m"
 
     if [[ -f "$DOCKER" ]]; then
         date -u
@@ -464,7 +464,7 @@ fi
 
 echo ""
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "\033[34;107m*** User und Gruppen ***\033[0m"
+    printf "\033[34;107m*** User und Gruppen ***\033[0m"
     echo "User der 'iob diag' aufgerufen hat:"
     whoami
     env | grep HOME
@@ -490,14 +490,14 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 
     fi
 else
-    echo -e "\033[34;107m*** Users and Groups ***\033[0m"
+    printf "\033[34;107m*** Users and Groups ***\033[0m"
     echo "User that called 'iob diag':"
     whoami
     env | grep HOME
     echo "GROUPS=$(groups)"
     echo ""
     echo "User that is running 'js-controller':"
-    if [[ $(pgrep -f iobroker.js-controller) -gt 0 ]]; then
+    if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         echo "$IOUSER"
         sudo -H -u "$IOUSER" env | grep HOME
@@ -517,45 +517,45 @@ else
 
     fi
 fi
-echo -e "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
+printf "\033[34;107m*** DISPLAY-SERVER SETUP ***\033[0m"
 
 if [ -n "$WAYLAND_DISPLAY" ]; then
-    echo -e "Display-Server: \tWayland"
+    printf "Display-Server: \tWayland"
 elif [ -n "$DISPLAY" ]; then
-    echo -e "Display-Server: \tX11"
+    printf "Display-Server: \tX11"
 else
     if command -v loginctl &> /dev/null; then
         session_type=$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type 2>/dev/null | awk -F= '{print $2}')
         if [ "$session_type" = "x11" ] || [ "$session_type" = "wayland" ]; then
-            echo -e "Session: \t\t$session_type" | tr '[:lower:]' '[:upper:]'
+            printf "Session: \t\t$session_type" | tr '[:lower:]' '[:upper:]'
         fi
     fi
-    echo -e "Display-Server: \tUnknown"
+    printf "Display-Server: \tUnknown"
 fi
-echo -e "Display-Manager: \t$(systemctl status display-manager --no-pager | head -n 1)"
+printf "Display-Manager: \t$(systemctl status display-manager --no-pager | head -n 1)"
 
-echo -e "Desktop: \t\t$DESKTOP_SESSION"
-echo -e "Session: \t\t$XDG_SESSION_TYPE"
+printf "Desktop: \t\t$DESKTOP_SESSION"
+printf "Session: \t\t$XDG_SESSION_TYPE"
 
 
 if [ -z "$DOCKER" ]; then
-    echo -e "Boot Target: \t$(systemctl get-default)"
+    printf "Boot Target: \t$(systemctl get-default)"
 fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            echo -e "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen."
+            printf "\nDas System bootet in eine graphische Oberfläche. Im Serverbetrieb wird keine GUI verwendet. Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen."
         else
-            echo -e "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Please set BootTarget to 'multi-user.target' or run 'iobroker fix'"
+            printf "\nSystem is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'. Please set BootTarget to 'multi-user.target' or run 'iobroker fix'"
         fi
     fi
 fi
 echo ""
-echo -e "\033[34;107m*** MEMORY ***\033[0m"
+printf "\033[34;107m*** MEMORY ***\033[0m"
 free -th --mega
 echo ""
-echo -e "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)"
+printf "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)"
 echo ""
 vmstat -S M -s | head -n 10
 
@@ -567,66 +567,66 @@ vmstat -S M -s | head -n 10
 #fi
 
 echo ""
-echo -e "\033[34;107m*** top - Table Of Processes  ***\033[0m"
+printf "\033[34;107m*** top - Table Of Processes  ***\033[0m"
 top -b -n 1 | head -n 5
 
 if [ -f "$DOCKER" ]; then
     echo ""
 else
     echo ""
-    echo -e "\033[34;107m*** FAILED SERVICES ***\033[0m"
+    printf "\033[34;107m*** FAILED SERVICES ***\033[0m"
     echo ""
     systemctl list-units --failed --no-pager
     echo ""
 fi
 
 echo ""
-echo -e "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m"
+printf "\033[34;107m*** DMESG CRITICAL ERRORS ***\033[0m"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
 if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        echo -e "\e[31mEs wurden $CRITERROR KRITISCHE FEHLER gefunden.\e[0m \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
+        printf "\e[31mEs wurden $CRITERROR KRITISCHE FEHLER gefunden.\e[0m \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
-        echo -e "\e[31m$CRITERROR CRITICAL ERRORS DETECTED!\e[0m \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
+        printf "\e[31m$CRITERROR CRITICAL ERRORS DETECTED!\e[0m \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        echo -e "\e[32mEs wurden keine kritischen Fehler gefunden\e[0m"
+        printf "\e[32mEs wurden keine kritischen Fehler gefunden\e[0m"
     else
-        echo -e "\e[32mNo critical errors detected\e[0m"
+        printf "\e[32mNo critical errors detected\e[0m"
     fi
 fi
 echo ""
 
-echo -e "\033[34;107m*** FILESYSTEM ***\033[0m"
+printf "\033[34;107m*** FILESYSTEM ***\033[0m"
 df -PTh
 echo ""
-echo -e "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m"
+printf "\033[32mMessages concerning ext4 filesystem in dmesg:\033[0m"
 sudo dmesg -T | grep -i ext4 | grep -v -e 'Modules linked in:' -e 'Kernel command line:'
 echo ""
-echo -e "\033[32mShow mounted filesystems:\033[0m"
+printf "\033[32mShow mounted filesystems:\033[0m"
 findmnt --real
 echo ""
 if [[ -L "/opt/iobroker/backups" ]]; then
     echo "backups directory is linked to a different directory"
     echo ""
 fi
-echo -e "\033[32mFiles in neuralgic directories:\033[0m"
+printf "\033[32mFiles in neuralgic directories:\033[0m"
 echo ""
-echo -e "\033[32m/var:\033[0m"
+printf "\033[32m/var:\033[0m"
 sudo du -h /var/ | sort -rh | head -5
-echo -e ""
+printf ""
 if [[ ! -f "$DOCKER" ]]; then
     journalctl --disk-usage
 fi
 echo ""
-echo -e "\033[32m/opt/iobroker/backups:\033[0m"
+printf "\033[32m/opt/iobroker/backups:\033[0m"
 du -h /opt/iobroker/backups/ | sort -rh | head -5
 echo ""
-echo -e "\033[32m/opt/iobroker/iobroker-data:\033[0m"
+printf "\033[32m/opt/iobroker/iobroker-data:\033[0m"
 du -h /opt/iobroker/iobroker-data/ | sort -rh | head -5
 echo ""
-echo -e "\033[32mThe five largest files in iobroker-data are:\033[0m"
+printf "\033[32mThe five largest files in iobroker-data are:\033[0m"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 echo ""
 
@@ -654,28 +654,28 @@ check_zigbee_port() {
     if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
         echo ""
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            echo -e "\e[32m✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!\e[0m"
+            printf "\e[32m✓ zigbee.$instance COM-Port stimmt mit 'by-id' überein. Sehr gut!\e[0m"
         else
-            echo -e "\e[32m✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!\e[0m"
+            printf "\e[32m✓ Your zigbee.$instance COM-Port is matching 'by-id'. Very good!\e[0m"
         fi
     else
         echo ""
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            echo -e "\e[1;33m⚠ HINWEIS:"
-            echo -e "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein.\e[0m"
+            printf "\e[1;33m⚠ HINWEIS:"
+            printf "Dein zigbee.$instance COM-Port stimmt NICHT mit 'by-id' überein.\e[0m"
             echo "Bitte überprüfe die Einstellung:"
-            echo -e "$configured_port"
+            printf "$configured_port"
         else
-            echo -e "\e[1;33m⚠ HINT:"
-            echo -e "Your zigbee.$instance COM-Port is NOT matching 'by-id'.\e[0m"
+            printf "\e[1;33m⚠ HINT:"
+            printf "Your zigbee.$instance COM-Port is NOT matching 'by-id'.\e[0m"
             echo "Please check your setting:"
-            echo -e "$configured_port"
+            printf "$configured_port"
         fi
     fi
 }
 
 # USB-Geräte by-id
-echo -e "\033[32mUSB-Devices by-id:\033[0m"
+printf "\033[32mUSB-Devices by-id:\033[0m"
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "USB-Sticks - Vermeide direkte Links zu /dev/tty* in deinen Adapter-Einstellungen,"
     echo "bevorzuge immer die Links 'by-id':"
@@ -703,7 +703,7 @@ echo ""
 # Prüfe ob überhaupt ZigBee-Daten existieren
 for d in /opt/iobroker/iobroker-data/zigbee_*; do
     if [[ -d "$d" ]]; then
-        echo -e "\033[34;107m*** ZigBee Settings ***\033[0m"
+        printf "\033[34;107m*** ZigBee Settings ***\033[0m"
         break
     fi
 done
@@ -735,7 +735,7 @@ if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
             echo "*** MASKED ***"
             echo "Network Key:"
             echo "*** MASKED ***"
-            echo -e "\nTo unmask the settings run 'iob diag --unmask'\n"
+            printf "\nTo unmask the settings run 'iob diag --unmask'\n"
             break
         fi
     done
@@ -743,13 +743,13 @@ if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
     for d in /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json; do
         if [[ "$MASKED" = "unmasked" ]]; then
 
-            echo -e "\nZigbee Network Settings on your coordinator/in nvbackup are:"
-            echo -e "zigbee.$(printf '%s\n' "$d" | cut -c36)"
+            printf "\nZigbee Network Settings on your coordinator/in nvbackup are:"
+            printf "zigbee.$(printf '%s\n' "$d" | cut -c36)"
             echo "Extended Pan ID:"
             grep extended_pan_id "$d" | cut -c 23-38
             echo "Pan ID:"
             printf "%d" 0x"$(grep \"pan_id\" "$d" | cut -c 14-17)"
-            echo -e "\nChannel:"
+            printf "\nChannel:"
             grep \"channel\" "$d" | cut -c 14-15
             echo "Network Key:"
             grep \"key\" "$d" | cut -c 13-44
@@ -789,11 +789,11 @@ check_nodejs_installation() {
         if [[ "$show_messages" == "true" ]]; then
             NODENOTCORR=1
             if [[ "$SKRPTLANG" == "--de" ]]; then
-                echo -e "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
+                printf "\033[0;31m*** Node.js ist NICHT korrekt installiert ***\033[0m"
                 echo "Probleme: ${problems[*]}"
                 echo "Führe 'iobroker nodejs-update' im Terminal aus."
             else
-                echo -e "\033[0;31m*** Node.js is NOT correctly installed ***\033[0m"
+                printf "\033[0;31m*** Node.js is NOT correctly installed ***\033[0m"
                 echo "Issues: ${problems[*]}"
                 echo "Execute 'iob nodejs-update' in your terminal."
             fi
@@ -802,9 +802,9 @@ check_nodejs_installation() {
     else
         if [[ "$show_messages" == "true" ]]; then
             if [[ "$SKRPTLANG" == "--de" ]]; then
-                echo -e "\e[32m✓ Node.js ist korrekt installiert\e[0m"
+                printf "\e[32m✓ Node.js ist korrekt installiert\e[0m"
             else
-                echo -e "\e[32m✓ Node.js installation is correct\e[0m"
+                printf "\e[32m✓ Node.js installation is correct\e[0m"
             fi
         fi
         return 0
@@ -812,12 +812,12 @@ check_nodejs_installation() {
 }
 
 echo ""
-echo -e "\033[34;107m*** NodeJS-Installation ***\033[0m"
+printf "\033[34;107m*** NodeJS-Installation ***\033[0m"
 echo ""
-echo -e "$PATHNODEJS \t$VERNODEJS"
-echo -e "$PATHNODE \t\t$VERNODE"
-echo -e "$PATHNPM \t\t$VERNPM"
-echo -e "$PATHNPX \t\t$VERNPX"
+printf "$PATHNODEJS \t$VERNODEJS"
+printf "$PATHNODE \t\t$VERNODE"
+printf "$PATHNPM \t\t$VERNPM"
+printf "$PATHNPX \t\t$VERNPX"
 echo ""
 
 check_nodejs_installation
@@ -829,24 +829,24 @@ if [ -f /usr/bin/apt-cache ]; then
 fi
 
 ANZNPMTMP=$(find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l)
-echo -e "\033[32mTemp directories causing deletion problem:\033[0m ""$ANZNPMTMP"""
+printf "\033[32mTemp directories causing deletion problem:\033[0m ""$ANZNPMTMP"""
 if (( ANZNPMTMP > 0 )); then
-    echo -e "Some problems detected, please run \e[031miob fix\e[0m"
+    printf "Some problems detected, please run \e[031miob fix\e[0m"
 else
     echo "No problems detected"
 fi
 
 # echo "";
-# echo -e "Temp directories being cleaned up now `find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \;`";
+# printf "Temp directories being cleaned up now `find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \;`";
 # find /opt/iobroker/node_modules -type d -iname ".*-????????" ! -iname ".local-chromium" -exec rm -rf {} \ &> /dev/null;
-# echo -e "\033[32m1 - Temp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium'>e;
+# printf "\033[32m1 - Temp directories causing npm8 problem:\033[0m `find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium'>e;
 echo ""
 if grep -q ERR <<< "$NPMLS"; then
-    echo -e "\033[322mErrors in npm tree:\033[0m"
+    printf "\033[322mErrors in npm tree:\033[0m"
     echo "$NPMLS" | grep ERR
     echo ""
 else
-    echo -e "\033[32mErrors in npm tree:\033[0m 0"
+    printf "\033[32mErrors in npm tree:\033[0m 0"
     echo "No problems detected"
     echo ""
 fi
@@ -854,7 +854,7 @@ fi
 ### Is my nodejs vulnerable?
 
 if [[ $NODENOTCORR -eq 0 ]]; then
-    echo -e "\033[32mChecking for nodejs vulnerability:\033[0m"
+    printf "\033[32mChecking for nodejs vulnerability:\033[0m"
     if [ -d "/home/iobroker" ]; then
         cd /home/iobroker || exit
     else
@@ -867,59 +867,59 @@ fi
 
 check_architecture
 
-echo -e "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
+printf "\n\033[34;107m*** ioBroker-Installation ***\033[0m"
 echo ""
-echo -e "\033[32mioBroker Status\033[0m"
+printf "\033[32mioBroker Status\033[0m"
 iob status $ALLOWROOT
-echo -e "\nHosts:"
+printf "\nHosts:"
 iob list hosts $ALLOWROOT
 echo ""
 # multihost detection - wip
 # iobroker multihost status
 # iobroker status all | grep MULTIHOSTSERVICE/enabled
-echo -e "\033[32mCore adapters versions\033[0m"
-echo -e "js-controller: \t$(iob -v $ALLOWROOT)"
-echo -e "admin: \t\t$(iob version admin $ALLOWROOT)"
-echo -e "javascript: \t$(iob version javascript $ALLOWROOT)"
+printf "\033[32mCore adapters versions\033[0m"
+printf "js-controller: \t$(iob -v $ALLOWROOT)"
+printf "admin: \t\t$(iob version admin $ALLOWROOT)"
+printf "javascript: \t$(iob version javascript $ALLOWROOT)"
 echo ""
-echo -e "nodejs modules from github: \t$(echo "$NPMLS" | grep -c 'github.com')"
+printf "nodejs modules from github: \t$(echo "$NPMLS" | grep -c 'github.com')"
 echo "$NPMLS" | grep 'github.com'
 echo ""
-echo -e "\033[32mAdapter State\033[0m"
+printf "\033[32mAdapter State\033[0m"
 echo "$IOBLISTINST"
 echo ""
-echo -e "\033[32mEnabled adapters with bindings\033[0m"
+printf "\033[32mEnabled adapters with bindings\033[0m"
 echo "$IOBLISTINST" | grep enabled | grep port
 echo ""
-echo -e "\033[32mioBroker-Repositories\033[0m"
+printf "\033[32mioBroker-Repositories\033[0m"
 iob repo list $ALLOWROOT
 echo ""
-echo -e "\033[32mInstalled ioBroker-Adapters\033[0m"
+printf "\033[32mInstalled ioBroker-Adapters\033[0m"
 iob update -i $ALLOWROOT
 echo ""
-echo -e "\033[32mObjects and States\033[0m"
+printf "\033[32mObjects and States\033[0m"
 echo "Please stand by - This may take a while"
 IOBOBJECTS=$(iob list objects $ALLOWROOT 2>/dev/null | wc -l)
-echo -e "Objects: \t$IOBOBJECTS"
+printf "Objects: \t$IOBOBJECTS"
 IOBSTATES=$(iob list states $ALLOWROOT 2>/dev/null | wc -l)
-echo -e "States: \t$IOBSTATES"
+printf "States: \t$IOBSTATES"
 echo ""
-echo -e "\033[34;107m*** OS-Repositories and Updates ***\033[0m"
+printf "\033[34;107m*** OS-Repositories and Updates ***\033[0m"
 if [ -f /usr/bin/apt-get ]; then
     sudo apt-get update 1>/dev/null && sudo apt-get update
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
         if (( APT == 0 )); then
-            echo -e "\e[32mOffene Systemupdates: $APT\e[0m"
+            printf "\e[32mOffene Systemupdates: $APT\e[0m"
         else
-            echo -e "\e[31mOffene Systemupdates: $APT\e[0m"
+            printf "\e[31mOffene Systemupdates: $APT\e[0m"
         fi
     else
         if (( APT == 0 )); then
-            echo -e "\e[32mPending systemupdates: $APT\e[0m"
+            printf "\e[32mPending systemupdates: $APT\e[0m"
         else
-            echo -e "\e[31mPending systemupdates: $APT\e[0m"
+            printf "\e[31mPending systemupdates: $APT\e[0m"
         fi
     fi
 else
@@ -932,7 +932,7 @@ fi
 
 echo ""
 
-echo -e "\033[34;107m*** Listening Ports ***\033[0m"
+printf "\033[34;107m*** Listening Ports ***\033[0m"
 if command -v ss &> /dev/null; then
     sudo ss -tulp
 else
@@ -942,25 +942,25 @@ fi
 # Check if malware process pawns-cli is running
 if pgrep "pawns-cli" > /dev/null; then
     if [ "$SKRPTLANG" == "--de" ]; then
-        echo -e "${RED}WARNUNG: Der Prozess 'pawns-cli' läuft auf diesem System!${NC}"
-        echo -e "${RED}Dies könnte ein Hinweis auf Malwarebefall sein.${NC}"
-        echo -e "${RED}Bitte überprüfen Sie das System und entfernen Sie den Prozess, falls er nicht legitim ist.${NC}"
-        echo -e "${RED}Schauen Sie im Ordner Global bei den Skripten nach verdächtigen Einträgen${NC}"
-        echo -e "${RED}Oftmals ist ein offen im Internet stehender ioBroker die Ursache. Das System muss abgesichert neuinstalliert werden.${NC}"
-        echo -e "${RED}Ein Backup muss aus der Zeit vor dem Befall stammen.${NC}"
+        printf "${RED}WARNUNG: Der Prozess 'pawns-cli' läuft auf diesem System!${NC}"
+        printf "${RED}Dies könnte ein Hinweis auf Malwarebefall sein.${NC}"
+        printf "${RED}Bitte überprüfen Sie das System und entfernen Sie den Prozess, falls er nicht legitim ist.${NC}"
+        printf "${RED}Schauen Sie im Ordner Global bei den Skripten nach verdächtigen Einträgen${NC}"
+        printf "${RED}Oftmals ist ein offen im Internet stehender ioBroker die Ursache. Das System muss abgesichert neuinstalliert werden.${NC}"
+        printf "${RED}Ein Backup muss aus der Zeit vor dem Befall stammen.${NC}"
     else
-        echo -e "${RED}WARNING: The process 'pawns-cli' is running on this system!${NC}"
-        echo -e "${RED}This could be an indication of malware infection.${NC}"
-        echo -e "${RED}Please check the system and remove the process if it is not legitimate.${NC}"
-        echo -e "${RED}Check the scripts in the Global folder for any suspicious entries.${NC}"
-        echo -e "${RED}Often, the cause is an ioBroker installation that is openly accessible on the internet. The system must be reinstalled securely.${NC}"
-        echo -e "${RED}A backup must be from before the infection.${NC}"
+        printf "${RED}WARNING: The process 'pawns-cli' is running on this system!${NC}"
+        printf "${RED}This could be an indication of malware infection.${NC}"
+        printf "${RED}Please check the system and remove the process if it is not legitimate.${NC}"
+        printf "${RED}Check the scripts in the Global folder for any suspicious entries.${NC}"
+        printf "${RED}Often, the cause is an ioBroker installation that is openly accessible on the internet. The system must be reinstalled securely.${NC}"
+        printf "${RED}A backup must be from before the infection.${NC}"
     fi
 fi
 
 
 echo ""
-echo -e "\033[34;107m*** Log File - Last 25 Lines ***\033[0m"
+printf "\033[34;107m*** Log File - Last 25 Lines ***\033[0m"
 echo ""
 # iobroker logs --lines 25;
 tail -n 25 /opt/iobroker/log/iobroker.current.log
@@ -968,7 +968,7 @@ echo ""
 echo "\`\`\`"
 echo ""
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "\033[33m============ Langfassung bis hier markieren =============\033[0m"
+    printf "\033[33m============ Langfassung bis hier markieren =============\033[0m"
     echo ""
     echo "iob diag hat das System inspiziert."
     echo ""
@@ -979,7 +979,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "Beliebige Taste für eine Zusammenfassung drücken"
     fi
 else
-    echo -e "\033[33m============ Mark until here for C&P =============\033[0m"
+    printf "\033[33m============ Mark until here for C&P =============\033[0m"
     echo ""
     echo "iob diag has finished."
     echo ""
@@ -998,7 +998,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo ""
     echo "\`\`\`bash"
     echo "===================== ZUSAMMENFASSUNG ====================="
-    echo -e "\t\t\tv.$SKRIPTV"
+    printf "\t\t\tv.$SKRIPTV"
     echo ""
     echo ""
 else
@@ -1006,7 +1006,7 @@ else
     echo ""
     echo "\`\`\`bash"
     echo "======================= SUMMARY ======================="
-    echo -e "\t\t\tv.$SKRIPTV"
+    printf "\t\t\tv.$SKRIPTV"
     echo ""
     echo ""
 fi
@@ -1028,62 +1028,62 @@ INSTENV2=$(
 )
 if [[ -f "$DOCKER" ]]; then
     grep -i model /proc/cpuinfo | tail -1
-    echo -e "Kernel          : $(uname -m)"
-    echo -e "Userland        : $(dpkg --print-architecture)"
+    printf "Kernel          : $(uname -m)"
+    printf "Userland        : $(dpkg --print-architecture)"
     if [[ -f "$DOCKER" ]]; then
-        echo -e "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
+        printf "Docker          : $(cat /opt/scripts/.docker_config/.thisisdocker)"
     else
-        echo -e "Docker          : false"
+        printf "Docker          : false"
     fi
 
 else
     hostnamectl | grep -v 'Machine\|Boot'
 fi
 echo ""
-echo -e "Installation: \t\t$INSTENV2"
-echo -e "Kernel: \t\t$(uname -m)"
-echo -e "Userland: \t\t$(getconf LONG_BIT) bit"
+printf "Installation: \t\t$INSTENV2"
+printf "Kernel: \t\t$(uname -m)"
+printf "Userland: \t\t$(getconf LONG_BIT) bit"
 if [ -f "$DOCKER" ]; then
-    echo -e "Timezone: \t\t$(date +"%Z %z")"
+    printf "Timezone: \t\t$(date +"%Z %z")"
 else
-    echo -e "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)"
+    printf "Timezone: \t\t$(timedatectl | grep zone | cut -c28-80)"
 fi
-echo -e "User-ID: \t\t$EUID"
-echo -e "Display-Server: \t$(if (( XORGTEST > 0 )); then echo "true"; else echo "false"; fi)"
+printf "User-ID: \t\t$EUID"
+printf "Display-Server: \t$(if (( XORGTEST > 0 )); then echo "true"; else echo "false"; fi)"
 if [ -f "$DOCKER" ]; then
-    echo -e ""
+    printf ""
 else
-    echo -e "Boot Target: \t\t$(systemctl get-default)"
+    printf "Boot Target: \t\t$(systemctl get-default)"
 fi
 
 echo ""
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "Offene OS-Updates: \t$APT"
-    echo -e "Offene iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
+    printf "Offene OS-Updates: \t$APT"
+    printf "Offene iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 else
-    echo -e "Pending OS-Updates: \t$APT"
-    echo -e "Pending iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
+    printf "Pending OS-Updates: \t$APT"
+    printf "Pending iob updates: \t$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 fi
 if [[ -f "/var/run/reboot-required" ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        echo -e "\nDas System muss JETZT neugestartet werden!"
+        printf "\nDas System muss JETZT neugestartet werden!"
         echo ""
     else
-        echo -e "\nThis system needs to be REBOOTED NOW!"
+        printf "\nThis system needs to be REBOOTED NOW!"
         echo ""
     fi
 fi
 echo ""
 
-echo -e "\nNodejs-Installation:"
-echo -e "$PATHNODEJS \t$VERNODEJS"
-echo -e "$PATHNODE \t\t$VERNODE"
-echo -e "$PATHNPM \t\t$VERNPM"
-echo -e "$PATHNPX \t\t$VERNPX"
+printf "\nNodejs-Installation:"
+printf "$PATHNODEJS \t$VERNODEJS"
+printf "$PATHNODE \t\t$VERNODE"
+printf "$PATHNPM \t\t$VERNPM"
+printf "$PATHNPX \t\t$VERNPX"
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    echo -e "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM"
+    printf "\nEmpfohlene Versionen sind zurzeit nodejs $NODERECOM und npm $NPMRECOM"
 else
-    echo -e "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM"
+    printf "\nRecommended versions are nodejs $NODERECOM and npm $NPMRECOM"
 fi
 # Nutze die bereits existierende Funktion
 if check_nodejs_installation false; then
@@ -1106,26 +1106,26 @@ else
     fi
 fi
 
-# echo -e "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
-echo -e "\nMEMORY: "
+# printf "Total Memory: \t\t`free -h | awk '/^Mem:/{print $2}'`";
+printf "\nMEMORY: "
 free -ht --mega
 echo ""
-echo -e "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)"
+printf "Active iob-Instances: \t$(echo "$IOBLISTINST" | grep -c ^+)"
 iob repo list $ALLOWROOT | tail -n1
 echo ""
-echo -e "ioBroker Core: \t\tjs-controller \t\t$(iob -v $ALLOWROOT)"
-echo -e "\t\t\tadmin \t\t\t$(iob version admin $ALLOWROOT)"
+printf "ioBroker Core: \t\tjs-controller \t\t$(iob -v $ALLOWROOT)"
+printf "\t\t\tadmin \t\t\t$(iob version admin $ALLOWROOT)"
 echo ""
-echo -e "ioBroker Status: \t$(iobroker status $ALLOWROOT)"
+printf "ioBroker Status: \t$(iobroker status $ALLOWROOT)"
 echo ""
 # iobroker status all | grep MULTIHOSTSERVICE/enabled;
 echo "Status admin and web instance:"
 echo "$IOBLISTINST" | grep 'admin.\|system.adapter.web.'
 echo ""
-echo -e "Objects: \t\t$IOBOBJECTS"
-echo -e "States: \t\t$IOBSTATES"
+printf "Objects: \t\t$IOBOBJECTS"
+printf "States: \t\t$IOBSTATES"
 echo ""
-echo -e "Size of iob-Database:"
+printf "Size of iob-Database:"
 echo ""
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*objects\* -exec du -sh {} + | sort -rh | head -n 5
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -sh {} + | sort -rh | head -n 5
@@ -1134,33 +1134,33 @@ echo ""
 if (( ANZNPMTMP > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         echo "**********************************************************************"
-        echo -e "Probleme wurden erkannt, bitte \e[031miob fix\e[0m ausführen"
+        printf "Probleme wurden erkannt, bitte \e[031miob fix\e[0m ausführen"
         echo "**********************************************************************"
         echo ""
     else
         echo "**********************************************************************"
-        echo -e "Some problems detected, please run \e[031miob fix\e[0m and try to have them fixed"
+        printf "Some problems detected, please run \e[031miob fix\e[0m and try to have them fixed"
         echo "**********************************************************************"
         echo ""
     fi
 fi
 if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        echo -e "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
+        printf "Es wurden $CRITERROR KRITISCHE FEHLER gefunden. \nSiehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
-        echo -e "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
+        printf "$CRITERROR CRITICAL ERRORS DETECTED! \nCheck 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 fi
-echo -e "$RELEASESTATUS"
+printf "$RELEASESTATUS"
 echo ""
 if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "=================== ENDE DER ZUSAMMENFASSUNG ===================="
-    echo -e "\`\`\`"
+    printf "\`\`\`"
     echo ""
     echo "=== Ausgabe bis hier markieren und kopieren ==="
 else
     echo "=================== END OF SUMMARY ===================="
-    echo -e "\`\`\`"
+    printf "\`\`\`"
     echo ""
     echo "=== Mark text until here for copying ==="
 fi
