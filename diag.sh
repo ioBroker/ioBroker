@@ -829,10 +829,10 @@ PATHNODEJS=$(type -P nodejs)
 PATHNODE=$(type -P node)
 PATHNPM=$(type -P npm)
 PATHNPX=$(type -P npx)
-VERNODEJS=$(nodejs -v)
-VERNODE=$(node -v)
-VERNPM=$(npm -v)
-VERNPX=$(npx -v)
+VERNODEJS=$(nodejs -v 2>/dev/null)
+VERNODE=$(node -v 2>/dev/null)
+VERNPM=$(npm -v 2>/dev/null)
+VERNPX=$(npx -v 2>/dev/null)
 
 check_nodejs_installation() {
     local show_messages="${1:-true}" # Standard: Zeige Meldungen
@@ -919,7 +919,7 @@ fi
 
 check_architecture
 
-printf "\n%b%s%b" "$HEADLINE" "*** ioBroker-Installation ***" "$NC"
+printf "\n\n%b%s%b" "$HEADLINE" "*** ioBroker-Installation ***" "$NC"
 printf "\n%b%s%b\n" "$GREEN" "ioBroker Status" "$NC"
 iob status $ALLOWROOT
 printf "\n%b%s%b\n" "$GREEN" "Hosts:" "$NC"
