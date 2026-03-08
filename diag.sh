@@ -769,19 +769,11 @@ print_zigbee_port_table() {
 
         # Check if the configured port is a TCP connection
         if [[ "$configured_port" == tcp://* ]]; then
-            if [[ "$lang" == "--de" ]]; then
-                printf "%-15s %-35s %-35s %-20s\n" \
-                    "zigbee.$instance_number" \
-                    "$short_configured_port" \
-                    "-" \
-                    "${YELLOW}TCP Connection${NC}"
-            else
-                printf "%-15s %-35s %-35s %-20s\n" \
-                    "zigbee.$instance_number" \
-                    "$short_configured_port" \
-                    "-" \
-                    "${YELLOW}TCP Connection${NC}"
-            fi
+            printf "%-15s %-35s %-35s %-20s\n" \
+                "zigbee.$instance_number" \
+                "$short_configured_port" \
+                "-" \
+                "${YELLOW}tcp${NC}"
         else
             # For serial ports, check each by-id port
             for i in "${!sys_zigbee_ports[@]}"; do
