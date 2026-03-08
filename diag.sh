@@ -761,7 +761,7 @@ print_zigbee_port_table() {
         instance_number=$(echo "$instance_line" | grep -oP 'zigbee\.\K[0-9]+')
 
         local configured_port
-        configured_port=$(get_zigbee_port "$instance_line")
+        configured_port=$(get_zigbee_port "$instance_line" | head -n 1)
 
         # Skip if no port is configured
         if [[ -z "$configured_port" ]]; then
