@@ -703,14 +703,18 @@ fi
 
 ########### TESTCODE ######################
 
+# Color definitions
 GREEN=$(printf '\033[0;32m')
 RED=$(printf '\033[0;31m')
+YELLOW=$(printf '\033[1;33m')
 NC=$(printf '\033[0m')  # No Color
 
 # Function to shorten port paths (show last 12 characters)
 shorten_port() {
     local port="$1"
-    if [[ ${#port} -gt 12 ]]; then
+    if [[ "$port" == tcp://* ]]; then
+        echo "$port"  # TCP connections are not shortened
+    elif [[ ${#port} -gt 12 ]]; then
         echo "...${port: -12}"
     else
         echo "$port"
@@ -726,7 +730,7 @@ IOBLISTINST=$(iobroker list instances 2>/dev/null)
 # Function to extract configured port for a ZigBee instance
 get_zigbee_port() {
     local instance="$1"
-    echo "$IOBLISTINST" | grep -A1 "$instance" | grep -oP 'port: \K\/dev\/[^\s]+'
+    echo "$IOBLISTINST" | grep -A1 "$instance" | grep -oP 'port: \K[^\s]+'
 }
 
 # Function to print ZigBee port status in a table format
@@ -775,26 +779,33 @@ print_zigbee_port_table() {
 
         # Check if the configured port matches any by-id port
         local status
-        local matching_port=""
-        for port in "${sys_zigbee_ports[@]}"; do
-            if [[ "$configured_port" == "$port" ]]; then
-                matching_port="$port"
-                break
-            fi
-        done
-
-        # Set status text (language-dependent)
-        if [[ -n "$matching_port" ]]; then
+        if [[ "$configured_port" == tcp://* ]]; then
             if [[ "$lang" == "--de" ]]; then
-                status="${GREEN}✓ Übereinstimmend${NC}"
+                status="${YELLOW}TCP Verbindung${NC}"
             else
-                status="${GREEN}✓ Matching${NC}"
+                status="${YELLOW}TCP Connection${NC}"
             fi
         else
-            if [[ "$lang" == "--de" ]]; then
-                status="${RED}✗ Nicht übereinstimmend${NC}"
+            local matching_port=""
+            for port in "${sys_zigbee_ports[@]}"; do
+                if [[ "$configured_port" == "$port" ]]; then
+                    matching_port="$port"
+                    break
+                fi
+            done
+
+            if [[ -n "$matching_port" ]]; then
+                if [[ "$lang" == "--de" ]]; then
+                    status="${GREEN}✓ Übereinstimmend${NC}"
+                else
+                    status="${GREEN}✓ Matching${NC}"
+                fi
             else
-                status="${RED}✗ Not matching${NC}"
+                if [[ "$lang" == "--de" ]]; then
+                    status="${RED}✗ Nicht übereinstimmend${NC}"
+                else
+                    status="${RED}✗ Not matching${NC}"
+                fi
             fi
         fi
 
@@ -809,7 +820,6 @@ print_zigbee_port_table() {
 
 # Print the table
 print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
-
 ############ TESTCODE ENDE ####################
 
 
