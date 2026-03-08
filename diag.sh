@@ -332,8 +332,6 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     #        vcgencmd measure_temp;
     #        vcgencmd measure_volts;
 
-    #### TEST CODE  ###
-
     echo ""
     printf "\033[34;107m*** RASPBERRY THROTTLING ***\033[0m\n"
     # CODE from https://github.com/alwye/get_throttled under MIT Licence
@@ -703,6 +701,118 @@ else
     printf "\n%s\n" "No nvbackup.json found."
 fi
 
+########### TESTCODE ######################
+
+GREEN=$(printf '\033[0;32m')
+RED=$(printf '\033[0;31m')
+NC=$(printf '\033[0m')  # No Color
+
+# Function to shorten port paths (show last 12 characters)
+shorten_port() {
+    local port="$1"
+    if [[ ${#port} -gt 12 ]]; then
+        echo "...${port: -12}"
+    else
+        echo "$port"
+    fi
+}
+
+# Get actual by-id ports from the system
+SYSZIGBEEPORTS=($(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null))
+
+# Get actual ioBroker instances
+IOBLISTINST=$(iobroker list instances 2>/dev/null)
+
+# Function to extract configured port for a ZigBee instance
+get_zigbee_port() {
+    local instance="$1"
+    echo "$IOBLISTINST" | grep -A1 "$instance" | grep -oP 'port: \K\/dev\/[^\s]+'
+}
+
+# Function to print ZigBee port status in a table format
+print_zigbee_port_table() {
+    local lang="$1"
+    shift
+    local sys_zigbee_ports=("$@")
+
+    # Table header (language-dependent)
+    if [[ "$lang" == "--de" ]]; then
+        printf "\n${GREEN}=== ZigBee-Port-Übersicht ===${NC}\n"
+        printf "%-15s %-25s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbare by-id-Ports" "Status"
+        printf "%-15s %-25s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
+    else
+        printf "\n${GREEN}=== ZigBee Port Overview ===${NC}\n"
+        printf "%-15s %-25s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Ports" "Status"
+        printf "%-15s %-25s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
+    fi
+
+    # Find all ZigBee instances dynamically
+    local instances
+    instances=$(echo "$IOBLISTINST" | grep -E 'system\.adapter\.zigbee\.[0-9]+')
+
+    for instance_line in $instances; do
+        # Extract instance number (e.g., "0" from "system.adapter.zigbee.0")
+        local instance_number
+        instance_number=$(echo "$instance_line" | grep -oP 'zigbee\.\K[0-9]+')
+
+        local configured_port
+        configured_port=$(get_zigbee_port "$instance_line")
+
+        # Skip if no port is configured
+        if [[ -z "$configured_port" ]]; then
+            continue
+        fi
+
+        # Shorten the configured port path
+        local short_configured_port
+        short_configured_port=$(shorten_port "$configured_port")
+
+        # Shorten all by-id port paths
+        local short_ports=()
+        for port in "${sys_zigbee_ports[@]}"; do
+            short_ports+=($(shorten_port "$port"))
+        done
+
+        # Check if the configured port matches any by-id port
+        local status
+        local matching_port=""
+        for port in "${sys_zigbee_ports[@]}"; do
+            if [[ "$configured_port" == "$port" ]]; then
+                matching_port="$port"
+                break
+            fi
+        done
+
+        # Set status text (language-dependent)
+        if [[ -n "$matching_port" ]]; then
+            if [[ "$lang" == "--de" ]]; then
+                status="${GREEN}✓ Übereinstimmend${NC}"
+            else
+                status="${GREEN}✓ Matching${NC}"
+            fi
+        else
+            if [[ "$lang" == "--de" ]]; then
+                status="${RED}✗ Nicht übereinstimmend${NC}"
+            else
+                status="${RED}✗ Not matching${NC}"
+            fi
+        fi
+
+        # Print table row with shortened port paths
+        printf "%-15s %-25s %-35s %-20s\n" \
+            "zigbee.$instance_number" \
+            "$short_configured_port" \
+            "$(IFS=$','; echo "${short_ports[*]}")" \
+            "$status"
+    done
+}
+
+# Print the table
+print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
+
+############ TESTCODE ENDE ####################
+
+
 #### NODEJS-CHECK
 
 PATHNODEJS=$(type -P nodejs)
@@ -883,7 +993,7 @@ tail -n 25 /opt/iobroker/log/iobroker.current.log
 printf "%s\n\n" '```'
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b" "$YELLOW" "============ Langfassung bis hier markieren =============" "$NC"
-    printf "\n\n%s" "iob diag hat das System inspiziert."
+    printf "\n\n%s\n\n" "iob diag hat das System inspiziert."
     if [[ $SUMMARY != "summary" ]]; then
         exit
     else
@@ -891,7 +1001,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     fi
 else
     printf "\n%b%s%b"  "$YELLOW" "m============ Mark until here for C&P =============" "$NC"
-    printf "\n\n%s" "iob diag has finished."
+    printf "\n\n%s\n\n" "iob diag has finished."
     if [[ $SUMMARY != "summary" ]]; then
         exit
     else
