@@ -774,7 +774,7 @@ print_zigbee_port_table() {
                     "zigbee.$instance_number" \
                     "$short_configured_port" \
                     "-" \
-                    "${YELLOW}TCP Verbindung${NC}"
+                    "${YELLOW}TCP Connection${NC}"
             else
                 printf "%-15s %-35s %-35s %-20s\n" \
                     "zigbee.$instance_number" \
