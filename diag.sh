@@ -750,7 +750,7 @@ print_zigbee_port_table() {
         printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
 
-    for instance_line in $instances; do
+    while IFS= read -r instance_line; do
         # Extract instance number (e.g., "0" from "system.adapter.zigbee.0")
         local instance_number
         instance_number=$(echo "$instance_line" | grep -oP 'zigbee\.\K[0-9]+')
@@ -811,7 +811,7 @@ print_zigbee_port_table() {
                 fi
             done
         fi
-    done
+    done < <(printf "%s\n" $instances)
 }
 
 # Print the table only if there are ZigBee instances
