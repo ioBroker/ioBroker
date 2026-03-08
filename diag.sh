@@ -703,23 +703,15 @@ fi
 
 ########### TESTCODE ######################
 
-
-
-# Color definitions
-GREEN=$(printf '\033[0;32m')
-RED=$(printf '\033[0;31m')
-YELLOW=$(printf '\033[1;33m')
-NC=$(printf '\033[0m')  # No Color
-
 # Function to shorten port paths (show last 12 characters)
 shorten_port() {
     local port="$1"
     if [[ "$port" == tcp://* ]]; then
-        echo "$port"  # TCP connections are not shortened
+        printf "%s" "$port"  # TCP connections are not shortened
     elif [[ ${#port} -gt 12 ]]; then
-        echo "...${port: -12}"
+        printf "%s" "...${port: -12}"
     else
-        echo "$port"
+        printf "%s" "$port"
     fi
 }
 
@@ -731,6 +723,9 @@ done < <(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 -print0 2>/dev/null)
 
 # Get actual ioBroker instances
 IOBLISTINST=$(iobroker list instances 2>/dev/null)
+
+# Check if there are any ZigBee instances
+instances=$(echo "$IOBLISTINST" | grep -E 'system\.adapter\.zigbee\.[0-9]+')
 
 # Function to extract configured port for a ZigBee instance
 get_zigbee_port() {
@@ -746,18 +741,14 @@ print_zigbee_port_table() {
 
     # Table header (language-dependent)
     if [[ "$lang" == "--de" ]]; then
-        printf "\n%b%s%b\n" "${GREEN}" "=== ZigBee-Port-Übersicht ===" "${NC}"
+        printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
         printf "%-15s %-25s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbare by-id-Ports" "Status"
         printf "%-15s %-25s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
     else
-        printf "\n%b%s%b\n" "${GREEN}" "=== ZigBee Port Overview ===" "${NC}"
+        printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
         printf "%-15s %-25s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Ports" "Status"
         printf "%-15s %-25s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
-
-    # Find all ZigBee instances dynamically
-    local instances
-    instances=$(echo "$IOBLISTINST" | grep -E 'system\.adapter\.zigbee\.[0-9]+')
 
     for instance_line in $instances; do
         # Extract instance number (e.g., "0" from "system.adapter.zigbee.0")
@@ -786,9 +777,9 @@ print_zigbee_port_table() {
         local status
         if [[ "$configured_port" == tcp://* ]]; then
             if [[ "$lang" == "--de" ]]; then
-                status="${YELLOW}TCP Verbindung${NC}"
+                printf -v status "%b%s%b" "$YELLOW" "TCP Verbindung" "$NC"
             else
-                status="${YELLOW}TCP Connection${NC}"
+                printf -v status "%b%s%b" "$YELLOW" "TCP Connection" "$NC"
             fi
         else
             local matching_port=""
@@ -801,15 +792,15 @@ print_zigbee_port_table() {
 
             if [[ -n "$matching_port" ]]; then
                 if [[ "$lang" == "--de" ]]; then
-                    status="${GREEN}✓ Übereinstimmend${NC}"
+                    printf -v status "%b%s%b" "$GREEN" "✓ Übereinstimmend" "$NC"
                 else
-                    status="${GREEN}✓ Matching${NC}"
+                    printf -v status "%b%s%b" "$GREEN" "✓ Matching" "$NC"
                 fi
             else
                 if [[ "$lang" == "--de" ]]; then
-                    status="${RED}✗ Nicht übereinstimmend${NC}"
+                    printf -v status "%b%s%b" "$RED" "✗ Nicht übereinstimmend" "$NC"
                 else
-                    status="${RED}✗ Not matching${NC}"
+                    printf -v status "%b%s%b" "$RED" "✗ Not matching" "$NC"
                 fi
             fi
         fi
@@ -818,14 +809,15 @@ print_zigbee_port_table() {
         printf "%-15s %-25s %-35s %-20s\n" \
             "zigbee.$instance_number" \
             "$short_configured_port" \
-            "$(IFS=$','; echo "${short_ports[*]}")" \
+            "$(IFS=$','; printf "%s" "${short_ports[*]}")" \
             "$status"
     done
 }
 
-# Print the table
-print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
-
+# Print the table only if there are ZigBee instances
+if [[ -n "$instances" ]]; then
+    print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
+fi
 
 ############ TESTCODE ENDE ####################
 
