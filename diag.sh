@@ -724,8 +724,13 @@ done < <(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 -print0 2>/dev/null)
 # Get actual ioBroker instances
 IOBLISTINST=$(iobroker list instances 2>/dev/null)
 
-# Check if there are any ZigBee instances
-instances=$(echo "$IOBLISTINST" | grep -E 'system\.adapter\.zigbee\.[0-9]+')
+# Extract ZigBee instances with numbers (e.g., zigbee.0, zigbee.1)
+instances=()
+while IFS= read -r line; do
+    if [[ $line =~ system\.adapter\.zigbee\.[0-9]+ ]]; then
+        instances+=("$line")
+    fi
+done < <(echo "$IOBLISTINST")
 
 # Function to extract configured port for a ZigBee instance
 get_zigbee_port() {
@@ -750,7 +755,7 @@ print_zigbee_port_table() {
         printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
 
-    while IFS= read -r instance_line; do
+    for instance_line in "${instances[@]}"; do
         # Extract instance number (e.g., "0" from "system.adapter.zigbee.0")
         local instance_number
         instance_number=$(echo "$instance_line" | grep -oP 'zigbee\.\K[0-9]+')
@@ -811,11 +816,11 @@ print_zigbee_port_table() {
                 fi
             done
         fi
-    done < <(printf "%s\n" $instances)
+    done
 }
 
 # Print the table only if there are ZigBee instances
-if [[ -n "$instances" ]]; then
+if [[ ${#instances[@]} -gt 0 ]]; then
     print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
 fi
 
