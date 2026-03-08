@@ -735,7 +735,11 @@ done < <(echo "$IOBLISTINST" | grep -E 'system\.adapter\.zigbee\.[0-9]+')
 # Function to extract configured port for a ZigBee instance
 get_zigbee_port() {
     local instance="$1"
-    echo "$IOBLISTINST" | sed -n "/$instance/,/^$/p" | grep -m1 -oP 'port: \K[^\s]+'
+    echo "$IOBLISTINST" | awk -v inst="$instance" '
+    BEGIN { found = 0 }
+    $0 ~ inst { found = 1; next }
+    found && /port: / { print $0; found = 0 }
+    ' | grep -oP 'port: \K[^\s]+' | head -n 1
 }
 
 # Function to print ZigBee port status in a table format
@@ -761,7 +765,7 @@ print_zigbee_port_table() {
         instance_number=$(echo "$instance_line" | grep -oP 'zigbee\.\K[0-9]+')
 
         local configured_port
-        configured_port=$(get_zigbee_port "$instance_line" | head -n 1)
+        configured_port=$(get_zigbee_port "$instance_line")
 
         # Skip if no port is configured
         if [[ -z "$configured_port" ]]; then
