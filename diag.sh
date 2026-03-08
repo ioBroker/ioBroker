@@ -703,6 +703,8 @@ fi
 
 ########### TESTCODE ######################
 
+
+
 # Color definitions
 GREEN=$(printf '\033[0;32m')
 RED=$(printf '\033[0;31m')
@@ -721,8 +723,11 @@ shorten_port() {
     fi
 }
 
-# Get actual by-id ports from the system
-SYSZIGBEEPORTS=($(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null))
+# Get actual by-id ports from the system using mapfile
+SYSZIGBEEPORTS=()
+while IFS= read -r -d '' port; do
+    SYSZIGBEEPORTS+=("$port")
+done < <(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 -print0 2>/dev/null)
 
 # Get actual ioBroker instances
 IOBLISTINST=$(iobroker list instances 2>/dev/null)
@@ -741,11 +746,11 @@ print_zigbee_port_table() {
 
     # Table header (language-dependent)
     if [[ "$lang" == "--de" ]]; then
-        printf "\n${GREEN}=== ZigBee-Port-Übersicht ===${NC}\n"
+        printf "\n%b%s%b\n" "${GREEN}" "=== ZigBee-Port-Übersicht ===" "${NC}"
         printf "%-15s %-25s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbare by-id-Ports" "Status"
         printf "%-15s %-25s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
     else
-        printf "\n${GREEN}=== ZigBee Port Overview ===${NC}\n"
+        printf "\n%b%s%b\n" "${GREEN}" "=== ZigBee Port Overview ===" "${NC}"
         printf "%-15s %-25s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Ports" "Status"
         printf "%-15s %-25s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
@@ -774,7 +779,7 @@ print_zigbee_port_table() {
         # Shorten all by-id port paths
         local short_ports=()
         for port in "${sys_zigbee_ports[@]}"; do
-            short_ports+=($(shorten_port "$port"))
+            short_ports+=("$(shorten_port "$port")")
         done
 
         # Check if the configured port matches any by-id port
@@ -820,6 +825,8 @@ print_zigbee_port_table() {
 
 # Print the table
 print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
+
+
 ############ TESTCODE ENDE ####################
 
 
