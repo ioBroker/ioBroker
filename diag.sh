@@ -748,11 +748,11 @@ print_zigbee_port_table() {
     if [[ "$lang" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "-------" "----------------------------" "----------------------------" "------"
     else
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------------------" "----------------------------" "------"
     fi
 
     for instance_line in "${instances[@]}"; do
