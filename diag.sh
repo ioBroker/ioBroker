@@ -703,26 +703,15 @@ fi
 
 ########### TESTCODE ######################
 
-# Function to shorten port paths (show last 20 characters for Configured Port and last 15 for by-id Ports)
+# Function to shorten port paths (show last 25 characters for Configured Port and last 25 for by-id Ports)
 shorten_port() {
     local port="$1"
-    local type="$2"  # "configured" or "byid"
     if [[ "$port" == tcp://* ]]; then
         printf "%s" "$port"  # TCP connections are not shortened
+    elif [[ ${#port} -gt 25 ]]; then
+        printf "%s" "...${port: -25}"
     else
-        if [[ "$type" == "configured" ]]; then
-            if [[ ${#port} -gt 20 ]]; then
-                printf "%s" "...${port: -20}"
-            else
-                printf "%s" "$port"
-            fi
-        else
-            if [[ ${#port} -gt 15 ]]; then
-                printf "%s" "...${port: -15}"
-            else
-                printf "%s" "$port"
-            fi
-        fi
+        printf "%s" "$port"
     fi
 }
 
@@ -753,12 +742,12 @@ print_zigbee_port_table() {
     # Table header (language-dependent)
     if [[ "$lang" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
-        printf "%-15s %-30s %-40s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbare by-id-Ports" "Status"
-        printf "%-15s %-30s %-40s %-20s\n" "-------" "-------------------" "--------------------------" "------"
+        printf "%-15s %-30s %-30s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" "Status"
+        printf "%-15s %-30s %-30s %-20s\n" "-------" "-------------------" "--------------------------" "------"
     else
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
-        printf "%-15s %-30s %-40s %-20s\n" "Instance" "Configured Port" "Available by-id Ports" "Status"
-        printf "%-15s %-30s %-40s %-20s\n" "--------" "----------------" "----------------------------" "------"
+        printf "%-15s %-30s %-30s %-20s\n" "Instance" "Configured Port" "Available by-id Port" "Status"
+        printf "%-15s %-30s %-30s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
 
     for instance_line in $instances; do
@@ -774,54 +763,53 @@ print_zigbee_port_table() {
             continue
         fi
 
-        # Shorten the configured port path (last 20 characters)
+        # Shorten the configured port path
         local short_configured_port
-        short_configured_port=$(shorten_port "$configured_port" "configured")
-
-        # Shorten all by-id port paths (last 15 characters)
-        local short_ports=()
-        for port in "${sys_zigbee_ports[@]}"; do
-            short_ports+=("$(shorten_port "$port" "byid")")
-        done
+        short_configured_port=$(shorten_port "$configured_port")
 
         # Check if the configured port matches any by-id port
-        local status
         if [[ "$configured_port" == tcp://* ]]; then
             if [[ "$lang" == "--de" ]]; then
-                printf -v status "%b%s%b" "$YELLOW" "TCP Verbindung" "$NC"
+                printf "%-15s %-30s %-30s %-20s\n" \
+                    "zigbee.$instance_number" \
+                    "$short_configured_port" \
+                    "-" \
+                    "${YELLOW}TCP Verbindung${NC}"
             else
-                printf -v status "%b%s%b" "$YELLOW" "TCP Connection" "$NC"
+                printf "%-15s %-30s %-30s %-20s\n" \
+                    "zigbee.$instance_number" \
+                    "$short_configured_port" \
+                    "-" \
+                    "${YELLOW}TCP Connection${NC}"
             fi
         else
-            local matching_port=""
             for port in "${sys_zigbee_ports[@]}"; do
+                local short_port
+                short_port=$(shorten_port "$port")
+
+                local status
                 if [[ "$configured_port" == "$port" ]]; then
-                    matching_port="$port"
-                    break
+                    if [[ "$lang" == "--de" ]]; then
+                        status="${GREEN}✓ Übereinstimmend${NC}"
+                    else
+                        status="${GREEN}✓ Matching${NC}"
+                    fi
+                else
+                    if [[ "$lang" == "--de" ]]; then
+                        status="${RED}✗ Nicht übereinstimmend${NC}"
+                    else
+                        status="${RED}✗ Not matching${NC}"
+                    fi
                 fi
+
+                # Print table row for each by-id port
+                printf "%-15s %-30s %-30s %-20s\n" \
+                    "zigbee.$instance_number" \
+                    "$short_configured_port" \
+                    "$short_port" \
+                    "$status"
             done
-
-            if [[ -n "$matching_port" ]]; then
-                if [[ "$lang" == "--de" ]]; then
-                    printf -v status "%b%s%b" "$GREEN" "✓ Übereinstimmend" "$NC"
-                else
-                    printf -v status "%b%s%b" "$GREEN" "✓ Matching" "$NC"
-                fi
-            else
-                if [[ "$lang" == "--de" ]]; then
-                    printf -v status "%b%s%b" "$RED" "✗ Nicht übereinstimmend" "$NC"
-                else
-                    printf -v status "%b%s%b" "$RED" "✗ Not matching" "$NC"
-                fi
-            fi
         fi
-
-        # Print table row with shortened port paths
-        printf "%-15s %-30s %-40s %-20s\n" \
-            "zigbee.$instance_number" \
-            "$short_configured_port" \
-            "$(IFS=$','; printf "%s" "${short_ports[*]}")" \
-            "$status"
     done
 }
 
