@@ -69,10 +69,10 @@ if ! command -v distro-info >/dev/null; then
 fi
 
 # Farbdefinitionen
-YELLOW='\033[1;33m'
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+GREEN=$(printf '\033[0;32m')
+RED=$(printf '\033[0;31m')
+YELLOW=$(printf '\033[1;33m')
+NC=$(printf '\033[0m')  # No Color
 HEADLINE='\033[34;107m'
 
 # VARIABLES
