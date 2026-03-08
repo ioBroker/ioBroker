@@ -735,7 +735,7 @@ done < <(echo "$IOBLISTINST")
 # Function to extract configured port for a ZigBee instance
 get_zigbee_port() {
     local instance="$1"
-    echo "$IOBLISTINST" | grep -A1 "$instance" | grep -oP 'port: \K[^\s]+'
+    echo "$IOBLISTINST" | grep -A1 "$instance" | grep -oP 'port: \K[^\s]+' | head -n 1
 }
 
 # Function to print ZigBee port status in a table format
