@@ -767,7 +767,7 @@ print_zigbee_port_table() {
         local short_configured_port
         short_configured_port=$(shorten_port "$configured_port")
 
-        # Check if the configured port matches any by-id port
+        # Check if the configured port is a TCP connection
         if [[ "$configured_port" == tcp://* ]]; then
             if [[ "$lang" == "--de" ]]; then
                 printf "%-15s %-35s %-35s %-20s\n" \
@@ -783,6 +783,7 @@ print_zigbee_port_table() {
                     "${YELLOW}TCP Connection${NC}"
             fi
         else
+            # For serial ports, check each by-id port
             for i in "${!sys_zigbee_ports[@]}"; do
                 local short_port
                 short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
