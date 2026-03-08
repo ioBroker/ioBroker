@@ -730,12 +730,12 @@ while IFS= read -r line; do
     if [[ $line =~ system\.adapter\.zigbee\.[0-9]+ ]]; then
         instances+=("$line")
     fi
-done < <(echo "$IOBLISTINST")
+done < <(echo "$IOBLISTINST" | grep -E 'system\.adapter\.zigbee\.[0-9]+')
 
 # Function to extract configured port for a ZigBee instance
 get_zigbee_port() {
     local instance="$1"
-    echo "$IOBLISTINST" | grep -A1 "$instance" | grep -oP 'port: \K[^\s]+' | head -n 1
+    echo "$IOBLISTINST" | sed -n "/$instance/,/^$/p" | grep -m1 -oP 'port: \K[^\s]+'
 }
 
 # Function to print ZigBee port status in a table format
