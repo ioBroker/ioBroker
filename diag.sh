@@ -478,14 +478,14 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 else
     printf "%b%s%b" "$HEADLINE" "*** Users and Groups ***" "$NC"
     printf "\n%s\n" "User that called 'iob diag':"
-    whoami
-    env | grep HOME
+    printf "%s\n" "$(whoami)"
+    printf "%s%s\n" "HOME=" "$(bash -c 'echo $HOME')"
     printf "%s%s" "GROUPS=" "$(groups)"
     printf "\n\n%s" "User that is running 'js-controller':"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         printf "\n%s\n" "$IOUSER"
-        sudo -H -u "$IOUSER" env | grep HOME
+        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
         printf "\n%b%s%b" "$RED" "js-controller is not running" "$NC"
@@ -1014,7 +1014,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n\n%s" "Beliebige Taste für eine Zusammenfassung drücken"
     fi
 else
-    printf "\n%b%s%b"  "$YELLOW" "m============ Mark until here for C&P =============" "$NC"
+    printf "\n%b%s%b"  "$YELLOW" "============= Mark until here for C&P =============" "$NC"
     printf "\n\n%s\n\n" "iob diag has finished."
     if [[ $SUMMARY != "summary" ]]; then
         exit
