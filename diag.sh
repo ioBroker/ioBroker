@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-03-10" #version of this script
+SKRIPTV="2026-03-12" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -160,12 +160,12 @@ else
 fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    printf "\n%b%s%b" "$YELLOW" "========== Langfassung ab hier markieren und kopieren ===========" "$NC"
+    printf "%b%s%b" "$YELLOW" "========== Langfassung ab hier markieren und kopieren ===========" "$NC"
     printf "\n\n%s" '```bash'
     printf "\n%s%s" "Script v." "$SKRIPTV"
     printf "\n\n%b%s%b" "$HEADLINE" "*** GRUNDSYSTEM ***" "$NC"
 else
-    printf "\n%b%s%b" "$YELLOW" "========== Start marking the full check here ===========" "$NC"
+    printf "%b%s%b" "$YELLOW" "========== Start marking the full check here ===========" "$NC"
     printf "\n\n%s" '```bash'
     printf "\n%s%s" "Script v." "$SKRIPTV"
     printf "\n\n%b%s%b" "$HEADLINE" "*** BASE SYSTEM ***" "$NC"
@@ -180,9 +180,8 @@ else
     source /usr/lib/os-release
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"
     hostnamectl | grep -v 'Machine\|Boot\|Operating'
-    printf "%s%s\n" "OS is similar to: " "$ID_LIKE"
+    printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
-    printf "%s%s" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
     printf "\n%s\n" "Docker          : false"
 fi
 
@@ -205,7 +204,7 @@ check_architecture
 
 printf "\n\n%s\n" "Systemuptime and Load:"
 uptime
-
+printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
@@ -415,7 +414,7 @@ else
 fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    printf "\n%b%s%b" "$HEADLINE" "*** ZEIT UND ZEITZONEN ***" "$NC"
+    printf "\n%b%s%b\n" "$HEADLINE" "*** ZEIT UND ZEITZONEN ***" "$NC"
 
     if [[ -f "$DOCKER" ]]; then
         date -u
@@ -460,20 +459,18 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der den 'js-controller' ausführt:"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "%s" "$IOUSER"
-        sudo -H -u "$IOUSER" env | grep HOME
-        printf "\n%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
+        printf "\n%s\n" "$IOUSER"
+        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
     printf "\n%b%s%b" "$RED" "js-controller läuft nicht" "$NC"
     fi
 
     if [[ ! -f "$DOCKER" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
-
         # Prompt for username
-        printf "\n%s" "Es sollte ein Standarduser angelegt werden! Dieser user kann auch mittels 'sudo' temporär root-Rechte erlangen."
-        printf "\n%s" "Ein permanentes Login als root ist nicht vorgesehen."
-        printf "\n%s" "Bitte den 'iobroker fix' ausführen oder manuell einen entsprechenden User anlegen."
-
+        printf "\n%s\n" "Es sollte ein Standarduser angelegt werden! Dieser user kann auch mittels 'sudo' temporär root-Rechte erlangen."
+        printf "%s\n" "Ein permanentes Login als root ist nicht vorgesehen."
+        printf "%s" "Bitte den 'iobroker fix' ausführen oder manuell einen entsprechenden User anlegen."
     fi
 else
     printf "%b%s%b" "$HEADLINE" "*** Users and Groups ***" "$NC"
