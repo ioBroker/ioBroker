@@ -9,7 +9,7 @@
     "access": "public"
   },
   "dependencies": {
-    "fs-extra": "^11.3.3",
+    "fs-extra": "^11.3.4",
     "semver": "^7.7.4",
     "yargs": "^17.7.2"
   },
