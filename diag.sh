@@ -989,6 +989,8 @@ if pgrep "pawns-cli" > /dev/null; then
         printf "\n%s" "Schauen Sie im Ordner Global bei den Skripten nach verdächtigen Einträgen"
         printf "\n%s" "Oftmals ist ein offen im Internet stehender ioBroker die Ursache. Das System muss abgesichert neuinstalliert werden."
         printf "\n%s%b" "Ein Backup muss aus der Zeit vor dem Befall stammen." "$NC"
+
+
     else
         printf "\n%b%s" "$RED" "WARNING: The process 'pawns-cli' is running on this system!"
         printf "\n%s" "This could be an indication of malware infection."
@@ -996,6 +998,25 @@ if pgrep "pawns-cli" > /dev/null; then
         printf "\n%s" "Check the scripts in the Global folder for any suspicious entries."
         printf "\n%s" "Often, the cause is an ioBroker installation that is openly accessible on the internet. The system must be reinstalled securely."
         printf "\n%s%b" "A backup must be from before the infection." "$NC"
+    fi
+    count=0
+    matches=()
+
+    for file in /tmp/*; do
+        if [[ -e "$file" && "$file" =~ pawns-cli ]]; then
+            matches+=("$file")
+            ((count++))
+        fi
+    done
+
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo "Gefundene Dateien:"
+        printf '%s\n' "${matches[@]}"
+        echo -e "\nAnzahl der Malware-Dateien: $count"
+    else
+        echo "Found files:"
+        printf '%s\n' "${matches[@]}"
+        echo -e "\nNumber of malware: $count"
     fi
 fi
 
