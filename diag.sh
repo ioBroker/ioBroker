@@ -914,7 +914,26 @@ if [[ $NODENOTCORR -eq 0 ]]; then
         cd ~ || exit
     fi
     sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
-    sudo -H -u "$(whoami)" npx is-my-node-vulnerable
+    sudo -H -u "$(whoami)" npx is-my-node-vulnerable > /dev/null 2>&1
+    EXIT_CODE=$?
+
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        if [ "$EXIT_CODE" -ne 0 ]; then
+            printf '%sSicherheitslücken in der Node.js-Version erkannt!\n' "$RED"
+            npx is-my-node-vulnerable
+            printf '%s' "$NC"
+        else
+            printf '%sKeine bekannten Sicherheitslücken in der Node.js-Version erkannt!%s\n' "$GREEN" "$NC"
+        fi
+    else
+        if [ "$EXIT_CODE" -ne 0 ]; then
+                printf '%sVulnerabilities detected in the Node.js version!\n' "$RED"
+                npx is-my-node-vulnerable
+                printf '%s' "$NC"
+            else
+                printf '%sNo known Vulnerabilities detected!%s\n' "$GREEN" "$NC"
+        fi
+    fi
     cd || exit
 fi
 
