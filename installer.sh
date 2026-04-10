@@ -60,7 +60,7 @@ fi
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
-LIB_URL="https://raw.githubusercontent.com/Grothesk242/ioBroker/master/$LIB_NAME"
+LIB_URL="https://raw.githubusercontent.com/Grothesk242/ioBroker/refs/heads/installer_fixes/$LIB_NAME"
 
 curl -sL $LIB_URL >~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else
