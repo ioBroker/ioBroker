@@ -901,11 +901,11 @@ echo "Pin: origin deb.nodesource.com" | tee -a /etc/apt/preferences.d/nodejs > /
 echo "Pin-Priority: 1001" | tee -a /etc/apt/preferences.d/nodejs > /dev/null
 
         else
-            $SUDOX $INSTALL_CMD update 2>&1 >/dev/null
-            $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
+            $SUDOX $INSTALL_CMD update >/dev/null 2>&1
+            $SUDOX $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg >/dev/null 2>&1
             $SUDOX mkdir -p /usr/share/keyrings
-            $SUDOX rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
-            $SUDOX rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
+            $SUDOX rm /usr/share/keyrings/nodesource.gpg >/dev/null 2>&1
+            $SUDOX rm /etc/apt/keyrings/nodesource.gpg >/dev/null 2>&1
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
             $SUDOX chmod 644 /usr/share/keyrings/nodesource.gpg
             arch=$(dpkg --print-architecture)
