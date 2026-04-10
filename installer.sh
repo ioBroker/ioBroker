@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="WIP_GROTHESK" # format YYYY-MM-DD
+INSTALLER_VERSION="WIP_GROTHESK1" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
