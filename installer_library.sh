@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-03-02" # format YYYY-MM-DD
+LIBRARY_VERSION="WIP_GROTHESK" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -826,9 +826,9 @@ fix_dir_permissions() {
         # We cannot rely on default permissions on this system
         echo "${yellow}This system does not support setting default permissions.${normal}"
         echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
-        echo "ACL enabled: false" >>$INSTALLER_INFO_FILE
+        echo "ACL enabled: false" | tee -a $INSTALLER_INFO_FILE
     else
-        echo "ACL enabled: true" >>$INSTALLER_INFO_FILE
+        echo "ACL enabled: true" | tee -a $INSTALLER_INFO_FILE
     fi
 }
 
@@ -874,8 +874,8 @@ module_hotfixes=1"
             $INSTALL_CMD update 2>&1 >/dev/null
             $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
             mkdir -p /usr/share/keyrings
-            rm /usr/share/keyrings/nodesource.gpg 2>&1 >/dev/null
-            rm /etc/apt/keyrings/nodesource.gpg 2>&1 >/dev/null
+            rm -f /usr/share/keyrings/nodesource.gpg 2>/dev/null
+            rm -f /etc/apt/keyrings/nodesource.gpg 2>/dev/null
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
             chmod 644 /usr/share/keyrings/nodesource.gpg
             arch=$(dpkg --print-architecture)
