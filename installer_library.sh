@@ -871,11 +871,11 @@ module_hotfixes=1"
         exit 1
     else
         if [ "$IS_ROOT" = true ]; then
-            $INSTALL_CMD update 2>&1 >/dev/null
-            $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg 2>&1 >/dev/null
+            $INSTALL_CMD update >/dev/null 2>&1
+            $INSTALL_CMD $INSTALL_CMD_ARGS ca-certificates curl gnupg >/dev/null 2>&1
             mkdir -p /usr/share/keyrings
-            rm -f /usr/share/keyrings/nodesource.gpg 2>/dev/null
-            rm -f /etc/apt/keyrings/nodesource.gpg 2>/dev/null
+            rm -f /usr/share/keyrings/nodesource.gpg >/dev/null 2>&1
+            rm -f /etc/apt/keyrings/nodesource.gpg >/dev/null 2>&1
             curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /usr/share/keyrings/nodesource.gpg
             chmod 644 /usr/share/keyrings/nodesource.gpg
             arch=$(dpkg --print-architecture)
