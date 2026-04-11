@@ -189,7 +189,7 @@ then
     exit
 fi
 
-DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm nodejs -qqy" #Deinstall DFSG-Version
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm nodejs -qqy" #Deinstall any previously installed nodejs and related packages
 
 clear
 echo -e "ioBroker nodejs fixer $VERSION"
@@ -281,25 +281,25 @@ then
             [[ -f /usr/bin/nodejs && "$PATHNODEJS" != "/usr/bin/nodejs" ]]
         then
             echo -e "*** Deleting $PATHNODEJS ***"
-            $SUDOX rm "$(type -p nodejs)" >/dev/null 2>&1
+            $SUDOX rm -f "$(type -p nodejs)" >/dev/null 2>&1
         fi
         if
             [[ "$PATHNODE" != "/usr/bin/node" ]]
         then
             echo -e "*** Deleting $PATHNODE ***"
-            $SUDOX rm "$(type -p node)" >/dev/null 2>&1
+            $SUDOX rm -f "$(type -p node)" >/dev/null 2>&1
         fi
         if
             [[ "$PATHNPM" != "/usr/bin/npm" ]]
         then
             echo -e "*** Deleting $PATHNPM ***"
-            $SUDOX rm "$(type -p npm)" >/dev/null 2>&1
+            $SUDOX rm -f "$(type -p npm)" >/dev/null 2>&1
         fi
         if
             [[ "$PATHNPX" != "/usr/bin/npx" ]]
         then
             echo -e "*** Deleting $PATHNPX ***"
-            $SUDOX rm "$(type -p npx)" >/dev/null 2>&1
+            $SUDOX rm -f "$(type -p npx)" >/dev/null 2>&1
         fi
         echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now"
     fi

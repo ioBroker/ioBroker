@@ -1,8 +1,8 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-04-11
-* Muted somme confusing error messages.
-+ Readded hint to run 'iob fix' to finalize setup. 
+* Muted some confusing error messages.
+* Readded hint to run 'iob fix' to finalize setup. 
 
 ## 2026-03-02
 * Use deb822 format for nodesource.sources in accordance with nodesource installer script
