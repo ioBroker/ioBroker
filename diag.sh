@@ -172,10 +172,10 @@ else
 fi
 
 if [ -f "$DOCKER" ]; then
-    printf "\n%s" "Hardware Vendor : " "$(cat /sys/devices/virtual/dmi/id/sys_vendor)"
-    printf "\n%s" "Kernel          : " "$(uname -m)"
+    printf "\n%s%s" "Hardware Vendor : " "$(cat /sys/devices/virtual/dmi/id/sys_vendor)"
+    printf "\n%s%s" "Kernel          : " "$(uname -m)"
     printf "\n%s%d%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
-    printf "\n%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
+    printf "\n%s%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
     source /usr/lib/os-release
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"

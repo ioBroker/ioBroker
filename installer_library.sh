@@ -826,9 +826,9 @@ fix_dir_permissions() {
         # We cannot rely on default permissions on this system
         echo "${yellow}This system does not support setting default permissions.${normal}"
         echo "${yellow}Do not use npm to manually install adapters unless you know what you are doing!${normal}"
-        echo "ACL enabled: false" | sudo tee -a $INSTALLER_INFO_FILE
+        echo "ACL enabled: false" | $SUDOX tee -a "$INSTALLER_INFO_FILE"
     else
-        echo "ACL enabled: true" | sudo tee -a $INSTALLER_INFO_FILE
+        echo "ACL enabled: true" | $SUDOX tee -a "$INSTALLER_INFO_FILE"
     fi
 }
 
