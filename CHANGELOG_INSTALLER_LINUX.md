@@ -1,7 +1,7 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-04-11
-* Muted somme confusing error messages.
+* Muted some confusing error messages.
 + Readded hint to run 'iob fix' to finalize setup. 
 
 ## 2026-03-02
