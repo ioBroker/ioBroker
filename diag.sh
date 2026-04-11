@@ -1094,7 +1094,7 @@ if [[ -f "$DOCKER" ]]; then
     printf "\n%s%s" "Kernel          : " "$(uname -m)"
     printf "\n%s%s" "Userland        : " "$(dpkg --print-architecture)"
     if [[ -f "$DOCKER" ]]; then
-        print "\n%s%s" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
+        printf "\n%s%s" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
     else
         printf "\n%s" "Docker          : false"
     fi
