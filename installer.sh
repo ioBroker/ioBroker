@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="WIP_GROTHESK1" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-04-11" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -60,7 +60,7 @@ fi
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
-LIB_URL="https://raw.githubusercontent.com/Grothesk242/ioBroker/refs/heads/installer_fixes/$LIB_NAME"
+LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 
 curl -sL $LIB_URL >~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else
@@ -614,6 +614,7 @@ else
 fi
 
 print_msg "${yellow}You need to re-login before doing anything else on the console!${normal}"
+print_bold "${red}Please run 'iob fix' first after the required re-login to finalize the setup.${normal}"
 
 if [ "$RECOMMEND_FIXER_AFTER_INSTALL" = "true" ]; then
     print_bold "${red}Please run 'iob fix' after the required re-login to fix some common issues.${normal}"

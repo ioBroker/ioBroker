@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="WIP_GROTHESK" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-04-11" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
