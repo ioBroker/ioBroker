@@ -2,7 +2,11 @@
 
 ## 2026-04-11
 * Muted some confusing error messages.
+<<<<<<< HEAD
 * Readded hint to run 'iob fix' to finalize setup. 
+=======
+* Readded hint to run 'iob fix' to finalize setup. 
+>>>>>>> b53445c149325372c8866b220a44d6c3419c0638
 
 ## 2026-03-02
 * Use deb822 format for nodesource.sources in accordance with nodesource installer script
