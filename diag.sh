@@ -99,6 +99,11 @@ NODENOTCORR=0
 IOBLISTINST=$(iobroker list instances $ALLOWROOT)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
+install_date=$(stat -c %w / | cut -d. -f1)
+current_timestamp=$(date +%s)
+install_timestamp=$(date -d "$(stat -c %w /)" +%s)
+days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
+
 #Debian and Ubuntu releases and their status
 EOLDEB=$(debian-distro-info --unsupported)
 EOLUBU=$(ubuntu-distro-info --unsupported)
@@ -180,7 +185,7 @@ else
     source /usr/lib/os-release
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"
     hostnamectl | grep -v 'Machine\|Boot\|Operating'
-    printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
+    printf "%s%s\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
     printf "\n%s\n" "Docker          : false"
 fi
@@ -202,7 +207,9 @@ check_architecture() {
 
 check_architecture
 
-printf "\n\n%s\n" "Systemuptime and Load:"
+printf "\n\nInstalled on: %s | Days since install: %d\n" "$install_date" "$days_since_install"
+
+printf "\n%s\n" "Systemuptime and Load:"
 uptime
 printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
