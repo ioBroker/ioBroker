@@ -509,7 +509,7 @@ printf "\n%s\t%s" "Display-Manager: " "$(systemctl status display-manager --no-p
 printf "\n%s\t\t%s" "Desktop:" "$DESKTOP_SESSION"
 printf "\n%s\t\t%s" "Session:" "$XDG_SESSION_TYPE"
 
-if [ -z "$DOCKER" ]; then
+if [[ ! -f "$DOCKER" ]]; then
     printf "Boot Target: \t%s" "$(systemctl get-default)"
 fi
 
