@@ -1062,7 +1062,7 @@ else
 fi
 clear
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    printf "\n%s" "Zusammfassung ab hier markieren und kopieren:"
+    printf "\n%s" "Zusammenfassung ab hier markieren und kopieren:"
     printf "\n\n%s" '```bash'
     printf "\n%s" "====================== ZUSAMMENFASSUNG ======================"
     printf "\n\t\t\t%s%s\n\n" "v." "$SKRIPTV"
