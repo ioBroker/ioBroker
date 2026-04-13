@@ -516,7 +516,7 @@ fi
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n\n%b%s"  "Das System bootet in eine graphische Oberfläche. Im Serverbetrieb wird kein GUI verwendet." "$YELLOW"
+            printf "\n\n%b%s%b" "$YELLOW" "Das System bootet in eine graphische Oberfläche. Im Serverbetrieb wird kein GUI verwendet." "$NC"
             printf "\n%s%b" "Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen." "$NC"
         else
             printf "\n\n%b%s" "$YELLOW" "System is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'."
