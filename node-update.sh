@@ -3,7 +3,7 @@
 # written to help updating and fixing nodejs on linux (Debian based Distros)
 
 #To be manually changed:
-VERSION="2026-03-02"
+VERSION="2026-03-05"
 
 # Load recommended Node.js version from versions.json (fallback to 22 if not reachable)
 VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
@@ -55,7 +55,7 @@ if [ -z "$(type -P apt-get)" ]; then
     exit 1
 fi
 
-if ([[ $DEBIANRELEASE = *buster* ]] || [[ $DEBIANRELEASE = 10.* ]]) && [[ $1 -ne 18 ]]; then
+if { [[ $DEBIANRELEASE = *buster* ]] || [[ $DEBIANRELEASE = 10.* ]]; } && [[ $1 -ne 18 ]]; then
     echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't run.\nPlease install the current Debian Stable release"
     unset LC_ALL
     exit 1
@@ -189,7 +189,7 @@ then
     exit
 fi
 
-DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm -qqy" #Deinstall DFSG-Version
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm nodejs -qqy" #Deinstall any previously installed nodejs and related packages
 
 clear
 echo -e "ioBroker nodejs fixer $VERSION"
@@ -281,25 +281,25 @@ then
             [[ -f /usr/bin/nodejs && "$PATHNODEJS" != "/usr/bin/nodejs" ]]
         then
             echo -e "*** Deleting $PATHNODEJS ***"
-            $SUDOX rm "$(type -p nodejs)"
+            $SUDOX rm -f "$(type -p nodejs)" >/dev/null 2>&1
         fi
         if
             [[ "$PATHNODE" != "/usr/bin/node" ]]
         then
             echo -e "*** Deleting $PATHNODE ***"
-            $SUDOX rm "$(type -p node)"
+            $SUDOX rm -f "$(type -p node)" >/dev/null 2>&1
         fi
         if
             [[ "$PATHNPM" != "/usr/bin/npm" ]]
         then
             echo -e "*** Deleting $PATHNPM ***"
-            $SUDOX rm "$(type -p npm)"
+            $SUDOX rm -f "$(type -p npm)" >/dev/null 2>&1
         fi
         if
             [[ "$PATHNPX" != "/usr/bin/npx" ]]
         then
             echo -e "*** Deleting $PATHNPX ***"
-            $SUDOX rm "$(type -p npx)"
+            $SUDOX rm -f "$(type -p npx)" >/dev/null 2>&1
         fi
         echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now"
     fi
@@ -423,7 +423,7 @@ fi
 
 echo ""
 echo ""
-echo "Removing dfsg-nodejs"
+echo "Removing any previously installed nodejs version"
 eval "$DFSGREM"
 echo ""
 

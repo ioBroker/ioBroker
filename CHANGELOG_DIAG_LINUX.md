@@ -1,4 +1,6 @@
 # Changelog for Linux-Diag-Script
+## 2026-03-10
+* Code cleanup, added zigbee port overview, and fixed user check
 
 ## 2026-03-01
 * nodejs vulnerability check is more robust
