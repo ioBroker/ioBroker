@@ -517,7 +517,7 @@ printf "\n%s\t\t%s" "Desktop:" "$DESKTOP_SESSION"
 printf "\n%s\t\t%s" "Session:" "$XDG_SESSION_TYPE"
 
 if [[ ! -f "$DOCKER" ]]; then
-    printf "Boot Target: \t%s" "$(systemctl get-default)"
+    printf "\nBoot Target: \t\t%s" "$(systemctl get-default)"
 fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
