@@ -172,10 +172,10 @@ else
 fi
 
 if [ -f "$DOCKER" ]; then
-    printf "\n%s" "Hardware Vendor : " "$(cat /sys/devices/virtual/dmi/id/sys_vendor)"
-    printf "\n%s" "Kernel          : " "$(uname -m)"
+    printf "\n%s%s" "Hardware Vendor : " "$(cat /sys/devices/virtual/dmi/id/sys_vendor)"
+    printf "\n%s%s" "Kernel          : " "$(uname -m)"
     printf "\n%s%d%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
-    printf "\n%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
+    printf "\n%s%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
     source /usr/lib/os-release
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"
@@ -510,14 +510,14 @@ printf "\n%s\t%s" "Display-Manager: " "$(systemctl status display-manager --no-p
 printf "\n%s\t\t%s" "Desktop:" "$DESKTOP_SESSION"
 printf "\n%s\t\t%s" "Session:" "$XDG_SESSION_TYPE"
 
-if [ -z "$DOCKER" ]; then
+if [[ ! -f "$DOCKER" ]]; then
     printf "Boot Target: \t%s" "$(systemctl get-default)"
 fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n\n%b%s"  "Das System bootet in eine graphische Oberfläche. Im Serverbetrieb wird kein GUI verwendet." "$YELLOW"
+            printf "\n\n%b%s%b" "$YELLOW" "Das System bootet in eine graphische Oberfläche. Im Serverbetrieb wird kein GUI verwendet." "$NC"
             printf "\n%s%b" "Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen." "$NC"
         else
             printf "\n\n%b%s" "$YELLOW" "System is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'."
@@ -1063,7 +1063,7 @@ else
 fi
 clear
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    printf "\n%s" "Zusammfassung ab hier markieren und kopieren:"
+    printf "\n%s" "Zusammenfassung ab hier markieren und kopieren:"
     printf "\n\n%s" '```bash'
     printf "\n%s" "====================== ZUSAMMENFASSUNG ======================"
     printf "\n\t\t\t%s%s\n\n" "v." "$SKRIPTV"
@@ -1095,7 +1095,7 @@ if [[ -f "$DOCKER" ]]; then
     printf "\n%s%s" "Kernel          : " "$(uname -m)"
     printf "\n%s%s" "Userland        : " "$(dpkg --print-architecture)"
     if [[ -f "$DOCKER" ]]; then
-        print "\n%s%s" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
+        printf "\n%s%s" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
     else
         printf "\n%s" "Docker          : false"
     fi
