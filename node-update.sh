@@ -189,7 +189,7 @@ then
     exit
 fi
 
-DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm nodejs -qqy" #Deinstall any previously installed nodejs and related packages
+DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm nodejs -qqy" # Remove distro-packaged Node.js and related packages
 
 clear
 echo -e "ioBroker nodejs fixer $VERSION"
