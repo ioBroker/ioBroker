@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2026-03-05
+* Make sure any previously installed nodejs is removed, including dfsg version
+
 ## 2026-03-02
 * Use deb822 format for sources in accordance with nodesource installer script
 * Replace hardcoded Node.js version with dynamic lookup from `versions.json`
