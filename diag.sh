@@ -779,24 +779,35 @@ print_zigbee_port_table() {
                 "${YELLOW}tcp${NC}"
         else
             # For serial ports, check each by-id port
-            for i in "${!sys_zigbee_ports[@]}"; do
-                local short_port
-                short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
+if [ ${#sys_zigbee_ports[@]} -eq 0 ]; then
+    echo "No /dev/serial/by-id entries found. Configured ZigBee ports are not available or do not match."
+else
+    for i in "${!sys_zigbee_ports[@]}"; do
+        local short_port
+        short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
 
-                local status
-                if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
-                    if [[ "$lang" == "--de" ]]; then
-                        status="${GREEN}✓ Übereinstimmend${NC}"
-                    else
-                        status="${GREEN}✓ Matching${NC}"
-                    fi
-                else
-                    if [[ "$lang" == "--de" ]]; then
-                        status="${RED}✗ Nicht übereinstimmend${NC}"
-                    else
-                        status="${RED}✗ Not matching${NC}"
-                    fi
-                fi
+        local status
+        if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
+            if [[ "$lang" == "--de" ]]; then
+                status="${GREEN}✓ Übereinstimmend${NC}"
+            else
+                status="${GREEN}✓ Matching${NC}"
+            fi
+        else
+            if [[ "$lang" == "--de" ]]; then
+                status="${RED}✗ Nicht übereinstimmend${NC}"
+            else
+                status="${RED}✗ Not matching${NC}"
+            fi
+        fi
+
+        # Hier fehlt wahrscheinlich noch die Ausgabe der Zeile mit dem Port und dem Status.
+        # Beispiel:
+        echo "$short_port: $status"
+    done
+fi
+
+
 
                 # Print table row for each by-id port
                 if [[ $i -eq 0 ]]; then
