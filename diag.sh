@@ -373,7 +373,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     echo "Current issues:"
     CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
     CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
-    if (( CURRENT_HEX == 0 )) || [[ -z "$CURRENT_HEX" ]]; then
+    if [ "$CURRENT_HEX" == "0" ] || [ -z "$CURRENT_HEX" ]; then
         printf "\e[32mNo throttling issues detected.\e[0m\n"
     else
         bit_n=0
@@ -511,7 +511,7 @@ printf "\n%s\t\t%s" "Desktop:" "$DESKTOP_SESSION"
 printf "\n%s\t\t%s" "Session:" "$XDG_SESSION_TYPE"
 
 if [[ ! -f "$DOCKER" ]]; then
-    printf "Boot Target: \t%s" "$(systemctl get-default)"
+    printf "\nBoot Target: \t%s" "$(systemctl get-default)"
 fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
@@ -543,9 +543,9 @@ printf "\n%b%s%b\n" "$HEADLINE" "*** DMESG CRITICAL ERRORS ***" "$NC"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
 if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        printf "%b%s%s%s\n%b%s" "$RED" "Es wurden" "$CRITERROR" "KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
+        printf "%b%s%s%s\n%b%s" "$RED" "Es wurden " "$CRITERROR" " KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
-        printf "%b%s%s%b\n%s" "$RED" "$CRITERROR" "CRITICAL ERRORS DETECTED!" "$NC" "Check 'sudo dmesg --level=emerg,alert,crit -T' for details"
+        printf "%b%s%s%b\n%s" "$RED" "$CRITERROR" " CRITICAL ERRORS DETECTED!" "$NC" "Check 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -667,14 +667,14 @@ if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
         if [[ "$MASKED" != "unmasked" ]]; then
             printf "\n\n%s\n" "Zigbee Network Settings on your coordinator / in nvbackup are:"
             printf "\n%s" "zigbee.X"
-            printf "\n%s" "\nExtended Pan ID:"
-            printf "\n%s" "\n*** MASKED ***"
-            printf "\n%s" "\nPan ID:"
-            printf "\n%s" "\n*** MASKED ***"
-            printf "\n%s" "\nChannel:"
-            printf "\n%s" "\n*** MASKED ***"
-            printf "\n%s" "\nNetwork Key:"
-            printf "\n%s" "\n*** MASKED ***"
+            printf "\n%s" "Extended Pan ID:"
+            printf "\n%s" "*** MASKED ***"
+            printf "\n%s" "Pan ID:"
+            printf "\n%s" "*** MASKED ***"
+            printf "\n%s" "Channel:"
+            printf "\n%s" "*** MASKED ***"
+            printf "\n%s" "Network Key:"
+            printf "\n%s" "*** MASKED ***"
             printf "\n\n%s\n" "To unmask the settings run 'iob diag --unmask'"
             break
         fi
