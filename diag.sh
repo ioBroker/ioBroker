@@ -99,6 +99,11 @@ NODENOTCORR=0
 IOBLISTINST=$(iobroker list instances $ALLOWROOT)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
+install_date=$(stat -c %w / | cut -d. -f1)
+current_timestamp=$(date +%s)
+install_timestamp=$(date -d "$(stat -c %w /)" +%s)
+days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
+
 #Debian and Ubuntu releases and their status
 EOLDEB=$(debian-distro-info --unsupported)
 EOLUBU=$(ubuntu-distro-info --unsupported)
@@ -316,7 +321,6 @@ else
             UNKNOWNRELEASE=0
         fi
     done
-
 
     if  (( UNKNOWNRELEASE == 1 )) ; then
         RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
