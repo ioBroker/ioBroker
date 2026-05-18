@@ -963,6 +963,8 @@ echo ""
 printf "\n%b%s%b\n" "$GREEN" "ioBroker-Repositories" "$NC"
 iob repo list $ALLOWROOT
 printf "\n\n%b%s%b\n" "$GREEN" "Installed ioBroker-Adapters" "$NC"
+iob list adapters $ALLOWROOT
+printf "\n\n%b%s%b\n" "$GREEN" "ioBroker-Adapter Versions and update status" "$NC"
 iob update -i $ALLOWROOT
 printf "\n\n%b%s%b\n" "$GREEN" "Objects and States" "$NC"
 echo "Please stand by - This may take a while"
