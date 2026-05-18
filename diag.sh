@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-03-12" #version of this script
+SKRIPTV="2026-05-15" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -179,13 +179,13 @@ fi
 if [ -f "$DOCKER" ]; then
     printf "\n%s%s" "Hardware Vendor : " "$(cat /sys/devices/virtual/dmi/id/sys_vendor)"
     printf "\n%s%s" "Kernel          : " "$(uname -m)"
-    printf "\n%s%d%s%s\n" "Userland        : " "$(getconf LONG_BIT)" " bit"
+    printf "\n%s%d%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
     printf "\n%s%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
     source /usr/lib/os-release
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"
     hostnamectl | grep -v 'Machine\|Boot\|Operating'
-    printf "%s%s\n" "OS is similar to: " "$ID_LIKE"
+    printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
     printf "\n%s\n" "Docker          : false"
 fi
@@ -207,9 +207,7 @@ check_architecture() {
 
 check_architecture
 
-printf "\n\nInstalled on: %s | Days since install: %d\n" "$install_date" "$days_since_install"
-
-printf "\n%s\n" "Systemuptime and Load:"
+printf "\n\n%s\n" "Systemuptime and Load:"
 uptime
 printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
@@ -217,49 +215,49 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
 
     for RELEASE in "${EOLDEB[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '$DEBSTABLE' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${EOLUBU[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${DEBSTABLE[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '$DEBSTABLE'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${UBULTS[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '$UBULTS'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${UBUSUP[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
             RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${TESTING[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDas Betriebssystem mit dem Codenamen '$CODENAME' ist eine Testversion! Es sollte nur zu Testzwecken eingesetzt werden!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${OLDSTABLE[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '$DEBSTABLE' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
         fi
@@ -276,49 +274,49 @@ else
     printf "\n%b%s%b\n" "$HEADLINE" "*** LIFE CYCLE STATUS ***" "$NC"
 
     for RELEASE in "${EOLDEB[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${EOLUBU[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${DEBSTABLE[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '$DEBSTABLE'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${UBULTS[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '$UBULTS'!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${UBUSUP[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
             RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${TESTING[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
             UNKNOWNRELEASE=0
         fi
     done
 
     for RELEASE in "${OLDSTABLE[@]}"; do
-        if [[ "$RELEASE" == "$CODENAME" ]]; then
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m"
             UNKNOWNRELEASE=0
         fi
@@ -379,7 +377,7 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
     echo "Current issues:"
     CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
     CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
-    if (( CURRENT_HEX == 0 )) || [[ -z "$CURRENT_HEX" ]]; then
+    if [ "$CURRENT_HEX" == "0" ] || [ -z "$CURRENT_HEX" ]; then
         printf "\e[32mNo throttling issues detected.\e[0m\n"
     else
         bit_n=0
@@ -517,13 +515,13 @@ printf "\n%s\t\t%s" "Desktop:" "$DESKTOP_SESSION"
 printf "\n%s\t\t%s" "Session:" "$XDG_SESSION_TYPE"
 
 if [[ ! -f "$DOCKER" ]]; then
-    printf "\nBoot Target: \t\t%s" "$(systemctl get-default)"
+    printf "\nBoot Target: \t%s" "$(systemctl get-default)"
 fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
     if [[ $(systemctl get-default) == "graphical.target" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n\n%b%s"  "Das System bootet in eine graphische Oberfläche. Im Serverbetrieb wird kein GUI verwendet." "$YELLOW"
+            printf "\n\n%b%s%b" "$YELLOW" "Das System bootet in eine graphische Oberfläche. Im Serverbetrieb wird kein GUI verwendet." "$NC"
             printf "\n%s%b" "Bitte das BootTarget auf 'multi-user.target' setzen oder 'iobroker fix' ausführen." "$NC"
         else
             printf "\n\n%b%s" "$YELLOW" "System is booting into 'graphical.target'. Usually a server is running in 'multi-user.target'."
@@ -549,9 +547,9 @@ printf "\n%b%s%b\n" "$HEADLINE" "*** DMESG CRITICAL ERRORS ***" "$NC"
 CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
 if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        printf "%b%s%s%s\n%b%s" "$RED" "Es wurden" "$CRITERROR" "KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
+        printf "%b%s%s%s\n%b%s" "$RED" "Es wurden " "$CRITERROR" " KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
-        printf "%b%s%s%b\n%s" "$RED" "$CRITERROR" "CRITICAL ERRORS DETECTED!" "$NC" "Check 'sudo dmesg --level=emerg,alert,crit -T' for details"
+        printf "%b%s%s%b\n%s" "$RED" "$CRITERROR" " CRITICAL ERRORS DETECTED!" "$NC" "Check 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -673,14 +671,14 @@ if ls /opt/iobroker/iobroker-data/zigbee_*/nvbackup.json 1>/dev/null 2>&1; then
         if [[ "$MASKED" != "unmasked" ]]; then
             printf "\n\n%s\n" "Zigbee Network Settings on your coordinator / in nvbackup are:"
             printf "\n%s" "zigbee.X"
-            printf "\n%s" "\nExtended Pan ID:"
-            printf "\n%s" "\n*** MASKED ***"
-            printf "\n%s" "\nPan ID:"
-            printf "\n%s" "\n*** MASKED ***"
-            printf "\n%s" "\nChannel:"
-            printf "\n%s" "\n*** MASKED ***"
-            printf "\n%s" "\nNetwork Key:"
-            printf "\n%s" "\n*** MASKED ***"
+            printf "\n%s" "Extended Pan ID:"
+            printf "\n%s" "*** MASKED ***"
+            printf "\n%s" "Pan ID:"
+            printf "\n%s" "*** MASKED ***"
+            printf "\n%s" "Channel:"
+            printf "\n%s" "*** MASKED ***"
+            printf "\n%s" "Network Key:"
+            printf "\n%s" "*** MASKED ***"
             printf "\n\n%s\n" "To unmask the settings run 'iob diag --unmask'"
             break
         fi
@@ -785,24 +783,35 @@ print_zigbee_port_table() {
                 "${YELLOW}tcp${NC}"
         else
             # For serial ports, check each by-id port
-            for i in "${!sys_zigbee_ports[@]}"; do
-                local short_port
-                short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
+if [ ${#sys_zigbee_ports[@]} -eq 0 ]; then
+    echo "No /dev/serial/by-id entries found. Configured ZigBee ports are not available or do not match."
+else
+    for i in "${!sys_zigbee_ports[@]}"; do
+        local short_port
+        short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
 
-                local status
-                if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
-                    if [[ "$lang" == "--de" ]]; then
-                        status="${GREEN}✓ Übereinstimmend${NC}"
-                    else
-                        status="${GREEN}✓ Matching${NC}"
-                    fi
-                else
-                    if [[ "$lang" == "--de" ]]; then
-                        status="${RED}✗ Nicht übereinstimmend${NC}"
-                    else
-                        status="${RED}✗ Not matching${NC}"
-                    fi
-                fi
+        local status
+        if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
+            if [[ "$lang" == "--de" ]]; then
+                status="${GREEN}✓ Übereinstimmend${NC}"
+            else
+                status="${GREEN}✓ Matching${NC}"
+            fi
+        else
+            if [[ "$lang" == "--de" ]]; then
+                status="${RED}✗ Nicht übereinstimmend${NC}"
+            else
+                status="${RED}✗ Not matching${NC}"
+            fi
+        fi
+
+        # Hier fehlt wahrscheinlich noch die Ausgabe der Zeile mit dem Port und dem Status.
+        # Beispiel:
+        echo "$short_port: $status"
+    done
+fi
+
+
 
                 # Print table row for each by-id port
                 if [[ $i -eq 0 ]]; then
