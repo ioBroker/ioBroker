@@ -221,6 +221,15 @@ printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
 
+#DEBUG:
+echo "DEBUG: CODENAME = '$CODENAME'"
+echo "DEBUG: UBUSUP = ${UBUSUP[@]}"
+echo "DEBUG: UBULTS = ${UBULTS[@]}"
+echo "DEBUG: EOLUBU = ${EOLUBU[@]}"
+echo "DEBUG: TESTING = ${TESTING[@]}"
+#DEBUG_END
+
+
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '${DEBSTABLE[0]}' gebracht werden!\e[0m"
