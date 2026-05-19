@@ -208,7 +208,7 @@ else
     INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
 fi
 
-printf "\n\n%s\n" "$INSTALL_STATUS"
+printf "%s" "$INSTALL_STATUS"
 
 check_architecture() {
     if (( ARCH == 32 )); then
