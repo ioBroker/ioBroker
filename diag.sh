@@ -237,27 +237,23 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         fi
     done
 
-# Prüfe, ob CODENAME in UBUSUP, aber nicht in UBULTS ist
-IS_IN_UBUSUP=0
+# --- UBUSUP als Schleife einbinden (Deutsch) ---
 for RELEASE in "${UBUSUP[@]}"; do
-    if [[ "$RELEASE" == "$CODENAME" ]]; then
-        IS_IN_UBUSUP=1
-        break
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        IS_LTS=0
+        for LTS in "${UBULTS[@]}"; do
+            if [[ "$RELEASE" == "$LTS" ]]; then
+                IS_LTS=1
+                break
+            fi
+        done
+        if (( IS_LTS == 0 )); then
+            RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
+            UNKNOWNRELEASE=0
+            break
+        fi
     fi
 done
-
-IS_IN_UBULTS=0
-for RELEASE in "${UBULTS[@]}"; do
-    if [[ "$RELEASE" == "$CODENAME" ]]; then
-        IS_IN_UBULTS=1
-        break
-    fi
-done
-
-if (( IS_IN_UBUSUP == 1 && IS_IN_UBULTS == 0 )); then
-    RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
-    UNKNOWNRELEASE=0
-fi
 
     for RELEASE in "${TESTING[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -301,7 +297,7 @@ else
         fi
     done
 
-    # --- Ubuntu-Prüfungen (Englisch) ---
+# --- Ubuntu-Prüfungen (Englisch) ---
 for RELEASE in "${EOLUBU[@]}"; do
     if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
         RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '${UBULTS[0]}' NOW!\e[0m"
@@ -318,27 +314,25 @@ for RELEASE in "${UBULTS[@]}"; do
     fi
 done
 
-# Prüfe, ob CODENAME in UBUSUP, aber nicht in UBULTS ist
-IS_IN_UBUSUP=0
+# --- NEU: UBUSUP als Schleife einbinden ---
 for RELEASE in "${UBUSUP[@]}"; do
-    if [[ "$RELEASE" == "$CODENAME" ]]; then
-        IS_IN_UBUSUP=1
-        break
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        # Prüfe, ob RELEASE in UBULTS enthalten ist
+        IS_LTS=0
+        for LTS in "${UBULTS[@]}"; do
+            if [[ "$RELEASE" == "$LTS" ]]; then
+                IS_LTS=1
+                break
+            fi
+        done
+        # Nur ausgeben, wenn es KEINE LTS-Version ist
+        if (( IS_LTS == 0 )); then
+            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
+            UNKNOWNRELEASE=0
+            break
+        fi
     fi
 done
-
-IS_IN_UBULTS=0
-for RELEASE in "${UBULTS[@]}"; do
-    if [[ "$RELEASE" == "$CODENAME" ]]; then
-        IS_IN_UBULTS=1
-        break
-    fi
-done
-
-if (( IS_IN_UBUSUP == 1 && IS_IN_UBULTS == 0 )); then
-    RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
-    UNKNOWNRELEASE=0
-fi
 
 # --- Weitere Prüfungen (TESTING, etc.) ---
 for RELEASE in "${TESTING[@]}"; do
@@ -348,6 +342,11 @@ for RELEASE in "${TESTING[@]}"; do
         break
     fi
 done
+
+# --- Fallback: Unknown Release ---
+if (( UNKNOWNRELEASE == 1 )); then
+    RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
+fi
 
     for RELEASE in "${OLDSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
