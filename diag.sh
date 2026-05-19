@@ -973,11 +973,14 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     printf "\n\n%b%s%b\n" "$GREEN" "Checking for nodejs vulnerability:" "$NC"
     if [ -d "/home/iobroker" ]; then
         cd /home/iobroker || exit
+        sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+        sudo -H -u iobroker npx is-my-node-vulnerable > /dev/null 2>&1
     else
         cd ~ || exit
+        sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
+        sudo -H -u "$(whoami)" npx is-my-node-vulnerable > /dev/null 2>&1
     fi
-    sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-    sudo -H -u iobroker npx is-my-node-vulnerable > /dev/null 2>&1
+
     EXIT_CODE=$?
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
