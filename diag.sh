@@ -200,7 +200,7 @@ else
     printf "%s" "Virtualization  : Docker"
 fi
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
-printf "\n%s%s%s" "Userland        : " "$(getconf LONG_BIT)" "bit"
+printf "\n%s%s%s\n\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     INSTALL_STATUS="System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
