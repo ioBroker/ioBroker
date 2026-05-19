@@ -79,11 +79,11 @@ HEADLINE='\033[34;107m'
 export LC_ALL=C
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
-if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
+if [[ "$*" =~ "--allow-root" ]]; then ALLOWROOT="--allow-root"; fi
 MASKED=""
-if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
+if [[ "$*" =~ --unmask ]]; then MASKED="unmasked"; fi
 SUMMARY=""
-if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
+if [[ "$*" =~ (--summary|--short|--zusammenfassung|--kurz|-s|-k) ]]; then SUMMARY="summary"; fi
 ARCH=$(getconf LONG_BIT);
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
@@ -115,7 +115,7 @@ mapfile -t EOLDEB < <(debian-distro-info --unsupported)
 mapfile -t DEBSTABLE < <(debian-distro-info --stable)
 mapfile -t OLDSTABLE < <(debian-distro-info --oldstable)
 mapfile -t TESTING < <(debian-distro-info --testing)
-CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
+CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
 clear
@@ -193,12 +193,12 @@ else
     printf "\n%s\n" "Docker          : false"
 fi
 
-SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
-if [[ -n "$SYSTDDVIRT" ]]; then
-    printf "%s%s" "Virtualization  : " "$(systemd-detect-virt)"
+if [[ -f "$DOCKER" ]]; then
+    SYSTDDVIRT="Docker"
 else
-    printf "%s" "Virtualization  : Docker"
+    SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null || echo "Unknown")
 fi
+printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
@@ -225,6 +225,15 @@ printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
 
+    if ! command -v distro-info >/dev/null; then
+        if   command -v apt-get >/dev/null; then
+            echo "Installing distro-info..."
+            sudo apt-get update && sudo apt-get install -y distro-info
+        else
+            echo "ERROR: 'distro-info' is required but not available. Install it manually."
+            exit 1
+        fi
+    fi
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -583,7 +592,16 @@ if [ ! -f "$DOCKER" ]; then
 fi
 
 printf "\n%b%s%b\n" "$HEADLINE" "*** DMESG CRITICAL ERRORS ***" "$NC"
-CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
+
+if [[ $(id -u) -eq 0 ]]; then
+    CRITERROR=$(dmesg --level=emerg,alert,crit -T | wc -l)
+elif command -v sudo >/dev/null; then
+    CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
+else
+    CRITERROR=0
+    echo "WARNING: Cannot check dmesg (no sudo rights)."
+fi
+
 if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "%b%s%s%s\n%b%s" "$RED" "Es wurden " "$CRITERROR" " KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
