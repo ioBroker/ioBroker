@@ -290,6 +290,14 @@ done
 else
     printf "\n%b%s%b\n" "$HEADLINE" "*** LIFE CYCLE STATUS ***" "$NC"
 
+    #DEBUG:
+echo "DEBUG: CODENAME = '$CODENAME'"
+echo "DEBUG: UBUSUP = ${UBUSUP[@]}"
+echo "DEBUG: UBULTS = ${UBULTS[@]}"
+echo "DEBUG: EOLUBU = ${EOLUBU[@]}"
+echo "DEBUG: TESTING = ${TESTING[@]}"
+#DEBUG_END
+
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '${DEBSTABLE[0]}' NOW!\e[0m"
