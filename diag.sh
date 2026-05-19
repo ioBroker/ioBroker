@@ -200,7 +200,7 @@ else
     printf "%s" "Virtualization  : Docker"
 fi
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
-printf "\n%s%s%s\n\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
+printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     INSTALL_STATUS="System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
@@ -218,7 +218,7 @@ check_architecture() {
 
 check_architecture
 
-printf "\n\n%s\n" "Systemuptime and Load:"
+printf "\n%s\n" "Systemuptime and Load:"
 uptime
 printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
