@@ -976,8 +976,8 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     else
         cd ~ || exit
     fi
-    sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
-    sudo -H -u "$(whoami)" npx is-my-node-vulnerable > /dev/null 2>&1
+    sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+    sudo -H -u iobroker npx is-my-node-vulnerable > /dev/null 2>&1
     EXIT_CODE=$?
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
