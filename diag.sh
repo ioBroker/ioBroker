@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-05-18" #version of this script
+SKRIPTV="2026-05-19" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -105,13 +105,20 @@ install_timestamp=$(date -d "$(stat -c %w /)" +%s)
 days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
 
 #Debian and Ubuntu releases and their status
-EOLDEB=$(debian-distro-info --unsupported)
-EOLUBU=$(ubuntu-distro-info --unsupported)
-DEBSTABLE=$(debian-distro-info --stable)
-UBULTS=$(ubuntu-distro-info --lts)
-UBUSUP=$(ubuntu-distro-info --supported)
-TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)
-OLDSTABLE=$(debian-distro-info --oldstable)
+#EOLDEB=($(debian-distro-info --unsupported))
+IFS=' ' read -ra EOLDEB <<< "$(debian-distro-info --unsupported)"
+#EOLUBU=($(ubuntu-distro-info --unsupported))
+IFS=' ' read -ra EOLUBU <<< "$(ubuntu-distro-info --unsupported)"
+#DEBSTABLE=($(debian-distro-info --stable))
+IFS=' ' read -ra DEBSTABLE <<< "$(debian-distro-info --stable)"
+#UBULTS=($(ubuntu-distro-info --lts))
+IFS=' ' read -ra UBULTS <<< "$(ubuntu-distro-info --lts)"
+#UBUSUP=($(ubuntu-distro-info --supported))
+IFS=' ' read -ra UBUSUP <<< "$(ubuntu-distro-info --supported)"
+#TESTING=($(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null))
+IFS=' ' read -ra TESTING <<< "$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)"
+#OLDSTABLE=($(debian-distro-info --oldstable))
+IFS=' ' read -ra OLDSTABLE <<< "$(debian-distro-info --oldstable)"
 CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
@@ -216,7 +223,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '$DEBSTABLE' gebracht werden!\e[0m"
+            RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '${DEBSTABLE[0]}' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -224,7 +231,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 
     for RELEASE in "${EOLUBU[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
+            RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -232,7 +239,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 
     for RELEASE in "${DEBSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '$DEBSTABLE'!\e[0m"
+            RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '${DEBSTABLE[0]}'!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -240,15 +247,15 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 
     for RELEASE in "${UBULTS[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '$UBULTS'!\e[0m"
+            RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '${UBULTS[0]}'!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
     done
 
     for RELEASE in "${UBUSUP[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
-            RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "${UBULTS[0]}" ]]; then
+            RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -264,7 +271,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 
     for RELEASE in "${OLDSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '$DEBSTABLE' gebracht werden!\e[0m"
+            RELEASESTATUS="\e[1;33mDebian '${OLDSTABLE[0]}' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '${DEBSTABLE[0]}' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -282,7 +289,7 @@ else
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m"
+            RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '${DEBSTABLE[0]}' NOW!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -290,7 +297,7 @@ else
 
     for RELEASE in "${EOLUBU[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m"
+            RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '${UBULTS[0]}' NOW!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -298,7 +305,7 @@ else
 
     for RELEASE in "${DEBSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '$DEBSTABLE'!\e[0m"
+            RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '${DEBSTABLE[0]}'!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -306,15 +313,15 @@ else
 
     for RELEASE in "${UBULTS[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '$UBULTS'!\e[0m"
+            RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '${UBULTS[0]}'!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
     done
 
     for RELEASE in "${UBUSUP[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
-            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m"
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "${UBULTS[0]}" ]]; then
+            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
@@ -330,7 +337,7 @@ else
 
     for RELEASE in "${OLDSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m"
+            RELEASESTATUS="\e[1;33mDebian '${OLDSTABLE[0]}' is the current oldstable version. Please upgrade to the latest stable release '${DEBSTABLE[0]}' in due time!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
