@@ -203,7 +203,7 @@ printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
-    INSTALL_STATUS="System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+    INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
 else
     INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
 fi
