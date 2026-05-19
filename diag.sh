@@ -105,20 +105,16 @@ install_timestamp=$(date -d "$(stat -c %w /)" +%s)
 days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
 
 #Debian and Ubuntu releases and their status
-#EOLDEB=($(debian-distro-info --unsupported))
-IFS=' ' read -ra EOLDEB <<< "$(debian-distro-info --unsupported)"
-#EOLUBU=($(ubuntu-distro-info --unsupported))
-IFS=' ' read -ra EOLUBU <<< "$(ubuntu-distro-info --unsupported)"
-#DEBSTABLE=($(debian-distro-info --stable))
-IFS=' ' read -ra DEBSTABLE <<< "$(debian-distro-info --stable)"
-#UBULTS=($(ubuntu-distro-info --lts))
-IFS=' ' read -ra UBULTS <<< "$(ubuntu-distro-info --lts)"
-#UBUSUP=($(ubuntu-distro-info --supported))
-IFS=' ' read -ra UBUSUP <<< "$(ubuntu-distro-info --supported)"
-#TESTING=($(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null))
-IFS=' ' read -ra TESTING <<< "$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)"
-#OLDSTABLE=($(debian-distro-info --oldstable))
-IFS=' ' read -ra OLDSTABLE <<< "$(debian-distro-info --oldstable)"
+# Ubuntu
+mapfile -t UBUSUP < <(ubuntu-distro-info --supported)
+mapfile -t UBULTS < <(ubuntu-distro-info --lts)
+mapfile -t EOLUBU < <(ubuntu-distro-info --unsupported)
+
+# Debian
+mapfile -t EOLDEB < <(debian-distro-info --unsupported)
+mapfile -t DEBSTABLE < <(debian-distro-info --stable)
+mapfile -t OLDSTABLE < <(debian-distro-info --oldstable)
+mapfile -t TESTING < <(debian-distro-info --testing)
 CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
