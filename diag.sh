@@ -185,9 +185,10 @@ if [ -f "$DOCKER" ]; then
     printf "\n%s%d%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
     printf "\n%s%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
-    source /usr/lib/os-release
+    PRETTY_NAME=$(grep -oP 'PRETTY_NAME="\K[^\"]*' /usr/lib/os-release)
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"
     hostnamectl | grep -v 'Machine\|Boot\|Operating'
+    ID_LIKE=$(grep -oP 'ID_LIKE=\K.*' /usr/lib/os-release)
     printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
     printf "\n%s\n" "Docker          : false"
