@@ -202,6 +202,14 @@ fi
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
+if [[ "$SKRPTLANG" == "--de" ]]; then
+    INSTALL_STATUS="System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+else
+    INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
+fi
+
+printf "%s\n" "$INSTALL_STATUS"
+
 check_architecture() {
     if (( ARCH == 32 )); then
         printf "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
@@ -216,14 +224,6 @@ printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
-
-#DEBUG:
-echo "DEBUG: CODENAME = '$CODENAME'"
-echo "DEBUG: UBUSUP = ${UBUSUP[@]}"
-echo "DEBUG: UBULTS = ${UBULTS[@]}"
-echo "DEBUG: EOLUBU = ${EOLUBU[@]}"
-echo "DEBUG: TESTING = ${TESTING[@]}"
-#DEBUG_END
 
 
     for RELEASE in "${EOLDEB[@]}"; do
@@ -285,14 +285,6 @@ done
 
 else
     printf "\n%b%s%b\n" "$HEADLINE" "*** LIFE CYCLE STATUS ***" "$NC"
-
-    #DEBUG:
-echo "DEBUG: CODENAME = '$CODENAME'"
-echo "DEBUG: UBUSUP = ${UBUSUP[@]}"
-echo "DEBUG: UBULTS = ${UBULTS[@]}"
-echo "DEBUG: EOLUBU = ${EOLUBU[@]}"
-echo "DEBUG: TESTING = ${TESTING[@]}"
-#DEBUG_END
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -511,7 +503,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der den 'js-controller' ausführt:"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s\n" "$IOUSER"
+        printf "\n%s" "$IOUSER"
         printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
@@ -533,7 +525,7 @@ else
     printf "\n\n%s" "User that is running 'js-controller':"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s\n" "$IOUSER"
+        printf "\n%s" "$IOUSER"
         printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
