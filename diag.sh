@@ -441,7 +441,11 @@ fi
     done
 
     if  (( UNKNOWNRELEASE == 1 )) ; then
-        RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
+        if [[ -z "$CODENAME" ]]; then
+        RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
+        else
+        RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+        fi
     fi
     echo -e "$RELEASESTATUS"
 fi
