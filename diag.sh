@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-05-19" #version of this script
+SKRIPTV="2026-05-20" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -99,24 +99,62 @@ NODENOTCORR=0
 IOBLISTINST=$(iobroker list instances $ALLOWROOT)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
-install_date=$(stat -c %w / | cut -d. -f1)
+# Versuche, die Geburtszeit zu holen
+birth_time_raw=$(stat -c %w / 2>/dev/null)
+
+if [[ "$birth_time_raw" != "-" ]]; then
+    # Geburtszeit ist verfügbar → verwende sie
+    #install_date=$(echo "$birth_time_raw" | cut -d. -f1)
+    install_timestamp=$(date -d "$birth_time_raw" +%s 2>/dev/null)
+
+    # Falls `date -d` scheitert (z. B. wegen Nanosekunden oder exotischem Format)
+    if ! install_timestamp=$(date -d "$birth_time_raw" +%s 2>/dev/null); then
+        # Fallback: Letzte Änderung von /
+        install_timestamp=$(stat -c %Y /)
+        #install_date=$(date -d "@$install_timestamp" +%Y-%m-%d)
+    fi
+else
+    # Fallback: Letzte Änderung von /
+    install_timestamp=$(stat -c %Y /)
+    #install_date=$(date -d "@$install_timestamp" +%Y-%m-%d)
+fi
+
 current_timestamp=$(date +%s)
-install_timestamp=$(date -d "$(stat -c %w /)" +%s)
 days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
 
-#Debian and Ubuntu releases and their status
-# Ubuntu
-mapfile -t UBUSUP < <(ubuntu-distro-info --supported)
-mapfile -t UBULTS < <(ubuntu-distro-info --lts)
-mapfile -t EOLUBU < <(ubuntu-distro-info --unsupported)
+# Prüfe, ob distro-info verfügbar ist (enthält ubuntu-distro-info und debian-distro-info)
+DISTRO_INFO_AVAILABLE=false
+if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-info >/dev/null 2>&1; then
+    DISTRO_INFO_AVAILABLE=true
+    # Ubuntu
+    mapfile -t UBUSUP < <(ubuntu-distro-info --supported 2>/dev/null)
+    mapfile -t UBULTS < <(ubuntu-distro-info --lts 2>/dev/null)
+    mapfile -t EOLUBU < <(ubuntu-distro-info --unsupported 2>/dev/null)
+    # Debian
+    mapfile -t EOLDEB < <(debian-distro-info --unsupported 2>/dev/null)
+    mapfile -t DEBSTABLE < <(debian-distro-info --stable 2>/dev/null)
+    mapfile -t OLDSTABLE < <(debian-distro-info --oldstable 2>/dev/null)
+    mapfile -t TESTING < <(debian-distro-info --testing 2>/dev/null)
+fi
 
-# Debian
-mapfile -t EOLDEB < <(debian-distro-info --unsupported)
-mapfile -t DEBSTABLE < <(debian-distro-info --stable)
-mapfile -t OLDSTABLE < <(debian-distro-info --oldstable)
-mapfile -t TESTING < <(debian-distro-info --testing)
-CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
-UNKNOWNRELEASE=1
+# Warnung, falls distro-info fehlt
+if [[ "$DISTRO_INFO_AVAILABLE" == false ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        echo -e "\n${YELLOW}WARNUNG: Das Paket 'distro-info' ist nicht installiert.${NC}"
+        echo "Die Lebenszyklus-Prüfung des Betriebssystems wird übersprungen."
+        echo "Installiere es manuell mit:"
+        echo "  sudo apt-get update && sudo apt-get install distro-info"
+    else
+        echo -e "\n${YELLOW}WARNING: The 'distro-info' package is not installed.${NC}"
+        echo "OS lifecycle checks will be skipped."
+        echo "Install it manually with:"
+        echo "  sudo apt-get update && sudo apt-get install distro-info"
+    fi
+    UNKNOWNRELEASE=1  # Überspringe die Prüfung
+fi
+
+#CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
+CODENAME=schnupfi
 
 clear
 if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -203,10 +241,18 @@ printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
-if [[ "$SKRPTLANG" == "--de" ]]; then
-    INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+if [[ "$days_since_install" -gt 0 ]] && [[ "$days_since_install" -lt 36524 ]]; then  # 100 Jahre als Obergrenze
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+    else
+        INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
+    fi
 else
-    INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        INSTALL_STATUS="Installationsdatum unbekannt (Dateisystem unterstützt keine Geburtszeit)."
+    else
+        INSTALL_STATUS="Installation date unknown (filesystem does not support birth time)."
+    fi
 fi
 
 printf "\n%s\n" "$INSTALL_STATUS"
@@ -227,11 +273,10 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
 
     if ! command -v distro-info >/dev/null; then
-        if   command -v apt-get >/dev/null; then
-            echo "Installing distro-info..."
-            sudo apt-get update && sudo apt-get install -y distro-info
-        else
-            echo "ERROR: 'distro-info' is required but not available. Install it manually."
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            echo "FEHLER: Das Paket 'distro-info' ist nicht installiert. Bitte nachinstallieren:"
+            echo "sudo apt update && sudo apt install distro-info"
+            echo "Alternativ den 'iob fix' ausführen."
             exit 1
         fi
     fi
@@ -258,6 +303,7 @@ for RELEASE in "${UBUSUP[@]}"; do
         IS_LTS=0
         for LTS in "${UBULTS[@]}"; do
             if [[ "$RELEASE" == "$LTS" ]]; then
+                RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '${UBULTS[0]}'!\e[0m"
                 IS_LTS=1
                 break
             fi
@@ -267,6 +313,14 @@ for RELEASE in "${UBUSUP[@]}"; do
             UNKNOWNRELEASE=0
             break
         fi
+    fi
+done
+
+for RELEASE in "${EOLUBU[@]}"; do
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' wird nicht mehr unterstützt und muss JETZT auf das aktuelle LTS release '${UBULTS[0]}' aktualisiert werden!\e[0m"
+        UNKNOWNRELEASE=0
+        break
     fi
 done
 
@@ -295,6 +349,13 @@ done
 
 else
     printf "\n%b%s%b\n" "$HEADLINE" "*** LIFE CYCLE STATUS ***" "$NC"
+
+        if ! command -v distro-info >/dev/null; then
+            echo "ERROR: Package 'distro-info' is not installed. Please do:"
+            echo "sudo apt update && sudo apt install distro-info"
+            echo "Alternatively execute the 'iob fix'"
+            exit 1
+        fi
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -376,6 +437,7 @@ fi
     fi
     echo -e "$RELEASESTATUS"
 fi
+
 
 # RASPBERRY only
 if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
@@ -513,7 +575,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der den 'js-controller' ausführt:"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s" "$IOUSER"
+        printf "\n%s\n" "$IOUSER"
         printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
@@ -535,7 +597,7 @@ else
     printf "\n\n%s" "User that is running 'js-controller':"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s" "$IOUSER"
+        printf "\n%s\n" "$IOUSER"
         printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
