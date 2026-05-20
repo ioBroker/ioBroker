@@ -1,4 +1,8 @@
 # Changelog for Linux-Diag-Script
+## 2026-05-18
+* Fixed experimental zigbee ports detection
+* Added adapter list
+
 ## 2026-03-10
 * Code cleanup
 * Added zigbee port overview
@@ -54,6 +58,9 @@
 * Implemented check for a default user and offer to create one if missing
 * Added check for 'critical errors' in dmesg
 * Added 'iob list hosts' command
+
+## 2026-05-18 
+* Added iob list adapters
 
 ## 2024-06-24
 * Added language information to CodeTags for copying to ioB-Forum.

@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-05-15" #version of this script
+SKRIPTV="2026-05-19" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -79,11 +79,11 @@ HEADLINE='\033[34;107m'
 export LC_ALL=C
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
 ALLOWROOT=""
-if [ "$*" = "--allow-root" ]; then ALLOWROOT=$"--allow-root"; fi
+if [[ "$*" =~ "--allow-root" ]]; then ALLOWROOT="--allow-root"; fi
 MASKED=""
-if [[ "$*" = *--unmask* ]]; then MASKED="unmasked"; fi
+if [[ "$*" =~ --unmask ]]; then MASKED="unmasked"; fi
 SUMMARY=""
-if [[ "$*" = *--summary* ]] || [[ "$*" = *--short* ]] || [[ "$*" = *--zusammenfassung* ]] || [[ "$*" = *--kurz* ]] || [[ "$*" = *-s* ]] || [[ "$*" = *-k* ]]; then SUMMARY="summary"; fi
+if [[ "$*" =~ (--summary|--short|--zusammenfassung|--kurz|-s|-k) ]]; then SUMMARY="summary"; fi
 ARCH=$(getconf LONG_BIT);
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
@@ -105,14 +105,17 @@ install_timestamp=$(date -d "$(stat -c %w /)" +%s)
 days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
 
 #Debian and Ubuntu releases and their status
-EOLDEB=$(debian-distro-info --unsupported)
-EOLUBU=$(ubuntu-distro-info --unsupported)
-DEBSTABLE=$(debian-distro-info --stable)
-UBULTS=$(ubuntu-distro-info --lts)
-UBUSUP=$(ubuntu-distro-info --supported)
-TESTING=$(debian-distro-info --testing && ubuntu-distro-info --devel 2>/dev/null)
-OLDSTABLE=$(debian-distro-info --oldstable)
-CODENAME=$(source /usr/lib/os-release && echo "$VERSION_CODENAME")
+# Ubuntu
+mapfile -t UBUSUP < <(ubuntu-distro-info --supported)
+mapfile -t UBULTS < <(ubuntu-distro-info --lts)
+mapfile -t EOLUBU < <(ubuntu-distro-info --unsupported)
+
+# Debian
+mapfile -t EOLDEB < <(debian-distro-info --unsupported)
+mapfile -t DEBSTABLE < <(debian-distro-info --stable)
+mapfile -t OLDSTABLE < <(debian-distro-info --oldstable)
+mapfile -t TESTING < <(debian-distro-info --testing)
+CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
 UNKNOWNRELEASE=1
 
 clear
@@ -182,22 +185,31 @@ if [ -f "$DOCKER" ]; then
     printf "\n%s%d%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
     printf "\n%s%s\n" "Docker          : " "$(cat /opt/scripts/.docker_config/.thisisdocker)"
 else
-    source /usr/lib/os-release
+    PRETTY_NAME=$(grep -oP 'PRETTY_NAME="\K[^\"]*' /usr/lib/os-release)
     printf "\n%s%s\n" "Operating System: " "$PRETTY_NAME"
     hostnamectl | grep -v 'Machine\|Boot\|Operating'
+    ID_LIKE=$(grep -oP 'ID_LIKE=\K.*' /usr/lib/os-release)
     printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
     printf "\n%s\n" "Docker          : false"
 fi
 
-SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
-if [[ -n "$SYSTDDVIRT" ]]; then
-    printf "%s%s" "Virtualization  : " "$(systemd-detect-virt)"
+if [[ -f "$DOCKER" ]]; then
+    SYSTDDVIRT="Docker"
 else
-    printf "%s" "Virtualization  : Docker"
+    SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null || echo "Unknown")
 fi
+printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
-printf "\n%s%s%s" "Userland        : " "$(getconf LONG_BIT)" "bit"
+printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
+
+if [[ "$SKRPTLANG" == "--de" ]]; then
+    INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+else
+    INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
+fi
+
+printf "\n%s\n" "$INSTALL_STATUS"
 
 check_architecture() {
     if (( ARCH == 32 )); then
@@ -207,59 +219,70 @@ check_architecture() {
 
 check_architecture
 
-printf "\n\n%s\n" "Systemuptime and Load:"
+printf "\n%s\n" "Systemuptime and Load:"
 uptime
 printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
 
+    if ! command -v distro-info >/dev/null; then
+        if   command -v apt-get >/dev/null; then
+            echo "Installing distro-info..."
+            sudo apt-get update && sudo apt-get install -y distro-info
+        else
+            echo "ERROR: 'distro-info' is required but not available. Install it manually."
+            exit 1
+        fi
+    fi
+
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '$DEBSTABLE' gebracht werden!\e[0m"
+            RELEASESTATUS="\e[31mDas Debian Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle stabile Veröffentlichung '${DEBSTABLE[0]}' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
-        fi
-    done
-
-    for RELEASE in "${EOLUBU[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' hat sein Lebensende erreicht und muss JETZT auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
-            UNKNOWNRELEASE=0
+            break
         fi
     done
 
     for RELEASE in "${DEBSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '$DEBSTABLE'!\e[0m"
+            RELEASESTATUS="\e[32mDas Betriebssystem ist das aktuelle, stabile Debian '${DEBSTABLE[0]}'!\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
     done
 
-    for RELEASE in "${UBULTS[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '$UBULTS'!\e[0m"
+# --- UBUSUP als Schleife einbinden (Deutsch) ---
+for RELEASE in "${UBUSUP[@]}"; do
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        IS_LTS=0
+        for LTS in "${UBULTS[@]}"; do
+            if [[ "$RELEASE" == "$LTS" ]]; then
+                IS_LTS=1
+                break
+            fi
+        done
+        if (( IS_LTS == 0 )); then
+            RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
-    done
-
-    for RELEASE in "${UBUSUP[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
-            RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '$UBULTS' mit Langzeitunterstützung gebracht werden.\e[0m"
-            UNKNOWNRELEASE=0
-        fi
-    done
+    fi
+done
 
     for RELEASE in "${TESTING[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mDas Betriebssystem mit dem Codenamen '$CODENAME' ist eine Testversion! Es sollte nur zu Testzwecken eingesetzt werden!\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
     done
 
     for RELEASE in "${OLDSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '$DEBSTABLE' gebracht werden!\e[0m"
+            RELEASESTATUS="\e[1;33mDebian '${OLDSTABLE[0]}' ist eine veraltete Version. Es sollte in nächster Zeit auf die aktuelle stabile Version '${DEBSTABLE[0]}' gebracht werden!\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
     done
 
@@ -275,50 +298,76 @@ else
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '$DEBSTABLE' NOW!\e[0m"
+            RELEASESTATUS="\e[31mDebian Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest stable release '${DEBSTABLE[0]}' NOW!\e[0m"
             UNKNOWNRELEASE=0
-        fi
-    done
-
-    for RELEASE in "${EOLUBU[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '$UBULTS' NOW!\e[0m"
-            UNKNOWNRELEASE=0
+            break
         fi
     done
 
     for RELEASE in "${DEBSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '$DEBSTABLE'!\e[0m"
+            RELEASESTATUS="\e[32mOperating System is the current Debian stable version codenamed '${DEBSTABLE[0]}'!\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
     done
 
-    for RELEASE in "${UBULTS[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '$UBULTS'!\e[0m"
-            UNKNOWNRELEASE=0
-        fi
-    done
+# --- Ubuntu-Prüfungen (Englisch) ---
+for RELEASE in "${EOLUBU[@]}"; do
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '${UBULTS[0]}' NOW!\e[0m"
+        UNKNOWNRELEASE=0
+        break
+    fi
+done
 
-    for RELEASE in "${UBUSUP[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]] && [[ "$RELEASE" != "$UBULTS" ]]; then
-            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '$UBULTS' in due time!\e[0m"
-            UNKNOWNRELEASE=0
-        fi
-    done
+for RELEASE in "${UBULTS[@]}"; do
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '${UBULTS[0]}'!\e[0m"
+        UNKNOWNRELEASE=0
+        break
+    fi
+done
 
-    for RELEASE in "${TESTING[@]}"; do
-        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
+# --- NEU: UBUSUP als Schleife einbinden ---
+for RELEASE in "${UBUSUP[@]}"; do
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        # Prüfe, ob RELEASE in UBULTS enthalten ist
+        IS_LTS=0
+        for LTS in "${UBULTS[@]}"; do
+            if [[ "$RELEASE" == "$LTS" ]]; then
+                IS_LTS=1
+                break
+            fi
+        done
+        # Nur ausgeben, wenn es KEINE LTS-Version ist
+        if (( IS_LTS == 0 )); then
+            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
-    done
+    fi
+done
+
+# --- Weitere Prüfungen (TESTING, etc.) ---
+for RELEASE in "${TESTING[@]}"; do
+    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+        RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
+        UNKNOWNRELEASE=0
+        break
+    fi
+done
+
+# --- Fallback: Unknown Release ---
+if (( UNKNOWNRELEASE == 1 )); then
+    RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
+fi
 
     for RELEASE in "${OLDSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            RELEASESTATUS="\e[1;33mDebian '$OLDSTABLE' is the current oldstable version. Please upgrade to the latest stable release '$DEBSTABLE' in due time!\e[0m"
+            RELEASESTATUS="\e[1;33mDebian '${OLDSTABLE[0]}' is the current oldstable version. Please upgrade to the latest stable release '${DEBSTABLE[0]}' in due time!\e[0m"
             UNKNOWNRELEASE=0
+            break
         fi
     done
 
@@ -464,7 +513,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der den 'js-controller' ausführt:"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s\n" "$IOUSER"
+        printf "\n%s" "$IOUSER"
         printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
@@ -486,7 +535,7 @@ else
     printf "\n\n%s" "User that is running 'js-controller':"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s\n" "$IOUSER"
+        printf "\n%s" "$IOUSER"
         printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
@@ -515,7 +564,7 @@ printf "\n%s\t\t%s" "Desktop:" "$DESKTOP_SESSION"
 printf "\n%s\t\t%s" "Session:" "$XDG_SESSION_TYPE"
 
 if [[ ! -f "$DOCKER" ]]; then
-    printf "\nBoot Target: \t%s" "$(systemctl get-default)"
+    printf "\nBoot Target: \t\t%s" "$(systemctl get-default)"
 fi
 
 if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
@@ -544,7 +593,16 @@ if [ ! -f "$DOCKER" ]; then
 fi
 
 printf "\n%b%s%b\n" "$HEADLINE" "*** DMESG CRITICAL ERRORS ***" "$NC"
-CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
+
+if [[ $(id -u) -eq 0 ]]; then
+    CRITERROR=$(dmesg --level=emerg,alert,crit -T | wc -l)
+elif command -v sudo >/dev/null; then
+    CRITERROR=$(sudo dmesg --level=emerg,alert,crit -T | wc -l)
+else
+    CRITERROR=0
+    echo "WARNING: Cannot check dmesg (no sudo rights)."
+fi
+
 if (( CRITERROR > 0 )); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "%b%s%s%s\n%b%s" "$RED" "Es wurden " "$CRITERROR" " KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
@@ -750,11 +808,11 @@ print_zigbee_port_table() {
     if [[ "$lang" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "-------" "----------------------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
     else
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
 
     for instance_line in "${instances[@]}"; do
@@ -783,35 +841,24 @@ print_zigbee_port_table() {
                 "${YELLOW}tcp${NC}"
         else
             # For serial ports, check each by-id port
-if [ ${#sys_zigbee_ports[@]} -eq 0 ]; then
-    echo "No /dev/serial/by-id entries found. Configured ZigBee ports are not available or do not match."
-else
-    for i in "${!sys_zigbee_ports[@]}"; do
-        local short_port
-        short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
+            for i in "${!sys_zigbee_ports[@]}"; do
+                local short_port
+                short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
 
-        local status
-        if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
-            if [[ "$lang" == "--de" ]]; then
-                status="${GREEN}✓ Übereinstimmend${NC}"
-            else
-                status="${GREEN}✓ Matching${NC}"
-            fi
-        else
-            if [[ "$lang" == "--de" ]]; then
-                status="${RED}✗ Nicht übereinstimmend${NC}"
-            else
-                status="${RED}✗ Not matching${NC}"
-            fi
-        fi
-
-        # Hier fehlt wahrscheinlich noch die Ausgabe der Zeile mit dem Port und dem Status.
-        # Beispiel:
-        echo "$short_port: $status"
-    done
-fi
-
-
+                local status
+                if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
+                    if [[ "$lang" == "--de" ]]; then
+                        status="${GREEN}✓ Übereinstimmend${NC}"
+                    else
+                        status="${GREEN}✓ Matching${NC}"
+                    fi
+                else
+                    if [[ "$lang" == "--de" ]]; then
+                        status="${RED}✗ Nicht übereinstimmend${NC}"
+                    else
+                        status="${RED}✗ Not matching${NC}"
+                    fi
+                fi
 
                 # Print table row for each by-id port
                 if [[ $i -eq 0 ]]; then
@@ -926,11 +973,14 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     printf "\n\n%b%s%b\n" "$GREEN" "Checking for nodejs vulnerability:" "$NC"
     if [ -d "/home/iobroker" ]; then
         cd /home/iobroker || exit
+        sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+        sudo -H -u iobroker npx is-my-node-vulnerable > /dev/null 2>&1
     else
         cd ~ || exit
+        sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
+        sudo -H -u "$(whoami)" npx is-my-node-vulnerable > /dev/null 2>&1
     fi
-    sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
-    sudo -H -u "$(whoami)" npx is-my-node-vulnerable > /dev/null 2>&1
+
     EXIT_CODE=$?
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -974,6 +1024,8 @@ echo ""
 printf "\n%b%s%b\n" "$GREEN" "ioBroker-Repositories" "$NC"
 iob repo list $ALLOWROOT
 printf "\n\n%b%s%b\n" "$GREEN" "Installed ioBroker-Adapters" "$NC"
+iob list adapters $ALLOWROOT
+printf "\n\n%b%s%b\n" "$GREEN" "ioBroker-Adapter Versions and update status" "$NC"
 iob update -i $ALLOWROOT
 printf "\n\n%b%s%b\n" "$GREEN" "Objects and States" "$NC"
 echo "Please stand by - This may take a while"
