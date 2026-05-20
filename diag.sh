@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-05-15" #version of this script
+SKRIPTV="2026-05-18" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -750,11 +750,11 @@ print_zigbee_port_table() {
     if [[ "$lang" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "-------" "----------------------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
     else
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
 
     for instance_line in "${instances[@]}"; do
@@ -783,35 +783,24 @@ print_zigbee_port_table() {
                 "${YELLOW}tcp${NC}"
         else
             # For serial ports, check each by-id port
-if [ ${#sys_zigbee_ports[@]} -eq 0 ]; then
-    echo "No /dev/serial/by-id entries found. Configured ZigBee ports are not available or do not match."
-else
-    for i in "${!sys_zigbee_ports[@]}"; do
-        local short_port
-        short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
+            for i in "${!sys_zigbee_ports[@]}"; do
+                local short_port
+                short_port=$(shorten_port "${sys_zigbee_ports[$i]}")
 
-        local status
-        if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
-            if [[ "$lang" == "--de" ]]; then
-                status="${GREEN}✓ Übereinstimmend${NC}"
-            else
-                status="${GREEN}✓ Matching${NC}"
-            fi
-        else
-            if [[ "$lang" == "--de" ]]; then
-                status="${RED}✗ Nicht übereinstimmend${NC}"
-            else
-                status="${RED}✗ Not matching${NC}"
-            fi
-        fi
-
-        # Hier fehlt wahrscheinlich noch die Ausgabe der Zeile mit dem Port und dem Status.
-        # Beispiel:
-        echo "$short_port: $status"
-    done
-fi
-
-
+                local status
+                if [[ "$configured_port" == "${sys_zigbee_ports[$i]}" ]]; then
+                    if [[ "$lang" == "--de" ]]; then
+                        status="${GREEN}✓ Übereinstimmend${NC}"
+                    else
+                        status="${GREEN}✓ Matching${NC}"
+                    fi
+                else
+                    if [[ "$lang" == "--de" ]]; then
+                        status="${RED}✗ Nicht übereinstimmend${NC}"
+                    else
+                        status="${RED}✗ Not matching${NC}"
+                    fi
+                fi
 
                 # Print table row for each by-id port
                 if [[ $i -eq 0 ]]; then

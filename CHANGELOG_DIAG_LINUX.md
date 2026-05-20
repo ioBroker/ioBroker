@@ -1,4 +1,7 @@
 # Changelog for Linux-Diag-Script
+## 2026-05-18
+* Fixed experimental zigbee ports detection
+
 ## 2026-03-10
 * Code cleanup
 * Added zigbee port overview
