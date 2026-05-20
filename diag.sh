@@ -135,6 +135,8 @@ if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-inf
     mapfile -t DEBSTABLE < <(debian-distro-info --stable 2>/dev/null)
     mapfile -t OLDSTABLE < <(debian-distro-info --oldstable 2>/dev/null)
     mapfile -t TESTING < <(debian-distro-info --testing 2>/dev/null)
+    # All
+    mapfile -t ALLRELEASES < <(debian-distro-info --all 2>/dev/null; ubuntu-distro-info --all 2>/dev/null)
 fi
 
 # Warnung, falls distro-info fehlt
@@ -340,15 +342,18 @@ done
         fi
     done
 
-    if (( UNKNOWNRELEASE == 1 )); then
-        if [[ -z "$CODENAME" ]]; then
+if (( UNKNOWNRELEASE == 1 )); then
+    if [[ -z "$CODENAME" ]]; then
         RELEASESTATUS="Die Version ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
-        else
-        RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+    else
+        # Prüfe ob CODENAME in ALLRELEASES vorkommt
+        if [[ ! " ${ALLRELEASES[*]} " =~ " $CODENAME " ]]; then
+            RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
         fi
     fi
+fi
 
-    echo -e "$RELEASESTATUS"
+echo -e "$RELEASESTATUS"
     #printf "%s\n\n" "$RELEASESTATUS"
 
 else
@@ -440,13 +445,17 @@ fi
         fi
     done
 
-    if  (( UNKNOWNRELEASE == 1 )) ; then
-        if [[ -z "$CODENAME" ]]; then
+if (( UNKNOWNRELEASE == 1 )); then
+    if [[ -z "$CODENAME" ]]; then
         RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
-        else
-        RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+    else
+        # Prüfe ob CODENAME in ALLRELEASES vorkommt
+        if [[ ! " ${ALLRELEASES[*]} " =~ " $CODENAME " ]]; then
+            RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
         fi
     fi
+fi
+
     echo -e "$RELEASESTATUS"
 fi
 
