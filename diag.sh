@@ -341,7 +341,11 @@ done
     done
 
     if (( UNKNOWNRELEASE == 1 )); then
-        RELEASESTATUS="Das Betriebssystem mit dem Codenamen '$CODENAME' ist unbekannt. Bitte den Status der Unterstützung eigenständig prüfen."
+        if [[ -z "$CODENAME" ]]; then
+        RELEASESTATUS="Die Version ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+        else
+        RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+        fi
     fi
 
     echo -e "$RELEASESTATUS"
@@ -421,7 +425,11 @@ done
 
 # --- Fallback: Unknown Release ---
 if (( UNKNOWNRELEASE == 1 )); then
-    RELEASESTATUS="Unknown release codenamed '$CODENAME'. Please check yourself if the Operating System is actively maintained."
+    if [[ -z "$CODENAME" ]]; then
+    RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
+    else
+    RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+    fi
 fi
 
     for RELEASE in "${OLDSTABLE[@]}"; do
