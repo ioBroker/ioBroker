@@ -122,6 +122,9 @@ fi
 current_timestamp=$(date +%s)
 days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
 
+CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
+
+
 # Prüfe, ob distro-info verfügbar ist (enthält ubuntu-distro-info und debian-distro-info)
 DISTRO_INFO_AVAILABLE=false
 if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-info >/dev/null 2>&1; then
@@ -137,6 +140,25 @@ if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-inf
     mapfile -t TESTING < <(debian-distro-info --testing 2>/dev/null)
     # All
     mapfile -t ALLRELEASES < <(debian-distro-info --all 2>/dev/null; ubuntu-distro-info --all 2>/dev/null)
+    # Prüfen ob CODENAME gesetzt und in ALLRELEASES enthalten ist, Meldung in RELEASESTATUS schreiben
+if [[ "$lang" == "--de" ]]; then
+  if [ -z "${CODENAME:-}" ]; then
+    RELEASESTATUS+="Unbenannte Veröffentlichung - Bitte den Status selber prüfen"
+  else
+    if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -Fxq -- "$CODENAME"; then
+      RELEASESTATUS+="Veröffentlichung '$CODENAME' ist nicht bekannt - Bitte den Status selber prüfen"
+    fi
+  fi
+else
+  if [ -z "${CODENAME:-}" ]; then
+    RELEASESTATUS+="Unnamed Release - Please check support status yourself"
+  else
+    if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -Fxq -- "$CODENAME"; then
+      RELEASESTATUS+="Release  '$CODENAME' is unknown - Please check support status yourself"
+    fi
+  fi
+fi
+
 fi
 
 # Warnung, falls distro-info fehlt
@@ -155,8 +177,7 @@ if [[ "$DISTRO_INFO_AVAILABLE" == false ]]; then
     UNKNOWNRELEASE=1  # Überspringe die Prüfung
 fi
 
-#CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
-CODENAME=schnupfi
+
 
 clear
 if [[ "$SKRPTLANG" == "--de" ]]; then
