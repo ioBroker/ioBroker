@@ -1,6 +1,6 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-05-20" #version of this script
+SKRIPTV="2026-06-01" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -252,15 +252,15 @@ else
     ID_LIKE=$(grep -oP 'ID_LIKE=\K.*' /usr/lib/os-release)
     printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
-    printf "\n%s\n" "Docker          : false"
+    printf "%s\n" "Docker          : false"
 fi
-
 if [[ -f "$DOCKER" ]]; then
     SYSTDDVIRT="Docker"
 else
-    SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null || echo "Unknown")
+    SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null | head -n1)
+    SYSTDDVIRT=${SYSTDDVIRT:-"Unknown"}
 fi
-printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
+printf "%s%s" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
@@ -617,8 +617,8 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der den 'js-controller' ausführt:"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s" "$IOUSER"
-        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "%s" "$IOUSER"
+        printf "\n%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
     printf "\n%b%s%b" "$RED" "js-controller läuft nicht" "$NC"
@@ -640,7 +640,7 @@ else
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         printf "\n%s" "$IOUSER"
-        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "\n%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
         printf "\n%b%s%b" "$RED" "js-controller is not running" "$NC"
@@ -911,12 +911,12 @@ print_zigbee_port_table() {
     # Table header (language-dependent)
     if [[ "$lang" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
-        printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" " Status"
+        printf "%-15s %-35s %-35s %-20s\n" "-------" "----------------------------" "----------------------------" "------"
     else
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------------------" "----------------------------" "------"
     fi
 
     for instance_line in "${instances[@]}"; do
