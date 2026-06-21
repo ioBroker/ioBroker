@@ -228,7 +228,7 @@ setup_nodesource_repo() {
     local arch
     arch=$(dpkg --print-architecture)
     if [[ "$arch" != "amd64" && "$arch" != "arm64" ]]; then
-        log "error" "Unsupported architecture: $arch. Only amd64 and arm64 are supported."
+        log "error" "Unsupported architecture: $arch. Nodesoure does not provide a 32bit nodejs anymore, only amd64 and arm64 are supported. You will have to reinstall a 64bit Operating System."
         exit 1
     fi
 
