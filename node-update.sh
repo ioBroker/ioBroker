@@ -15,7 +15,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-06-04"
+readonly VERSION="2026-06-21"
 readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
 readonly DEFAULT_NODE_MAJOR=22
