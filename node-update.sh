@@ -1,7 +1,7 @@
 #!/bin/bash
-# iobroker nodejs-update
-# written to help updating and fixing nodejs on linux (Debian based Distros)
-
+# ioBroker Node.js Update Script
+# Refactored for clarity, safety, and maintainability
+# Author: Thomas Braun
 # License: MIT
 #
 # Copyright (c) 2026 Thomas Braun
@@ -12,469 +12,279 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#To be manually changed:
-VERSION="2026-03-05"
+set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
-# Load recommended Node.js version from versions.json (fallback to 22 if not reachable)
-VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
-NODE_MAJOR=22
-VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
-if [ -n "$VERSIONS_JSON" ]; then
-    NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
-    if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
-        NODE_MAJOR=$NODE_MAJOR_FROM_JSON
+# --- Constants ---
+readonly VERSION="2026-06-04"
+readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
+readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
+readonly DEFAULT_NODE_MAJOR=22
+readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"
+readonly IOB_DIR="/opt/iobroker"
+readonly IOB_USER="iobroker"
+
+# --- Global Variables ---
+DRY_RUN=false
+SUDOX=""
+NODE_MAJOR=""
+NODERECOM=""
+VERNODE=""
+HOST_PLATFORM=""
+INSTALL_CMD=""
+INSTALL_CMD_ARGS=()  # Array for proper quoting
+
+# --- Logging ---
+log() {
+    local level="$1"
+    local message="$2"
+    case "$level" in
+        "error") echo -e "\033[31m[ERROR] $message\033[0m" >&2 ;;
+        "warn")  echo -e "\033[33m[WARN] $message\033[0m" >&2 ;;
+        "info")  echo -e "\033[32m[INFO] $message\033[0m" ;;
+        *)       echo -e "$message" ;;
+    esac
+}
+
+# --- Cleanup ---
+# Only clean up temporary files, NOT the repository files
+cleanup() {
+    log "info" "Cleaning up temporary files..."
+    if [[ -n "$SUDOX" ]]; then
+        # Only remove temporary key files, NOT the repository
+        $SUDOX rm -f /usr/share/keyrings/nodesource.gpg.new 2>/dev/null || true
     fi
-fi
-
-# Check if version option is a valid one
-if [[ -z "$1" ]]; then
-    echo "No specific version given, installing recommended version from nodejs v.$NODE_MAJOR tree"
-    sleep 2
-elif [ "$1" -ge 18 ]; then
-    echo "Valid major version. CUSTOM installation of nodejs v$1"
-    sleep 2
-else
-    echo -e "Only give a major nodejs version number like this: \niob nodejs-update $NODE_MAJOR"
-    exit 1
-fi
-
-## Excluding systems:
-SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null)
-DOCKER=/opt/scripts/.docker_config/.thisisdocker #used to identify docker
-DEBIANRELEASE=$(cat /etc/debian_version)
-
-if [ -f "$DOCKER" ]; then
-    echo "Updating Node.js in Docker is not supported, please update your Docker Container"
-    unset LC_ALL
-    exit 1
-elif [ "$(id -u)" -eq 0 ]; then
-    echo -e "This script must not be run as root! \nPlease use your standard user!"
-    unset LC_ALL
-    exit 1
-fi
-
-if [[ $SYSTDDVIRT = "wsl" ]]; then
-    echo "WSL is not supported."
-    unset LC_ALL
-    exit 1
-fi
-
-if [ -z "$(type -P apt-get)" ]; then
-    echo "Only a Debian-based Linux is supported"
-    unset LC_ALL
-    exit 1
-fi
-
-if { [[ $DEBIANRELEASE = *buster* ]] || [[ $DEBIANRELEASE = 10.* ]]; } && [[ $1 -ne 18 ]]; then
-    echo -e "Debian 10 'Buster' has reached End of Life and is not supported anymore.\nRecent versions of nodejs won't run.\nPlease install the current Debian Stable release"
-    unset LC_ALL
-    exit 1
-fi
-
-### Starting the skript
-echo -e "ioBroker nodejs-update v$VERSION is starting. Please be patient!"
-HOST=$(hostname)
-NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext) #reading node version from iob states. If successful, no fallback required.
-if [[ $NODERECOM != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; then              #check if a semvered nodejs installation is found
-    NODERECOMNF=1                                                                #marker for 'no recommended version found'
-fi
-NODEINSTMAJOR=$(nodejs -v | cut -d. -f1 | cut -c 2-3) #truncating installed nodejs version to major version
-export LC_ALL=C                                       #setting LOCALES temporary to english
-
-#CUSTOM INSTALLATION
-if [[ -n $1 ]]; then
-    NODE_MAJOR=$1
-    NODERECOM=CUSTOM
-fi
-# ------------------------------
-# functions for ioBroker nodejs-update - Code borrowed from 'iob installer' ;-)
-# ------------------------------
-
-# Error handler function
-handle_error() {
-  local exit_code=$1
-  local error_message="$2"
-  log "Error: $error_message (Exit Code: $exit_code)" "error"
-  exit "$exit_code"
 }
 
-# Function to check for command availability
-command_exists() {
-  command -v "$1" &> /dev/null
-}
+trap cleanup EXIT
 
-check_os() {
-    if ! [ -f "/etc/debian_version" ]; then
-        echo "Error: This script is only supported on Debian-based systems."
+# --- Validation Functions ---
+validate_node_major() {
+    local major="$1"
+    if [[ ! "$major" =~ ^[0-9]+$ ]]; then
+        log "error" "Invalid Node.js major version: $major. Must be a number (e.g., 20, 22)."
+        exit 1
+    fi
+    if [[ "$major" -lt 18 ]]; then
+        log "error" "Node.js major version must be >= 18."
         exit 1
     fi
 }
 
-# INSTALL NODEJS
-nodejs_installation() {
-    echo -e "\nInstalling latest nodejs v$NODE_MAJOR release"
-    $SUDOX $INSTALL_CMD -qq update
-    $SUDOX $INSTALL_CMD -qq --allow-downgrades upgrade nodejs
-    VERNODE=$(node -v)
-    echo -e "\n\033[32mSUCCESS!\033[0m"
-    echo -e "$VERNODE has been installed! You are using the latest nodejs@$NODE_MAJOR release now!"
-}
-
-# COMPATIBILITY CHECK
-compatibility_check() {
-    echo -e "\nCOMPATIBILITY CHECK IN PROGRESS (Only a --dry-run! No modules are really changed or added!)"
-    cd /opt/iobroker || exit
-    npm i --dry-run
-}
-
-# RESTART IOBROKER
-restart_iob() {
-    echo -e "\n\nWe tried our best to fix your nodejs. Please run iob diag again to verify."
-    echo -e "\n*** RESTARTING ioBroker NOW! *** \n Please refresh or restart your browser in a few moments."
-    iob restart
-}
-
-# Test which platform this script is being run on
-# When adding another supported platform, also add detection for the install command
-# HOST_PLATFORM:  Name of the platform
-# INSTALL_CMD:      comand for package installation
-# INSTALL_CMD_ARGS: arguments for $INSTALL_CMD to install something
-# INSTALL_CMD_UPD_ARGS: arguments for $INSTALL_CMD to update something
-# IOB_DIR:        Directory where iobroker should be installed
-# IOB_USER:       The user to run ioBroker as
-
-unamestr=$(uname)
-case "$unamestr" in
-"Linux")
-    HOST_PLATFORM="linux"
-    INSTALL_CMD="apt-get"
-    INSTALL_CMD_ARGS="install"
-    if [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
-        INSTALL_CMD="yum"
-        # The args -y and -q have to be separate
-        INSTALL_CMD_ARGS="install -q -y"
-    fi
-    IOB_DIR="/opt/iobroker"
-    IOB_USER="iobroker"
-    ;;
-"Darwin")
-    # OSX and Linux are the same in terms of install procedure
-    HOST_PLATFORM="osx"
-    ROOT_GROUP="wheel"
-    INSTALL_CMD="brew"
-    INSTALL_CMD_ARGS="install"
-    IOB_DIR="/usr/local/iobroker"
-    IOB_USER="$USER"
-    ;;
-"FreeBSD")
-    HOST_PLATFORM="freebsd"
-    ROOT_GROUP="wheel"
-    INSTALL_CMD="pkg"
-    INSTALL_CMD_ARGS="install"
-    IOB_DIR="/opt/iobroker"
-    IOB_USER="iobroker"
-    ;;
-*)
-    # The following should never happen, but better be safe than sorry
-    echo "Unsupported platform $unamestr"
-    exit 1
-    ;;
-esac
-
-if [[ $EUID -eq 0 ]]; then
-    IS_ROOT=true
-    SUDOX=""
-else
-    IS_ROOT=false
-    SUDOX="sudo "
-    ROOT_GROUP="root"
-    USER_GROUP="$USER"
-fi
-
-if
-    [[ "$INSTALL_CMD" != "apt-get" ]]
-then
-    echo "Non-Debian-based Systems are not supported, exiting"
-    unset LC_ALL
-    exit
-fi
-
-DFSGREM="$SUDOX $INSTALL_CMD remove libnode* node-* nodejs-doc npm nodejs -qqy" # Remove distro-packaged Node.js and related packages
-
-clear
-echo -e "ioBroker nodejs fixer $VERSION"
-
-if [[ -n "$NODERECOM" ]] && [[ "$NODERECOM" = [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]; then
-    echo -e "\nRecommended nodejs-version is: $NODERECOM"
-    echo "Checking your installation now. Please be patient!"
-elif
-    [[ "$NODERECOM" == CUSTOM ]]
-then
-    echo -e "You requested to install latest version from nodejs v$1 tree."
-else
-    NODERECOMNF=1
-    echo -e "No recommendation for a nodejs version found on your system. We recommend to install latest version from nodejs v$NODE_MAJOR tree."
-fi
-echo ""
-echo "Your current setup is:"
-
-if [[ -f /usr/bin/nodejs ]]; then
-    echo -e "$(type -p nodejs) \t$(nodejs -v)"
-fi
-echo -e "$(type -p node) \t\t$(node -v)"
-echo -e "$(type -p npm) \t\t$(npm -v)"
-echo -e "$(type -p npx) \t\t$(npx -v)"
-
-PATHNODEJS=$(type -p nodejs)
-PATHNODE=$(type -p node)
-PATHNPM=$(type -p npm)
-PATHNPX=$(type -p npx)
-
-if [[ -f /usr/bin/nodejs ]]; then
-    VERNODEJS=$(nodejs -v)
-fi
-
-VERNODE=$(node -v)
-VERNPM=$(npm -v)
-VERNPX=$(npx -v)
-NOTCORRSTRG="\n\033[0;31m*** nodejs is NOT correctly installed ***\033[0m"
-if
-    [[ -f /usr/bin/nodejs && "$PATHNODEJS" != "/usr/bin/nodejs" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-elif
-    [[ "$PATHNODE" != "/usr/bin/node" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-elif
-    [[ "$PATHNPM" != "/usr/bin/npm" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-elif
-    [[ "$PATHNPX" != "/usr/bin/npx" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-elif
-    [[ -f /usr/bin/nodejs && "$VERNODEJS" != "$VERNODE" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-elif
-    [[ "$VERNPM" != "$VERNPX" ]]
-then
-    NODENOTCORR=1
-    echo -e "$NOTCORRSTRG"
-else
-    echo ""
-fi
-echo "We found these nodejs versions available for installation:"
-echo ""
-apt-cache policy nodejs
-echo ""
-
-# DETECTING WRONG PATHS
-if
-    [[ "$NODENOTCORR" -eq 1 ]]
-then
-    echo -e "\n\nYour nodejs-Installation seems to be faulty. Shall we try to fix it?"
-    echo "Press <y> to continue or any other key to quit"
-    read -r -s -n 1 charpaths
-    if
-        [[ "$charpaths" = "y" ]] || [[ "$charpaths" = "Y" ]]
-    then
-        echo -e "\nFixing your nodejs setup"
-        if
-            [[ -f /usr/bin/nodejs && "$PATHNODEJS" != "/usr/bin/nodejs" ]]
-        then
-            echo -e "*** Deleting $PATHNODEJS ***"
-            $SUDOX rm -f "$(type -p nodejs)" >/dev/null 2>&1
+check_dependencies() {
+    local deps=("curl" "gpg" "iobroker" "iob" "systemd-detect-virt" "apt-get" "apt-mark")
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" &>/dev/null; then
+            log "error" "Required command '$dep' is not installed."
+            exit 1
         fi
-        if
-            [[ "$PATHNODE" != "/usr/bin/node" ]]
-        then
-            echo -e "*** Deleting $PATHNODE ***"
-            $SUDOX rm -f "$(type -p node)" >/dev/null 2>&1
-        fi
-        if
-            [[ "$PATHNPM" != "/usr/bin/npm" ]]
-        then
-            echo -e "*** Deleting $PATHNPM ***"
-            $SUDOX rm -f "$(type -p npm)" >/dev/null 2>&1
-        fi
-        if
-            [[ "$PATHNPX" != "/usr/bin/npx" ]]
-        then
-            echo -e "*** Deleting $PATHNPX ***"
-            $SUDOX rm -f "$(type -p npx)" >/dev/null 2>&1
-        fi
-        echo -e "\nWrong paths have been fixed. Run 'iob diag' or 'iob nodejs-update' again to check if your installation is fine now"
-    fi
-else
-    echo -e "\n\n\033[32mNothing to do\033[0m - Your installation is using the correct paths."
-fi
-
-if
-    [[ "$INSTALL_CMD" != "apt-get" ]]
-then
-    echo "Non-Debian-based Systems are not supported, exiting"
-    unset LC_ALL
-    exit
-fi
-VERNODE=$(node -v)
-if [[ "$VERNODE" = "v$NODERECOM" ]] && ls /etc/apt/sources.list.d/nodesource.* >/dev/null 2>&1; then
-    echo -e "\033[32mNothing to do\033[0m - Your version is the recommended one."
-    echo -e "\n*** You can now keep your whole system up-to-date using the usual 'sudo apt update && sudo apt full-upgrade' commands. ***"
-    echo "*** DO NOT USE node version managers like 'nvm', 'n' and others in parallel. They will break your current installation! ***"
-    echo -e "\n*** DO NOT use 'nodejs-update' as part of your regular update process! ***"
-    unset LC_ALL
-    if [[ -f "/var/run/reboot-required" ]]; then
-        echo ""
-        echo "This system needs to be REBOOTED NOW!"
-        echo ""
-    fi
-    exit
-fi
-
-
-if [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" == [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]] || ! ls /etc/apt/sources.list.d/nodesource.* >/dev/null 2>&1; then
-    echo -e "\nYou are missing the nodesource repo file or"
-    echo -e "you want to change your current nodejs version: $VERNODE ?"
-
-    elif [[ $1 -gt 18 ]]; then
-    echo "Do you want to install nodejs $1 or fix the source?"
-    else
-    echo "Do you want to intall nodejs v$NODERECOM ?"
-fi
-
-    echo -e "\nPress <y> to continue or any other key to quit"
-    read -r -s -n 1 char
-    if
-        [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-    then
-        echo "Trying to fix your installation now. Please be patient."
-        # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt -o -path /run \) -prune -false -o -name nodesource.[gk]* -print)" 2> /dev/null
-        # Deleting nodesource sources - Will be recreated later.
-        $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
-    else
-        echo "We are not fixing your installation. Exiting."
-        if [[ -f "/var/run/reboot-required" ]]; then
-            echo ""
-            echo "This system needs to be REBOOTED NOW!"
-            echo ""
-        fi
-        exit
-    fi
-
-if
-    [[ "$VERNODE" != "v$NODERECOM" ]] && [[ "$NODERECOM" != [[:digit:]]*.[[:digit:]]*.[[:digit:]]* ]]
-then
-    echo -e "\nYou are running nodejs $VERNODE. Do you want to install latest version from nodejs v.$NODE_MAJOR tree? "
-    echo -e "\nPress <y> to continue or any other key to quit"
-    read -r -s -n 1 char
-    if
-        [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]
-    then
-        echo "Trying to fix your installation now. Please be patient."
-        # Finding nodesource.gpg or nodesource.key and deleting. Current key is pulled in later.
-        $SUDOX rm "$($SUDOX find / \( -path /proc -o -path /dev -o -path /sys -o -path /lost+found -o -path /mnt \) -prune -false -o -name nodesource.[gk]* -print)"
-        # Deleting nodesource repo file. Will be recreated later.
-        $SUDOX rm /etc/apt/sources.list.d/nodesource.* 2>/dev/null
-    else
-        echo "Not fixing your installation. Exiting."
-
-        if [[ -f "/var/run/reboot-required" ]]; then
-            echo ""
-            echo "This system needs to be REBOOTED NOW!"
-            echo ""
-        fi
-        exit
-
-    fi
-fi
-
-
-# Function for the progress bar
-progress_bar() {
-    while kill -0 "$1" 2>/dev/null; do
-        echo -n "#"
-        sleep 1
     done
-    echo ""
 }
 
-# Excecute in the background
-echo "Stopping ioBroker now"
-iob stop &
+check_internet() {
+    if ! curl -sL --connect-timeout 5 https://github.com &>/dev/null; then
+        log "error" "No internet connection. Cannot fetch Node.js version."
+        exit 1
+    fi
+}
 
-# Save the PID of the background process
-command_pid=$!
+# --- Version Detection ---
+get_recommended_node_major() {
+    local versions_json
+    versions_json=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null || return 1)
+    echo "$versions_json" | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || echo "$DEFAULT_NODE_MAJOR"
+}
 
-# Check if process is running
-if ! kill -0 "$command_pid" 2>/dev/null; then
-    echo "ioBroker is not running or could not be stopped."
+get_current_node_version() {
+    if command -v node &>/dev/null; then
+        node -v 2>/dev/null || echo "not installed"
     else
-    # Start progressbar with PID
-    progress_bar $command_pid &
-
-    # Wait until iobroker had been shutdown
-    wait $command_pid
-
-    echo -e "\nioBroker has been stopped"
-fi
-
-
-
-
-
-echo ""
-echo ""
-echo "Removing any previously installed nodejs version"
-eval "$DFSGREM"
-echo ""
-
-echo -e "\n\n*** The following repos are active on your system:"
-$SUDOX "$INSTALL_CMD" update
-echo -e "\n*** Installing ca-certificates, curl and gnupg, just in case they are missing."
-if ! $SUDOX "$INSTALL_CMD" install -y -qq ca-certificates curl gnupg; then
-    handle_error "$?" "Failed to install packages"
-fi
-# Installing the key for nodesource repository
-
-if ! $SUDOX mkdir -p /usr/share/keyrings; then
-    handle_error "$?" "Makes sure the path /usr/share/keyrings exist or run ' mkdir -p /usr/share/keyrings' with sudo"
-fi
-
-$SUDOX rm -f /usr/share/keyrings/nodesource.gpg || true
-$SUDOX rm -f /etc/apt/keyrings/nodesource.gpg || true
-$SUDOX rm -f /etc/apt/sources.list.d/nodesource.* || true
-
-    # Run 'curl' and 'gpg' to download and import the NodeSource signing key
-    if ! curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg; then
-      handle_error "$?" "Failed to download and import the NodeSource signing key"
+        echo "not installed"
     fi
+}
 
-    # Explicitly set the permissions to ensure the file is readable by all
-    if ! $SUDOX chmod 644 /usr/share/keyrings/nodesource.gpg; then
-        handle_error "$?" "Failed to set correct permissions on /usr/share/keyrings/nodesource.gpg"
+# --- System Checks ---
+check_root() {
+    if [[ $EUID -eq 0 ]]; then
+        log "error" "This script must not be run as root. Please use your standard user."
+        exit 1
     fi
+    if ! sudo -v 2>/dev/null; then
+        log "error" "sudo privileges are required but not available."
+        exit 1
+    fi
+    SUDOX="sudo"
+}
 
-# Setting up a fresh & clean nodesource repo file
-echo -e "\n*** Creating new /etc/apt/sources.list.d/nodesource.sources and pinning source"
-echo ""
+check_docker() {
+    if [[ -f "$DOCKER_MARKER" ]]; then
+        log "error" "Updating Node.js in Docker is not supported. Please update your Docker container."
+        exit 1
+    fi
+}
 
+check_wsl() {
+    local sys_virt
+    sys_virt=$(systemd-detect-virt 2>/dev/null || echo "none")
+    if [[ "$sys_virt" == "wsl" ]]; then
+        log "error" "WSL is not supported."
+        exit 1
+    fi
+}
+
+check_debian() {
+    if [[ ! -f "/etc/debian_version" ]]; then
+        log "error" "Only Debian-based Linux systems are supported."
+        exit 1
+    fi
+    local debian_version
+    debian_version=$(cat /etc/debian_version 2>/dev/null || echo "")
+    if [[ "$debian_version" == *"buster"* || "$debian_version" == 10.* ]]; then
+        log "error" "Debian 10 'Buster' has reached End of Life and is not supported. Please install the current Debian Stable release."
+        exit 1
+    fi
+}
+
+# --- Check and remove hold from nodejs package ---
+check_nodejs_hold() {
+    log "info" "Checking if nodejs package is on hold..."
+    if apt-mark showhold 2>/dev/null | grep -qx nodejs; then
+        log "info" "nodejs package is on hold. Removing hold to allow update..."
+        if [[ "$DRY_RUN" == true ]]; then
+            log "info" "[DRY RUN] Would execute: $SUDOX apt-mark unhold nodejs"
+        else
+            if ! $SUDOX apt-mark unhold nodejs; then
+                log "error" "Failed to remove hold from nodejs package."
+                exit 1
+            fi
+            log "info" "Hold removed from nodejs package."
+        fi
+    else
+        log "info" "nodejs package is not on hold."
+    fi
+}
+
+# --- Platform Detection ---
+detect_platform() {
+    local unamestr
+    unamestr=$(uname)
+    case "$unamestr" in
+        "Linux")
+            HOST_PLATFORM="linux"
+            INSTALL_CMD="apt-get"
+            INSTALL_CMD_ARGS=("install" "-qq" "--allow-downgrades")  # Array for proper quoting
+            ;;
+        "Darwin")
+            HOST_PLATFORM="osx"
+            INSTALL_CMD="brew"
+            INSTALL_CMD_ARGS=("install")  # Array for proper quoting
+            ;;
+        "FreeBSD")
+            HOST_PLATFORM="freebsd"
+            INSTALL_CMD="pkg"
+            INSTALL_CMD_ARGS=("install")  # Array for proper quoting
+            ;;
+        *)
+            log "error" "Unsupported platform: $unamestr"
+            exit 1
+            ;;
+    esac
+    if [[ "$INSTALL_CMD" != "apt-get" ]]; then
+        log "error" "Only Debian-based systems are supported."
+        exit 1
+    fi
+}
+
+# --- ioBroker Controller Management ---
+# Stop ioBroker using 'iob stop' command
+stop_iobroker() {
+    log "info" "Stopping ioBroker with 'iob stop'..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: iob stop"
+    else
+        if ! iob stop; then
+            log "error" "Failed to stop ioBroker with 'iob stop'."
+            exit 1
+        fi
+        log "info" "ioBroker stopped successfully."
+    fi
+}
+
+# Start ioBroker using 'iob start' command
+start_iobroker() {
+    log "info" "Starting ioBroker with 'iob start'..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: iob start"
+    else
+        if ! iob start; then
+            log "error" "Failed to start ioBroker with 'iob start'."
+            exit 1
+        fi
+        log "info" "ioBroker started successfully."
+    fi
+}
+
+# --- Node.js Installation ---
+setup_nodesource_repo() {
+    local arch
     arch=$(dpkg --print-architecture)
-    if [ "$arch" != "amd64" ] && [ "$arch" != "arm64" ]; then
-      handle_error "1" "Unsupported architecture: $arch. Only amd64 and arm64 are supported."
+    if [[ "$arch" != "amd64" && "$arch" != "arm64" ]]; then
+        log "error" "Unsupported architecture: $arch. Only amd64 and arm64 are supported."
+        exit 1
     fi
 
-#   echo "deb [arch=$arch signed-by=/usr/share/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | $SUDOX tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+    log "info" "Setting up NodeSource repository for Node.js $NODE_MAJOR..."
 
-    cat <<EOF | $SUDOX tee /etc/apt/sources.list.d/nodesource.sources > /dev/null
+    # Ensure /usr/share/keyrings exists
+    if [[ "$DRY_RUN" == false ]]; then
+        $SUDOX mkdir -p /usr/share/keyrings
+    fi
+
+    # Remove old NodeSource repo files and keys (only if not dry run)
+    if [[ "$DRY_RUN" == false ]]; then
+        $SUDOX rm -f /usr/share/keyrings/nodesource.gpg /etc/apt/keyrings/nodesource.gpg 2>/dev/null || true
+        $SUDOX rm -f /etc/apt/sources.list.d/nodesource.* 2>/dev/null || true
+    fi
+
+    # Download and verify GPG key
+    log "info" "Downloading NodeSource GPG key..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would download GPG key from https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key"
+    else
+        if ! curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+            $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg; then
+            log "error" "Failed to download and import the NodeSource GPG key."
+            exit 1
+        fi
+        $SUDOX chmod 644 /usr/share/keyrings/nodesource.gpg
+    fi
+
+    # Verify GPG key fingerprint
+    log "info" "Verifying GPG key fingerprint..."
+    local fingerprint
+    local gpg_output
+    gpg_output=$($SUDOX gpg --show-keys --with-fingerprint /usr/share/keyrings/nodesource.gpg 2>&1)
+
+    # Extract fingerprint: Get the line after 'pub' and remove all spaces
+    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; gsub(/ /, ""); print}')
+
+    if [[ -z "$fingerprint" ]]; then
+        log "error" "Could not extract fingerprint from GPG key. GPG output was:\n$gpg_output"
+        exit 1
+    fi
+
+    if [[ "$fingerprint" != "$NODESOURCE_KEY_FINGERPRINT" ]]; then
+        log "error" "NodeSource GPG key fingerprint mismatch! Expected: $NODESOURCE_KEY_FINGERPRINT, Got: $fingerprint"
+        $SUDOX rm -f /usr/share/keyrings/nodesource.gpg
+        exit 1
+    fi
+    log "info" "GPG key fingerprint verified successfully: $fingerprint"
+
+    # Create new NodeSource repo file
+    log "info" "Creating NodeSource repository file..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would create /etc/apt/sources.list.d/nodesource.sources"
+    else
+        cat <<EOF | $SUDOX tee /etc/apt/sources.list.d/nodesource.sources >/dev/null
 Types: deb
 URIs: https://deb.nodesource.com/node_$NODE_MAJOR.x
 Suites: nodistro
@@ -482,36 +292,242 @@ Components: main
 Architectures: $arch
 Signed-By: /usr/share/keyrings/nodesource.gpg
 EOF
-
-
-    # Nodejs Config
-    echo "Package: nodejs" | $SUDOX tee /etc/apt/preferences.d/nodejs > /dev/null
-    echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs > /dev/null
-    echo "Pin-Priority: 1001" | $SUDOX tee -a /etc/apt/preferences.d/nodejs > /dev/null
-
-
-
-echo -e "\n*** These repos are active after the adjustments:"
-$SUDOX "$INSTALL_CMD" update
-
-echo -e "\nInstalling nodejs now!"
-
-if [ "$SYSTDDVIRT" != "none" ]; then
-    nodejs_installation
-    compatibility_check
-    echo -e "\n\n*** You need to manually restart your container/virtual machine now! *** "
-    echo -e "\nWe tried our best to fix your nodejs. Please run 'iob diag' again to verify."
-    unset LC_ALL
-    if [[ -f "/var/run/reboot-required" ]]; then
-        echo ""
-        echo "This system needs to be REBOOTED NOW!"
-        echo ""
+        if [[ ! -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+            log "error" "Failed to create NodeSource repository file."
+            exit 1
+        fi
     fi
-    exit
-else
-    nodejs_installation
-    compatibility_check
-    restart_iob
-fi
 
-exit
+    # Pin NodeSource repo to highest priority
+    log "info" "Setting repository pin priority..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would create /etc/apt/preferences.d/nodejs"
+    else
+        echo "Package: nodejs" | $SUDOX tee /etc/apt/preferences.d/nodejs >/dev/null
+        echo "Pin: origin deb.nodesource.com" | $SUDOX tee -a /etc/apt/preferences.d/nodejs >/dev/null
+        echo "Pin-Priority: 1001" | $SUDOX tee -a /etc/apt/preferences.d/nodejs >/dev/null
+    fi
+
+    log "info" "NodeSource repository configured successfully and will remain in the system."
+
+    # Verify repository file exists
+    if [[ "$DRY_RUN" == false && ! -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+        log "error" "NodeSource repository file not found after creation."
+        exit 1
+    fi
+}
+
+install_nodejs() {
+    log "info" "Updating package lists..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: $SUDOX $INSTALL_CMD update"
+    else
+        if ! $SUDOX "$INSTALL_CMD" update; then
+            log "error" "Failed to update package lists."
+            exit 1
+        fi
+    fi
+
+    log "info" "Installing Node.js $NODE_MAJOR..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: $SUDOX $INSTALL_CMD ${INSTALL_CMD_ARGS[*]}"
+    else
+        # Fixed SC2086: Use array expansion with proper quoting
+        if ! $SUDOX "$INSTALL_CMD" "${INSTALL_CMD_ARGS[@]}" nodejs; then
+            log "error" "Failed to install Node.js $NODE_MAJOR."
+            exit 1
+        fi
+    fi
+
+    # Verify installation
+    local new_version
+    new_version=$(get_current_node_version)
+    if [[ "$new_version" == "not installed" ]]; then
+        log "error" "Node.js installation failed."
+        exit 1
+    fi
+    log "info" "Node.js $new_version installed successfully."
+}
+
+remove_old_nodejs() {
+    log "info" "Removing old Node.js versions..."
+    local packages=("libnode*" "node-*" "nodejs-doc" "npm" "nodejs")
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would remove packages: ${packages[*]}"
+    else
+        $SUDOX "$INSTALL_CMD" remove -qqy "${packages[@]}" 2>/dev/null || true
+    fi
+}
+
+# --- Compatibility Check ---
+compatibility_check() {
+    log "info" "Checking npm dependencies for compatibility with Node.js $NODE_MAJOR..."
+    if [[ ! -d "$IOB_DIR" ]]; then
+        log "warn" "ioBroker directory not found at $IOB_DIR. Skipping compatibility check."
+        return
+    fi
+    cd "$IOB_DIR" || return
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: npm i --dry-run"
+    else
+        if ! npm i --dry-run &>/tmp/npm_dryrun.log; then
+            log "warn" "Potential compatibility issues detected. See /tmp/npm_dryrun.log for details."
+        else
+            log "info" "No compatibility issues found."
+        fi
+    fi
+}
+
+# --- Path Validation ---
+validate_node_paths() {
+    local correct=true
+    local paths=("nodejs:/usr/bin/nodejs" "node:/usr/bin/node" "npm:/usr/bin/npm" "npx:/usr/bin/npx")
+
+    for path_spec in "${paths[@]}"; do
+        local cmd=${path_spec%%:*}
+        local expected_path=${path_spec#*:}
+        local actual_path
+        actual_path=$(type -p "$cmd" 2>/dev/null || echo "")
+
+        if [[ -n "$actual_path" && "$actual_path" != "$expected_path" ]]; then
+            log "warn" "Incorrect path for $cmd: $actual_path (expected: $expected_path)"
+            correct=false
+        fi
+    done
+
+    if [[ "$correct" == false ]]; then
+        log "info" "Your Node.js installation seems to be faulty. Fixing paths..."
+        for path_spec in "${paths[@]}"; do
+            local cmd=${path_spec%%:*}
+            local expected_path=${path_spec#*:}
+            local actual_path
+            actual_path=$(type -p "$cmd" 2>/dev/null || echo "")
+
+            if [[ -n "$actual_path" && "$actual_path" != "$expected_path" ]]; then
+                if [[ "$DRY_RUN" == true ]]; then
+                    log "info" "[DRY RUN] Would remove $actual_path and symlink to $expected_path"
+                else
+                    $SUDOX rm -f "$actual_path"
+                    $SUDOX ln -sf "$expected_path" "$actual_path"
+                fi
+            fi
+        done
+        log "info" "Paths have been corrected. Please verify with 'iob diag'."
+    else
+        log "info" "Node.js paths are correct."
+    fi
+}
+
+# --- Main Function ---
+main() {
+    # Parse arguments
+    local custom_version=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --help|-h)
+                echo "Usage: $0 [OPTIONS] [NODE_MAJOR_VERSION]"
+                echo ""
+                echo "Options:"
+                echo "  --dry-run    Show what would be done without making changes"
+                echo "  --help, -h   Show this help message"
+                echo ""
+                echo "Arguments:"
+                echo "  NODE_MAJOR_VERSION   Major version of Node.js to install (e.g., 20, 22)"
+                echo "                      If omitted, the recommended version from ioBroker or versions.json will be used."
+                exit 0
+                ;;
+            *)
+                if [[ -n "$custom_version" ]]; then
+                    log "error" "Only one version argument is allowed."
+                    exit 1
+                fi
+                custom_version="$1"
+                shift
+                ;;
+        esac
+    done
+
+    # Check dependencies
+    check_dependencies
+    check_internet
+
+    # Check system
+    check_root
+    check_docker
+    check_wsl
+    check_debian
+    detect_platform
+
+    # Determine Node.js version
+    if [[ -n "$custom_version" ]]; then
+        validate_node_major "$custom_version"
+        NODE_MAJOR="$custom_version"
+        log "info" "Custom installation of Node.js v$NODE_MAJOR requested."
+    else
+        local recommended_major
+        recommended_major=$(get_recommended_node_major)
+        NODE_MAJOR="$recommended_major"
+        log "info" "No specific version given. Installing recommended version from Node.js v.$NODE_MAJOR tree."
+    fi
+
+    # Get current version
+    VERNODE=$(get_current_node_version)
+    log "info" "Current Node.js version: $VERNODE"
+
+    # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
+    if [[ "$VERNODE" == "v$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+        log "info" "Nothing to do. Your version ($VERNODE) is already the recommended one."
+        log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
+        log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
+        log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
+        if [[ -f "/var/run/reboot-required" ]]; then
+            log "warn" "This system needs to be REBOOTED NOW!"
+        fi
+        exit 0
+    fi
+
+    # Stop ioBroker with 'iob stop' before starting work
+    stop_iobroker
+
+    # Validate paths
+    validate_node_paths
+
+    # Remove old Node.js
+    remove_old_nodejs
+
+    # Setup NodeSource repo
+    setup_nodesource_repo
+
+    # Check and remove hold from nodejs package before installation
+    check_nodejs_hold
+
+    # Install Node.js
+    install_nodejs
+
+    # Compatibility check
+    compatibility_check
+
+    # Start ioBroker with 'iob start' after successful Node.js installation
+    start_iobroker
+
+    # Final message
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "Dry run completed. No changes were made."
+    else
+        log "info" "Node.js update completed successfully!"
+        log "info" "The NodeSource repository has been permanently added to your system."
+        log "info" "You can now update Node.js in the future using: sudo apt update && sudo apt upgrade nodejs"
+        log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
+        log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
+        if [[ -f "/var/run/reboot-required" ]]; then
+            log "warn" "This system needs to be REBOOTED NOW!"
+        fi
+    fi
+}
+
+# --- Entry Point ---
+main "$@"
