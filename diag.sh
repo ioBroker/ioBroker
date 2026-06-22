@@ -1,6 +1,17 @@
 #!/bin/bash
 # iobroker diagnostics
-SKRIPTV="2026-06-01" #version of this script
+
+# License: MIT
+#
+# Copyright (c) 2026 Thomas Braun
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+SKRIPTV="2026-06-06" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -252,15 +263,15 @@ else
     ID_LIKE=$(grep -oP 'ID_LIKE=\K.*' /usr/lib/os-release)
     printf "%s%s\n\n" "OS is similar to: " "$ID_LIKE"
     grep -i model /proc/cpuinfo | tail -1
-    printf "%s\n" "Docker          : false"
+    printf "\n%s\n" "Docker          : false"
 fi
+
 if [[ -f "$DOCKER" ]]; then
     SYSTDDVIRT="Docker"
 else
-    SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null | head -n1)
-    SYSTDDVIRT=${SYSTDDVIRT:-"Unknown"}
+    SYSTDDVIRT=$(systemd-detect-virt 2>/dev/null || echo "Unknown")
 fi
-printf "%s%s" "Virtualization  : " "$SYSTDDVIRT"
+printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
@@ -368,8 +379,8 @@ if (( UNKNOWNRELEASE == 1 )); then
         RELEASESTATUS="Die Version ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
     else
         # Prüfe ob CODENAME in ALLRELEASES vorkommt
-        if [[ ! " ${ALLRELEASES[*]} " =~ " $CODENAME " ]]; then
-            RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+        if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
+        RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
         fi
     fi
 fi
@@ -471,7 +482,7 @@ if (( UNKNOWNRELEASE == 1 )); then
         RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
     else
         # Prüfe ob CODENAME in ALLRELEASES vorkommt
-        if [[ ! " ${ALLRELEASES[*]} " =~ " $CODENAME " ]]; then
+        if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
             RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
         fi
     fi
@@ -617,8 +628,8 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     echo "User der den 'js-controller' ausführt:"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "%s" "$IOUSER"
-        printf "\n%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "\n%s\n" "$IOUSER"
+        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
     printf "\n%b%s%b" "$RED" "js-controller läuft nicht" "$NC"
@@ -639,8 +650,8 @@ else
     printf "\n\n%s" "User that is running 'js-controller':"
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
-        printf "\n%s" "$IOUSER"
-        printf "\n%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "\n%s\n" "$IOUSER"
+        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
         printf "\n%b%s%b" "$RED" "js-controller is not running" "$NC"
@@ -911,12 +922,12 @@ print_zigbee_port_table() {
     # Table header (language-dependent)
     if [[ "$lang" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee-Port-Übersicht ===" "$NC"
-        printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" " Status"
-        printf "%-15s %-35s %-35s %-20s\n" "-------" "----------------------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "Instanz" "Konfigurierter Port" "Verfügbarer by-id-Port" "Status"
+        printf "%-15s %-35s %-35s %-20s\n" "-------" "-------------------" "--------------------------" "------"
     else
         printf "\n%b%s%b\n" "$GREEN" "=== ZigBee Port Overview ===" "$NC"
         printf "%-15s %-35s %-35s %-20s\n" "Instance" "Configured Port" "Available by-id Port" "Status"
-        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------------------" "----------------------------" "------"
+        printf "%-15s %-35s %-35s %-20s\n" "--------" "----------------" "----------------------------" "------"
     fi
 
     for instance_line in "${instances[@]}"; do

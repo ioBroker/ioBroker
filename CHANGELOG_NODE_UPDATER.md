@@ -1,5 +1,10 @@
 # Changelog for Node.js Updater Script
 
+## 2026-06-21
+* Complete code rewrite
+* BREAKING CHANGE: 32bit support has been revoked due to nodesource upstream only supporting 64bit versions
+* Added Options --help and --dry-run 
+
 ## 2026-03-05
 * Make sure any previously installed nodejs is removed, including dfsg version
 
