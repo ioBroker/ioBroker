@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-06-06" #version of this script
+SKRIPTV="2026-07-27" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -734,8 +734,8 @@ fi
 
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** FILESYSTEM ***" "$NC"
 df -PTh
-printf "\n%b%s%b\n" "$GREEN" "Messages concerning filesystems in dmesg:" "$NC"
-sudo dmesg -T | grep -Ei 'ext4|btrfs|ext2|ext3|vfat|xfs|f2fs|gfs2' | grep -Ev 'Modules linked in:|Kernel command line:|info'
+printf "\n%b%s%b\n" "$GREEN" "Messages concerning filesystems in dmesg (Last 15 lines only):" "$NC"
+sudo dmesg -T | grep -Ei 'ext4|btrfs|ext2|ext3|vfat|xfs|f2fs|gfs2' | grep -Ev 'Modules linked in:|Kernel command line:|info' | tail -n 15
 printf "\n%b%s%b\n" "$GREEN" "Show mounted filesystems:" "$NC"
 findmnt --real
 
