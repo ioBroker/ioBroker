@@ -756,44 +756,7 @@ du -h /opt/iobroker/iobroker-data/ | sort -rh | head -5
 printf "\n%b%s%b\n" "$GREEN" "The five largest files in iobroker-data are:" "$NC"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 
-# ============================================================================
-# ZigBee Port Checking - Optimierte Version
-# ============================================================================
 
-# Funktion für ZigBee Port Check
-# check_zigbee_port() {
-#     local instance=$1
-#     local configured_port
-#
-#
-#     configured_port=$(awk -F: -v instance="$instance" '$0 ~ "system.adapter.zigbee." instance {print substr($4, 2)}' <<< "$IOBLISTINST")
-#
-#     # Wenn kein Port konfiguriert, überspringe diese Instanz
-#     [[ -z "$configured_port" ]] && return 0
-#
-#     # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
-#     if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
-#         echo ""
-#         if [[ "$SKRPTLANG" == "--de" ]]; then
-#             printf "\n%b%s%s%s%b" "$GREEN" "✓ zigbee." "$instance" " COM-Port stimmt mit 'by-id' überein. Sehr gut!" "$NC"
-#         else
-#             printf "\n%b%s%s%s%b" "$GREEN" "✓ Your zigbee." "$instance" " COM-Port is matching 'by-id'. Very good!" "$NC"
-#         fi
-#     else
-#         echo ""
-#         if [[ "$SKRPTLANG" == "--de" ]]; then
-#             printf "\n%b%s" "$YELLOW" "⚠ HINWEIS:"
-#             printf "\n%s%d%s%b" "Dein zigbee." "$instance" " COM-Port stimmt NICHT mit 'by-id' überein." "$NC"
-#             printf "\n%s" "Bitte überprüfe die Einstellung:"
-#             printf "\n%s" "$configured_port"
-#         else
-#             printf "\n%b%s" "$YELLOW" "⚠ HINT:"
-#             printf "\n%s%d%s%b" "Your zigbee." "$instance" " COM-Port is NOT matching 'by-id'." "$NC"
-#             printf "\n%s" "Please check your setting:"
-#             printf "\n%s" "$configured_port"
-#         fi
-#     fi
-# }
 
 # USB-Geräte by-id
 printf "\n%b%s%b\n" "$GREEN" "USB-Devices by-id:" "$NC"
@@ -827,15 +790,6 @@ for d in /opt/iobroker/iobroker-data/zigbee_*; do
     fi
 done
 
-# Prüfe alle ZigBee-Instanzen automatisch (0-9)
-# Die Funktion überspringt automatisch nicht-existente Instanzen
-# for i in {0..9}; do
-#     check_zigbee_port "$i"
-# done
-
-# ============================================================================
-# Ende des optimierten ZigBee-Blocks
-# ============================================================================
 
 # masked output
 
