@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-07-27" #version of this script
+SKRIPTV="2026-08-30" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -761,39 +761,39 @@ find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -
 # ============================================================================
 
 # Funktion für ZigBee Port Check
-check_zigbee_port() {
-    local instance=$1
-    local configured_port
-
-
-    configured_port=$(awk -F: -v instance="$instance" '$0 ~ "system.adapter.zigbee." instance {print substr($4, 2)}' <<< "$IOBLISTINST")
-
-    # Wenn kein Port konfiguriert, überspringe diese Instanz
-    [[ -z "$configured_port" ]] && return 0
-
-    # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
-    if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
-        echo ""
-        if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n%b%s%s%s%b" "$GREEN" "✓ zigbee." "$instance" " COM-Port stimmt mit 'by-id' überein. Sehr gut!" "$NC"
-        else
-            printf "\n%b%s%s%s%b" "$GREEN" "✓ Your zigbee." "$instance" " COM-Port is matching 'by-id'. Very good!" "$NC"
-        fi
-    else
-        echo ""
-        if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n%b%s" "$YELLOW" "⚠ HINWEIS:"
-            printf "\n%s%d%s%b" "Dein zigbee." "$instance" " COM-Port stimmt NICHT mit 'by-id' überein." "$NC"
-            printf "\n%s" "Bitte überprüfe die Einstellung:"
-            printf "\n%s" "$configured_port"
-        else
-            printf "\n%b%s" "$YELLOW" "⚠ HINT:"
-            printf "\n%s%d%s%b" "Your zigbee." "$instance" " COM-Port is NOT matching 'by-id'." "$NC"
-            printf "\n%s" "Please check your setting:"
-            printf "\n%s" "$configured_port"
-        fi
-    fi
-}
+# check_zigbee_port() {
+#     local instance=$1
+#     local configured_port
+#
+#
+#     configured_port=$(awk -F: -v instance="$instance" '$0 ~ "system.adapter.zigbee." instance {print substr($4, 2)}' <<< "$IOBLISTINST")
+#
+#     # Wenn kein Port konfiguriert, überspringe diese Instanz
+#     [[ -z "$configured_port" ]] && return 0
+#
+#     # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
+#     if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
+#         echo ""
+#         if [[ "$SKRPTLANG" == "--de" ]]; then
+#             printf "\n%b%s%s%s%b" "$GREEN" "✓ zigbee." "$instance" " COM-Port stimmt mit 'by-id' überein. Sehr gut!" "$NC"
+#         else
+#             printf "\n%b%s%s%s%b" "$GREEN" "✓ Your zigbee." "$instance" " COM-Port is matching 'by-id'. Very good!" "$NC"
+#         fi
+#     else
+#         echo ""
+#         if [[ "$SKRPTLANG" == "--de" ]]; then
+#             printf "\n%b%s" "$YELLOW" "⚠ HINWEIS:"
+#             printf "\n%s%d%s%b" "Dein zigbee." "$instance" " COM-Port stimmt NICHT mit 'by-id' überein." "$NC"
+#             printf "\n%s" "Bitte überprüfe die Einstellung:"
+#             printf "\n%s" "$configured_port"
+#         else
+#             printf "\n%b%s" "$YELLOW" "⚠ HINT:"
+#             printf "\n%s%d%s%b" "Your zigbee." "$instance" " COM-Port is NOT matching 'by-id'." "$NC"
+#             printf "\n%s" "Please check your setting:"
+#             printf "\n%s" "$configured_port"
+#         fi
+#     fi
+# }
 
 # USB-Geräte by-id
 printf "\n%b%s%b\n" "$GREEN" "USB-Devices by-id:" "$NC"
@@ -829,9 +829,9 @@ done
 
 # Prüfe alle ZigBee-Instanzen automatisch (0-9)
 # Die Funktion überspringt automatisch nicht-existente Instanzen
-for i in {0..9}; do
-    check_zigbee_port "$i"
-done
+# for i in {0..9}; do
+#     check_zigbee_port "$i"
+# done
 
 # ============================================================================
 # Ende des optimierten ZigBee-Blocks
