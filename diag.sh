@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-06-06" #version of this script
+SKRIPTV="2026-08-30" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -734,8 +734,8 @@ fi
 
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** FILESYSTEM ***" "$NC"
 df -PTh
-printf "\n%b%s%b\n" "$GREEN" "Messages concerning filesystems in dmesg:" "$NC"
-sudo dmesg -T | grep -Ei 'ext4|btrfs|ext2|ext3|vfat|xfs|f2fs|gfs2' | grep -Ev 'Modules linked in:|Kernel command line:|info'
+printf "\n%b%s%b\n" "$GREEN" "Messages concerning filesystems in dmesg (Last 15 lines only):" "$NC"
+sudo dmesg -T | grep -Ei 'ext4|btrfs|ext2|ext3|vfat|xfs|f2fs|gfs2' | grep -Ev 'Modules linked in:|Kernel command line:|info' | tail -n 15
 printf "\n%b%s%b\n" "$GREEN" "Show mounted filesystems:" "$NC"
 findmnt --real
 
@@ -756,44 +756,7 @@ du -h /opt/iobroker/iobroker-data/ | sort -rh | head -5
 printf "\n%b%s%b\n" "$GREEN" "The five largest files in iobroker-data are:" "$NC"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 
-# ============================================================================
-# ZigBee Port Checking - Optimierte Version
-# ============================================================================
 
-# Funktion für ZigBee Port Check
-check_zigbee_port() {
-    local instance=$1
-    local configured_port
-
-
-    configured_port=$(awk -F: -v instance="$instance" '$0 ~ "system.adapter.zigbee." instance {print substr($4, 2)}' <<< "$IOBLISTINST")
-
-    # Wenn kein Port konfiguriert, überspringe diese Instanz
-    [[ -z "$configured_port" ]] && return 0
-
-    # Prüfe ob der konfigurierte Port in den by-id Geräten vorkommt
-    if [[ "$SYSZIGBEEPORT" == "$configured_port" ]]; then
-        echo ""
-        if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n%b%s%s%s%b" "$GREEN" "✓ zigbee." "$instance" " COM-Port stimmt mit 'by-id' überein. Sehr gut!" "$NC"
-        else
-            printf "\n%b%s%s%s%b" "$GREEN" "✓ Your zigbee." "$instance" " COM-Port is matching 'by-id'. Very good!" "$NC"
-        fi
-    else
-        echo ""
-        if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "\n%b%s" "$YELLOW" "⚠ HINWEIS:"
-            printf "\n%s%d%s%b" "Dein zigbee." "$instance" " COM-Port stimmt NICHT mit 'by-id' überein." "$NC"
-            printf "\n%s" "Bitte überprüfe die Einstellung:"
-            printf "\n%s" "$configured_port"
-        else
-            printf "\n%b%s" "$YELLOW" "⚠ HINT:"
-            printf "\n%s%d%s%b" "Your zigbee." "$instance" " COM-Port is NOT matching 'by-id'." "$NC"
-            printf "\n%s" "Please check your setting:"
-            printf "\n%s" "$configured_port"
-        fi
-    fi
-}
 
 # USB-Geräte by-id
 printf "\n%b%s%b\n" "$GREEN" "USB-Devices by-id:" "$NC"
@@ -827,15 +790,6 @@ for d in /opt/iobroker/iobroker-data/zigbee_*; do
     fi
 done
 
-# Prüfe alle ZigBee-Instanzen automatisch (0-9)
-# Die Funktion überspringt automatisch nicht-existente Instanzen
-for i in {0..9}; do
-    check_zigbee_port "$i"
-done
-
-# ============================================================================
-# Ende des optimierten ZigBee-Blocks
-# ============================================================================
 
 # masked output
 

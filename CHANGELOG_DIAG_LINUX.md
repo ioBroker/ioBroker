@@ -1,4 +1,9 @@
 # Changelog for Linux-Diag-Script
+
+## 2028-08-30
+* Removed old usb port check
+* Limit dmesg output concerning filesystems to last 15 lines
+
 ## 2026-05-18
 * Fixed experimental zigbee ports detection
 * Added adapter list
