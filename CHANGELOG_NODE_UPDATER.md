@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2026-09-05
+* Added package database consistency check
+
 ## 2026-06-21
 * Complete code rewrite
 * BREAKING CHANGE: 32bit support has been revoked due to nodesource upstream only supporting 64bit versions

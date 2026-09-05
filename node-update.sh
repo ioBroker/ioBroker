@@ -15,7 +15,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-06-21"
+readonly VERSION="2026-09-05"
 readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
 readonly DEFAULT_NODE_MAJOR=22
@@ -162,6 +162,21 @@ check_nodejs_hold() {
         log "info" "nodejs package is not on hold."
     fi
 }
+
+# --- Package Database Consistency Check ---
+check_package_database_consistency() {
+    log "info" "Checking package database consistency with 'apt update'..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: $SUDOX apt update"
+    else
+        if ! $SUDOX apt update > /dev/null 2>&1; then
+            log "error" "Package database is inconsistent. 'apt update' failed. Fix the issue and try again."
+            exit 1
+        fi
+        log "info" "Package database is consistent."
+    fi
+}
+
 
 # --- Platform Detection ---
 detect_platform() {
@@ -461,6 +476,9 @@ main() {
     check_wsl
     check_debian
     detect_platform
+
+    # Check package database consistency
+    check_package_database_consistency
 
     # Determine Node.js version
     if [[ -n "$custom_version" ]]; then
