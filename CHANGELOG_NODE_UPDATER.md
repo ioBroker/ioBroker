@@ -2,6 +2,7 @@
 
 ## 2026-09-05
 * Added package database consistency check
+* Added hint to rerun the command if key verification fails
 
 ## 2026-06-21
 * Complete code rewrite
