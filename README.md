@@ -1,5 +1,5 @@
 ![Logo](img/logos/ioBroker_Logo_Long_Vector.svg)
-# ioBroker (windows installer)
+# ioBroker (Windows installer)
 
 [![NPM version](https://img.shields.io/npm/v/iobroker.svg)](https://www.npmjs.com/package/iobroker)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.svg)](https://www.npmjs.com/package/iobroker)
@@ -30,14 +30,14 @@ ioBroker defines some common rules for a pair of databases used to exchange data
 
 ### Databases
 
-ioBroker uses "in memory" database to hold the data and saves it on disk with reasonable intervals. 
+ioBroker uses an "in memory" database to hold the data and saves it on disk with reasonable intervals. 
 There are two types of storage:
 - objects (meta/configuration information)
 - states (values)
 
 Objects and states can be stored in "in memory" or in Redis.
 
-[Redis](https://redis.io/) is an in-memory key-value data store and also a message broker with a publish/subscribe pattern.
+[Redis](https://redis.io/) is an in-memory key-value data store and also a message broker with a `publish/subscribe` pattern.
 
 It's used to maintain and publish all states of connected systems.
 
@@ -57,7 +57,7 @@ This means that usually it is not a good idea to expose the ioBroker databases,
 adapters or any smart home devices directly to the internet or, in general, 
 to an environment where untrusted clients can directly access these network services. 
 Adapters that offer services supposed to be exposed to the internet should be handled with care. 
-You should always activate **HTTPS** and use valid certificates for web, admin if open it for internet or 
+You should always activate **HTTPS** and use valid certificates for web admin if open it for internet or,  
 for example, use it with additional security measures like VPN, VLAN and reverse proxies.
 
 ## Getting Started
@@ -75,7 +75,7 @@ A single adapter's memory fingerprint is roundabout 10 to 60 MB.
 * [Complete Parameters Reference](PARAMETERS.md) - Comprehensive list of all available parameters for all ioBroker commands (install, fix, diag, node-update)
 
 ### Community support
-* Get help in the [ioBroker Forums](https://forum.iobroker.net) (english, german and russian languages)
+* Get help in the [ioBroker Forums](https://forum.iobroker.net) (English, German and Russian languages)
 
 ## Logos and pictures
 
@@ -87,12 +87,12 @@ Please request permission via info@iobroker.net
 
 ## License
 
-This module is distributor under the MIT License (MIT). 
+This module is distributed under the MIT License (MIT).
 **Please notice that other ioBroker adapters can have different licenses.**
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2025 bluefox <dogafox@gmail.com>,
+Copyright (c) 2014-2026 bluefox <dogafox@gmail.com>,
 Copyright (c) 2014      hobbyquaker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

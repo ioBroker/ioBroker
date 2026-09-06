@@ -88,7 +88,9 @@ directly (`./fix_installation.sh`), not via `iob fix`.
 `/usr/local/bin`) as both `iob` and `iobroker`. It:
 
 - routes `start`/`stop`/`restart` (exactly one argument) to `systemctl`, `launchctl`, or init.d;
-- intercepts `fix`, `diag`, `nodejs-update` and downloads + runs the remote script as `$IOB_USER`;
+- intercepts `fix`, `diag`, `nodejs-update` and downloads + runs the remote script as `$IOB_USER` —
+  forwarding only `"$2"`, so **only the first option reaches the script**: `iob diag --de --unmask` silently
+  drops `--unmask`;
 - refuses to run as root unless `--allow-root` is passed;
 - passes everything else through to `node node_modules/iobroker.js-controller/iobroker.js`.
 
@@ -148,7 +150,8 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
 - **`versions.json` is a public interface of this repo for the rest of the ioBroker ecosystem**, not an
   internal config, and it is fetched from the `master` branch at runtime — so an edit goes live for every
   consumer immediately, without a release. Do not treat it as a local knob. Known consumers:
-  - this repo: only `nodeJsRecommended`, via `installer_library.sh` and `node-update.sh`;
+  - this repo: `nodeJsRecommended` (`installer_library.sh`, `node-update.sh`) and `nodeJsAccepted`
+    (`node-update.sh`, `lib-npx/checkVersions.js`, `lib-npx/installCopyFiles.js`);
   - `ioBroker.admin` (`src/main.ts`, `src-admin/src/components/Adapters/Utils.ts`) — reads all three to tell
     users which Node.js/npm version is recommended and whether theirs is still accepted;
   - `ioBroker.repobuilder` (`types.d.ts`) and `ioBroker.build` (`build/windows/ioBroker.iss`).
@@ -158,7 +161,12 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   `lib-npx/checkVersions.js` plus `lib-npx/installCopyFiles.js` read the bundled copy — which is why
   `versions.json` is listed in `package.json` `files`. Each reader keeps a hardcoded fallback list for the
   case that the file is unreachable or missing; when you change the accepted set, update those fallbacks
-  too, otherwise an offline install silently applies the old policy.
+  too, otherwise an offline installation silently applies the old policy.
+
+  The two sides enforce it differently, on purpose: `node-update.sh` *picks* a version to install and
+  refuses one outside `nodeJsAccepted`, while `checkVersions.js` inspects an *existing* system and only
+  warns, so an unsupported-but-working setup is never blocked. `checkVersions.js` keeps one hard error, at
+  `MIN_NODE_VERSION` (16.20.0), below which nothing can work.
 - `diag.sh` is bilingual (English/German, `--de`); help text and many messages exist in both languages.
 - `.gitmodules` declares 134 adapter submodules under `adapterlist/` that are not checked out and are
   unrelated to the installer. Do not initialize them.
