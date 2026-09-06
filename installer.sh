@@ -473,7 +473,10 @@ elif [ "$INITSYSTEM" = "systemd" ]; then
 elif [ "$INITSYSTEM" = "rc.d" ]; then
     echo "Enabling autostart..."
 
-    PIDFILE="$CONTROLLER_DIR/lib/iobroker.pid"
+    # Was $CONTROLLER_DIR/lib/iobroker.pid, but js-controller has no lib directory any
+    # more, so touch and chown both failed. /var/run is where FreeBSD keeps pid files,
+    # and unlike node_modules it survives an npm install.
+    PIDFILE="/var/run/iobroker.pid"
 
     # Write an rc.d service that automatically detects the correct node executable and runs ioBroker
     RCD_FILE=$(
