@@ -62,3 +62,66 @@ jobs:
         done
         echo "admin did not become reachable within 180s"
         exit 1
+
+  # ===================
+  # Exercises install_nodejs, which no CI run has ever reached: installer.sh only calls it
+  # when "node" is absent, and every runner image ships with Node.js preinstalled. The
+  # NodeSource path - GPG key import, nodesource.sources, apt pinning - was therefore
+  # completely uncovered. Remove Node.js first so the installer has to install it itself.
+  test-nodejs-install:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    # Must happen before Node.js is removed, "node tasks --create" needs it
+    - name: Build the self-contained installer
+      run: node tasks --create
+
+    - name: Remove the preinstalled Node.js
+      run: |
+        sudo apt-get remove -y --purge nodejs npm > /dev/null 2>&1 || true
+        sudo rm -f /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+        # The tool cache copy is reachable only through the PATH entries the runner sets up
+        printf 'PATH=%s\n' "$(printf '%s' "$PATH" | tr ':' '\n' | grep -v 'hostedtoolcache/node' | paste -sd:)" >> "$GITHUB_ENV"
+
+    # GITHUB_ENV only takes effect in later steps, so assert in a separate one
+    - name: Verify Node.js is really gone
+      run: |
+        if command -v node; then
+          echo "node is still on PATH, the installer would skip install_nodejs"
+          exit 1
+        fi
+        echo "no node on PATH, install_nodejs will run"
+
+    - name: Install ioBroker
+      run: bash ./dist/install.sh --silent
+
+    - name: Verify the installer installed the recommended Node.js from NodeSource
+      run: |
+        expected=$(jq -r '.nodeJsRecommended' versions.json)
+        actual=$(node -v)
+        actual="${actual#v}"
+        actual="${actual%%.*}"
+        echo "installer produced Node.js $actual, versions.json recommends $expected"
+        test "$actual" = "$expected"
+        test -f /etc/apt/sources.list.d/nodesource.sources
+        echo "NodeSource repository is configured"
+
+    - name: Test permissions
+      run: bash .github/testFiles.sh
+
+    - name: Test if ioBroker starts by checking the admin adapter output
+      run: |
+        for i in $(seq 1 36); do
+          if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "admin did not become reachable within 180s"
+        exit 1
