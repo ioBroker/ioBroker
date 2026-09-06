@@ -1,6 +1,5 @@
 const { readFileSync, writeFileSync, existsSync, mkdirSync } = require('node:fs');
 const Stream = require('node:stream');
-const { Client } = require('ssh2');
 
 const dist = `${__dirname}/dist/`;
 
@@ -48,6 +47,10 @@ function writeSftp(sftp, fileName, data, cb) {
 }
 
 function uploadOneFile(fileName, data) {
+    // Required lazily: only the deploy path needs ssh2, so "node tasks --create"
+    // works in a fresh checkout without installing the dev dependencies.
+    const { Client } = require('ssh2');
+
     return new Promise((resolve, reject) => {
         const conn = new Client();
         conn.on('ready', () =>

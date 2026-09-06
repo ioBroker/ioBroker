@@ -20,30 +20,33 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x, 24.x]
+        # No node-version matrix on purpose: there was no actions/setup-node step, so the
+        # four entries produced four identical jobs. The installer selects and installs its
+        # own Node.js version anyway, which is what this job is supposed to exercise.
         os: [ubuntu-latest, macos-latest]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
 
-    - name: Fix up installer script for local installs
-      run: |
-        # remove download of library
-        sed '/# get and load the LIB => START/,/# get and load the LIB => END/d' installer.sh
-        # and source it manually
-        source ./installer_library.sh
+    # installer.sh downloads installer_library.sh from master at runtime, so running it
+    # directly would test master's library instead of the one in this branch. The previous
+    # attempt to strip that block had no effect: sed without -i writes to stdout, and the
+    # sourced functions were gone by the next step anyway.
+    # "node tasks --create" inlines the local library into dist/install.sh, which is also
+    # the artifact that gets deployed to iobroker.net.
+    - name: Build the self-contained installer
+      run: node tasks --create
 
     - name: Install ioBroker
-      run: bash ./installer.sh --silent
+      run: bash ./dist/install.sh --silent
 
     - name: Test permissions
       # TODO: test this on OSX too!
-      if: startsWith(runner.OS, 'ubuntu')
+      # runner.os is 'Linux', never 'ubuntu', so the previous startsWith() condition was
+      # always false and this step never ran on any runner.
+      if: runner.os == 'Linux'
       run: bash .github/testFiles.sh
-
-    - name: Prepare tests
-      run: npm install mocha chai
 
     - name: Test if ioBroker starts by checking the admin adapter output
       run: curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1
