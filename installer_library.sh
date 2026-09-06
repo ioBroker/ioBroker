@@ -11,14 +11,14 @@ VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/version
 NODE_MAJOR=22
 # Space separated list of the major versions ioBroker supports.
 # Fallback only, overridden by nodeJsAccepted from versions.json below.
-NODE_ACCEPTED="20 22 24 26"
+NODE_ACCEPTED="22 24 26"
 VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
 if [ -n "$VERSIONS_JSON" ]; then
     NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
     if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
         NODE_MAJOR=$NODE_MAJOR_FROM_JSON
     fi
-    # "nodeJsAccepted": [20, 22, 24, 26] -> "20 22 24 26"
+    # "nodeJsAccepted": [22, 24, 26] -> "22 24 26"
     # Portable on purpose: this library also runs on macOS and FreeBSD, where grep -P is absent.
     NODE_ACCEPTED_FROM_JSON=$(echo "$VERSIONS_JSON" | sed -n 's/.*"nodeJsAccepted"[[:space:]]*:[[:space:]]*\[\([0-9,[:space:]]*\)\].*/\1/p' | tr ',' ' ')
     if [ -n "$NODE_ACCEPTED_FROM_JSON" ]; then

@@ -45,7 +45,7 @@ function copyFilesToRootDir() {
 function createPackageJson() {
     const ownPackage = require('../package.json');
     // Keep the engine range in sync with versions.json instead of hardcoding it
-    let minNodeMajor = 20;
+    let minNodeMajor = 22;
     try {
         const accepted = require('../versions.json').nodeJsAccepted;
         if (Array.isArray(accepted) && accepted.length) {

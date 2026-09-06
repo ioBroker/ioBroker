@@ -20,7 +20,7 @@ readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/maste
 readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
 readonly DEFAULT_NODE_MAJOR=22
 # Fallback list, only used when versions.json cannot be downloaded
-readonly DEFAULT_ACCEPTED_NODE_MAJORS="20 22 24 26"
+readonly DEFAULT_ACCEPTED_NODE_MAJORS="22 24 26"
 readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"
 readonly IOB_DIR="/opt/iobroker"
 readonly IOB_USER="iobroker"
@@ -116,7 +116,7 @@ get_recommended_node_major() {
     fi
 }
 
-# Space separated list of the major versions ioBroker accepts, e.g. "20 22 24 26"
+# Space separated list of the major versions ioBroker accepts, e.g. "22 24 26"
 get_accepted_node_majors() {
     local accepted
     accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' || true)
