@@ -41,7 +41,7 @@ if (versions.node && !acceptedNodeMajors.includes(semver.major(semver.coerce(ver
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     console.error(`ioBroker supports Node.JS ${acceptedNodeMajors.join(', ')}. You have installed ${versions.node}`);
     console.error('Please install a supported Node.JS version and start the installation again!');
-    // TODO: Print manual how to update NodeJS
+    // TODO: Print manual how to update Node.js
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     process.exit(2);
 }
