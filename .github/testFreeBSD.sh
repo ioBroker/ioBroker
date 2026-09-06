@@ -32,6 +32,23 @@ echo "::group::Install ioBroker"
 bash "$WORKSPACE/dist/install.sh" --silent
 echo "::endgroup::"
 
+# installer.sh runs "npm i --production --loglevel error --unsafe-perm >/dev/null" and
+# never checks the exit code, so a failed install still ends with "installed
+# successfully". Catch that here and show what npm actually says.
+echo "::group::Verify the ioBroker packages were installed"
+IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
+echo "node $(node -v), npm $(npm -v), IOB_DIR=$IOB_DIR"
+if [ ! -d "$IOB_DIR/node_modules/iobroker.js-controller" ]; then
+    echo "js-controller is missing, the installer's npm run produced nothing."
+    echo "Repeating it with output so the reason is visible:"
+    cd "$IOB_DIR"
+    npm i --production --unsafe-perm 2>&1 | tail -40 || true
+    cd "$WORKSPACE"
+    exit 1
+fi
+echo "js-controller is present"
+echo "::endgroup::"
+
 echo "::group::File permissions"
 bash "$WORKSPACE/.github/testFiles.sh"
 echo "::endgroup::"
