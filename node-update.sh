@@ -19,6 +19,8 @@ readonly VERSION="2026-09-06"
 readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
 readonly DEFAULT_NODE_MAJOR=22
+# Fallback list, only used when versions.json cannot be downloaded
+readonly DEFAULT_ACCEPTED_NODE_MAJORS="20 22 24 26"
 readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"
 readonly IOB_DIR="/opt/iobroker"
 readonly IOB_USER="iobroker"
@@ -32,6 +34,8 @@ VERNODE=""
 HOST_PLATFORM=""
 INSTALL_CMD=""
 INSTALL_CMD_ARGS=()  # Array for proper quoting
+VERSIONS_JSON=""        # cache, versions.json is downloaded at most once per run
+VERSIONS_JSON_FETCHED=false
 
 # --- Logging ---
 log() {
@@ -64,8 +68,10 @@ validate_node_major() {
         log "error" "Invalid Node.js major version: $major. Must be a number (e.g., 20, 22)."
         exit 1
     fi
-    if [[ "$major" -lt 18 ]]; then
-        log "error" "Node.js major version must be >= 18."
+    local accepted
+    accepted=$(get_accepted_node_majors)
+    if [[ " $accepted " != *" $major "* ]]; then
+        log "error" "ioBroker does not support Node.js $major. Accepted major versions: $accepted."
         exit 1
     fi
 }
@@ -88,19 +94,40 @@ check_internet() {
 }
 
 # --- Version Detection ---
+# versions.json is the single source of truth shared with ioBroker.admin,
+# the repobuilder and the Windows installer. Download it once and reuse it.
+fetch_versions_json() {
+    if [[ "$VERSIONS_JSON_FETCHED" == false ]]; then
+        VERSIONS_JSON_FETCHED=true
+        VERSIONS_JSON=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null) || VERSIONS_JSON=""
+    fi
+    printf '%s' "$VERSIONS_JSON"
+}
+
 get_recommended_node_major() {
-    local versions_json
     local recommended
-    # 'return 1' inside a command substitution only exits that subshell, so the fallback
-    # is made explicit here and the user is told when the default version is used.
-    versions_json=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null) || versions_json=""
-    recommended=$(echo "$versions_json" | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || true)
+    recommended=$(fetch_versions_json | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || true)
     if [[ "$recommended" =~ ^[0-9]+$ ]]; then
         echo "$recommended"
     else
         # log writes warnings to stderr, so it cannot pollute the captured value
         log "warn" "Could not read the recommended Node.js version from $VERSIONS_URL. Falling back to v$DEFAULT_NODE_MAJOR."
         echo "$DEFAULT_NODE_MAJOR"
+    fi
+}
+
+# Space separated list of the major versions ioBroker accepts, e.g. "20 22 24 26"
+get_accepted_node_majors() {
+    local accepted
+    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' || true)
+    # unquoted on purpose: collapses the one-per-line matches into a single spaced list
+    # shellcheck disable=SC2086
+    accepted=$(echo $accepted)
+    if [[ -n "$accepted" ]]; then
+        echo "$accepted"
+    else
+        log "warn" "Could not read the accepted Node.js versions from $VERSIONS_URL. Falling back to: $DEFAULT_ACCEPTED_NODE_MAJORS."
+        echo "$DEFAULT_ACCEPTED_NODE_MAJORS"
     fi
 }
 

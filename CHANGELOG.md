@@ -1,6 +1,9 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
+## **WORK IN PROGRESS**
+* Read the supported Node.js and npm versions from versions.json instead of hardcoding them
+
 ## 6.0.1 (2024-08-23)
 * Windows: Fix service installation error on very slow PCs
 

@@ -9,19 +9,34 @@
 const { getSystemVersions } = require('./tools.js');
 const semver = require('semver');
 
-// DEFINE minimum versions here:
-/** The minimum required Node.js version - should be the current LTS */
-const MIN_NODE_VERSION = '16.20.0';
-/** The recommended npm version - should be the one bundled with MIN_NODE_VERSION */
-const RECOMMENDED_NPM_VERSION = '8.19.4';
-/** The minimum supported npm version - should probably be the same major version as RECOMMENDED_NPM_VERSION*/
+/*
+ * The supported versions live in versions.json, which is also read by ioBroker.admin,
+ * the repobuilder and the Windows installer. Do not hardcode them here.
+ * The values below are only a fallback for the case that the file cannot be read.
+ */
+const FALLBACK_ACCEPTED_NODE_MAJORS = [20, 22, 24, 26];
+const FALLBACK_RECOMMENDED_NPM_MAJOR = 10;
+/** The minimum supported npm version. versions.json has no key for this. */
 const MIN_NPM_VERSION = '8.0.0';
+
+let supported;
+try {
+    supported = require('../versions.json');
+} catch {
+    supported = {};
+}
+
+const acceptedNodeMajors =
+    Array.isArray(supported.nodeJsAccepted) && supported.nodeJsAccepted.length
+        ? supported.nodeJsAccepted
+        : FALLBACK_ACCEPTED_NODE_MAJORS;
+const recommendedNpmMajor = supported.npmRecommended || FALLBACK_RECOMMENDED_NPM_MAJOR;
 
 const versions = getSystemVersions();
 
-if (versions.node && semver.lt(versions.node, semver.coerce(MIN_NODE_VERSION))) {
+if (versions.node && !acceptedNodeMajors.includes(semver.major(semver.coerce(versions.node)))) {
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.error(`ioBroker needs at least Node.JS ${MIN_NODE_VERSION}. You have installed ${versions.node}`);
+    console.error(`ioBroker supports Node.js ${acceptedNodeMajors.join(', ')}. You have installed ${versions.node}`);
     console.error('Please update your Node.JS version!');
     // TODO: Print manual how to update NodeJS
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
@@ -47,9 +62,9 @@ if (semver.lt(versions.npm, semver.coerce(MIN_NPM_VERSION))) {
     process.exit(4);
 }
 
-if (semver.lt(versions.npm, semver.coerce(RECOMMENDED_NPM_VERSION))) {
+if (semver.major(semver.coerce(versions.npm)) < recommendedNpmMajor) {
     console.warn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.warn(`You are using npm ${versions.npm}, but ioBroker recommends using ${RECOMMENDED_NPM_VERSION}.`);
+    console.warn(`You are using npm ${versions.npm}, but ioBroker recommends npm ${recommendedNpmMajor} or newer.`);
     console.warn('Consider using "npm install -g npm" to install the newest version!');
     console.warn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
 }

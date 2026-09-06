@@ -153,10 +153,12 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
     users which Node.js/npm version is recommended and whether theirs is still accepted;
   - `ioBroker.repobuilder` (`types.d.ts`) and `ioBroker.build` (`build/windows/ioBroker.iss`).
 
-  Note that the limits enforced *inside this repo* are hardcoded separately and do not follow this file:
-  `node-update.sh` (`validate_node_major`, `>= 18`), `lib-npx/checkVersions.js` (Node 16.20.0 / npm 8.0.0)
-  and `lib-npx/installCopyFiles.js` (`engines.node >=18.0.0`). Changing `versions.json` alone does not
-  change what the installer or the NPX package actually accept.
+  Inside this repo the enforced limits follow the file too: `node-update.sh` validates against
+  `nodeJsAccepted` (`get_accepted_node_majors`, downloaded once per run via `fetch_versions_json`), and
+  `lib-npx/checkVersions.js` plus `lib-npx/installCopyFiles.js` read the bundled copy — which is why
+  `versions.json` is listed in `package.json` `files`. Each reader keeps a hardcoded fallback list for the
+  case that the file is unreachable or missing; when you change the accepted set, update those fallbacks
+  too, otherwise an offline install silently applies the old policy.
 - `diag.sh` is bilingual (English/German, `--de`); help text and many messages exist in both languages.
 - `.gitmodules` declares 134 adapter submodules under `adapterlist/` that are not checked out and are
   unrelated to the installer. Do not initialize them.
