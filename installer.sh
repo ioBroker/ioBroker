@@ -532,11 +532,11 @@ elif [ "$INITSYSTEM" = "rc.d" ]; then
     $SUDOX touch "$PIDFILE"
     $SUDOX chown "$IOB_USER":"$IOB_USER" "$PIDFILE"
 
-    # Enable startup and start the service
+    # Enable autostart only. The service itself is started further below, after
+    # fix_dir_permissions: unlike the systemd unit, which carries Restart=on-failure,
+    # rc.d has no supervision, so a controller started before the ownership of the
+    # installation is changed under it dies and never comes back.
     sysrc iobroker_enable=YES
-    if [ "$SKIP_IOBROKER_START" != "true" ]; then
-        service iobroker start
-    fi
 
     echo "Autostart enabled!"
     echo "Autostart: rc.d" >>"$INSTALLER_INFO_FILE"
@@ -601,7 +601,12 @@ if [ -f /etc/rc.local ]; then
         if [ "$IS_ROOT" != true ]; then
             sudo sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
         else
-            sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+            # FreeBSD sed needs an explicit backup extension after -i
+            if [ "$HOST_PLATFORM" = "freebsd" ]; then
+                sed -i '' 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+            else
+                sed -i 's/curl -sLf https:\/\/iobroker.net\/install\.sh | bash -//g' /etc/rc.local
+            fi
         fi
     fi
 fi
@@ -617,6 +622,12 @@ get_platform_params
 # Don't do it on OSX, because we'll install as the current user anyways
 if [ "$HOST_PLATFORM" != "osx" ]; then
     fix_dir_permissions
+fi
+
+# Started here, not next to sysrc above, so the ownership of the installation is final
+# before the controller touches it. See the comment in the rc.d block.
+if [ "$INITSYSTEM" = "rc.d" ] && [ "$SKIP_IOBROKER_START" != "true" ]; then
+    service iobroker start
 fi
 # Force npm to run as iobroker when inside IOB_DIR
 if [[ "$IS_ROOT" != true && "$USER" != "$IOB_USER" ]]; then
