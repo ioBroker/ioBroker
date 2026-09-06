@@ -163,10 +163,12 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   case that the file is unreachable or missing; when you change the accepted set, update those fallbacks
   too, otherwise an offline installation silently applies the old policy.
 
-  The two sides enforce it differently, on purpose: `node-update.sh` *picks* a version to install and
-  refuses one outside `nodeJsAccepted`, while `checkVersions.js` inspects an *existing* system and only
-  warns, so an unsupported-but-working setup is never blocked. `checkVersions.js` keeps one hard error, at
-  `MIN_NODE_VERSION` (16.20.0), below which nothing can work.
+  All three enforce it the same way — a major outside `nodeJsAccepted` is fatal. `checkVersions.js`
+  briefly warned instead, on the assumption that such a setup is unsupported but working; the CI matrix
+  then showed that `iobroker.admin` declares `node >= 22`, so npm fails with `EBADENGINE` regardless and
+  the warning only delayed a worse error message. `installer.sh` is the one exception: under `brew` it
+  reports the mismatch and continues, because `install_nodejs` cannot install through brew and would
+  abort an installation that has no way to fix itself.
 - `diag.sh` is bilingual (English/German, `--de`); help text and many messages exist in both languages.
 - `.gitmodules` declares 134 adapter submodules under `adapterlist/` that are not checked out and are
   unrelated to the installer. Do not initialize them.
