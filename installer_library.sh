@@ -102,11 +102,12 @@ get_platform_params() {
     # HOST_PLATFORM:    Name of the platform
     # INSTALL_CMD:      Command for package installation
     # INSTALL_CMD_ARGS: Arguments for $INSTALL_CMD to install something
-    # INSTALL_CMD_UPD_ARGS: Arguments for $INSTALL_CMD to update something
+    # INSTALL_CMD_UPD_ARGS: Subcommand and arguments for $INSTALL_CMD to refresh the
+    #                   package metadata, so callers do not have to branch per manager
     # IOB_DIR:          Directory where iobroker should be installed
     # IOB_USER:          The user to run ioBroker as
 
-    INSTALL_CMD_UPD_ARGS=""
+    INSTALL_CMD_UPD_ARGS="update"
 
     unamestr=$(uname)
     case "$unamestr" in
@@ -118,12 +119,12 @@ get_platform_params() {
             INSTALL_CMD="dnf"
             # The args -y and -q have to be separate
             INSTALL_CMD_ARGS="install -q -y"
-            INSTALL_CMD_UPD_ARGS="-y"
+            INSTALL_CMD_UPD_ARGS="-y makecache"
         elif [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
             INSTALL_CMD="yum"
             # The args -y and -q have to be separate
             INSTALL_CMD_ARGS="install -q -y"
-            INSTALL_CMD_UPD_ARGS="-y"
+            INSTALL_CMD_UPD_ARGS="-y makecache"
         fi
         IOB_DIR="/opt/iobroker"
         IOB_USER="iobroker"
@@ -847,13 +848,8 @@ install_nodejs() {
     print_bold "Installing Node.js $NODE_MAJOR..."
 
     if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
-        if [ "$INSTALL_CMD" = "yum" ]; then
-            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
-            REPO_DIR="/etc/yum.repos.d"
-        else
-            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
-            REPO_DIR="/etc/yum.repos.d"
-        fi
+        $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+        REPO_DIR="/etc/yum.repos.d"
         SYS_ARCH=$(uname -m)
         NODEJS_REPO_CONTENT="[nodesource-nodejs]
 name=Node.js Packages for Linux RPM based distros - $SYS_ARCH
