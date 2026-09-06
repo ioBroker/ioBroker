@@ -5,6 +5,7 @@
 * Replace an installed Node.js version that is not listed in nodeJsAccepted instead of only checking that node exists
 * Dropped Node.js 18 and 20 from the accepted versions, iobroker.admin requires Node.js 22 or newer
 * Moved the update subcommand into INSTALL_CMD_UPD_ARGS and removed the duplicated package manager branches
+* FreeBSD: ioBroker now actually starts after the installation, plus fixes to the rc.d pid file path, the IP detection and three sed calls that used the GNU form
 
 ## 2026-04-11
 * Muted some confusing error messages.
