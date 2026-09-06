@@ -94,7 +94,7 @@ directly (`./fix_installation.sh`), not via `iob fix`.
 - refuses to run as root unless `--allow-root` is passed;
 - passes everything else through to `node node_modules/iobroker.js-controller/iobroker.js`.
 
-`$IOB_DIR` is `/opt/iobroker` on Linux, `/usr/local/iobroker` on FreeBSD — resolved by
+`$IOB_DIR` is `/opt/iobroker` on Linux **and FreeBSD**, `/usr/local/iobroker` on macOS — resolved by
 `get_platform_params()` in the library. Never hardcode it.
 
 ### NPX package (`lib-npx/`)
