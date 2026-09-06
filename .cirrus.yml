@@ -20,8 +20,18 @@ task:
       sudo chmod +x .github/testFiles.sh
       .github/testFiles.sh
 
-    # Test if ioBroker starts by checking the admin adapter output
-    - curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1
+    # Test if ioBroker starts by checking the admin adapter output.
+    # Retry, the service needs a while to come up.
+    - |
+      for i in $(seq 1 36); do
+        if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+          echo "admin is reachable after $((i * 5))s"
+          exit 0
+        fi
+        sleep 5
+      done
+      echo "admin did not become reachable within 180s"
+      exit 1
 
     # Now test if adapters which require python can be installed
     - iobroker url iobroker.lovelace

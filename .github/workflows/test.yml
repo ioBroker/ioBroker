@@ -48,5 +48,17 @@ jobs:
       if: runner.os == 'Linux'
       run: bash .github/testFiles.sh
 
+    # The service needs a while to come up. This used to be a single attempt that only
+    # worked because an unrelated "npm install mocha chai" step ran before it and acted
+    # as an accidental delay - a race, not a test. Retry instead.
     - name: Test if ioBroker starts by checking the admin adapter output
-      run: curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1
+      run: |
+        for i in $(seq 1 36); do
+          if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "admin did not become reachable within 180s"
+        exit 1
