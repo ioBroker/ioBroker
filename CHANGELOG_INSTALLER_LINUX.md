@@ -2,6 +2,7 @@
 
 ## 2026-09-06
 * Fixed the timezone check for 'Etc/UTC' which never triggered due to a typo
+* Replace an installed Node.js version that is not listed in nodeJsAccepted instead of only checking that node exists
 
 ## 2026-04-11
 * Muted some confusing error messages.
