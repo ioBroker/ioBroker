@@ -9,17 +9,31 @@ set -eu
 
 WORKSPACE=$(pwd)
 
+# The VM is emulated by QEMU on the runner, with no nested virtualisation, so ioBroker
+# starts far more slowly here than on a native runner - 10s on ubuntu is no yardstick.
 wait_for_admin() {
     local i
-    for i in $(seq 1 36); do
+    for i in $(seq 1 120); do
         if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
             echo "admin is reachable after $((i * 5))s"
             return 0
         fi
         sleep 5
     done
-    echo "admin did not become reachable within 180s"
+    echo "admin did not become reachable within 600s"
     return 1
+}
+
+# Called when the admin never answers, so the run says why instead of just timing out
+dump_diagnostics() {
+    echo "--- service status ---"
+    service iobroker status || true
+    echo "--- ioBroker processes ---"
+    ps aux | grep -i '[i]obroker' || echo "no ioBroker process is running"
+    echo "--- listening sockets ---"
+    sockstat -4 -l || true
+    echo "--- last 60 log lines ---"
+    tail -n 60 "$IOB_DIR"/log/*.log 2>/dev/null || echo "no log files found"
 }
 
 # Built here rather than on the host so the artifacts cannot be lost in the workspace
@@ -54,7 +68,10 @@ bash "$WORKSPACE/.github/testFiles.sh"
 echo "::endgroup::"
 
 echo "::group::Admin reachable"
-wait_for_admin
+if ! wait_for_admin; then
+    dump_diagnostics
+    exit 1
+fi
 echo "::endgroup::"
 
 # Installing this adapter needs python, so it also covers the python dependency
