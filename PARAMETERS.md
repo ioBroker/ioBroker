@@ -24,7 +24,7 @@ npx @iobroker/install
 mkdir C:\iobroker && cd C:\iobroker && npx @iobroker/install
 ```
 
-**Parameters:** None - behavior is automatic based on detected platform.
+**Parameters:** None - behavior is automatic based on the detected platform.
 
 ### Linux/macOS Shell Installation
 
@@ -39,8 +39,9 @@ curl -sL https://iobroker.net/install.sh | bash -
 ```
 
 **Available Parameters:**
-- `--silent` - Skip all user prompts and run automated installation
-- No other direct command-line parameters supported
+- `--silent` - Skip all user prompts and run an automated installation
+- `--redis` - Install and configure Redis as the database backend
+- `--no-autostart` - Do not start ioBroker after the installation has finished
 
 **Notes:**
 - The installer creates an `iob` command with additional parameters (see [Service Control Commands](#service-control-commands))
@@ -55,14 +56,11 @@ iob diag [OPTIONS]
 ```
 
 **Available Parameters:**
-- `--de` - Output (partially) in German language
+- `--de` - Output (partially) in German language. This is the only option that switches the language.
 - `--unmask` - Show otherwise masked output for complete diagnosis
-- `-s, --short` - Show summary only (English)
-- `-k, --kurz` - Show summary only (German)
-- `--summary` - Show summary only (English)
-- `--zusammenfassung` - Show summary only (German)
-- `-h, --help` - Display help and exit
-- `--hilfe` - Display help and exit (German)
+- `--summary`, `--short`, `-s`, `--zusammenfassung`, `--kurz`, `-k` - Show summary only. These are exact
+  aliases of each other; none of them changes the language, combine with `--de` for a German summary.
+- `--help` - Display help and exit. The help text itself is German only, and `-h` is *not* recognised.
 - `--allow-root` - Allow running as root user (not recommended)
 
 **Examples:**
@@ -148,6 +146,10 @@ iob [COMMAND] [OPTIONS]
 **Global Options:**
 - `--allow-root` - Allow running commands as root (applies to fix, nodejs-update, diag)
 
+**Limitation:** for `fix`, `diag` and `nodejs-update` the `iob` wrapper forwards only the *first* argument to
+the downloaded script. `iob diag --de --unmask` therefore silently runs with `--de` alone. To combine
+options, call the script directly, e.g. `bash /path/to/diag.sh --de --unmask`.
+
 **Examples:**
 ```bash
 # Service control
@@ -180,10 +182,13 @@ iob nodejs-update [VERSION]
 ```
 
 **Parameters:**
-- `VERSION` - Major Node.js version number (18, 20, 22, etc.)
-  - If not specified, installs the recommended version (currently 22)
-  - Must be 18 or higher
+- `VERSION` - Major Node.js version number (20, 22, 24, etc.)
+  - If not specified, installs the recommended version (`nodeJsRecommended` from `versions.json`, currently 22)
+  - Must be one of the accepted major versions (`nodeJsAccepted` from `versions.json`, currently 22, 24, 26).
+    The script reads that list at runtime, so the set of allowed versions can change without a new release.
   - Only major version numbers are accepted
+- `--dry-run` - Show what would be done without making any changes
+- `-h, --help` - Show the usage information and exit
 
 **Examples:**
 ```bash
@@ -204,7 +209,7 @@ iob nodejs-update 22
 Uses the same parameters as `iob nodejs-update` above.
 
 **What node-update does:**
-- Updates Node.js to specified or recommended version
+- Updates Node.js to a specified or recommended version
 - Only works on Debian-based Linux distributions
 - Removes old Node.js versions and installs from NodeSource repository
 - Fixes PATH issues with incorrect Node.js installations
@@ -213,8 +218,8 @@ Uses the same parameters as `iob nodejs-update` above.
 **System Requirements:**
 - Debian-based Linux distribution (Ubuntu, Debian, etc.)
 - Not running as root
-- Not in Docker container
-- Not in WSL environment
+- Not in a Docker container
+- Not in a WSL environment
 - apt-get package manager available
 
 ## Common Parameters Across Commands
@@ -224,7 +229,7 @@ This parameter is available for most maintenance commands (`fix`, `diag`, `nodej
 
 **Important Notes:**
 - Running as root is NOT recommended for security reasons
-- Only use when absolutely necessary for system repairs
+- Only used when absolutely necessary for system repairs
 - The installer will warn you and recommend creating a proper user setup
 - Future versions may disable this option entirely
 
@@ -245,7 +250,7 @@ The diagnostic script supports different output levels:
 When using the NPX installer on Windows:
 - Only x64 systems are supported
 - Installation automatically detects Windows and runs Windows-specific setup
-- No additional command-line parameters required
+- No additional command-line parameters are required
 
 ### Linux/macOS Installation  
 When using the shell installer:

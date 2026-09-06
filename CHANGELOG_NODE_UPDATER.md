@@ -1,8 +1,13 @@
 # Changelog for Node.js Updater Script
 
-## 2026-09-05
+## 2026-09-06
 * Added package database consistency check
 * Added hint to rerun the command if key verification fails
+* Package database check now uses the detected package manager and prints its output on failure
+* Fixed the up-to-date check which never matched and forced a full reinstall on every run
+* Warn the user when versions.json cannot be read and the built-in default Node.js version is used
+* Accepted Node.js versions are now read from versions.json instead of a hardcoded minimum of 18
+* Dropped Node.js 18 and 20 from the offline fallback list, iobroker.admin requires Node.js 22 or newer
 
 ## 2026-06-21
 * Complete code rewrite

@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-09-06
+* Corrected the version stamp, which was left at 2025-09-18 when the script was last changed
+
 ## 2026-03-02
 * Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
 

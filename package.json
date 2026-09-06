@@ -26,6 +26,7 @@
     "img/architecture.png",
     "lib-npx",
     "install",
+    "versions.json",
     "iob.bat",
     "iobroker.bat",
     "LICENSE"

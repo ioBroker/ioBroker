@@ -19,6 +19,8 @@ readonly VERSION="2026-09-06"
 readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
 readonly DEFAULT_NODE_MAJOR=22
+# Fallback list, only used when versions.json cannot be downloaded
+readonly DEFAULT_ACCEPTED_NODE_MAJORS="22 24 26"
 readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"
 readonly IOB_DIR="/opt/iobroker"
 readonly IOB_USER="iobroker"
@@ -32,6 +34,8 @@ VERNODE=""
 HOST_PLATFORM=""
 INSTALL_CMD=""
 INSTALL_CMD_ARGS=()  # Array for proper quoting
+VERSIONS_JSON=""        # cache, versions.json is downloaded at most once per run
+VERSIONS_JSON_FETCHED=false
 
 # --- Logging ---
 log() {
@@ -64,8 +68,10 @@ validate_node_major() {
         log "error" "Invalid Node.js major version: $major. Must be a number (e.g., 20, 22)."
         exit 1
     fi
-    if [[ "$major" -lt 18 ]]; then
-        log "error" "Node.js major version must be >= 18."
+    local accepted
+    accepted=$(get_accepted_node_majors)
+    if [[ " $accepted " != *" $major "* ]]; then
+        log "error" "ioBroker does not support Node.js $major. Accepted major versions: $accepted."
         exit 1
     fi
 }
@@ -88,10 +94,41 @@ check_internet() {
 }
 
 # --- Version Detection ---
+# versions.json is the single source of truth shared with ioBroker.admin,
+# the repobuilder and the Windows installer. Download it once and reuse it.
+fetch_versions_json() {
+    if [[ "$VERSIONS_JSON_FETCHED" == false ]]; then
+        VERSIONS_JSON_FETCHED=true
+        VERSIONS_JSON=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null) || VERSIONS_JSON=""
+    fi
+    printf '%s' "$VERSIONS_JSON"
+}
+
 get_recommended_node_major() {
-    local versions_json
-    versions_json=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null || return 1)
-    echo "$versions_json" | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || echo "$DEFAULT_NODE_MAJOR"
+    local recommended
+    recommended=$(fetch_versions_json | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || true)
+    if [[ "$recommended" =~ ^[0-9]+$ ]]; then
+        echo "$recommended"
+    else
+        # log writes warnings to stderr, so it cannot pollute the captured value
+        log "warn" "Could not read the recommended Node.js version from $VERSIONS_URL. Falling back to v$DEFAULT_NODE_MAJOR."
+        echo "$DEFAULT_NODE_MAJOR"
+    fi
+}
+
+# Space separated list of the major versions ioBroker accepts, e.g. "22 24 26"
+get_accepted_node_majors() {
+    local accepted
+    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' || true)
+    # unquoted on purpose: collapses the one-per-line matches into a single spaced list
+    # shellcheck disable=SC2086
+    accepted=$(echo $accepted)
+    if [[ -n "$accepted" ]]; then
+        echo "$accepted"
+    else
+        log "warn" "Could not read the accepted Node.js versions from $VERSIONS_URL. Falling back to: $DEFAULT_ACCEPTED_NODE_MAJORS."
+        echo "$DEFAULT_ACCEPTED_NODE_MAJORS"
+    fi
 }
 
 get_current_node_version() {
@@ -165,18 +202,22 @@ check_nodejs_hold() {
 
 # --- Package Database Consistency Check ---
 check_package_database_consistency() {
-    log "info" "Checking package database consistency with 'apt update'..."
+    log "info" "Checking package database consistency with '$INSTALL_CMD update'..."
     if [[ "$DRY_RUN" == true ]]; then
-        log "info" "[DRY RUN] Would execute: $SUDOX apt update"
+        log "info" "[DRY RUN] Would execute: $SUDOX $INSTALL_CMD update"
     else
-        if ! $SUDOX apt update > /dev/null 2>&1; then
-            log "error" "Package database is inconsistent. 'apt update' failed. Fix the issue and try again."
+        # Keep the output so it can be shown if the update fails.
+        # Note: 'local' must be declared separately, otherwise it masks the exit code.
+        local update_output
+        if ! update_output=$($SUDOX "$INSTALL_CMD" update 2>&1); then
+            log "error" "Package database is inconsistent. '$INSTALL_CMD update' failed. Fix the issue and try again."
+            log "error" "Output of '$INSTALL_CMD update':"
+            printf '%s\n' "$update_output" >&2
             exit 1
         fi
         log "info" "Package database is consistent."
     fi
 }
-
 
 # --- Platform Detection ---
 detect_platform() {
@@ -289,11 +330,10 @@ setup_nodesource_repo() {
 
     if [[ "$fingerprint" != "$NODESOURCE_KEY_FINGERPRINT" ]]; then
         log "error" "NodeSource GPG key fingerprint mismatch! Expected: $NODESOURCE_KEY_FINGERPRINT, Got: $fingerprint"
-        log "warn" "This error may be temporary. Please run the command again to retry."  # <-- Hinweis hinzugefügt
+        log "warn" "This error may be temporary. Please run the command again to retry."
         $SUDOX rm -f /usr/share/keyrings/nodesource.gpg
         exit 1
     fi
-
     log "info" "GPG key fingerprint verified successfully: $fingerprint"
 
     # Create new NodeSource repo file
@@ -498,9 +538,16 @@ main() {
     VERNODE=$(get_current_node_version)
     log "info" "Current Node.js version: $VERNODE"
 
+    # Compare major versions only: VERNODE is a full version ("v22.11.0"),
+    # while NODE_MAJOR holds just the major ("22").
+    local current_major
+    NODERECOM="$NODE_MAJOR"
+    current_major="${VERNODE#v}"
+    current_major="${current_major%%.*}"
+
     # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
-    if [[ "$VERNODE" == "v$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
-        log "info" "Nothing to do. Your version ($VERNODE) is already the recommended one."
+    if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+        log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
         log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
         log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
         log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"

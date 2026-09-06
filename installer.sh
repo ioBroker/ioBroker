@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-04-11" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-09-06" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -52,7 +52,7 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
 
     # Check and fix timezone
     TIMEZONE=$(timedatectl show --property=Timezone --value)
-    if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+    if [[ $(command -v apt-get) ]] && [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
         echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi
@@ -116,8 +116,30 @@ else
     $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
 fi
 
-# Install Node.js if it is not installed
+# Install Node.js if it is not installed, or if the installed version is not supported.
+# Checking only whether "node" exists let ioBroker be installed on any version,
+# including ones that were dropped from nodeJsAccepted.
+NODE_INSTALL_REQUIRED="false"
 if [[ $(type -P "node" 2>/dev/null) != *"/node" ]]; then
+    echo "Node.js not found."
+    NODE_INSTALL_REQUIRED="true"
+else
+    CURRENT_NODE_MAJOR=$(node -v 2>/dev/null)
+    CURRENT_NODE_MAJOR="${CURRENT_NODE_MAJOR#v}"
+    CURRENT_NODE_MAJOR="${CURRENT_NODE_MAJOR%%.*}"
+    if [[ " $NODE_ACCEPTED " != *" $CURRENT_NODE_MAJOR "* ]]; then
+        echo "Node.js $CURRENT_NODE_MAJOR is installed, but ioBroker supports: $NODE_ACCEPTED"
+        if [ "$INSTALL_CMD" = "brew" ]; then
+            # install_nodejs cannot install via brew and would abort the whole installation,
+            # so warn instead of stopping a setup that would otherwise work.
+            echo "Please install a supported Node.js version from $NODE_JS_BREW_URL, then run the installer again."
+            echo "The installation continues, but this Node.js version is not supported."
+        else
+            NODE_INSTALL_REQUIRED="true"
+        fi
+    fi
+fi
+if [ "$NODE_INSTALL_REQUIRED" = "true" ]; then
     install_nodejs
 fi
 

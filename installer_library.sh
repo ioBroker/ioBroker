@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-04-11" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-09-06" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -9,11 +9,22 @@ LIBRARY_VERSION="2026-04-11" # format YYYY-MM-DD
 # ------------------------------
 VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 NODE_MAJOR=22
+# Space separated list of the major versions ioBroker supports.
+# Fallback only, overridden by nodeJsAccepted from versions.json below.
+NODE_ACCEPTED="22 24 26"
 VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
 if [ -n "$VERSIONS_JSON" ]; then
     NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
     if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
         NODE_MAJOR=$NODE_MAJOR_FROM_JSON
+    fi
+    # "nodeJsAccepted": [22, 24, 26] -> "22 24 26"
+    # Portable on purpose: this library also runs on macOS and FreeBSD, where grep -P is absent.
+    NODE_ACCEPTED_FROM_JSON=$(echo "$VERSIONS_JSON" | sed -n 's/.*"nodeJsAccepted"[[:space:]]*:[[:space:]]*\[\([0-9,[:space:]]*\)\].*/\1/p' | tr ',' ' ')
+    if [ -n "$NODE_ACCEPTED_FROM_JSON" ]; then
+        # unquoted on purpose: collapses the separators into a single spaced list
+        # shellcheck disable=SC2086
+        NODE_ACCEPTED=$(echo $NODE_ACCEPTED_FROM_JSON)
     fi
 fi
 NODE_JS_BREW_URL="https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/"
@@ -833,7 +844,7 @@ fix_dir_permissions() {
 }
 
 install_nodejs() {
-    print_bold "Node.js not found. Installing..."
+    print_bold "Installing Node.js $NODE_MAJOR..."
 
     if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
         if [ "$INSTALL_CMD" = "yum" ]; then
