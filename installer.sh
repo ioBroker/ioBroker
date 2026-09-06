@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-04-11" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-09-06" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -52,7 +52,7 @@ if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
 
     # Check and fix timezone
     TIMEZONE=$(timedatectl show --property=Timezone --value)
-    if [[ $(command -v apt-get) ]] && [[ $$TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+    if [[ $(command -v apt-get) ]] && [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
         echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
         RECOMMEND_FIXER_AFTER_INSTALL="true"
     fi

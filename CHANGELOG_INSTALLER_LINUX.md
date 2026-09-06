@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-09-06
+* Fixed the timezone check for 'Etc/UTC' which never triggered due to a typo
+
 ## 2026-04-11
 * Muted some confusing error messages.
 * Readded hint to run 'iob fix' to finalize setup. 

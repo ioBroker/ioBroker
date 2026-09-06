@@ -1,8 +1,11 @@
 # Changelog for Node.js Updater Script
 
-## 2026-09-05
+## 2026-09-06
 * Added package database consistency check
 * Added hint to rerun the command if key verification fails
+* Package database check now uses the detected package manager and prints its output on failure
+* Fixed the up-to-date check which never matched and forced a full reinstall on every run
+* Warn the user when versions.json cannot be read and the built-in default Node.js version is used
 
 ## 2026-06-21
 * Complete code rewrite

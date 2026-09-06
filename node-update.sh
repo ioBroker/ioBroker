@@ -90,8 +90,18 @@ check_internet() {
 # --- Version Detection ---
 get_recommended_node_major() {
     local versions_json
-    versions_json=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null || return 1)
-    echo "$versions_json" | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || echo "$DEFAULT_NODE_MAJOR"
+    local recommended
+    # 'return 1' inside a command substitution only exits that subshell, so the fallback
+    # is made explicit here and the user is told when the default version is used.
+    versions_json=$(curl -sL --connect-timeout 10 "$VERSIONS_URL" 2>/dev/null) || versions_json=""
+    recommended=$(echo "$versions_json" | grep -oP '"nodeJsRecommended"\s*:\s*\K[0-9]+' || true)
+    if [[ "$recommended" =~ ^[0-9]+$ ]]; then
+        echo "$recommended"
+    else
+        # log writes warnings to stderr, so it cannot pollute the captured value
+        log "warn" "Could not read the recommended Node.js version from $VERSIONS_URL. Falling back to v$DEFAULT_NODE_MAJOR."
+        echo "$DEFAULT_NODE_MAJOR"
+    fi
 }
 
 get_current_node_version() {
@@ -165,18 +175,22 @@ check_nodejs_hold() {
 
 # --- Package Database Consistency Check ---
 check_package_database_consistency() {
-    log "info" "Checking package database consistency with 'apt update'..."
+    log "info" "Checking package database consistency with '$INSTALL_CMD update'..."
     if [[ "$DRY_RUN" == true ]]; then
-        log "info" "[DRY RUN] Would execute: $SUDOX apt update"
+        log "info" "[DRY RUN] Would execute: $SUDOX $INSTALL_CMD update"
     else
-        if ! $SUDOX apt update > /dev/null 2>&1; then
-            log "error" "Package database is inconsistent. 'apt update' failed. Fix the issue and try again."
+        # Keep the output so it can be shown if the update fails.
+        # Note: 'local' must be declared separately, otherwise it masks the exit code.
+        local update_output
+        if ! update_output=$($SUDOX "$INSTALL_CMD" update 2>&1); then
+            log "error" "Package database is inconsistent. '$INSTALL_CMD update' failed. Fix the issue and try again."
+            log "error" "Output of '$INSTALL_CMD update':"
+            printf '%s\n' "$update_output" >&2
             exit 1
         fi
         log "info" "Package database is consistent."
     fi
 }
-
 
 # --- Platform Detection ---
 detect_platform() {
@@ -289,11 +303,10 @@ setup_nodesource_repo() {
 
     if [[ "$fingerprint" != "$NODESOURCE_KEY_FINGERPRINT" ]]; then
         log "error" "NodeSource GPG key fingerprint mismatch! Expected: $NODESOURCE_KEY_FINGERPRINT, Got: $fingerprint"
-        log "warn" "This error may be temporary. Please run the command again to retry."  # <-- Hinweis hinzugefügt
+        log "warn" "This error may be temporary. Please run the command again to retry."
         $SUDOX rm -f /usr/share/keyrings/nodesource.gpg
         exit 1
     fi
-
     log "info" "GPG key fingerprint verified successfully: $fingerprint"
 
     # Create new NodeSource repo file
@@ -498,9 +511,16 @@ main() {
     VERNODE=$(get_current_node_version)
     log "info" "Current Node.js version: $VERNODE"
 
+    # Compare major versions only: VERNODE is a full version ("v22.11.0"),
+    # while NODE_MAJOR holds just the major ("22").
+    local current_major
+    NODERECOM="$NODE_MAJOR"
+    current_major="${VERNODE#v}"
+    current_major="${current_major%%.*}"
+
     # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
-    if [[ "$VERNODE" == "v$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
-        log "info" "Nothing to do. Your version ($VERNODE) is already the recommended one."
+    if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+        log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
         log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
         log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
         log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
