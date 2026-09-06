@@ -12,22 +12,58 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Derive the test matrix from versions.json, the same source of truth the installer,
+  # the NPX package and ioBroker.admin read. A version added or dropped there is then
+  # picked up here automatically instead of drifting apart.
+  node-versions:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Read nodeJsAccepted from versions.json
+      id: read
+      run: |
+        MATRIX=$(jq -c '[.nodeJsAccepted[] | tostring + ".x"]' versions.json)
+        echo "Testing against Node.js: $MATRIX"
+        echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
   # ===================
   # Runs unit tests on all supported node versions and OSes
   test-install:
+    needs: node-versions
     if: contains(github.event.head_commit.message, '[skip ci]') == false
 
     runs-on: ${{ matrix.os }}
     strategy:
+      # One unsupported version should not hide the result for the others
+      fail-fast: false
       matrix:
-        # No node-version matrix on purpose: there was no actions/setup-node step, so the
-        # four entries produced four identical jobs. The installer selects and installs its
-        # own Node.js version anyway, which is what this job is supposed to exercise.
+        node-version: ${{ fromJson(needs.node-versions.outputs.matrix) }}
         os: [ubuntu-latest, macos-latest]
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # setup-node only prepends the tool cache to PATH for the steps that follow. The
+    # generated systemd unit resolves its interpreter with "which node" at service start,
+    # using systemd's own PATH, which never contains the tool cache. Without this link the
+    # matrix would only change the Node.js that the install script sees, while ioBroker
+    # itself would keep running on the image's default version.
+    - name: Make the selected Node.js the system Node.js
+      run: |
+        sudo ln -sf "$(command -v node)" /usr/local/bin/node
+        sudo ln -sf "$(command -v npm)" /usr/local/bin/npm
+        /usr/local/bin/node -v
 
     # installer.sh downloads installer_library.sh from master at runtime, so running it
     # directly would test master's library instead of the one in this branch. The previous
@@ -62,3 +98,16 @@ jobs:
         done
         echo "admin did not become reachable within 180s"
         exit 1
+
+    # Guard so the matrix cannot quietly go back to being decorative: resolve "node" the
+    # way systemd does when it starts the unit and compare it against the matrix entry.
+    - name: Verify the service resolves Node.js ${{ matrix.node-version }}
+      if: runner.os == 'Linux'
+      run: |
+        expected="${{ matrix.node-version }}"
+        expected="${expected%.x}"
+        actual=$(sudo env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin node -v)
+        actual="${actual#v}"
+        actual="${actual%%.*}"
+        echo "ioBroker would start on Node.js $actual, the matrix asks for $expected"
+        test "$actual" = "$expected"
