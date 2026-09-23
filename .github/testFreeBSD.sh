@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# End-to-end test of the FreeBSD installation path.
+# Runs inside the FreeBSD VM started by .github/workflows/freebsd.yml.
+#
+# This is a port of the former .cirrus.yml test_script. It runs dist/install.sh and
+# dist/fix.sh rather than installer.sh and fix_installation.sh, because those download
+# installer_library.sh from master at runtime and would test that instead of this branch.
+set -eu
+
+WORKSPACE=$(pwd)
+
+# The VM is emulated by QEMU on the runner, with no nested virtualisation, so ioBroker
+# starts far more slowly here than on a native runner - 10s on ubuntu is no yardstick.
+wait_for_admin() {
+    local i
+    for i in $(seq 1 120); do
+        if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            return 0
+        fi
+        sleep 5
+    done
+    echo "admin did not become reachable within 600s"
+    return 1
+}
+
+# Called when the admin never answers, so the run says why instead of just timing out
+dump_diagnostics() {
+    echo "--- service status ---"
+    service iobroker status || true
+    echo "--- ioBroker processes ---"
+    ps aux | grep -i '[i]obroker' || echo "no ioBroker process is running"
+    echo "--- listening sockets ---"
+    sockstat -4 -l || true
+    echo "--- last 60 log lines ---"
+    tail -n 60 "$IOB_DIR"/log/*.log 2>/dev/null || echo "no log files found"
+}
+
+# Built here rather than on the host so the artifacts cannot be lost in the workspace
+# sync, and so that "node tasks --create" is covered on FreeBSD too.
+echo "::group::Build the self-contained scripts"
+node tasks --create
+echo "::endgroup::"
+
+echo "::group::Install ioBroker"
+bash "$WORKSPACE/dist/install.sh" --silent
+echo "::endgroup::"
+
+# installer.sh runs "npm i --production --loglevel error --unsafe-perm >/dev/null" and
+# never checks the exit code, so a failed install still ends with "installed
+# successfully". Catch that here and show what npm actually says.
+echo "::group::Verify the ioBroker packages were installed"
+IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
+echo "node $(node -v), npm $(npm -v), IOB_DIR=$IOB_DIR"
+if [ ! -d "$IOB_DIR/node_modules/iobroker.js-controller" ]; then
+    echo "js-controller is missing, the installer's npm run produced nothing."
+    echo "Repeating it with output so the reason is visible:"
+    cd "$IOB_DIR"
+    npm i --production --unsafe-perm 2>&1 | tail -40 || true
+    cd "$WORKSPACE"
+    exit 1
+fi
+echo "js-controller is present"
+echo "::endgroup::"
+
+echo "::group::File permissions"
+bash "$WORKSPACE/.github/testFiles.sh"
+echo "::endgroup::"
+
+echo "::group::Admin reachable"
+if ! wait_for_admin; then
+    dump_diagnostics
+    exit 1
+fi
+echo "::endgroup::"
+
+# Installing this adapter needs python, so it also covers the python dependency
+echo "::group::Install an adapter that requires python"
+iobroker url iobroker.lovelace
+echo "::endgroup::"
+
+echo "::group::Stop ioBroker before running the fixer"
+# Resolved here, not at the top: before the installation neither directory exists yet
+IOB_DIR=$([ -d /opt/iobroker ] && echo "/opt/iobroker" || echo "/usr/local/iobroker")
+cd "$IOB_DIR"
+node node_modules/iobroker.js-controller/iobroker.js stop
+sleep 60
+cd "$WORKSPACE"
+echo "::endgroup::"
+
+echo "::group::Run the fixer"
+bash "$WORKSPACE/dist/fix.sh"
+echo "::endgroup::"
+
+echo "::group::File permissions after the fixer"
+bash "$WORKSPACE/.github/testFiles.sh"
+echo "::endgroup::"
+
+echo "FreeBSD installation test finished successfully"
