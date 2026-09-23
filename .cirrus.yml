@@ -5,23 +5,33 @@ task:
   prepare_install_script:
     - pkg install -y bash node npm libnghttp2 python sudo
   install_script:
-    # remove download of library from installer script and fixer and source it manually
-    - |
-      sed '/# get and load the LIB => START/,/# get and load the LIB => END/d' installer.sh
-      sed '/# get and load the LIB => START/,/# get and load the LIB => END/d' fix_installation.sh
-      source ./installer_library.sh
+    # installer.sh and fix_installation.sh download installer_library.sh from master at
+    # runtime. The previous sed/source pair never changed that: sed without -i writes to
+    # stdout and the sourced functions were gone by the next command. Build the
+    # self-contained scripts instead, so this branch's library is the one under test.
+    - node tasks --create
     # Install ioBroker
     - |
-      sudo chmod +x ./installer.sh
-      ./installer.sh
+      sudo chmod +x ./dist/install.sh
+      ./dist/install.sh
   test_script:
     # Test file permissions
     - |
       sudo chmod +x .github/testFiles.sh
       .github/testFiles.sh
 
-    # Test if ioBroker starts by checking the admin adapter output
-    - curl --insecure http://127.0.0.1:8081 2> /dev/null | grep '<title>Admin</title>' &> /dev/null || exit 1
+    # Test if ioBroker starts by checking the admin adapter output.
+    # Retry, the service needs a while to come up.
+    - |
+      for i in $(seq 1 36); do
+        if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+          echo "admin is reachable after $((i * 5))s"
+          exit 0
+        fi
+        sleep 5
+      done
+      echo "admin did not become reachable within 180s"
+      exit 1
 
     # Now test if adapters which require python can be installed
     - iobroker url iobroker.lovelace
@@ -33,10 +43,11 @@ task:
     - node node_modules/iobroker.js-controller/iobroker.js stop
     - sleep 60
     #
-    - cd $TEST_DIR
+    # $TEST_DIR was never defined, so this was a bare "cd" into $HOME
+    - cd $CIRRUS_WORKING_DIR
     # Run the fixer
-    - sudo chmod +x ./fix_installation.sh
-    - sudo env "PATH=$PATH" bash ./fix_installation.sh
+    - sudo chmod +x ./dist/fix.sh
+    - sudo env "PATH=$PATH" bash ./dist/fix.sh
     # Test file permissions again...
     - sudo chmod +x .github/testFiles.sh
     - bash .github/testFiles.sh
