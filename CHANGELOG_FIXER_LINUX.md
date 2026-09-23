@@ -2,6 +2,7 @@
 
 ## 2026-09-06
 * Corrected the version stamp, which was left at 2025-09-18 when the script was last changed
+* Moved the update subcommand into INSTALL_CMD_UPD_ARGS and removed the duplicated package manager branches
 
 ## 2026-03-02
 * Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages

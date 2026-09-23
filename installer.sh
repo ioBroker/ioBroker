@@ -110,11 +110,7 @@ fi
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
 
 # update repos
-if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
-    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS makecache
-else
-    $SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS update
-fi
+$SUDOX $INSTALL_CMD $INSTALL_CMD_UPD_ARGS
 
 # Install Node.js if it is not installed, or if the installed version is not supported.
 # Checking only whether "node" exists let ioBroker be installed on any version,
