@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-09-23
+* Node.js 24 (LTS) is now the recommended version, and Node.js 26 was added to the accepted versions
+
 ## 2026-09-06
 * Fixed the timezone check for 'Etc/UTC' which never triggered due to a typo
 * Replace an installed Node.js version that is not listed in nodeJsAccepted instead of only checking that node exists

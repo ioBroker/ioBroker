@@ -183,7 +183,7 @@ iob nodejs-update [VERSION]
 
 **Parameters:**
 - `VERSION` - Major Node.js version number (20, 22, 24, etc.)
-  - If not specified, installs the recommended version (`nodeJsRecommended` from `versions.json`, currently 22)
+  - If not specified, installs the recommended version (`nodeJsRecommended` from `versions.json`, currently 24)
   - Must be one of the accepted major versions (`nodeJsAccepted` from `versions.json`, currently 22, 24, 26).
     The script reads that list at runtime, so the set of allowed versions can change without a new release.
   - Only major version numbers are accepted

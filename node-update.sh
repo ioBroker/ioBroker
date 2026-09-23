@@ -15,10 +15,10 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-09-06"
+readonly VERSION="2026-09-23"
 readonly VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
 readonly NODESOURCE_KEY_FINGERPRINT="6F71F525282841EEDAF851B42F59B5F99B1BE0B4"
-readonly DEFAULT_NODE_MAJOR=22
+readonly DEFAULT_NODE_MAJOR=24
 # Fallback list, only used when versions.json cannot be downloaded
 readonly DEFAULT_ACCEPTED_NODE_MAJORS="22 24 26"
 readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"

@@ -97,8 +97,8 @@ versions.json        # Supported Node.js/npm versions
 ```json
 {
     "nodeJsAccepted": [22, 24, 26],
-    "nodeJsRecommended": 22,
-    "npmRecommended": 10
+    "nodeJsRecommended": 24,
+    "npmRecommended": 11
 }
 ```
 

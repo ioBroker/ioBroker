@@ -1,14 +1,14 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-09-06" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-09-23" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # (default fallback values, overridden by versions.json if reachable)
 # ------------------------------
 VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
-NODE_MAJOR=22
+NODE_MAJOR=24
 # Space separated list of the major versions ioBroker supports.
 # Fallback only, overridden by nodeJsAccepted from versions.json below.
 NODE_ACCEPTED="22 24 26"

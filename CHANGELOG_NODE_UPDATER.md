@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2026-09-23
+* Install Node.js 24 instead of 22 when no version is given, following nodeJsRecommended
+
 ## 2026-09-06
 * Added package database consistency check
 * Added hint to rerun the command if key verification fails

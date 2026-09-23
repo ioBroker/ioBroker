@@ -15,7 +15,7 @@ const semver = require('semver');
  * The values below are only a fallback for the case that the file cannot be read.
  */
 const FALLBACK_ACCEPTED_NODE_MAJORS = [22, 24, 26];
-const FALLBACK_RECOMMENDED_NPM_MAJOR = 10;
+const FALLBACK_RECOMMENDED_NPM_MAJOR = 11;
 /** The minimum supported npm version. versions.json has no key for this. */
 const MIN_NPM_VERSION = '8.0.0';
 
