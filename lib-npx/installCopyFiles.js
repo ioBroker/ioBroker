@@ -44,6 +44,16 @@ function copyFilesToRootDir() {
 /** Creates a package.json with the desired contents in the root folder */
 function createPackageJson() {
     const ownPackage = require('../package.json');
+    // Keep the engine range in sync with versions.json instead of hardcoding it
+    let minNodeMajor = 22;
+    try {
+        const accepted = require('../versions.json').nodeJsAccepted;
+        if (Array.isArray(accepted) && accepted.length) {
+            minNodeMajor = Math.min(...accepted);
+        }
+    } catch {
+        // keep the default
+    }
     // This is the package.json contents that will be in the target directory
     const rootPackageJson = {
         name: 'iobroker.inst',
@@ -56,7 +66,7 @@ function createPackageJson() {
             'uninstall-service': 'node uninstall.js',
         },
         engines: {
-            'node': '>=18.0.0',
+            'node': `>=${minNodeMajor}.0.0`,
         },
         dependencies: {
             'iobroker.js-controller': 'stable',

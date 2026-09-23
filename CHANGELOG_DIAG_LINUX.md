@@ -1,6 +1,6 @@
 # Changelog for Linux-Diag-Script
 
-## 2028-08-30
+## 2026-08-30
 * Removed old usb port check
 * Limit dmesg output concerning filesystems to last 15 lines
 
