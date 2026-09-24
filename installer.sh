@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-09-06" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-09-24" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -231,7 +231,16 @@ PACKAGE_JSON_FILE=$(
 # Create package.json and install all dependencies
 PACKAGE_JSON_FILENAME="$IOB_DIR/package.json"
 write_to_file "$PACKAGE_JSON_FILE" "$PACKAGE_JSON_FILENAME"
-npm i --production --loglevel error --unsafe-perm >/dev/null
+# --unsafe-perm was removed in npm 12 and has been a no-op since npm 7, where npm
+# stopped dropping privileges for lifecycle scripts. Passing it now aborts the whole
+# installation with EUNKNOWNCONFIG on any system that ships npm 12, e.g. FreeBSD.
+# The exit code was also ignored, so a failed install still reported success further
+# down. Capture the output and show it when npm fails.
+if ! NPM_OUTPUT=$(npm i --production --loglevel error 2>&1); then
+    echo "Installing the ioBroker packages failed. Output of 'npm i':"
+    printf '%s\n' "$NPM_OUTPUT" >&2
+    exit 1
+fi
 
 # Install and configure Redis if requested
 if [ "$INSTALL_REDIS" = "true" ]; then
