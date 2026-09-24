@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-09-24
+* Dropped the --unsafe-perm flag, which npm 12 rejects, and abort when installing the ioBroker packages fails
+
 ## 2026-09-23
 * Node.js 24 (LTS) is now the recommended version, and Node.js 26 was added to the accepted versions
 
