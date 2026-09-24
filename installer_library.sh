@@ -1,19 +1,30 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-04-11" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-09-23" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
 # (default fallback values, overridden by versions.json if reachable)
 # ------------------------------
 VERSIONS_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
-NODE_MAJOR=22
+NODE_MAJOR=24
+# Space separated list of the major versions ioBroker supports.
+# Fallback only, overridden by nodeJsAccepted from versions.json below.
+NODE_ACCEPTED="22 24 26"
 VERSIONS_JSON=$(curl -sL "$VERSIONS_URL" 2>/dev/null)
 if [ -n "$VERSIONS_JSON" ]; then
     NODE_MAJOR_FROM_JSON=$(echo "$VERSIONS_JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
     if [ -n "$NODE_MAJOR_FROM_JSON" ] && [[ "$NODE_MAJOR_FROM_JSON" =~ ^[0-9]+$ ]]; then
         NODE_MAJOR=$NODE_MAJOR_FROM_JSON
+    fi
+    # "nodeJsAccepted": [22, 24, 26] -> "22 24 26"
+    # Portable on purpose: this library also runs on macOS and FreeBSD, where grep -P is absent.
+    NODE_ACCEPTED_FROM_JSON=$(echo "$VERSIONS_JSON" | sed -n 's/.*"nodeJsAccepted"[[:space:]]*:[[:space:]]*\[\([0-9,[:space:]]*\)\].*/\1/p' | tr ',' ' ')
+    if [ -n "$NODE_ACCEPTED_FROM_JSON" ]; then
+        # unquoted on purpose: collapses the separators into a single spaced list
+        # shellcheck disable=SC2086
+        NODE_ACCEPTED=$(echo $NODE_ACCEPTED_FROM_JSON)
     fi
 fi
 NODE_JS_BREW_URL="https://nodejs.org/dist/latest-v${NODE_MAJOR}.x/"
@@ -91,11 +102,12 @@ get_platform_params() {
     # HOST_PLATFORM:    Name of the platform
     # INSTALL_CMD:      Command for package installation
     # INSTALL_CMD_ARGS: Arguments for $INSTALL_CMD to install something
-    # INSTALL_CMD_UPD_ARGS: Arguments for $INSTALL_CMD to update something
+    # INSTALL_CMD_UPD_ARGS: Subcommand and arguments for $INSTALL_CMD to refresh the
+    #                   package metadata, so callers do not have to branch per manager
     # IOB_DIR:          Directory where iobroker should be installed
     # IOB_USER:          The user to run ioBroker as
 
-    INSTALL_CMD_UPD_ARGS=""
+    INSTALL_CMD_UPD_ARGS="update"
 
     unamestr=$(uname)
     case "$unamestr" in
@@ -107,12 +119,12 @@ get_platform_params() {
             INSTALL_CMD="dnf"
             # The args -y and -q have to be separate
             INSTALL_CMD_ARGS="install -q -y"
-            INSTALL_CMD_UPD_ARGS="-y"
+            INSTALL_CMD_UPD_ARGS="-y makecache"
         elif [[ $(which "yum" 2>/dev/null) == *"/yum" ]]; then
             INSTALL_CMD="yum"
             # The args -y and -q have to be separate
             INSTALL_CMD_ARGS="install -q -y"
-            INSTALL_CMD_UPD_ARGS="-y"
+            INSTALL_CMD_UPD_ARGS="-y makecache"
         fi
         IOB_DIR="/opt/iobroker"
         IOB_USER="iobroker"
@@ -833,16 +845,11 @@ fix_dir_permissions() {
 }
 
 install_nodejs() {
-    print_bold "Node.js not found. Installing..."
+    print_bold "Installing Node.js $NODE_MAJOR..."
 
     if [ "$INSTALL_CMD" = "yum" ] || [ "$INSTALL_CMD" = "dnf" ]; then
-        if [ "$INSTALL_CMD" = "yum" ]; then
-            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
-            REPO_DIR="/etc/yum.repos.d"
-        else
-            $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
-            REPO_DIR="/etc/yum.repos.d"
-        fi
+        $SUDOX rm -f /etc/yum.repos.d/nodesource*.repo
+        REPO_DIR="/etc/yum.repos.d"
         SYS_ARCH=$(uname -m)
         NODEJS_REPO_CONTENT="[nodesource-nodejs]
 name=Node.js Packages for Linux RPM based distros - $SYS_ARCH
