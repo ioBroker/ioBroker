@@ -31,8 +31,8 @@ upload instead of writing).
 
 ### Testing
 
-There is **no unit test suite**. `mocha`/`chai` are devDependencies but no spec files exist — CI installs
-them and never runs them. Verification is end-to-end only:
+There is **no unit test suite**. `mocha`/`chai` are devDependencies but no spec files exist, and
+the CI step that used to install them is gone. Verification is end-to-end only:
 
 ```bash
 node tasks --create && bash ./installer.sh --silent   # 6-10 min; do not cancel, use 15+ min timeouts
@@ -50,11 +50,16 @@ artifact first and run that:
 node tasks --create && bash dist/install.sh --silent
 ```
 
-`test.yml` and `.cirrus.yml` contain a step that looks like it strips the LIB block, but it does not work —
-the `sed` has no `-i` so it writes to stdout, and the `source` runs in a different step's shell than the
-installer. **CI therefore tests master's library, not the branch's.** A PR touching only
-`installer_library.sh` gets a green run that executed none of its changes. Do not trust CI for library work;
-verify locally via `dist/`.
+CI does the same: `test.yml` builds `dist/` and runs `dist/install.sh`, so library changes on a branch are
+what actually gets tested. (Until that was fixed, a `sed`-strip step that never worked meant CI ran
+master's library, and a PR touching only `installer_library.sh` got a green run that executed none of its
+changes.)
+
+**The same blind spot still exists one level up, for `versions.json`.** The library downloads it from
+`master` at runtime, so a PR that edits it is exercised against master's values, not its own. Not
+theoretical: `test-nodejs-install` failed with `installer produced Node.js 22, versions.json recommends 24`
+on the PR that raised the recommendation, and went green only after the merge. Expect that red check on
+any PR editing `versions.json`, and confirm such a change on master afterwards.
 
 ### Linting
 
@@ -157,8 +162,10 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   - `ioBroker.repobuilder` (`types.d.ts`) and `ioBroker.build` (`build/windows/ioBroker.iss`).
 
   Inside this repo the enforced limits follow the file too: `node-update.sh` validates against
-  `nodeJsAccepted` (`get_accepted_node_majors`, downloaded once per run via `fetch_versions_json`), and
-  `lib-npx/checkVersions.js` plus `lib-npx/installCopyFiles.js` read the bundled copy — which is why
+  `nodeJsAccepted` (`get_accepted_node_majors` via `fetch_versions_json`, which despite its caching
+  variables re-downloads on every call — both call sites use it inside a command substitution, so the
+  assignment never reaches the parent shell), and `lib-npx/checkVersions.js` plus
+  `lib-npx/installCopyFiles.js` read the bundled copy — which is why
   `versions.json` is listed in `package.json` `files`. Each reader keeps a hardcoded fallback list for the
   case that the file is unreachable or missing; when you change the accepted set, update those fallbacks
   too, otherwise an offline installation silently applies the old policy.
@@ -176,9 +183,17 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
 
 ## CI
 
-- `test.yml` — installs on `ubuntu`/`MacOS X` Node 18/20/22/24, then permission and admin-reachable checks.
+- `test.yml` — three jobs: `node-versions` reads `nodeJsAccepted` and feeds the matrix; `test-install`
+  installs on `ubuntu`/`macos` for every accepted major, then checks permissions, admin reachability and
+  that the service really resolves the matrix version (systemd expands `which node` at start, so a plain
+  `setup-node` would not have covered it); `test-nodejs-install` purges Node.js first, so the installer
+  has to run `install_nodejs` and the NodeSource path is exercised at all.
 - `npx_install.yml` / `deploy_windows.yml` — `npm link` + `npx iobroker` on windows-latest; the `deploy` job
   publishes both `@iobroker/install` and `@iobroker/fix` on version tags.
 - `deploy.yml` — on GitHub release, runs `npm run deploy` (SFTP to iobroker.net).
-- `.cirrus.yml` — FreeBSD 14 install + fixer round-trip; the only FreeBSD coverage.
+- `freebsd.yml` — FreeBSD install + fixer round-trip in a `vmactions/freebsd-vm`, driven by
+  `.github/testFreeBSD.sh`. Replaces `.cirrus.yml`, which had silently stopped producing check runs in
+  2024. Marked `continue-on-error: true` while the platform is still broken — ioBroker does not start,
+  because the installer never calls `iobroker setup first` and `iobroker-data/iobroker.json` is missing.
+  Remove that line once the job goes green.
 - Releases are cut with `@alcalzone/release-script` (`npm run release-patch|minor|major`).
