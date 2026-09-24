@@ -193,7 +193,7 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
 - `deploy.yml` — on GitHub release, runs `npm run deploy` (SFTP to iobroker.net).
 - `freebsd.yml` — FreeBSD install + fixer round-trip in a `vmactions/freebsd-vm`, driven by
   `.github/testFreeBSD.sh`. Replaces `.cirrus.yml`, which had silently stopped producing check runs in
-  2024. Marked `continue-on-error: true` while the platform is still broken — ioBroker does not start,
-  because the installer never calls `iobroker setup first` and `iobroker-data/iobroker.json` is missing.
-  Remove that line once the job goes green.
+  2024, leaving the platform uncovered for two years. It blocks like any other job; the defects that
+  surfaced when it came back — rc.d pidfile path, `detect_ip_address`, GNU-form `sed -i`,
+  `--unsafe-perm` under npm 12, and the missing `iobroker setup first` — are all fixed.
 - Releases are cut with `@alcalzone/release-script` (`npm run release-patch|minor|major`).
