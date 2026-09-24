@@ -633,6 +633,25 @@ if [ "$HOST_PLATFORM" != "osx" ]; then
     fix_dir_permissions
 fi
 
+# Create the controller settings before anything starts the service.
+# The rc.d script runs "iobroker start", i.e. the CLI, and that reads
+# iobroker-data/iobroker.json before it does anything - but nothing ever created that
+# file. Under systemd the unit launches controller.js directly and it initialises the
+# settings itself, so Linux only ever worked by that side effect and FreeBSD, which has
+# no such unit, failed with "Please call 'iobroker setup first' to initialize the
+# settings." Run it explicitly, after fix_dir_permissions so the file is owned by
+# $IOB_USER and the controller can still write to it.
+if [ ! -f "$IOB_DIR/iobroker-data/iobroker.json" ]; then
+    echo "Initializing the ioBroker settings..."
+    # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
+    # shellcheck disable=SC2086
+    if ! SETUP_OUTPUT=$($IOB_NODE_CMDLINE "$CONTROLLER_DIR/iobroker.js" setup first 2>&1); then
+        echo "Initializing the ioBroker settings failed. Output of 'iobroker setup first':"
+        printf '%s\n' "$SETUP_OUTPUT" >&2
+        exit 1
+    fi
+fi
+
 # Started here, not next to sysrc above, so the ownership of the installation is final
 # before the controller touches it. See the comment in the rc.d block.
 if [ "$INITSYSTEM" = "rc.d" ] && [ "$SKIP_IOBROKER_START" != "true" ]; then
