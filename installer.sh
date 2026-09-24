@@ -208,6 +208,15 @@ disable_npm_updatenotifier
 force_strict_npm_version_checks
 
 # Create ioBroker's package.json and install dependencies:
+# The generated package.json pinned "node": ">=18.0.0", three majors behind
+# nodeJsAccepted. Derive it from the accepted list instead of hardcoding it again:
+# the lowest accepted major is the floor of what still works, which is what an
+# engines range expresses. lib-npx/installCopyFiles.js does the same for the NPX
+# package. Falls back to 22 if the list is unavailable or unparseable.
+NODE_ENGINE_MAJOR=$(echo "$NODE_ACCEPTED" | tr ' ' '\n' | grep -E '^[0-9]+$' | sort -n | head -1)
+if [ -z "$NODE_ENGINE_MAJOR" ]; then
+    NODE_ENGINE_MAJOR=22
+fi
 PACKAGE_JSON_FILE=$(
     cat <<-EOF
 	{
@@ -216,7 +225,7 @@ PACKAGE_JSON_FILE=$(
 		"private": true,
 		"description": "Automate your Life",
 		"engines": {
-			"node": ">=18.0.0"
+			"node": ">=${NODE_ENGINE_MAJOR}.0.0"
 		},
 		"dependencies": {
 			"iobroker.js-controller": "stable",

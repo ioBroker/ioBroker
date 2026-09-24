@@ -3,6 +3,7 @@
 ## 2026-09-24
 * Dropped the --unsafe-perm flag, which npm 12 rejects, and abort when installing the ioBroker packages fails
 * Run "iobroker setup first" during the installation, so the settings exist before the service is started
+* The generated package.json now derives its engines range from nodeJsAccepted instead of pinning Node.js 18
 
 ## 2026-09-23
 * Node.js 24 (LTS) is now the recommended version, and Node.js 26 was added to the accepted versions
