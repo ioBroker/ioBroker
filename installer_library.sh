@@ -343,9 +343,10 @@ install_necessary_packages() {
         # ensure dns_sd.h is where node-gyp expect it
         ln -s /usr/local/include/avahi-compat-libdns_sd/dns_sd.h /usr/include/dns_sd.h
         # enable dbus in the avahi configuration
-        sed -i -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
+        # FreeBSD sed needs an explicit backup extension after -i, GNU sed does not
+        sed -i '' -e 's/#enable-dbus/enable-dbus/' /usr/local/etc/avahi/avahi-daemon.conf
         # enable mdns usage for host resolution
-        sed -i -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
+        sed -i '' -e 's/hosts: file dns/hosts: file dns mdns/' /etc/nsswitch.conf
 
         # enable services avahi/dbus
         sysrc -f /etc/rc.conf dbus_enable="YES"
@@ -955,7 +956,11 @@ detect_ip_address() {
     # Detect IP address - ensure only one IP is returned
     local IP
     IP_COMMAND=$(type "ip" &>/dev/null && echo "ip addr show" || echo "ifconfig")
-    if [ "$HOST_PLATFORM" = "osx" ]; then
+    # Keyed on the command actually used, not on the platform: ifconfig (macOS, FreeBSD,
+    # and any Linux without iproute2) prints "inet 10.0.0.5 netmask ...", while
+    # "ip addr show" prints "inet 10.0.0.5/24 ...". FreeBSD used to take the CIDR branch,
+    # which never matches, so the installer ended with "Open http://:8081".
+    if [ "$IP_COMMAND" = "ifconfig" ]; then
         IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+" | head -1)
     else
         IP=$($IP_COMMAND | grep inet | grep -v inet6 | grep -v 127.0.0.1 | grep -Eo "([0-9]+\.){3}[0-9]+\/[0-9]+" | cut -d "/" -f1 | head -1)
