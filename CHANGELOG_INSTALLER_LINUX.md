@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-09-25
+* VERSIONS_URL can be overridden, so the CI can test a versions.json before it is merged
+
 ## 2026-09-24
 * Dropped the --unsafe-perm flag, which npm 12 rejects, and abort when installing the ioBroker packages fails
 * Run "iobroker setup first" during the installation, so the settings exist before the service is started
