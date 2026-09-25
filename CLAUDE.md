@@ -55,11 +55,19 @@ what actually gets tested. (Until that was fixed, a `sed`-strip step that never 
 master's library, and a PR touching only `installer_library.sh` got a green run that executed none of its
 changes.)
 
-**The same blind spot still exists one level up, for `versions.json`.** The library downloads it from
-`master` at runtime, so a PR that edits it is exercised against master's values, not its own. Not
-theoretical: `test-nodejs-install` failed with `installer produced Node.js 22, versions.json recommends 24`
-on the PR that raised the recommendation, and went green only after the merge. Expect that red check on
-any PR editing `versions.json`, and confirm such a change on master afterwards.
+The same used to apply one level up, to `versions.json`, which the library downloads from `master` at
+runtime: a PR editing it was exercised against master's values rather than its own, and contradicted the
+matrix, which is built from the local file. `VERSIONS_URL` now falls back to the GitHub URL instead of
+hardcoding it, and both `Install ioBroker` steps point at the checkout:
+
+```yaml
+env:
+  VERSIONS_URL: file://${{ github.workspace }}/versions.json
+```
+
+So a change to `versions.json` is verified before it is merged. In `node-update.sh` the default is
+applied *before* `readonly` — the other order silently discards a value from the environment.
+The variable is for testing; end users have no reason to set it.
 
 ### Linting
 
@@ -106,8 +114,8 @@ directly (`./fix_installation.sh`), not via `iob fix`.
 
 `lib-npx/install.js` is the `bin` entry. On non-Windows it just shells out to
 `curl -sL https://iobroker.net/{install,fix}.sh | bash -` — the Node code does nothing else there. On
-Windows it runs the real work in sequence: `checkVersions.js` (Node/npm minimums, hardcoded there
-separately from `versions.json`) → `installCopyFiles.js` (copies the package into `cwd()`, synthesizes an
+Windows it runs the real work in sequence: `checkVersions.js` (rejects a Node.js major outside `nodeJsAccepted`,
+read from the bundled `versions.json`) → `installCopyFiles.js` (copies the package into `cwd()`, synthesizes an
 `iobroker.inst` `package.json` pinning js-controller/admin/discovery/backitup to `stable`) →
 `npm install --production` → `installSetup.js` (writes `iob.bat`/`iobroker.bat`, installs `dotenv` +
 `windows-shortcuts` + git via winget, registers the Windows service, starts it).
@@ -183,7 +191,9 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
 
 ## CI
 
-- `test.yml` — three jobs: `node-versions` reads `nodeJsAccepted` and feeds the matrix; `test-install`
+- `test.yml` — four jobs: `node-versions` reads `nodeJsAccepted` and feeds the matrix;
+  `versions-url` checks that the runtime download of `versions.json` from `master` still works and parses,
+  which the installing jobs no longer cover because they read the checkout instead; `test-install`
   installs on `ubuntu`/`macos` for every accepted major, then checks permissions, admin reachability and
   that the service really resolves the matrix version (systemd expands `which node` at start, so a plain
   `setup-node` would not have covered it); `test-nodejs-install` purges Node.js first, so the installer
