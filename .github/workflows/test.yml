@@ -31,6 +31,27 @@ jobs:
         echo "Testing against Node.js: $MATRIX"
         echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
 
+  # The jobs below point VERSIONS_URL at the branch, so nothing would notice if the
+  # real download broke. Keep covering that path here: same URL and same parsing as
+  # installer_library.sh, without a full installation.
+  versions-url:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+    runs-on: ubuntu-latest
+    steps:
+    - name: The runtime download of versions.json still works
+      run: |
+        URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json"
+        JSON=$(curl -sL "$URL")
+        if [ -z "$JSON" ]; then
+          echo "$URL returned nothing - every installation falls back to its built-in defaults"
+          exit 1
+        fi
+        REC=$(echo "$JSON" | grep '"nodeJsRecommended"' | sed 's/.*"nodeJsRecommended"[[:space:]]*:[[:space:]]*\([0-9]*\).*/\1/')
+        ACC=$(echo "$JSON" | sed -n 's/.*"nodeJsAccepted"[[:space:]]*:[[:space:]]*\[\([0-9,[:space:]]*\)\].*/\1/p' | tr ',' ' ')
+        echo "recommended=[$REC] accepted=[$ACC]"
+        echo "$REC" | grep -qE '^[0-9]+$'
+        echo "$ACC" | grep -qE '[0-9]'
+
   # ===================
   # Runs unit tests on all supported node versions and OSes
   test-install:
@@ -75,6 +96,12 @@ jobs:
       run: node tasks --create
 
     - name: Install ioBroker
+      # Point the installer at this branch's versions.json. It otherwise downloads
+      # master's copy at runtime, so a PR editing that file would be verified
+      # against values it does not contain - and against the matrix above, which is
+      # built from the local file.
+      env:
+        VERSIONS_URL: file://${{ github.workspace }}/versions.json
       run: bash ./dist/install.sh --silent
 
     - name: Test permissions
@@ -147,6 +174,12 @@ jobs:
         echo "no node on PATH, install_nodejs will run"
 
     - name: Install ioBroker
+      # Point the installer at this branch's versions.json. It otherwise downloads
+      # master's copy at runtime, so a PR editing that file would be verified
+      # against values it does not contain - and against the matrix above, which is
+      # built from the local file.
+      env:
+        VERSIONS_URL: file://${{ github.workspace }}/versions.json
       run: bash ./dist/install.sh --silent
 
     - name: Verify the installer installed the recommended Node.js from NodeSource
