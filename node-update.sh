@@ -118,13 +118,17 @@ get_recommended_node_major() {
     fi
 }
 
-# Space separated list of the major versions ioBroker accepts, e.g. "22 24 26"
+# Returns a space-separated list of the major Node.js versions accepted by ioBroker, e.g., "22 24 26"
 get_accepted_node_majors() {
     local accepted
-    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' || true)
-    # unquoted on purpose: collapses the one-per-line matches into a single spaced list
-    # shellcheck disable=SC2086
-    accepted=$(echo $accepted)
+    # Extract accepted versions from versions.json, fallback to default if empty
+    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' | tr '\n' ' ' || true)
+
+    # Remove duplicate and leading/trailing spaces
+    accepted=${accepted// / }
+    accepted=${accepted# }
+    accepted=${accepted% }
+
     if [[ -n "$accepted" ]]; then
         echo "$accepted"
     else
