@@ -326,8 +326,8 @@ setup_nodesource_repo() {
     local gpg_output
     gpg_output=$($SUDOX gpg --show-keys --with-fingerprint /usr/share/keyrings/nodesource.gpg 2>&1)
 
-    # Extract fingerprint: Get the line after 'pub' and remove all spaces
-    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; if ($0 ~ /^[0-9A-Fa-f]{40}$/) print $0}')
+    # Extract the fingerprint line (second line after 'pub') and remove all spaces
+    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; gsub(/ /, ""); print}' | tr -d ' \n')
 
     if [[ -z "$fingerprint" ]]; then
         log "error" "Could not extract fingerprint from GPG key. GPG output was:\n$gpg_output"
