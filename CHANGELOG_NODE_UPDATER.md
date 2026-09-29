@@ -2,6 +2,10 @@
 ## 2026-09-30
 * Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 
+## 2026-09-27
+* GPG key check is now more robust
+* get_accepted_node_majors function fixed
+
 ## 2026-09-25
 * VERSIONS_URL can be overridden, so the CI can test a versions.json before it is merged
 
