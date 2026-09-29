@@ -1,4 +1,6 @@
 # Changelog for Node.js Updater Script
+## 2026-09-29
+* Added logging - Log can be retrieved in /opt/iobroker/log/ 
 
 ## 2026-09-27
 * GPG key check is now more robust
