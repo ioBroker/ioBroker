@@ -71,7 +71,6 @@ init_logging() {
 
     log "info" "Logging to $LOG_FILE"
 }
-
 # --- Cleanup ---
 # Only clean up temporary files, NOT the repository files
 cleanup() {
@@ -81,9 +80,11 @@ cleanup() {
         $SUDOX rm -f /usr/share/keyrings/nodesource.gpg.new 2>/dev/null || true
     fi
 
-    # Remove ANSI color codes from the log file so it stays readable
+    # Remove ANSI color codes and "Reading database" progress lines from the log
     if [[ -n "$LOG_FILE" && -f "$LOG_FILE" ]]; then
-        $SUDOX sed -i 's/\x1b\[[0-9;]*m//g' "$LOG_FILE" 2>/dev/null || true
+    $SUDOX sed -i -e 's/\x1b\[[0-9;]*m//g' \
+                  -e 's/\r/\n/g' \
+                  -e '/^(Reading database \.\.\./d' "$LOG_FILE" 2>/dev/null || true
     fi
 }
 
