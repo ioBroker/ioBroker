@@ -15,7 +15,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-09-25"
+readonly VERSION="2026-09-27"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -118,13 +118,17 @@ get_recommended_node_major() {
     fi
 }
 
-# Space separated list of the major versions ioBroker accepts, e.g. "22 24 26"
+# Returns a space-separated list of the major Node.js versions accepted by ioBroker, e.g., "22 24 26"
 get_accepted_node_majors() {
     local accepted
-    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' || true)
-    # unquoted on purpose: collapses the one-per-line matches into a single spaced list
-    # shellcheck disable=SC2086
-    accepted=$(echo $accepted)
+    # Extract accepted versions from versions.json, fallback to default if empty
+    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' | tr '\n' ' ' || true)
+
+    # Remove duplicate and leading/trailing spaces
+    accepted=${accepted// / }
+    accepted=${accepted# }
+    accepted=${accepted% }
+
     if [[ -n "$accepted" ]]; then
         echo "$accepted"
     else
@@ -322,8 +326,8 @@ setup_nodesource_repo() {
     local gpg_output
     gpg_output=$($SUDOX gpg --show-keys --with-fingerprint /usr/share/keyrings/nodesource.gpg 2>&1)
 
-    # Extract fingerprint: Get the line after 'pub' and remove all spaces
-    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; gsub(/ /, ""); print}')
+    # Extract the fingerprint line (second line after 'pub') and remove all spaces
+    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; gsub(/ /, ""); print}' | tr -d ' \n')
 
     if [[ -z "$fingerprint" ]]; then
         log "error" "Could not extract fingerprint from GPG key. GPG output was:\n$gpg_output"
@@ -332,10 +336,12 @@ setup_nodesource_repo() {
 
     if [[ "$fingerprint" != "$NODESOURCE_KEY_FINGERPRINT" ]]; then
         log "error" "NodeSource GPG key fingerprint mismatch! Expected: $NODESOURCE_KEY_FINGERPRINT, Got: $fingerprint"
-        log "warn" "This error may be temporary. Please run the command again to retry."
+        log "warn" "This error may be temporary. The GPG trust database might have been recreated. Please run the script again."
         $SUDOX rm -f /usr/share/keyrings/nodesource.gpg
         exit 1
     fi
+
+
     log "info" "GPG key fingerprint verified successfully: $fingerprint"
 
     # Create new NodeSource repo file
