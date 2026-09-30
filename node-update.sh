@@ -93,12 +93,9 @@ cleanup() {
     fi
 
     # Remove ANSI color codes and "Reading database" progress lines from the log
-    if [[ -n "$LOG_FILE" && -f "$LOG_FILE" ]]; then
-        $SUDOX sed -i \
-                  -e 's/\x1b\[[0-9;]*m//g' \
+    $SUDOX sed -i -e 's/\x1b\[[0-9;]*m//g' \
                   -e 's/\r/\n/g' \
-                  -e '/^(Reading database \.\.\.)/d' "$LOG_FILE" 2>/dev/null || true
-    fi
+                  -e '/^\(Reading database \.\.\. .*%)$/d' "$LOG_FILE" 2>/dev/null || true
 }
 
 trap cleanup EXIT
