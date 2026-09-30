@@ -5,6 +5,7 @@
 # License: MIT
 #
 # Copyright (c) 2026 Thomas Braun
+# Some parts are contributed by Mistras AI.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 #
@@ -15,7 +16,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-09-27"
+readonly VERSION="2026-09-29"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -26,6 +27,7 @@ readonly DEFAULT_ACCEPTED_NODE_MAJORS="22 24 26"
 readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"
 readonly IOB_DIR="/opt/iobroker"
 readonly IOB_USER="iobroker"
+readonly LOG_DIR="/opt/iobroker/log"
 
 # --- Global Variables ---
 DRY_RUN=false
@@ -38,6 +40,7 @@ INSTALL_CMD=""
 INSTALL_CMD_ARGS=()  # Array for proper quoting
 VERSIONS_JSON=""        # cache, versions.json is downloaded at most once per run
 VERSIONS_JSON_FETCHED=false
+LOG_FILE=""             # set by init_logging()
 
 # --- Logging ---
 log() {
@@ -51,6 +54,23 @@ log() {
     esac
 }
 
+# --- File Logging ---
+# Mirrors ALL terminal output (stdout and stderr, including output of
+# external commands like apt-get/npm) into a log file.
+init_logging() {
+
+    # Delete log files older than 10 days
+    find "$LOG_DIR" -name 'iob-nodejs-update-*.log' -type f -mtime +10 -delete
+
+    # Create the log file owned by $IOB_USER:$IOB_USER
+    LOG_FILE="$LOG_DIR/iob-nodejs-update-$(date '+%Y-%m-%d_%H-%M-%S').log"
+    $SUDOX touch "$LOG_FILE"
+    $SUDOX chown "$IOB_USER:$IOB_USER" "$LOG_FILE"
+    # Duplicate stdout and stderr: everything goes to the terminal AND the file
+    exec &> >(tee -a "$LOG_FILE")
+
+    log "info" "Logging to $LOG_FILE"
+}
 # --- Cleanup ---
 # Only clean up temporary files, NOT the repository files
 cleanup() {
@@ -58,6 +78,13 @@ cleanup() {
     if [[ -n "$SUDOX" ]]; then
         # Only remove temporary key files, NOT the repository
         $SUDOX rm -f /usr/share/keyrings/nodesource.gpg.new 2>/dev/null || true
+    fi
+
+    # Remove ANSI color codes and "Reading database" progress lines from the log
+    if [[ -n "$LOG_FILE" && -f "$LOG_FILE" ]]; then
+    $SUDOX sed -i -e 's/\x1b\[[0-9;]*m//g' \
+                  -e 's/\r/\n/g' \
+                  -e '/^(Reading database \.\.\./d' "$LOG_FILE" 2>/dev/null || true
     fi
 }
 
@@ -341,7 +368,6 @@ setup_nodesource_repo() {
         exit 1
     fi
 
-
     log "info" "GPG key fingerprint verified successfully: $fingerprint"
 
     # Create new NodeSource repo file
@@ -526,6 +552,9 @@ main() {
     check_wsl
     check_debian
     detect_platform
+
+    # Set up file logging (needs sudo, hence after check_root)
+    init_logging
 
     # Check package database consistency
     check_package_database_consistency
