@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-09-30
+* Added the `--hardened` option: the iobroker user gets no sudo rights and is not added to the docker group, and only members of the iobroker group may control the service via sudo
+
 ## 2026-09-25
 * VERSIONS_URL can be overridden, so the CI can test a versions.json before it is merged
 
@@ -14,26 +17,26 @@
 ## 2026-09-06
 * Fixed the timezone check for 'Etc/UTC' which never triggered due to a typo
 * Replace an installed Node.js version that is not listed in nodeJsAccepted instead of only checking that node exists
-* Dropped Node.js 18 and 20 from the accepted versions, iobroker.admin requires Node.js 22 or newer
+* Dropped Node.js 18 and 20 from the accepted versions, `iobroker.admin` requires Node.js 22 or newer
 * Moved the update subcommand into INSTALL_CMD_UPD_ARGS and removed the duplicated package manager branches
 * FreeBSD: ioBroker now actually starts after the installation, plus fixes to the rc.d pid file path, the IP detection and three sed calls that used the GNU form
 
 ## 2026-04-11
 * Muted some confusing error messages.
-* Readded hint to run 'iob fix' to finalize setup. 
+* Readded hint to run `iob fix` to finalize setup. 
 
 ## 2026-03-02
-* Use deb822 format for nodesource.sources in accordance with nodesource installer script
+* Use deb822 format for `nodesource.sources` in accordance with `nodesource` installer script
 * Replace hardcoded Node.js version with dynamic lookup from `versions.json`
 * Detect `dnf` on modern Fedora/RPM-based distros and use `makecache` instead of `update` to refresh package metadata without upgrading all packages
-* Fixed IP detection to prevent multiple IP addresses in final installation message when both ethernet and WiFi interfaces are active
-* Added --no-autostart flag to prevent ioBroker from starting automatically after installation
+* Fixed IP detection to prevent multiple IP addresses in final installation message when both ethernet and Wi-Fi interfaces are active
+* Added `--no-autostart` flag to prevent ioBroker from starting automatically after installation
 * Removed some quotations to make installer work again on some systems
 * Added `--redis` flag to install and configure Redis server for ioBroker states and objects storage
 * Added iobroker user to docker group if it exists to enable unix socket access to docker API
-* Adjusted nodejs installation to nodesource defaults
+* Adjusted Node.js installation to `nodesource` defaults
 * Restrict installations to 64bit (amd64 and arm64) architecture
-* Extend docker detection by adding .containerenv for Podman or CRI-O
+* Extend docker detection by adding `.containerenv` for Podman or CRI-O
 
 ## 2025-08-09
 * Install Node.js 22 by default for installer
@@ -48,19 +51,19 @@
 
 ## 2024-10-22
 * Allow iob start/stop/restart also as root but log information
-* Also install passwd and polkitd packages because some lxc systems might miss it
+* Also install passwd and `polkitd` packages because some lxc systems might miss it
 
 ### 2024-10-19
-* Added 'distro-info' package to prerequisite list
+* Added `distro-info` package to prerequisite list
 
 ### 2024-10-04
 * Enhance root check and messaging
 * root/sudo locked out for systemd based installations
-* --allow-root Option enabled (Just for a transition time)
-* adds "nmcli" to allowed sudo commands
+* `--allow-root` Option enabled (Just for a transition time)
+* adds `nmcli` to allowed sudo commands
 
 ### 2024-06-20
-* Install nodesource rpm package via yum
+* Install `nodesource` rpm package via yum
 
 ### 2024-05-24
 * Install Node.js 20 by default for installer
@@ -85,7 +88,7 @@
 
 ## 2023-10-10
 * IMPORTANT: Node.js v16+ is required at least for installation
-* Update node.js installation after nodesource repo changes and update node Node.js 18
+* Update Node.js installation after `nodesource` repo changes and update Node.js 18
 * Add command "iob nodejs-update" to update Node.js to the latest recommended version (or any when major given as parameter)
 
 ## 2023-09-13
@@ -126,7 +129,7 @@
 * Remove info adapter from new installations by default
 
 ## 2021-04-07
-* Install backitup Adapter on new installations by default
+* Install `backitup` Adapter on new installations by default
 
 ## 2021-01-23
 * (Linux) fix CLI completions
@@ -145,10 +148,10 @@
 * (Linux) Use `-y` argument for `yum`
 
 ## 2020-06-19 
-* (Linux) Updated Recommended Node.JS and NPM Version to 12.x LTS and improved CheckVersions Output for the user
+* (Linux) Updated Recommended Node.js and NPM Version to 12.x LTS and improved CheckVersions Output for the user
 
 ## 2020-06-12
-* (Linux) Added net-tools to fix error #277 "ifconfig: command not found" 
+* (Linux) Added net-tools to fix error #277 `ifconfig: command not found` 
 * (Linux) correctly parse string arguments inside quotes
 
 ## 2020-04-12
@@ -179,18 +182,18 @@
 
 ## 2019-10-21
 * (ADOE) Large refactoring:
-    * refactored 3 repeated execution blocks into function "add2sudoers()"
+    * refactored 3 repeated execution blocks into function `add2sudoers()`
     * introduced var $SUDOX as shortcut for "if $IS_ROOT... then ... else ... fi"
-    * refactored detection of HOST_PLATFORM into function get_platform_params()
-    * extended function "get_platform_params()": now delivers vars: HOST_PLATFORM, INSTALL_CMD, IOB_DIR, IOB_USER
+    * refactored detection of HOST_PLATFORM into function `get_platform_params()`
+    * extended function `get_platform_params()`: now delivers vars: HOST_PLATFORM, INSTALL_CMD, IOB_DIR, IOB_USER
     * changed "brew" and "pkg" to "$INSTALL_CMD"
-    * refactored "Enable colored output" into function "enable_colored_output()"
+    * refactored "Enable colored output" into function `enable_colored_output()`
     * "Install Node.js" and "Check if npm is installed" were existing twice. Deleted one.
     * refactored "Determine the platform..." to function  "install_necessary_packages()"
     * calling "install_package()" instead of "install_package_*"
     * refactored "Detect IP address" tu function "detect_ip_address()"
 * Added option to choose another npm registry.  
-Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install ioBroker using the taobao registry
+Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install ioBroker using the `taobao` registry
 
 ## 2019-10-19
 * Install `python-dev` to fix npm error: `ImportError: No module named compiler.ast`
@@ -239,7 +242,7 @@ Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install
 * Fixed the group add command in FreeBSD
 
 ## 2019-03-06
-* Fixed the setcap command so it works in Docker
+* Fixed the `setcap` command so it works in Docker
 * Fixed another typo in FreeBSD installation routine
 
 ## 2019-03-05
@@ -256,10 +259,10 @@ Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install
 * Removed limitation for number of arguments for iobroker
 
 ## 2019-02-25
-* fix setcap and include all in one command
+* fix `setcap` and include all in one command
 
 ## 2019-02-23
-* Give nodejs access to raw devices like ble
+* Give Node.js access to raw devices like `ble`
 
 ## 2019-02-15
 * (Linux) Add iobroker user to the redis group
@@ -268,11 +271,11 @@ Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install
 * (Linux) Add iobroker user to the i2c group
 
 ## 2019-01-30
-* (Linux) Give NodeJS access to privileged ports (<1024 and Bluetooth)
-* (MacOS) Add package installing support (brew) and autostart support for 
+* (Linux) Give Node.js access to privileged ports (<1024 and Bluetooth)
+* (macOS) Add package installing support (brew) and autostart support for 
 
 ## 2019-01-25
-* (FreeBSD) Added added a procedure to handle the freebsd package installation (there is no apt on BSD). `install_package_freebsd()`
+* (FreeBSD) Added a procedure to handle the freebsd package installation (there is no apt on BSD). `install_package_freebsd()`
 * (FreeBSD) Added a rough list of packages for iobroker to run on FreeBSD (subject to further improvement).
 * (FreeBSD) Added config patches for the zero conf daemon processes, add them to rc startup and start them.
 
@@ -295,7 +298,7 @@ Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install
 
 
 ## 2019-01-22
-* Use `KillMode=process` in `systemd` to prevent detached processes from being killed aswell
+* Use `KillMode=process` in `systemd` to prevent detached processes from being killed as well
 
 ## 2019-01-21 (fixes #106, #107)
 * Move temp_sudo_file instead of copying
@@ -303,10 +306,10 @@ Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install
 
 ## 2019-01-20 (see #99)
 * User creation and specifying which commands may be executed as sudo without password
-* Creation of the startup files for /etc/init.d, systemd (Linux/OSX) and rc.d (FreeBSD), including detection of the node executable on startup
-* Creation of the executables iob and iobroker
+* Creation of the startup files for `/etc/init.d`, systemd (Linux/macOS) and rc.d (FreeBSD), including detection of the node executable on startup
+* Creation of the executables `iob` and `iobroker`
 * Automated installation of commonly used packages
-* More logs into INSTALLER_INFO.txt
+* More logs into `INSTALLER_INFO.txt`
 * Automatic IP address detection for the final message
 * Detection if the installer script is being run as a result of npm install or some other command. _This should fix failures during execution of npm rebuild._
 * Run all iobroker commands as the iobroker user if possible
@@ -316,6 +319,6 @@ Use `MIRROR=taobao curl -sL https://iobroker.net/install.sh | bash -` to install
 
 
 ## 2019-01-02 (and earlier)
-* this version introducted writing INSTALLER_INFO.txt into the ioBroker directory with installation details used later on for support reasons
-* initial versions of the script and added several stuff, too much to describe here. This is used as baseline for the shellscript
+* this version introduced writing INSTALLER_INFO.txt into the ioBroker directory with installation details used later on for support reasons
+* initial versions of the script and added some stuff, too much to describe here. This is used as baseline for the shellscript
 

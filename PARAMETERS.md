@@ -42,6 +42,12 @@ curl -sL https://iobroker.net/install.sh | bash -
 - `--silent` - Skip all user prompts and run an automated installation
 - `--redis` - Install and configure Redis as the database backend
 - `--no-autostart` - Do not start ioBroker after the installation has finished
+- `--hardened` - Do not give the `iobroker` user any sudo rights, see [Hardened mode](#hardened-mode)
+
+The piped installation accepts the same options:
+```bash
+curl -sL https://iobroker.net/install.sh | bash -s -- --hardened
+```
 
 **Notes:**
 - The installer creates an `iob` command with additional parameters (see [Service Control Commands](#service-control-commands))
@@ -99,11 +105,17 @@ iob fix [OPTIONS]
 
 **Available Parameters:**
 - `--allow-root` - Allow running as root user (not recommended, but sometimes necessary for repairs)
+- `--no-update` - Skip updating the system package repositories
+- `--hardened` - Switch an existing installation to [Hardened mode](#hardened-mode). An installation that is
+  already hardened stays hardened on every later `iob fix`, the flag is not needed again.
 
 **Examples:**
 ```bash
 # Run standard fix
 iob fix
+
+# Remove the sudo rights of the iobroker user
+iob fix --hardened
 
 # Run fix as root (when necessary)
 iob fix --allow-root
@@ -278,6 +290,31 @@ This is automatically set by the installer to indicate an automated installation
 - Use `--allow-root` only when required and understand the security implications
 - The `--unmask` parameter in diagnostics may reveal sensitive system information
 - Always run the installer as a regular user when possible
+
+### Hardened mode
+
+By default, the installer gives the `iobroker` user passwordless sudo rights for a list of system tools
+(`apt-get`, `dpkg`, `systemd-run`, `mount`, `docker`, `reboot`, ...) and adds it to the `docker` group. This is
+what allows adapters and the admin interface to install OS dependencies, reboot the host, mount network shares
+and so on. The drawback: the `iobroker` user is effectively root, so a compromised adapter compromises the whole
+host.
+
+With `--hardened` (installer or `iob fix`):
+- the `iobroker` user gets **no** sudo rights and is removed from the `docker` group;
+- starting/stopping the service and running the `iob` CLI via sudo is allowed only for members of the
+  `iobroker` group instead of every local user;
+- the setting is stored in the root-owned sudoers file (`/etc/sudoers.d/iobroker`, on FreeBSD
+  `/usr/local/etc/sudoers.d/iobroker`), so the `iobroker` user cannot switch it off.
+
+In hardened mode the following does **not** work anymore and has to be done by an administrator on the shell:
+installing OS packages for adapters (`osDependencies`), reboot/shutdown of the host from ioBroker, mounting
+network shares (e.g. by backups), and adapters that use `docker`, `arp-scan`, `nmcli`, `vcgencmd`, `mysqldump`
+or other tools via sudo.
+
+To go back to the default setup, delete the sudoers file and run the fixer:
+```bash
+sudo rm /etc/sudoers.d/iobroker && iob fix
+```
 
 ## Getting Help
 

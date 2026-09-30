@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-09-30
+* Added the `--hardened` option to remove the sudo rights of the iobroker user; a hardened installation stays hardened on later runs
+
 ## 2026-09-06
 * Corrected the version stamp, which was left at 2025-09-18 when the script was last changed
 * Moved the update subcommand into INSTALL_CMD_UPD_ARGS and removed the duplicated package manager branches
