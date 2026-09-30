@@ -1,5 +1,6 @@
 # Changelog for Node.js Updater Script
-## 2026-09-29
+## 2026-09-30
+* Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 * Added logging - Log can be retrieved in /opt/iobroker/log/ 
 
 ## 2026-09-27

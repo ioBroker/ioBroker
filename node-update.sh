@@ -16,7 +16,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-09-29"
+readonly VERSION="2026-09-30"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -582,17 +582,51 @@ main() {
     current_major="${VERNODE#v}"
     current_major="${current_major%%.*}"
 
-    # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
-    if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
-        log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
-        log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
-        log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
-        log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
-        if [[ -f "/var/run/reboot-required" ]]; then
-            log "warn" "This system needs to be REBOOTED NOW!"
+# Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
+if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+    # Check if any Node.js binaries exist in directories other than /usr/bin/ or /bin/
+    local required_binaries=("nodejs" "node" "npm" "npx")
+    local wrong_location_binaries=()
+    local all_binaries_found=()
+
+    for binary in "${required_binaries[@]}"; do
+        # Find all locations of this binary
+        local binary_locations
+        binary_locations=$(which -a "$binary" 2>/dev/null || true)
+
+        if [[ -n "$binary_locations" ]]; then
+            while IFS= read -r location; do
+                if [[ -n "$location" && "$location" != "/usr/bin/$binary" && "$location" != "/bin/$binary" ]]; then
+                    wrong_location_binaries+=("$location")
+                    all_binaries_found+=("$location")
+                fi
+            done <<< "$binary_locations"
         fi
-        exit 0
+    done
+
+    if [[ ${#wrong_location_binaries[@]} -gt 0 ]]; then
+        log "warn" "Node.js binaries found in incorrect locations (should only be in /usr/bin/ or /bin/): ${wrong_location_binaries[*]}"
+        log "info" "Removing binaries from incorrect locations..."
+        for location in "${all_binaries_found[@]}"; do
+            if [[ "$DRY_RUN" == true ]]; then
+                log "info" "[DRY RUN] Would remove $location"
+            else
+                $SUDOX rm -f "$location"
+            fi
+        done
+        log "info" "Restarting script to ensure proper installation..."
+        exec "$0" "$@"
     fi
+
+    log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
+    log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
+    log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
+    log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
+    if [[ -f "/var/run/reboot-required" ]]; then
+        log "warn" "This system needs to be REBOOTED NOW!"
+    fi
+    exit 0
+fi
 
     # Stop ioBroker with 'iob stop' before starting work
     stop_iobroker
