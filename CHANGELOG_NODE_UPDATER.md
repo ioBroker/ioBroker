@@ -2,6 +2,8 @@
 ## 2026-09-30
 * Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 * Added logging - Log can be retrieved in /opt/iobroker/log/ 
+* Changed flow of checks - Package consistency fails early now
+* Fixed restart procedure
 
 ## 2026-09-27
 * GPG key check is now more robust

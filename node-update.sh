@@ -5,13 +5,25 @@
 # License: MIT
 #
 # Copyright (c) 2026 Thomas Braun
-# Some parts are contributed by Mistras AI.
+# Some parts are contributed by Mistral AI.
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
@@ -58,19 +70,19 @@ log() {
 # Mirrors ALL terminal output (stdout and stderr, including output of
 # external commands like apt-get/npm) into a log file.
 init_logging() {
-
     # Delete log files older than 10 days
-    find "$LOG_DIR" -name 'iob-nodejs-update-*.log' -type f -mtime +10 -delete
+    find "$LOG_DIR" -name 'iob-nodejs-update-*.log' -type f -mtime +10 -delete 2>/dev/null || true
 
     # Create the log file owned by $IOB_USER:$IOB_USER
     LOG_FILE="$LOG_DIR/iob-nodejs-update-$(date '+%Y-%m-%d_%H-%M-%S').log"
-    $SUDOX touch "$LOG_FILE"
-    $SUDOX chown "$IOB_USER:$IOB_USER" "$LOG_FILE"
+    $SUDOX touch "$LOG_FILE" 2>/dev/null || true
+    $SUDOX chown "$IOB_USER:$IOB_USER" "$LOG_FILE" 2>/dev/null || true
     # Duplicate stdout and stderr: everything goes to the terminal AND the file
     exec &> >(tee -a "$LOG_FILE")
 
     log "info" "Logging to $LOG_FILE"
 }
+
 # --- Cleanup ---
 # Only clean up temporary files, NOT the repository files
 cleanup() {
@@ -82,9 +94,10 @@ cleanup() {
 
     # Remove ANSI color codes and "Reading database" progress lines from the log
     if [[ -n "$LOG_FILE" && -f "$LOG_FILE" ]]; then
-    $SUDOX sed -i -e 's/\x1b\[[0-9;]*m//g' \
+        $SUDOX sed -i \
+                  -e 's/\x1b\[[0-9;]*m//g' \
                   -e 's/\r/\n/g' \
-                  -e '/^(Reading database \.\.\./d' "$LOG_FILE" 2>/dev/null || true
+                  -e '/^(Reading database \.\.\.)/d' "$LOG_FILE" 2>/dev/null || true
     fi
 }
 
@@ -139,7 +152,6 @@ get_recommended_node_major() {
     if [[ "$recommended" =~ ^[0-9]+$ ]]; then
         echo "$recommended"
     else
-        # log writes warnings to stderr, so it cannot pollute the captured value
         log "warn" "Could not read the recommended Node.js version from $VERSIONS_URL. Falling back to v$DEFAULT_NODE_MAJOR."
         echo "$DEFAULT_NODE_MAJOR"
     fi
@@ -214,25 +226,6 @@ check_debian() {
     fi
 }
 
-# --- Check and remove hold from nodejs package ---
-check_nodejs_hold() {
-    log "info" "Checking if nodejs package is on hold..."
-    if apt-mark showhold 2>/dev/null | grep -qx nodejs; then
-        log "info" "nodejs package is on hold. Removing hold to allow update..."
-        if [[ "$DRY_RUN" == true ]]; then
-            log "info" "[DRY RUN] Would execute: $SUDOX apt-mark unhold nodejs"
-        else
-            if ! $SUDOX apt-mark unhold nodejs; then
-                log "error" "Failed to remove hold from nodejs package."
-                exit 1
-            fi
-            log "info" "Hold removed from nodejs package."
-        fi
-    else
-        log "info" "nodejs package is not on hold."
-    fi
-}
-
 # --- Package Database Consistency Check ---
 check_package_database_consistency() {
     log "info" "Checking package database consistency with '$INSTALL_CMD update'..."
@@ -283,6 +276,25 @@ detect_platform() {
     fi
 }
 
+# --- Check and remove hold from nodejs package ---
+check_nodejs_hold() {
+    log "info" "Checking if nodejs package is on hold..."
+    if apt-mark showhold 2>/dev/null | grep -qx nodejs; then
+        log "info" "nodejs package is on hold. Removing hold to allow update..."
+        if [[ "$DRY_RUN" == true ]]; then
+            log "info" "[DRY RUN] Would execute: $SUDOX apt-mark unhold nodejs"
+        else
+            if ! $SUDOX apt-mark unhold nodejs; then
+                log "error" "Failed to remove hold from nodejs package."
+                exit 1
+            fi
+            log "info" "Hold removed from nodejs package."
+        fi
+    else
+        log "info" "nodejs package is not on hold."
+    fi
+}
+
 # --- ioBroker Controller Management ---
 # Stop ioBroker using 'iob stop' command
 stop_iobroker() {
@@ -317,7 +329,7 @@ setup_nodesource_repo() {
     local arch
     arch=$(dpkg --print-architecture)
     if [[ "$arch" != "amd64" && "$arch" != "arm64" ]]; then
-        log "error" "Unsupported architecture: $arch. Nodesoure does not provide a 32bit nodejs anymore, only amd64 and arm64 are supported. You will have to reinstall a 64bit Operating System."
+        log "error" "Unsupported architecture: $arch. NodeSource does not provide a 32bit nodejs anymore, only amd64 and arm64 are supported. You will have to reinstall a 64bit Operating System."
         exit 1
     fi
 
@@ -553,11 +565,11 @@ main() {
     check_debian
     detect_platform
 
+    # Check package database consistency (BEFORE init_logging to catch errors early)
+    check_package_database_consistency
+
     # Set up file logging (needs sudo, hence after check_root)
     init_logging
-
-    # Check package database consistency
-    check_package_database_consistency
 
     # Determine Node.js version
     if [[ -n "$custom_version" ]]; then
@@ -582,53 +594,57 @@ main() {
     current_major="${VERNODE#v}"
     current_major="${current_major%%.*}"
 
-# Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
-if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
-    # Check if any Node.js binaries exist in directories other than /usr/bin/ or /bin/
-    # This is important for identifying 'wild' installations done via tools like nvm or n.
-    # We only want nodesource installations done via packagemanager and they live in above directories.
-    local required_binaries=("nodejs" "node" "npm" "npx")
-    local wrong_location_binaries=()
-    local all_binaries_found=()
+    # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
+    if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+        # Check if any Node.js binaries exist in directories other than /usr/bin/ or /bin/
+        # This is important for identifying 'wild' installations done via tools like nvm or n.
+        # We only want nodesource installations done via packagemanager and they live in above directories.
+        local required_binaries=("nodejs" "node" "npm" "npx")
+        local wrong_location_binaries=()
+        local all_binaries_found=()
 
-    for binary in "${required_binaries[@]}"; do
-        # Find all locations of this binary
-        local binary_locations
-        binary_locations=$(which -a "$binary" 2>/dev/null || true)
+        for binary in "${required_binaries[@]}"; do
+            # Find all locations of this binary
+            local binary_locations
+            binary_locations=$(which -a "$binary" 2>/dev/null || true)
 
-        if [[ -n "$binary_locations" ]]; then
-            while IFS= read -r location; do
-                if [[ -n "$location" && "$location" != "/usr/bin/$binary" && "$location" != "/bin/$binary" ]]; then
-                    wrong_location_binaries+=("$location")
-                    all_binaries_found+=("$location")
-                fi
-            done <<< "$binary_locations"
-        fi
-    done
-
-    if [[ ${#wrong_location_binaries[@]} -gt 0 ]]; then
-        log "warn" "Node.js binaries found in incorrect locations (should only be in /usr/bin/ or /bin/): ${wrong_location_binaries[*]}"
-        log "info" "Removing binaries from incorrect locations..."
-        for location in "${all_binaries_found[@]}"; do
-            if [[ "$DRY_RUN" == true ]]; then
-                log "info" "[DRY RUN] Would remove $location"
-            else
-                $SUDOX rm -f "$location"
+            if [[ -n "$binary_locations" ]]; then
+                while IFS= read -r location; do
+                    if [[ -n "$location" && "$location" != "/usr/bin/$binary" && "$location" != "/bin/$binary" ]]; then
+                        wrong_location_binaries+=("$location")
+                        all_binaries_found+=("$location")
+                    fi
+                done <<< "$binary_locations"
             fi
         done
-        log "info" "Restarting script to ensure proper installation..."
-        exec "$0" "$@"
-    fi
 
-    log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
-    log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
-    log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
-    log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
-    if [[ -f "/var/run/reboot-required" ]]; then
-        log "warn" "This system needs to be REBOOTED NOW!"
+        if [[ ${#wrong_location_binaries[@]} -gt 0 ]]; then
+            log "warn" "Node.js binaries found in incorrect locations (should only be in /usr/bin/ or /bin/): ${wrong_location_binaries[*]}"
+            log "info" "Removing binaries from incorrect locations..."
+            for location in "${all_binaries_found[@]}"; do
+                if [[ "$DRY_RUN" == true ]]; then
+                    log "info" "[DRY RUN] Would remove $location"
+                else
+                    $SUDOX rm -f "$location"
+                fi
+            done
+            log "info" "Restarting script to ensure proper installation..."
+                if [[ -x "$0" ]]; then
+                    exec "$0" "$@"
+                else
+                    exec bash "$0" "$@"
+                fi
+        fi
+
+        log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
+        log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
+        log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
+        log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
+        if [[ -f "/var/run/reboot-required" ]]; then
+            log "warn" "This system needs to be REBOOTED NOW!"
+        fi
+        exit 0
     fi
-    exit 0
-fi
 
     # Stop ioBroker with 'iob stop' before starting work
     stop_iobroker
