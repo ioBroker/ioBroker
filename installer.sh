@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-09-24" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-09-30" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -26,6 +26,14 @@ INSTALL_REDIS="false"
 if [[ "$*" == *--redis* ]]; then
     INSTALL_REDIS="true"
     echo "Redis installation requested"
+fi
+
+# Check for --hardened flag: the iobroker user gets no sudo rights and is not added to the docker group.
+# Adapters that need root rights (OS packages, reboot, mount, docker, ...) will not work then.
+IOB_HARDENED="false"
+if [[ "$*" == *--hardened* ]]; then
+    IOB_HARDENED="true"
+    echo "Hardened installation requested"
 fi
 
 RECOMMEND_FIXER_AFTER_INSTALL="false"
@@ -194,6 +202,7 @@ chmod 664 "$INSTALLER_INFO_FILE"
 echo "Installer version: $INSTALLER_VERSION" >>"$INSTALLER_INFO_FILE"
 echo "Installation date $(date +%F)" >>"$INSTALLER_INFO_FILE"
 echo "Platform: $HOST_PLATFORM" >>"$INSTALLER_INFO_FILE"
+echo "Hardened: $IOB_HARDENED" >>"$INSTALLER_INFO_FILE"
 
 # ########################################################
 print_step "Installing ioBroker" 3 "$NUM_STEPS"

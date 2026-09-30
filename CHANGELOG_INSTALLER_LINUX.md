@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-09-30
+* Added the `--hardened` option: the iobroker user gets no sudo rights and is not added to the docker group, and only members of the iobroker group may control the service via sudo
+
 ## 2026-09-25
 * VERSIONS_URL can be overridden, so the CI can test a versions.json before it is merged
 

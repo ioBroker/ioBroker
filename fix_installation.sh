@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2026-09-06" # format YYYY-MM-DD
+FIXER_VERSION="2026-09-30" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -142,6 +142,14 @@ set_some_common_params
 SKIP_UPDATE=false
 if [[ "$*" == *--no-update* ]]; then
     SKIP_UPDATE=true
+fi
+
+# Check for --hardened flag: remove the sudo rights of the iobroker user. An installation that is
+# already hardened stays hardened without this flag, see is_hardened_setup in the library.
+IOB_HARDENED="false"
+if [[ "$*" == *--hardened* ]]; then
+    IOB_HARDENED="true"
+    echo "Hardening of the installation requested"
 fi
 
 # Test if ioBroker is installed

@@ -1,7 +1,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-09-25" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-09-30" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -673,6 +673,20 @@ function add2sudoers() {
     done
 }
 
+# First line of the sudoers file in hardened mode. The fixer looks for it, so that a hardened
+# installation stays hardened on "iob fix" without passing --hardened again.
+HARDENED_SUDOERS_MARKER="# ioBroker hardened mode: no root rights for the iobroker user"
+
+# Returns 0 if the installation should be hardened: either --hardened was passed (IOB_HARDENED=true)
+# or the existing sudoers file was written in hardened mode. The marker is read from the root-owned
+# sudoers file and not from the ioBroker directory, because the iobroker user must not be able
+# to switch the hardening off.
+is_hardened_setup() {
+    local sudoers_file="$1"
+    [ "$IOB_HARDENED" = "true" ] && return 0
+    $SUDOX grep -qsxF "$HARDENED_SUDOERS_MARKER" "$sudoers_file" &>/dev/null
+}
+
 create_user_linux() {
     username="$1"
     id "$username" &>/dev/null
@@ -687,7 +701,22 @@ create_user_linux() {
         sudo usermod -a -G $username $USER
     fi
 
-    SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
+    SUDOERS_FILE="/etc/sudoers.d/iobroker"
+    # In hardened mode the iobroker user gets no sudo rights at all, and only members of the
+    # iobroker group (not every local user) may control the service and run the CLI
+    local hardened=false
+    local sudo_principal="ALL"
+    if is_hardened_setup "$SUDOERS_FILE"; then
+        hardened=true
+        sudo_principal="%$username"
+        echo "Hardened mode: the user $username gets no sudo rights"
+    fi
+
+    if [ "$hardened" = true ]; then
+        SUDOERS_CONTENT="$HARDENED_SUDOERS_MARKER\n"
+    else
+        SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
+    fi
     # Add the user to all groups we need and give him passwordless sudo privileges
     # Define which commands iobroker may execute as sudo without password
     declare -a iob_commands=(
@@ -706,22 +735,24 @@ create_user_linux() {
         "mysqldump"
         "ldconfig"
     )
-    add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
+    if [ "$hardened" != true ]; then
+        add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
+    fi
 
     # Additionally, define which iobroker-related commands may be executed by every user
+    # (in hardened mode only by members of the iobroker group)
     declare -a all_user_commands=(
         "systemctl start iobroker"
         "systemctl stop iobroker"
         "systemctl restart iobroker"
     )
-    add2sudoers "ALL ALL=" "${all_user_commands[@]}"
+    add2sudoers "$sudo_principal ALL=" "${all_user_commands[@]}"
 
     # Furthermore, allow all users to execute node iobroker.js as iobroker
     if [ "$IOB_USER" != "$USER" ]; then
-        add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js *"
+        add2sudoers "$sudo_principal ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js *"
     fi
 
-    SUDOERS_FILE="/etc/sudoers.d/iobroker"
     $SUDOX rm -f $SUDOERS_FILE
     echo -e "$SUDOERS_CONTENT" >~/temp_sudo_file
     $SUDOX visudo -c -q -f ~/temp_sudo_file &&
@@ -743,6 +774,11 @@ create_user_linux() {
         video
     )
     for grp in "${groups[@]}"; do
+        # Membership in the docker group is equivalent to root rights
+        if [ "$grp" = "docker" ] && [ "$hardened" = true ]; then
+            getent group docker &>/dev/null && $SUDOX gpasswd -d $username docker &>/dev/null
+            continue
+        fi
         getent group $grp &>/dev/null && $SUDOX usermod -a -G $grp $username
     done
 }
@@ -754,9 +790,24 @@ create_user_freebsd() {
         # User does not exist
         $SUDOX pw useradd -m -s /usr/sbin/nologin -n "$username"
     fi
+    SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
+    # In hardened mode the iobroker user gets no sudo rights at all, and only members of the
+    # iobroker group (not every local user) may control the service and run the CLI
+    local hardened=false
+    local sudo_principal="ALL"
+    if is_hardened_setup "$SUDOERS_FILE"; then
+        hardened=true
+        sudo_principal="%$username"
+        echo "Hardened mode: the user $username gets no sudo rights"
+    fi
+
     # Add the user to all groups we need and give him passwordless sudo privileges
     # Define which commands may be executed as sudo without password
-    SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
+    if [ "$hardened" = true ]; then
+        SUDOERS_CONTENT="$HARDENED_SUDOERS_MARKER\n"
+    else
+        SUDOERS_CONTENT="$username ALL=(ALL) ALL\n"
+    fi
     # Add the user to all groups we need and give him passwordless sudo privileges
     # Define which commands iobroker may execute as sudo without password
     declare -a iob_commands=(
@@ -775,22 +826,24 @@ create_user_freebsd() {
         "mysqldump"
         "ldconfig"
     )
-    add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
+    if [ "$hardened" != true ]; then
+        add2sudoers "$username ALL=(ALL) " "${iob_commands[@]}"
+    fi
 
     # Additionally, define which iobroker-related commands may be executed by every user
+    # (in hardened mode only by members of the iobroker group)
     declare -a all_user_commands=(
         "service iobroker start"
         "service iobroker stop"
         "service iobroker restart"
     )
-    add2sudoers "ALL ALL=" "${all_user_commands[@]}"
+    add2sudoers "$sudo_principal ALL=" "${all_user_commands[@]}"
 
     # Furthermore, allow all users to execute node iobroker.js as iobroker
     if [ "$IOB_USER" != "$USER" ]; then
-        add2sudoers "ALL ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js *"
+        add2sudoers "$sudo_principal ALL=($IOB_USER) " "node $CONTROLLER_DIR/iobroker.js *"
     fi
 
-    SUDOERS_FILE="/usr/local/etc/sudoers.d/iobroker"
     $SUDOX rm -f $SUDOERS_FILE
     echo -e "$SUDOERS_CONTENT" >~/temp_sudo_file
     $SUDOX visudo -c -q -f ~/temp_sudo_file &&
@@ -813,6 +866,11 @@ create_user_freebsd() {
         video
     )
     for grp in "${groups[@]}"; do
+        # Membership in the docker group is equivalent to root rights
+        if [ "$grp" = "docker" ] && [ "$hardened" = true ]; then
+            getent group docker &>/dev/null && $SUDOX pw group mod docker -d $username &>/dev/null
+            continue
+        fi
         getent group $grp && $SUDOX pw group mod $grp -m $username
     done
 }
