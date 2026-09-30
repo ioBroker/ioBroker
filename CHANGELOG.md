@@ -15,7 +15,7 @@
 * Windows: Ensure that git installations run without user interaction
 
 ## 5.1.2 (2024-05-23)
-* Create the correct `controller.js` file on windows to work with controller v6
+* Create the correct `controller.js` file on Windows to work with controller v6
 
 ## 5.0.0 (2023-09-14)
 * Adjust a minimum Node.js version to 16.13 for new installations which match to the minimum version of js-controller 5.0.x
@@ -35,7 +35,7 @@
 * Do JSONL DB compression earlier in the Windows installer flow
 
 ## 4.2.1 (2022-12-22)
-* Caught some errors when executed in the wrong directory on windows
+* Caught some errors when executed in the wrong directory on Windows
 
 ## 4.2.0 (2022-12-09)
 * Sync Windows installer with Linux installer
@@ -54,13 +54,13 @@
 * ioBroker stopped now before fix
 
 ## 4.1.5 (2022-05-22)
-* Added support for windows: `iob fix`
+* Added support for Windows: `iob fix`
 
 ## 4.1.4 (2022-05-22)
-* Allowed to install on linux too
+* Allowed to install on Linux too
 
 ## 4.0.3 (2022-05-22)
 * Corrected fixer
 
 ## 4.0.2 (2022-05-22)
-* Activate windows as npx installer again
+* Activate Windows as npx installer again
