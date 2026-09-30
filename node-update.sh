@@ -585,6 +585,8 @@ main() {
 # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
 if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
     # Check if any Node.js binaries exist in directories other than /usr/bin/ or /bin/
+    # This is important for identifying 'wild' installations done via tools like nvm or n.
+    # We only want nodesource installations done via packagemanager and they live in above directories.
     local required_binaries=("nodejs" "node" "npm" "npx")
     local wrong_location_binaries=()
     local all_binaries_found=()
