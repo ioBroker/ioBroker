@@ -308,18 +308,22 @@ if [ "$INITSYSTEM" = "systemd" ]; then
     IOB_EXECUTABLE=$(
         cat <<-EOF
 		#!$BASH_CMDLINE
+		# --allow-root is matched as an exact argument, not as a substring: an object id
+		# or state name that happens to contain that text must not slip past the root guard.
+		iob_allow_root=false
+		for a in "\$@"; do if [ "\$a" = "--allow-root" ]; then iob_allow_root=true; break; fi; done
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
-            if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+            if [ "\$(id -u)" = 0 ] && [ "\$iob_allow_root" != true ]; then
                 echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease execute 'iob fix --allow-root' to create an appropriate setup!"
             fi
 			sudo systemctl \$1 iobroker
 			exit \$?
 		fi
-		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+		if [ "\$(id -u)" = 0 ] && [ "\$iob_allow_root" != true ]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit 1;
-		elif [ "\$(id -u)" -gt 0 ] && [[ "\$*" == *--allow-root* ]]; then
-            echo "Ignoring --allow-root: it only has an effect when running as root.";
+		elif [ "\$(id -u)" -gt 0 ] && [ "\$iob_allow_root" = true ]; then
+            echo "Ignoring --allow-root: it only has an effect when running as root." >&2;
         fi
 		if [ "\$1" = "fix" ]; then
 			shift
