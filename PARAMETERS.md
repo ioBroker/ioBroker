@@ -311,11 +311,11 @@ installing OS packages for adapters (`osDependencies`), reboot/shutdown of the h
 network shares (e.g. by backups), and adapters that use `docker`, `arp-scan`, `nmcli`, `vcgencmd`, `mysqldump`
 or other tools via sudo.
 
-To go back to the default setup, delete the sudoers file and run the fixer. The path differs by
-platform - removing the Linux one on FreeBSD leaves the marker in place, so the next fixer run
-stays hardened:
+To go back to the default setup, delete the sudoers file and run the fixer. Hardened mode exists on
+Linux and FreeBSD only - macOS never writes such a file. The path differs between the two, and
+removing the Linux one on FreeBSD leaves the marker in place, so the next fixer run stays hardened:
 ```bash
-# Linux / macOS
+# Linux
 sudo rm /etc/sudoers.d/iobroker && iob fix
 
 # FreeBSD

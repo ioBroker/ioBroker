@@ -777,14 +777,24 @@ create_user_linux() {
         # Membership in the docker group is equivalent to root rights
         if [ "$grp" = "docker" ] && [ "$hardened" = true ]; then
             if getent group docker &>/dev/null; then
-                # gpasswd exits non-zero when the user is not a member, which is exactly the
+                # gpasswd/pw exit non-zero when the user is not a member, which is exactly the
                 # state we want, so the outcome is verified instead of the exit code. Being in
                 # the docker group is equivalent to root, so a hardened setup must not keep it.
                 $SUDOX gpasswd -d "$username" docker &>/dev/null || true
-                if id -nG "$username" 2>/dev/null | tr ' ' '\n' | grep -qx docker; then
+                # The verification must not fail open: if "id" cannot resolve the user, its
+                # output is empty and a plain grep would read that as "not a member" and let a
+                # hardened setup report success. Capture the status separately and stop when
+                # membership cannot be established either way.
+                local user_groups
+                if ! user_groups=$(id -nG "$username" 2>/dev/null); then
+                    echo "ERROR: cannot read the group membership of $username."
+                    echo "Hardened mode cannot be verified, so the installation is stopped."
+                    exit 1
+                fi
+                if printf '%s\n' "$user_groups" | tr ' ' '\n' | grep -qx docker; then
                     echo "ERROR: could not remove $username from the docker group."
                     echo "Membership there is equivalent to root rights, so this installation is NOT hardened."
-                    echo "Remove it manually (gpasswd -d $username docker) and run the fixer again."
+                    echo "Remove it manually ($SUDOX gpasswd -d $username docker) and run the fixer again."
                     exit 1
                 fi
             fi
@@ -880,12 +890,24 @@ create_user_freebsd() {
         # Membership in the docker group is equivalent to root rights
         if [ "$grp" = "docker" ] && [ "$hardened" = true ]; then
             if getent group docker &>/dev/null; then
-                # Same reasoning as in create_user_linux: verify the result, not the exit code.
+                # gpasswd/pw exit non-zero when the user is not a member, which is exactly the
+                # state we want, so the outcome is verified instead of the exit code. Being in
+                # the docker group is equivalent to root, so a hardened setup must not keep it.
                 $SUDOX pw group mod docker -d "$username" &>/dev/null || true
-                if id -nG "$username" 2>/dev/null | tr ' ' '\n' | grep -qx docker; then
+                # The verification must not fail open: if "id" cannot resolve the user, its
+                # output is empty and a plain grep would read that as "not a member" and let a
+                # hardened setup report success. Capture the status separately and stop when
+                # membership cannot be established either way.
+                local user_groups
+                if ! user_groups=$(id -nG "$username" 2>/dev/null); then
+                    echo "ERROR: cannot read the group membership of $username."
+                    echo "Hardened mode cannot be verified, so the installation is stopped."
+                    exit 1
+                fi
+                if printf '%s\n' "$user_groups" | tr ' ' '\n' | grep -qx docker; then
                     echo "ERROR: could not remove $username from the docker group."
                     echo "Membership there is equivalent to root rights, so this installation is NOT hardened."
-                    echo "Remove it manually (pw group mod docker -d $username) and run the fixer again."
+                    echo "Remove it manually ($SUDOX pw group mod docker -d $username) and run the fixer again."
                     exit 1
                 fi
             fi
