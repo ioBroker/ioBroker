@@ -28,7 +28,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-09-30"
+readonly VERSION="2026-10-01"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -187,7 +187,12 @@ check_root() {
         log "error" "This script must not be run as root. Please use your standard user."
         exit 1
     fi
-    if ! sudo -v 2>/dev/null; then
+    # "sudo -n true" instead of "sudo -v": -v validates without a command and then needs a
+    # password unless every command is NOPASSWD. The sudoers file this installer drops into
+    # /etc/sudoers.d/iobroker is read after 90-cloud-init-users and only covers single
+    # commands, so on a cloud image -v starts asking - for a password that is never set
+    # there. -n never prompts and fails cleanly instead of blocking on input nobody can give.
+    if ! sudo -n true 2>/dev/null; then
         log "error" "sudo privileges are required but not available."
         exit 1
     fi
@@ -360,10 +365,15 @@ setup_nodesource_repo() {
     log "info" "Verifying GPG key fingerprint..."
     local fingerprint
     local gpg_output
-    gpg_output=$($SUDOX gpg --show-keys --with-fingerprint /usr/share/keyrings/nodesource.gpg 2>&1)
-
-    # Extract the fingerprint line (second line after 'pub') and remove all spaces
-    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; gsub(/ /, ""); print}' | tr -d ' \n')
+    # --with-colons gives a stable field format; the fpr record holds the fingerprint in
+    # field 10. The previous version read the line after "pub" out of the human readable
+    # output and merged stderr into it via 2>&1. On the first gpg call as root that output
+    # carries "gpg: /root/.gnupg/trustdb.gpg: trustdb created", which ended up in the
+    # fingerprint and failed the comparison - after Node.js had already been removed.
+    # stderr is kept separately, only for the error message below.
+    gpg_output=$($SUDOX gpg --show-keys --with-colons /usr/share/keyrings/nodesource.gpg 2>&1)
+    fingerprint=$($SUDOX gpg --show-keys --with-colons /usr/share/keyrings/nodesource.gpg 2>/dev/null \
+        | awk -F: '/^fpr:/ {print $10; exit}')
 
     if [[ -z "$fingerprint" ]]; then
         log "error" "Could not extract fingerprint from GPG key. GPG output was:\n$gpg_output"
