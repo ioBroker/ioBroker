@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-10-01
+* Added a shellcheck CI job and a shell directive to installer_library.sh
+
 ## 2026-09-30
 * Added the `--hardened` option: the iobroker user gets no sudo rights and is not added to the docker group, and only members of the iobroker group may control the service via sudo
 
