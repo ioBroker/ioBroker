@@ -2,13 +2,13 @@
 
 'use strict';
 
-const tools = require('./tools.js');
 const path = require('node:path');
 const platform = require('node:os').platform();
 const { execSync, exec } = require('node:child_process');
-const pack = require('../package.json');
-const semver = require('semver');
 const fs = require('fs-extra');
+const semver = require('semver');
+const tools = require('./tools.js');
+const pack = require('../package.json');
 
 function runLinux(isFix) {
     console.log(`Linux installation starting... (fixing = ${isFix})`);

@@ -12,15 +12,16 @@
 /* jslint node: true */
 'use strict';
 
+const path = require('node:path');
+const { execSync } = require('node:child_process');
+
+const fs = require('fs-extra');
 const yargs = require('yargs')
     .usage(`Commands:\n$0 [--objects <host>] [--states <host>] [custom]\n`)
     .default('objects', '127.0.0.1')
     .default('states', '127.0.0.1')
     .default('lang', 'en');
 
-const fs = require('fs-extra');
-const path = require('node:path');
-const { execSync } = require('node:child_process');
 const tools = require('./tools.js');
 
 /** The location of this module's root dir. E.g., /opt/iobroker */
@@ -190,7 +191,7 @@ function setup(callback) {
             console.log('creating conf/iobroker.json');
             config.objects.host = yargs.argv.objects || '127.0.0.1';
             config.states.host = yargs.argv.states || '127.0.0.1';
-            config.dataDir = path.join(process.cwd(), 'iobroker-data'); //tools.getDefaultDataDir();
+            config.dataDir = path.join(process.cwd(), 'iobroker-data');
             // Create default data dir
             fs.ensureDirSync(config.dataDir);
             fs.writeFileSync(path.join(process.cwd(), 'iobroker-data/iobroker.json'), JSON.stringify(config, null, 2));

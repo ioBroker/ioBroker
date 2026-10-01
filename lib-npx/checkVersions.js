@@ -6,8 +6,8 @@
  * to make sure they are compatible with ioBroker.
  */
 
-const { getSystemVersions } = require('./tools.js');
 const semver = require('semver');
+const { getSystemVersions } = require('./tools.js');
 
 /*
  * The supported versions live in versions.json, which is also read by ioBroker.admin,
