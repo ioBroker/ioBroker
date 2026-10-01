@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-10-01
+* The iob wrapper the fixer writes matches the installer again: all options are forwarded and the --allow-root check works
+
 ## 2026-09-30
 * Added the `--hardened` option to remove the sudo rights of the iobroker user; a hardened installation stays hardened on later runs
 

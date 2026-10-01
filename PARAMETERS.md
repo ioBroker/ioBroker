@@ -158,9 +158,9 @@ iob [COMMAND] [OPTIONS]
 **Global Options:**
 - `--allow-root` - Allow running commands as root (applies to fix, nodejs-update, diag)
 
-**Limitation:** for `fix`, `diag` and `nodejs-update` the `iob` wrapper forwards only the *first* argument to
-the downloaded script. `iob diag --de --unmask` therefore silently runs with `--de` alone. To combine
-options, call the script directly, e.g. `bash /path/to/diag.sh --de --unmask`.
+**Note:** `fix`, `diag` and `nodejs-update` are not run from this repository. The `iob` wrapper downloads
+them from `https://iobroker.net/` at invocation time, so they are always the released version, never a
+local change. All options are forwarded, so `iob diag --de --unmask` works as written.
 
 **Examples:**
 ```bash
