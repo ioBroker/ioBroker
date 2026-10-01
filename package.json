@@ -2,7 +2,7 @@
   "name": "@iobroker/install",
   "version": "6.0.1",
   "optionalDependencies": {
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.4",
     "windows-shortcuts": "^0.1.6"
   },
   "publishConfig": {
