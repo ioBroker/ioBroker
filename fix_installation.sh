@@ -326,7 +326,12 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$@"
 		elif [ "\$1" = "nodejs-update" ]; then
 			shift
-			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$@"
+			# --allow-root is a wrapper flag, handled above. node-update.sh does not
+			# know it and its catch-all branch would take it for a version number,
+			# so "iob nodejs-update --dry-run --allow-root" would fail. Drop it here.
+			nu_args=()
+			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
+			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
 		elif [ "\$1" = "diag" ]; then
 			shift
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
@@ -350,7 +355,12 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /Users/$IOB_USER/.fix.sh && bash /Users/$IOB_USER/.fix.sh "\$@"
 		elif [ "\$1" = "nodejs-update" ]; then
 			shift
-			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\$@"
+			# --allow-root is a wrapper flag, handled above. node-update.sh does not
+			# know it and its catch-all branch would take it for a version number,
+			# so "iob nodejs-update --dry-run --allow-root" would fail. Drop it here.
+			nu_args=()
+			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
+			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
 		elif [ "\$1" = "diag" ]; then
 			shift
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
@@ -368,7 +378,12 @@ else
 			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$@"
 		elif [ "\$1" = "nodejs-update" ]; then
 			shift
-			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$@"
+			# --allow-root is a wrapper flag, handled above. node-update.sh does not
+			# know it and its catch-all branch would take it for a version number,
+			# so "iob nodejs-update --dry-run --allow-root" would fail. Drop it here.
+			nu_args=()
+			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
+			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
 		elif [ "\$1" = "diag" ]; then
 			shift
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
