@@ -1,8 +1,7 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-10-01
-* The iob wrapper forwards all options to fix, diag and nodejs-update instead of only the first one
-* Fixed the --allow-root check in the wrapper, which never matched, and made it a warning instead of an error
+* Updated the `iob` wrapper to forward all options to `fix`, `diag` and `nodejs-update`, and warn non-root users when `--allow-root` is ignored
 
 ## 2026-09-30
 * Added the `--hardened` option: the iobroker user gets no sudo rights and is not added to the docker group, and only members of the iobroker group may control the service via sudo
