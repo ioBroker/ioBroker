@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-10-01
+* Hardened mode now fails loudly when the iobroker user cannot be removed from the docker group, instead of reporting success
+
 ## 2026-09-30
 * Added the `--hardened` option: the iobroker user gets no sudo rights and is not added to the docker group, and only members of the iobroker group may control the service via sudo
 

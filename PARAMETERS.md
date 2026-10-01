@@ -311,9 +311,15 @@ installing OS packages for adapters (`osDependencies`), reboot/shutdown of the h
 network shares (e.g. by backups), and adapters that use `docker`, `arp-scan`, `nmcli`, `vcgencmd`, `mysqldump`
 or other tools via sudo.
 
-To go back to the default setup, delete the sudoers file and run the fixer:
+To go back to the default setup, delete the sudoers file and run the fixer. The path differs by
+platform - removing the Linux one on FreeBSD leaves the marker in place, so the next fixer run
+stays hardened:
 ```bash
+# Linux / macOS
 sudo rm /etc/sudoers.d/iobroker && iob fix
+
+# FreeBSD
+sudo rm /usr/local/etc/sudoers.d/iobroker && iob fix
 ```
 
 ## Getting Help
