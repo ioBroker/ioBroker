@@ -371,15 +371,22 @@ setup_nodesource_repo() {
     log "info" "Verifying GPG key fingerprint..."
     local fingerprint
     local gpg_output
-    # --with-colons gives a stable field format; the fpr record holds the fingerprint in
-    # field 10. The previous version read the line after "pub" out of the human readable
-    # output and merged stderr into it via 2>&1. On the first gpg call as root that output
-    # carries "gpg: /root/.gnupg/trustdb.gpg: trustdb created", which ended up in the
-    # fingerprint and failed the comparison - after Node.js had already been removed.
-    # stderr is kept separately, only for the error message below.
-    gpg_output=$($SUDOX gpg --show-keys --with-colons /usr/share/keyrings/nodesource.gpg 2>&1)
-    fingerprint=$($SUDOX gpg --show-keys --with-colons /usr/share/keyrings/nodesource.gpg 2>/dev/null \
-        | awk -F: '/^fpr:/ {print $10; exit}')
+    # Read the key once and handle the status explicitly: under "set -e" a failing
+    # assignment would end the script right here, so the diagnostics below would never
+    # run and an unreadable key would abort without saying why - after Node.js has
+    # already been removed. "if ! var=$(...)" keeps that status in the condition.
+    if ! gpg_output=$($SUDOX gpg --show-keys --with-colons /usr/share/keyrings/nodesource.gpg 2>&1); then
+        log "error" "Could not read the NodeSource GPG key. Output of gpg:"
+        printf '%s\n' "$gpg_output" >&2
+        exit 1
+    fi
+
+    # --with-colons gives a stable field format, with the fingerprint in field 10 of the
+    # fpr record. The previous version read the line after "pub" out of the human readable
+    # output, so the "gpg: ... trustdb created" message that stderr carries on a first run
+    # as root ended up in the fingerprint and failed the comparison. Anchoring on ^fpr:
+    # ignores whatever else gpg writes.
+    fingerprint=$(printf '%s\n' "$gpg_output" | awk -F: '/^fpr:/ {print $10; exit}')
 
     if [[ -z "$fingerprint" ]]; then
         log "error" "Could not extract fingerprint from GPG key. GPG output was:\n$gpg_output"
