@@ -1,7 +1,7 @@
 # Changelog for Windows-Installer-NPX
 <!-- ## **WORK IN PROGRESS**
 -->
-## **WORK IN PROGRESS**
+## 7.0.0 (2026-10-01)
 * Read the supported Node.js and npm versions from versions.json instead of hardcoding them
 * Abort when the installed Node.js is not one of the supported versions
 * Recommend npm 11, the version bundled with the now recommended Node.js 24
