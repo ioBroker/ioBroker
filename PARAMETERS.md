@@ -156,7 +156,9 @@ iob [COMMAND] [OPTIONS]
 - `diag` - Run diagnostic script
 
 **Global Options:**
-- `--allow-root` - Allow running commands as root (applies to fix, nodejs-update, diag)
+- `--allow-root` - Allow running commands as root (applies to `fix` and `diag`). It has no effect on
+  `nodejs-update`: the wrapper accepts the flag, but the script refuses to run as root in any case,
+  so it is not forwarded.
 
 **Note:** `fix`, `diag` and `nodejs-update` are not run from this repository. The `iob` wrapper downloads
 them from `https://iobroker.net/` at invocation time, so they are always the released version, never a
