@@ -1,8 +1,8 @@
 # Changelog for Node.js Updater Script
 
 ## 2026-10-01
-* Read the NodeSource key fingerprint with --with-colons, so a gpg status message no longer breaks the check
-* Check sudo with "sudo -n true" instead of "sudo -v", which asked for a password on cloud images that have none
+* Fix first-run NodeSource GPG fingerprint parsing and use non-interactive sudo probing on passwordless cloud images.
+
 ## 2026-09-30
 * Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 * Added logging - Log can be retrieved in /opt/iobroker/log/ 
