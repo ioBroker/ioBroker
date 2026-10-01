@@ -187,12 +187,18 @@ check_root() {
         log "error" "This script must not be run as root. Please use your standard user."
         exit 1
     fi
-    # "sudo -n true" instead of "sudo -v": -v validates without a command and then needs a
-    # password unless every command is NOPASSWD. The sudoers file this installer drops into
-    # /etc/sudoers.d/iobroker is read after 90-cloud-init-users and only covers single
-    # commands, so on a cloud image -v starts asking - for a password that is never set
-    # there. -n never prompts and fails cleanly instead of blocking on input nobody can give.
-    if ! sudo -n true 2>/dev/null; then
+    # Two kinds of setup have to work here.
+    #
+    # Cloud images (EC2, GCP, Hetzner) grant NOPASSWD but never set a password, so there is
+    # nothing to type. "sudo -v" still asks there, because it validates without a command and
+    # only stays silent when every command is NOPASSWD - and the sudoers file this installer
+    # writes to /etc/sudoers.d/iobroker is read after 90-cloud-init-users and covers single
+    # commands only. So after an ioBroker installation, -v starts prompting on those images.
+    #
+    # Ordinary password sudo has no cached ticket on the first call, so the non-interactive
+    # probe fails there although the user is perfectly entitled. Hence: try -n first, and only
+    # fall back to the interactive form, which may legitimately ask for a password.
+    if ! sudo -n true 2>/dev/null && ! sudo -v; then
         log "error" "sudo privileges are required but not available."
         exit 1
     fi
