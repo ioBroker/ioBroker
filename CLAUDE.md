@@ -31,8 +31,8 @@ upload instead of writing).
 
 ### Testing
 
-There is **no unit test suite**. `mocha`/`chai` are devDependencies but no spec files exist, and
-the CI step that used to install them is gone. Verification is end-to-end only:
+There is **no unit test suite** and no test framework in `devDependencies` -- `mocha`/`chai` were
+removed because no spec files ever existed. Verification is end-to-end only:
 
 ```bash
 node tasks --create && bash ./installer.sh --silent   # 6-10 min; do not cancel, use 15+ min timeouts
@@ -71,8 +71,19 @@ The variable is for testing; end users have no reason to set it.
 
 ### Linting
 
-`npx eslint` does **not** work. The repo has an ESLint 8-style `.eslintrc.json` and no `eslint.config.js`,
-while `eslint` 9.x is the installed devDependency. Do not add lint steps expecting it to run.
+There is no JavaScript linter. `eslint` and its ESLint 8-style `.eslintrc.json` were removed: the
+config format is incompatible with ESLint 9, nothing ran it, and no `eslint.config.js` existed.
+Re-adding it means a flat config plus a `lint` script, not just the dependency.
+
+The shell scripts **are** linted. `shellcheck` runs in CI at severity `error`:
+
+```bash
+shellcheck -S error installer.sh installer_library.sh fix_installation.sh diag.sh node-update.sh
+```
+
+Below `error` there are still plenty of findings (warning/info/style), so raising the severity means
+fixing those first. `installer_library.sh` carries a `# shellcheck shell=bash` directive because it is
+sourced and has no shebang.
 
 ## Architecture
 

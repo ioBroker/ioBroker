@@ -1,7 +1,10 @@
+# shellcheck shell=bash
+# Sourced, not executed, so there is no shebang - the directive above tells the
+# linter which dialect to assume.
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-09-30" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-10-01" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
