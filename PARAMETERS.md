@@ -67,7 +67,6 @@ iob diag [OPTIONS]
 - `--summary`, `--short`, `-s`, `--zusammenfassung`, `--kurz`, `-k` - Show summary only. These are exact
   aliases of each other; none of them changes the language, combine with `--de` for a German summary.
 - `--help` - Display help and exit. The help text itself is German only, and `-h` is *not* recognised.
-- `--allow-root` - Allow running as root user (not recommended)
 
 **Examples:**
 ```bash
@@ -104,7 +103,6 @@ iob fix [OPTIONS]
 ```
 
 **Available Parameters:**
-- `--allow-root` - Allow running as root user (not recommended, but sometimes necessary for repairs)
 - `--no-update` - Skip updating the system package repositories
 - `--hardened` - Switch an existing installation to [Hardened mode](#hardened-mode). An installation that is
   already hardened stays hardened on every later `iob fix`, the flag is not needed again.
@@ -117,8 +115,8 @@ iob fix
 # Remove the sudo rights of the iobroker user
 iob fix --hardened
 
-# Run fix as root (when necessary)
-iob fix --allow-root
+# Run fix as the iobroker user (e.g. when logged in as root)
+sudo -u iobroker iob fix
 ```
 
 ### Direct Fix Script
@@ -156,9 +154,6 @@ iob [COMMAND] [OPTIONS]
 - `diag` - Run diagnostic script
 
 **Global Options:**
-- `--allow-root` - Allow running commands as root (applies to `fix` and `diag`). It has no effect on
-  `nodejs-update`: the wrapper accepts the flag, but the script refuses to run as root in any case,
-  so it is not forwarded.
 
 **Note:** `fix`, `diag` and `nodejs-update` are not run from this repository. The `iob` wrapper downloads
 them from `https://iobroker.net/` at invocation time, so they are always the released version, never a
@@ -176,9 +171,9 @@ iob fix
 iob nodejs-update
 iob diag
 
-# With root permission (when needed)
-iob fix --allow-root
-iob diag --allow-root
+# When logged in as root, switch to the iobroker user
+sudo -u iobroker iob fix
+sudo -u iobroker iob diag
 ```
 
 **Notes:**
@@ -238,11 +233,19 @@ Uses the same parameters as `iob nodejs-update` above.
 
 ## Common Parameters Across Commands
 
-### --allow-root
-This parameter is available for most maintenance commands (`fix`, `diag`, `nodejs-update`) and allows running the command as the root user. 
+### Running as root
+ioBroker commands refuse to run as root. The `iob` wrapper stops with an error and points at the
+supported way instead:
+
+```bash
+sudo -u iobroker iob <command>
+```
+
+The exception is `iob start|stop|restart`, which is routed to the service manager and only warns.
+A `--allow-root` option used to bypass the check; it has been removed. 
 
 **Important Notes:**
-- Running as root is NOT recommended for security reasons
+- ioBroker commands refuse to run as root. Use `sudo -u iobroker iob <command>` instead
 - Only used when absolutely necessary for system repairs
 - The installer will warn you and recommend creating a proper user setup
 - Future versions may disable this option entirely
@@ -289,7 +292,7 @@ This is automatically set by the installer to indicate an automated installation
 ## Security Considerations
 
 - **Never run as root** unless absolutely necessary for repairs
-- Use `--allow-root` only when required and understand the security implications
+- Use `sudo -u iobroker iob <command>` when you are logged in as root
 - The `--unmask` parameter in diagnostics may reveal sensitive system information
 - Always run the installer as a regular user when possible
 
