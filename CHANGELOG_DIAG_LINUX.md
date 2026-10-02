@@ -1,4 +1,6 @@
 # Changelog for Linux-Diag-Script
+## 2026-10-01
+* Readded nodejs recommended version hint
 
 ## 2026-08-30
 * Removed old usb port check

@@ -52,6 +52,28 @@ jobs:
         echo "$REC" | grep -qE '^[0-9]+$'
         echo "$ACC" | grep -qE '[0-9]'
 
+  # Lints the shell scripts, which are the bulk of this repository. Severity "error" only:
+  # below that there are still hundreds of findings, so a stricter level means fixing those
+  # first. Raise it once they are dealt with, do not lower it.
+  shellcheck:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Run shellcheck
+      run: |
+        shellcheck --version
+        shellcheck -S error \
+          installer.sh \
+          installer_library.sh \
+          fix_installation.sh \
+          diag.sh \
+          node-update.sh \
+          .github/testFiles.sh \
+          .github/testFreeBSD.sh
+
   # ===================
   # Runs unit tests on all supported node versions and OSes
   test-install:

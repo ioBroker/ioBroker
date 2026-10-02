@@ -1,5 +1,8 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-10-01
+* Return exit code 1 instead of "exit -2", which bash turned into 254
+
 ## 2026-09-30
 * Added the `--hardened` option to remove the sudo rights of the iobroker user; a hardened installation stays hardened on later runs
 
