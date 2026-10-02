@@ -116,7 +116,8 @@ iob fix
 iob fix --hardened
 
 # If you can only reach the system as root, run the fixer directly
-curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
+f=$(mktemp) && trap 'rm -f "$f"' EXIT
+curl -sLf https://iobroker.net/fix.sh -o "$f" && bash "$f"
 ```
 
 ### Direct Fix Script
@@ -172,7 +173,8 @@ iob nodejs-update
 iob diag
 
 # If you can only reach the system as root, run the scripts directly
-curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
+f=$(mktemp) && trap 'rm -f "$f"' EXIT
+curl -sLf https://iobroker.net/fix.sh -o "$f" && bash "$f"
 ```
 
 **Notes:**
@@ -242,10 +244,13 @@ repair when it detects that it is already running as `iobroker`, and under `--ha
 account has no sudo rights at all.
 
 If root is the only account you can reach, bypass the wrapper and run the script directly - the
-fixer itself supports being run as root:
+fixer itself supports being run as root. Use `mktemp` rather than a fixed path: a predictable
+name in the shared `/tmp` can be pre-created as a symlink by another local user, and `curl -o`
+would follow it while running as root.
 
 ```bash
-curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
+f=$(mktemp) && trap 'rm -f "$f"' EXIT
+curl -sLf https://iobroker.net/fix.sh -o "$f" && bash "$f"
 ```
 
 Under systemd, `iob start|stop|restart` is the exception: it is routed to the service manager and
