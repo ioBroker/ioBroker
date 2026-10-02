@@ -1,6 +1,7 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-10-01
+* Updated the `iob` wrapper to forward all options to `fix`, `diag` and `nodejs-update`, and warn non-root users when `--allow-root` is ignored
 * Hardened mode now fails loudly when the iobroker user cannot be removed from the docker group, instead of reporting success
 * Added a shellcheck CI job and a shell directive to installer_library.sh
 

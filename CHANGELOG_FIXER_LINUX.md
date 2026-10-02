@@ -1,6 +1,7 @@
 # Changelog for Linux-Fixer-Script
 
 ## 2026-10-01
+* The iob wrapper the fixer writes matches the installer again: all options are forwarded and the --allow-root check works
 * Return exit code 1 instead of "exit -2", which bash turned into 254
 
 ## 2026-09-30
