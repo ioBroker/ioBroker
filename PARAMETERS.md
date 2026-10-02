@@ -67,7 +67,6 @@ iob diag [OPTIONS]
 - `--summary`, `--short`, `-s`, `--zusammenfassung`, `--kurz`, `-k` - Show summary only. These are exact
   aliases of each other; none of them changes the language, combine with `--de` for a German summary.
 - `--help` - Display help and exit. The help text itself is German only, and `-h` is *not* recognised.
-- `--allow-root` - Allow running as root user (not recommended)
 
 **Examples:**
 ```bash
@@ -104,7 +103,6 @@ iob fix [OPTIONS]
 ```
 
 **Available Parameters:**
-- `--allow-root` - Allow running as root user (not recommended, but sometimes necessary for repairs)
 - `--no-update` - Skip updating the system package repositories
 - `--hardened` - Switch an existing installation to [Hardened mode](#hardened-mode). An installation that is
   already hardened stays hardened on every later `iob fix`, the flag is not needed again.
@@ -117,8 +115,9 @@ iob fix
 # Remove the sudo rights of the iobroker user
 iob fix --hardened
 
-# Run fix as root (when necessary)
-iob fix --allow-root
+# If you can only reach the system as root, run the fixer directly
+f=$(mktemp) && trap 'rm -f "$f"' EXIT
+curl -sLf https://iobroker.net/fix.sh -o "$f" && bash "$f"
 ```
 
 ### Direct Fix Script
@@ -156,9 +155,6 @@ iob [COMMAND] [OPTIONS]
 - `diag` - Run diagnostic script
 
 **Global Options:**
-- `--allow-root` - Allow running commands as root (applies to `fix` and `diag`). It has no effect on
-  `nodejs-update`: the wrapper accepts the flag, but the script refuses to run as root in any case,
-  so it is not forwarded.
 
 **Note:** `fix`, `diag` and `nodejs-update` are not run from this repository. The `iob` wrapper downloads
 them from `https://iobroker.net/` at invocation time, so they are always the released version, never a
@@ -176,9 +172,9 @@ iob fix
 iob nodejs-update
 iob diag
 
-# With root permission (when needed)
-iob fix --allow-root
-iob diag --allow-root
+# If you can only reach the system as root, run the scripts directly
+f=$(mktemp) && trap 'rm -f "$f"' EXIT
+curl -sLf https://iobroker.net/fix.sh -o "$f" && bash "$f"
 ```
 
 **Notes:**
@@ -238,12 +234,33 @@ Uses the same parameters as `iob nodejs-update` above.
 
 ## Common Parameters Across Commands
 
-### --allow-root
-This parameter is available for most maintenance commands (`fix`, `diag`, `nodejs-update`) and allows running the command as the root user. 
+### Running as root
+On systemd systems the `iob` wrapper refuses to run as root. (The launchctl and init.d wrappers
+carry no such check - that difference predates the removal of the option and is unchanged here.)
+
+Use a **normal user account with sudo rights** - not root,
+and not the `iobroker` service account: `fix_installation.sh` skips the account, group and sudoers
+repair when it detects that it is already running as `iobroker`, and under `--hardened` that
+account has no sudo rights at all.
+
+If root is the only account you can reach, bypass the wrapper and run the script directly - the
+fixer itself supports being run as root. Use `mktemp` rather than a fixed path: a predictable
+name in the shared `/tmp` can be pre-created as a symlink by another local user, and `curl -o`
+would follow it while running as root.
+
+```bash
+f=$(mktemp) && trap 'rm -f "$f"' EXIT
+curl -sLf https://iobroker.net/fix.sh -o "$f" && bash "$f"
+```
+
+Under systemd, `iob start|stop|restart` is the exception: it is routed to the service manager and
+only warns. `iob diag` stops with an error on every platform - the check sits in the script itself -
+because its queries would otherwise return nothing and produce a report that looks complete but is
+empty. A `--allow-root` option used to bypass the check; it has been removed. 
 
 **Important Notes:**
-- Running as root is NOT recommended for security reasons
-- Only used when absolutely necessary for system repairs
+- Under systemd the `iob` wrapper refuses to run as root. Use a normal account with sudo rights
+- For root-only recovery, run `fix.sh` directly instead of going through `iob`
 - The installer will warn you and recommend creating a proper user setup
 - Future versions may disable this option entirely
 
@@ -289,7 +306,7 @@ This is automatically set by the installer to indicate an automated installation
 ## Security Considerations
 
 - **Never run as root** unless absolutely necessary for repairs
-- Use `--allow-root` only when required and understand the security implications
+- When you can only reach the system as root, run `fix.sh` directly instead of through `iob`
 - The `--unmask` parameter in diagnostics may reveal sensitive system information
 - Always run the installer as a regular user when possible
 
