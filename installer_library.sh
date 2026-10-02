@@ -1,3 +1,6 @@
+# shellcheck shell=bash
+# Sourced, not executed, so there is no shebang - the directive above tells the
+# linter which dialect to assume.
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
