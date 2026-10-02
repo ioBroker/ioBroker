@@ -304,13 +304,13 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 		#!$BASH_CMDLINE
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
             if [ "\$(id -u)" = 0 ]; then
-                echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nRun 'sudo -u iobroker iob fix' to create an appropriate setup!"
+                echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet."
             fi
 			sudo systemctl \$1 iobroker
 			exit \$?
 		fi
 		if [ "\$(id -u)" = 0 ]; then
-			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nRun ioBroker commands as the iobroker user instead, for example:\n  sudo -u iobroker iob \$1" >&2
+			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nUse a normal user account that has sudo rights - not root, and not the iobroker user,\nbecause the fixer skips the account and sudoers repair when it runs as that user.\nIf root is the only account you can reach, run the script directly instead:\n  curl -sLf $FIXER_URL -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh" >&2
 			exit 1;
 		fi
 		if [ "\$1" = "fix" ]; then

@@ -51,8 +51,15 @@ fi
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
 if [[ $(id -u) -eq 0 ]] && [[ ! -f "$DOCKER" ]]; then
-    printf "You should not be root on your system!\nBetter use your standard user!\n\n"
-    sleep 15
+    # Hard stop, not a warning: every iob call below goes through the wrapper, which
+    # refuses to run as root. The queries would return nothing and the report would look
+    # complete while missing versions, instances and counts.
+    printf "This script cannot run as root.\n\n"
+    printf "It queries ioBroker through the iob command, which refuses to run as root,\n"
+    printf "so the report would silently come out empty.\n\n"
+    printf "Run it as a normal user that is a member of the iobroker group:\n"
+    printf "  iob diag\n"
+    exit 1
 fi
 clear
 if [[ "$*" =~ --de ]]; then SKRPTLANG="--de"; fi

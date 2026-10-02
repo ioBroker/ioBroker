@@ -115,8 +115,8 @@ iob fix
 # Remove the sudo rights of the iobroker user
 iob fix --hardened
 
-# Run fix as the iobroker user (e.g. when logged in as root)
-sudo -u iobroker iob fix
+# If you can only reach the system as root, run the fixer directly
+curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
 ```
 
 ### Direct Fix Script
@@ -171,9 +171,8 @@ iob fix
 iob nodejs-update
 iob diag
 
-# When logged in as root, switch to the iobroker user
-sudo -u iobroker iob fix
-sudo -u iobroker iob diag
+# If you can only reach the system as root, run the scripts directly
+curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
 ```
 
 **Notes:**
@@ -234,15 +233,21 @@ Uses the same parameters as `iob nodejs-update` above.
 ## Common Parameters Across Commands
 
 ### Running as root
-ioBroker commands refuse to run as root. The `iob` wrapper stops with an error and points at the
-supported way instead:
+ioBroker commands refuse to run as root. Use a **normal user account with sudo rights** - not root,
+and not the `iobroker` service account: `fix_installation.sh` skips the account, group and sudoers
+repair when it detects that it is already running as `iobroker`, and under `--hardened` that
+account has no sudo rights at all.
+
+If root is the only account you can reach, bypass the wrapper and run the script directly - the
+fixer itself supports being run as root:
 
 ```bash
-sudo -u iobroker iob <command>
+curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
 ```
 
-The exception is `iob start|stop|restart`, which is routed to the service manager and only warns.
-A `--allow-root` option used to bypass the check; it has been removed. 
+`iob start|stop|restart` is the exception: it is routed to the service manager and only warns.
+`iob diag` stops with an error, because its queries would return nothing and produce a report that
+looks complete but is empty. A `--allow-root` option used to bypass the check; it has been removed. 
 
 **Important Notes:**
 - ioBroker commands refuse to run as root. Use `sudo -u iobroker iob <command>` instead
@@ -292,7 +297,7 @@ This is automatically set by the installer to indicate an automated installation
 ## Security Considerations
 
 - **Never run as root** unless absolutely necessary for repairs
-- Use `sudo -u iobroker iob <command>` when you are logged in as root
+- When you can only reach the system as root, run `fix.sh` directly instead of through `iob`
 - The `--unmask` parameter in diagnostics may reveal sensitive system information
 - Always run the installer as a regular user when possible
 
