@@ -28,7 +28,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-09-30"
+readonly VERSION="2026-10-01"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -187,7 +187,18 @@ check_root() {
         log "error" "This script must not be run as root. Please use your standard user."
         exit 1
     fi
-    if ! sudo -v 2>/dev/null; then
+    # Two kinds of setup have to work here.
+    #
+    # Cloud images (EC2, GCP, Hetzner) grant NOPASSWD but never set a password, so there is
+    # nothing to type. "sudo -v" still asks there, because it validates without a command and
+    # only stays silent when every command is NOPASSWD - and the sudoers file this installer
+    # writes to /etc/sudoers.d/iobroker is read after 90-cloud-init-users and covers single
+    # commands only. So after an ioBroker installation, -v starts prompting on those images.
+    #
+    # Ordinary password sudo has no cached ticket on the first call, so the non-interactive
+    # probe fails there although the user is perfectly entitled. Hence: try -n first, and only
+    # fall back to the interactive form, which may legitimately ask for a password.
+    if ! sudo -n true 2>/dev/null && ! sudo -v; then
         log "error" "sudo privileges are required but not available."
         exit 1
     fi
@@ -360,10 +371,22 @@ setup_nodesource_repo() {
     log "info" "Verifying GPG key fingerprint..."
     local fingerprint
     local gpg_output
-    gpg_output=$($SUDOX gpg --show-keys --with-fingerprint /usr/share/keyrings/nodesource.gpg 2>&1)
+    # Read the key once and handle the status explicitly: under "set -e" a failing
+    # assignment would end the script right here, so the diagnostics below would never
+    # run and an unreadable key would abort without saying why - after Node.js has
+    # already been removed. "if ! var=$(...)" keeps that status in the condition.
+    if ! gpg_output=$($SUDOX gpg --show-keys --with-colons /usr/share/keyrings/nodesource.gpg 2>&1); then
+        log "error" "Could not read the NodeSource GPG key. Output of gpg:"
+        printf '%s\n' "$gpg_output" >&2
+        exit 1
+    fi
 
-    # Extract the fingerprint line (second line after 'pub') and remove all spaces
-    fingerprint=$(echo "$gpg_output" | awk '/pub/{getline; gsub(/ /, ""); print}' | tr -d ' \n')
+    # --with-colons gives a stable field format, with the fingerprint in field 10 of the
+    # fpr record. The previous version read the line after "pub" out of the human readable
+    # output, so the "gpg: ... trustdb created" message that stderr carries on a first run
+    # as root ended up in the fingerprint and failed the comparison. Anchoring on ^fpr:
+    # ignores whatever else gpg writes.
+    fingerprint=$(printf '%s\n' "$gpg_output" | awk -F: '/^fpr:/ {print $10; exit}')
 
     if [[ -z "$fingerprint" ]]; then
         log "error" "Could not extract fingerprint from GPG key. GPG output was:\n$gpg_output"

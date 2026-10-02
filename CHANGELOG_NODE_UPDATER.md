@@ -1,4 +1,8 @@
 # Changelog for Node.js Updater Script
+
+## 2026-10-01
+* Fix first-run NodeSource GPG fingerprint parsing and use non-interactive sudo probing on passwordless cloud images.
+
 ## 2026-09-30
 * Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 * Added logging - Log can be retrieved in /opt/iobroker/log/ 
