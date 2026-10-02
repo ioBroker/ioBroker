@@ -233,7 +233,10 @@ Uses the same parameters as `iob nodejs-update` above.
 ## Common Parameters Across Commands
 
 ### Running as root
-ioBroker commands refuse to run as root. Use a **normal user account with sudo rights** - not root,
+On systemd systems the `iob` wrapper refuses to run as root. (The launchctl and init.d wrappers
+carry no such check - that difference predates the removal of the option and is unchanged here.)
+
+Use a **normal user account with sudo rights** - not root,
 and not the `iobroker` service account: `fix_installation.sh` skips the account, group and sudoers
 repair when it detects that it is already running as `iobroker`, and under `--hardened` that
 account has no sudo rights at all.
@@ -245,13 +248,14 @@ fixer itself supports being run as root:
 curl -sLf https://iobroker.net/fix.sh -o /tmp/iob-fix.sh && bash /tmp/iob-fix.sh
 ```
 
-`iob start|stop|restart` is the exception: it is routed to the service manager and only warns.
-`iob diag` stops with an error, because its queries would return nothing and produce a report that
-looks complete but is empty. A `--allow-root` option used to bypass the check; it has been removed. 
+Under systemd, `iob start|stop|restart` is the exception: it is routed to the service manager and
+only warns. `iob diag` stops with an error on every platform - the check sits in the script itself -
+because its queries would otherwise return nothing and produce a report that looks complete but is
+empty. A `--allow-root` option used to bypass the check; it has been removed. 
 
 **Important Notes:**
-- ioBroker commands refuse to run as root. Use `sudo -u iobroker iob <command>` instead
-- Only used when absolutely necessary for system repairs
+- Under systemd the `iob` wrapper refuses to run as root. Use a normal account with sudo rights
+- For root-only recovery, run `fix.sh` directly instead of going through `iob`
 - The installer will warn you and recommend creating a proper user setup
 - Future versions may disable this option entirely
 
