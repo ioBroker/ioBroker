@@ -209,9 +209,9 @@ iob nodejs-update [VERSION]
 # Install recommended Node.js version
 iob nodejs-update
 
-# Install specific major version
-iob nodejs-update 20
+# Install specific major version (must be one of nodeJsAccepted)
 iob nodejs-update 22
+iob nodejs-update 26
 ```
 
 ### Direct Node Update Script
@@ -235,6 +235,23 @@ Uses the same parameters as `iob nodejs-update` above.
 - Not in a Docker container
 - Not in a WSL environment
 - apt-get package manager available
+
+### Run `iob fix` after a Node.js update
+
+The update replaces the Node.js binary, and with it the capabilities the installer had granted it:
+`cap_net_admin`, `cap_net_bind_service` and `cap_net_raw`. Adapters that need
+privileged ports or raw sockets - ping, BLE, anything listening below port 1024 - stop working until
+those are set again.
+
+`node-update.sh` does not restore them. The `setcap` call lives in `install_necessary_packages`, which
+only the installer and the fixer run, so after every Node.js update:
+
+```bash
+iob fix
+```
+
+This applies in both modes. Without `--hardened` the service account could in principle call `setcap`
+itself, because it is in the sudo list; under `--hardened` it cannot, so the fixer is the only way.
 
 ## Common Parameters Across Commands
 
@@ -310,8 +327,13 @@ With `--hardened` (installer or `iob fix`):
 
 In hardened mode the following does **not** work anymore and has to be done by an administrator on the shell:
 installing OS packages for adapters (`osDependencies`), reboot/shutdown of the host from ioBroker, mounting
-network shares (e.g. by backups), and adapters that use `docker`, `arp-scan`, `nmcli`, `vcgencmd`, `mysqldump`
-or other tools via sudo.
+network shares (e.g. by backups), setting capabilities on the Node.js binary with `setcap`, and adapters that
+use `docker`, `arp-scan`, `nmcli`, `vcgencmd`, `mysqldump` or other tools via sudo.
+
+Note that `--hardened` does not change how the **installation** itself runs: the installer and the fixer use
+the privileges of whoever starts them (`sudo` for a normal user), so the sudoers file and the Node.js
+capabilities are written either way. The flag only decides what the `iobroker` service account may do
+afterwards - which is why a Node.js update needs `iob fix` to restore the capabilities.
 
 To go back to the default setup, delete the sudoers file and run the fixer. Hardened mode exists on
 Linux and FreeBSD only - macOS never writes such a file. The path differs between the two, and
