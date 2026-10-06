@@ -1,4 +1,7 @@
 # Changelog for Node.js Updater Script
+## 2026-10-07
+* Added interactive prompt to run `iob fix` after successful Node.js installation to resolve potential issues. The user can choose to execute it immediately or skip it.
+
 ## 2026-09-30
 * Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 * Added logging - Log can be retrieved in /opt/iobroker/log/ 
