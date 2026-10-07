@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2026-09-06" # format YYYY-MM-DD
+FIXER_VERSION="2026-10-01" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -116,7 +116,7 @@ LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
 curl -sL $LIB_URL >~/$LIB_NAME
 if test -f ~/$LIB_NAME; then source ~/$LIB_NAME; else
     echo "Installer/Fixer: library not found"
-    exit -2
+    exit 1
 fi
 # Delete the lib again. We have sourced it so we don't need it anymore
 rm ~/$LIB_NAME
@@ -126,11 +126,11 @@ rm ~/$LIB_NAME
 RET=$(get_lib_version)
 if [ $? -ne 0 ]; then
     echo "Installer/Fixer: library $LIB_NAME could not be loaded!"
-    exit -2
+    exit 1
 fi
 if [ "$RET" == "" ]; then
     echo "Installer/Fixer: library $LIB_NAME does not work."
-    exit -2
+    exit 1
 fi
 echo "Library version=$RET"
 
@@ -142,6 +142,14 @@ set_some_common_params
 SKIP_UPDATE=false
 if [[ "$*" == *--no-update* ]]; then
     SKIP_UPDATE=true
+fi
+
+# Check for --hardened flag: remove the sudo rights of the iobroker user. An installation that is
+# already hardened stays hardened without this flag, see is_hardened_setup in the library.
+IOB_HARDENED="false"
+if [[ "$*" == *--hardened* ]]; then
+    IOB_HARDENED="true"
+    echo "Hardening of the installation requested"
 fi
 
 # Test if ioBroker is installed
@@ -300,26 +308,37 @@ if [ "$INITSYSTEM" = "systemd" ]; then
     IOB_EXECUTABLE=$(
         cat <<-EOF
 		#!$BASH_CMDLINE
+		# --allow-root is matched as an exact argument, not as a substring: an object id
+		# or state name that happens to contain that text must not slip past the root guard.
+		iob_allow_root=false
+		for a in "\$@"; do if [ "\$a" = "--allow-root" ]; then iob_allow_root=true; break; fi; done
 		if (( \$# == 1 )) && ([ "\$1" = "start" ] || [ "\$1" = "stop" ] || [ "\$1" = "restart" ]); then
-            if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+            if [ "\$(id -u)" = 0 ] && [ "\$iob_allow_root" != true ]; then
                 echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease execute 'iob fix --allow-root' to create an appropriate setup!"
             fi
 			sudo systemctl \$1 iobroker
 			exit \$?
 		fi
-		if [ "\$(id -u)" = 0 ] && [[ "\$*" != *--allow-root* ]]; then
+		if [ "\$(id -u)" = 0 ] && [ "\$iob_allow_root" != true ]; then
 			echo -e "\n***For security reasons ioBroker should not be run or administrated as root.***\nBy default only a user that is member of "iobroker" group can execute ioBroker commands.\nPlease read the Documentation on how to set up such a user, if not done yet.\nOnly in very special cases you can run iobroker commands by adding the "--allow-root" option at the end of the command line.\nPlease note that this option may be disabled in the future, so please change your setup accordingly now."
 			exit 1;
-		elif [ "\$(id -u)" -gt 0 ] && [ "\$*" = "*--allow-root*" ]; then
-            echo "Invalid option --allow-root";
-            exit 1;
+		elif [ "\$(id -u)" -gt 0 ] && [ "\$iob_allow_root" = true ]; then
+            echo "Ignoring --allow-root: it only has an effect when running as root." >&2;
         fi
 		if [ "\$1" = "fix" ]; then
-			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
+			shift
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$@"
 		elif [ "\$1" = "nodejs-update" ]; then
-			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
+			shift
+			# --allow-root is a wrapper flag, handled above. node-update.sh does not
+			# know it and its catch-all branch would take it for a version number,
+			# so "iob nodejs-update --dry-run --allow-root" would fail. Drop it here.
+			nu_args=()
+			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
+			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+			shift
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -336,11 +355,19 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			launchctl unload -w $SERVICE_FILENAME
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js stop
 		elif [ "\$1" = "fix" ]; then
-			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /Users/$IOB_USER/.fix.sh && bash /Users/$IOB_USER/.fix.sh "\$2"
+			shift
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /Users/$IOB_USER/.fix.sh && bash /Users/$IOB_USER/.fix.sh "\$@"
 		elif [ "\$1" = "nodejs-update" ]; then
-			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\$2"
+			shift
+			# --allow-root is a wrapper flag, handled above. node-update.sh does not
+			# know it and its catch-all branch would take it for a version number,
+			# so "iob nodejs-update --dry-run --allow-root" would fail. Drop it here.
+			nu_args=()
+			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
+			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
+			shift
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi
@@ -351,11 +378,19 @@ else
         cat <<-EOF
 		#!$BASH_CMDLINE
     if [ "\$1" = "fix" ]; then
-			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$2"
+			shift
+			sudo -u $IOB_USER curl -sLf $FIXER_URL --output /home/$IOB_USER/.fix.sh && bash /home/$IOB_USER/.fix.sh "\$@"
 		elif [ "\$1" = "nodejs-update" ]; then
-			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\$2"
+			shift
+			# --allow-root is a wrapper flag, handled above. node-update.sh does not
+			# know it and its catch-all branch would take it for a version number,
+			# so "iob nodejs-update --dry-run --allow-root" would fail. Drop it here.
+			nu_args=()
+			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
+			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
 		elif [ "\$1" = "diag" ]; then
-		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$2" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
+			shift
+		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
 		else
 			$IOB_NODE_CMDLINE $CONTROLLER_DIR/iobroker.js "\$@"
 		fi

@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-08-30" #version of this script
+SKRIPTV="2026-10-01" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -998,16 +998,22 @@ check_nodejs_installation() {
     else
         if [[ "$show_messages" == "true" ]]; then
             if [[ "$SKRPTLANG" == "--de" ]]; then
-                printf "\n\n%b%s%b\n\n" "$GREEN" "✓ Node.js ist korrekt installiert" "$NC"
+                printf "\n\n%b%s%b\n" "$GREEN" "✓ Node.js ist korrekt installiert" "$NC"
             else
-                printf "\n\n%b%s%b\n\n" "$GREEN" "✓ Node.js installation is correct" "$NC"
+                printf "\n\n%b%s%b\n" "$GREEN" "✓ Node.js installation is correct" "$NC"
             fi
+        fi
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "\n%s%s%s%s\n\n" "Empfohlene Versionen sind zurzeit nodejs " "$NODERECOM" " und npm " "$NPMRECOM"
+        else
+            printf "\n%s%s%s%s\n\n" "Recommended versions are nodejs " "$NODERECOM" " and npm " "$NPMRECOM"
         fi
         return 0
     fi
 }
 
 printf "\n%b%s%b\n" "$HEADLINE" "*** NodeJS-Installation ***" "$NC"
+
 printf "\n%s\t\t%s" "$PATHNODEJS" "$VERNODEJS"
 printf "\n%s\t\t%s" "$PATHNODE" "$VERNODE"
 printf "\n%s\t\t%s" "$PATHNPM" "$VERNPM"

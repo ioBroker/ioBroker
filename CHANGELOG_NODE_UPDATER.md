@@ -2,9 +2,14 @@
 ## 2026-10-07
 * Added interactive prompt to run `iob fix` after successful Node.js installation to resolve potential issues. The user can choose to execute it immediately or skip it.
 
+## 2026-10-01
+* Fix first-run NodeSource GPG fingerprint parsing and use non-interactive sudo probing on passwordless cloud images.
+
 ## 2026-09-30
 * Check for wrong paths. The nodejs binairies live in /usr/bin and not elsewhere in $PATH 
 * Added logging - Log can be retrieved in /opt/iobroker/log/ 
+* Changed flow of checks - Package consistency fails early now
+* Fixed restart procedure
 
 ## 2026-09-27
 * GPG key check is now more robust

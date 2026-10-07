@@ -9,7 +9,7 @@ ioBroker is a comprehensive home automation and IoT integration platform install
 ### Bootstrap and Build
 - Install dependencies: `npm install` -- takes 30 seconds
 - Build distribution scripts: `node tasks --create` -- takes 1 second. Creates scripts in `dist/` directory
-- Lint code (DEPRECATED): ESLint config uses old .eslintrc.json format incompatible with ESLint 9.x. Do NOT run `npx eslint` - it will fail. Code quality checks are handled in CI.
+- Lint shell scripts: `shellcheck -S error installer.sh installer_library.sh fix_installation.sh diag.sh node-update.sh`. This also runs in CI. There is no JavaScript linter; eslint was removed.
 - Test basic functionality: `node test.js` -- tests if admin interface is reachable on localhost:8081
 
 ### Installation Testing (Linux/macOS)
@@ -104,7 +104,7 @@ versions.json        # Supported Node.js/npm versions
 
 #### package.json Dependencies
 - Core: fs-extra, semver, yargs
-- Dev: eslint (deprecated config), mocha, chai, ssh2
+- Dev: ssh2, @alcalzone/release-script (eslint, mocha and chai were removed - unused)
 - Optional: dotenv, windows-shortcuts (Windows only)
 
 ### CI/CD Workflows
