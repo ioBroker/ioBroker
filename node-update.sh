@@ -574,6 +574,27 @@ main() {
         esac
     done
 
+# --- iob fix prompt ---
+prompt_and_run_iob_fix() {
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would prompt for running 'iob fix'"
+        return
+    fi
+
+    log "info" "It is strongly recommended to run 'iob fix' after updating Node.js to resolve potential dependency issues."
+    read -rp "Do you want to run 'iob fix' now? [y/N] " answer
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        log "info" "Running 'iob fix'..."
+        if ! iob fix; then
+            log "error" "Failed to run 'iob fix'. Please check the output above."
+            exit 1
+        fi
+        log "info" "'iob fix' completed successfully."
+    else
+        log "info" "Skipping 'iob fix'. You can run it manually later if needed."
+    fi
+}
+
     # Check dependencies
     check_dependencies
     check_internet
@@ -687,6 +708,8 @@ main() {
     # Compatibility check
     compatibility_check
 
+    # Prompt for iob fix
+    prompt_and_run_iob_fix
     # Start ioBroker with 'iob start' after successful Node.js installation
     start_iobroker
 
