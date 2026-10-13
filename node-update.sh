@@ -620,13 +620,17 @@ prompt_and_run_iob_fix() {
         return
     fi
 
+    # ioBroker is stopped at this point and only started after this function, and set -e would
+    # end the script right here: neither a missing answer nor a failing fixer may abort it.
+    local answer
     log "info" "It is strongly recommended to run 'iob fix' after updating Node.js to resolve potential dependency issues."
-    read -rp "Do you want to run 'iob fix' now? [y/N] " answer
+    # read fails without a terminal or on EOF, which counts as "no"
+    read -rp "Do you want to run 'iob fix' now? [y/N] " answer || answer=""
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         log "info" "Running 'iob fix'..."
         if ! iob fix; then
-            log "error" "Failed to run 'iob fix'. Please check the output above."
-            exit 1
+            log "warn" "Failed to run 'iob fix'. Please check the output above and run it again later. ioBroker is started anyway."
+            return
         fi
         log "info" "'iob fix' completed successfully."
     else
