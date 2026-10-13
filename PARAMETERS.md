@@ -227,6 +227,7 @@ Uses the same parameters as `iob nodejs-update` above.
 - Only works on Debian-based Linux distributions
 - Removes old Node.js versions and installs from NodeSource repository
 - Fixes PATH issues with incorrect Node.js installations
+- Sets the Node.js capabilities again (`cap_net_admin`, `cap_net_bind_service`, `cap_net_raw`)
 - Not supported in Docker containers or WSL
 
 **System Requirements:**
@@ -236,22 +237,20 @@ Uses the same parameters as `iob nodejs-update` above.
 - Not in a WSL environment
 - apt-get package manager available
 
-### Run `iob fix` after a Node.js update
+### Capabilities after a Node.js update
 
-The update replaces the Node.js binary, and with it the capabilities the installer had granted it:
-`cap_net_admin`, `cap_net_bind_service` and `cap_net_raw`. Adapters that need
-privileged ports or raw sockets - ping, BLE, anything listening below port 1024 - stop working until
-those are set again.
+Installing Node.js replaces the binary, and with it the capabilities the installer had granted it:
+`cap_net_admin`, `cap_net_bind_service` and `cap_net_raw`. Adapters that need privileged ports or raw
+sockets - ping, BLE, anything listening below port 1024 - stop working until those are set again.
 
-`node-update.sh` does not restore them. The `setcap` call lives in `install_necessary_packages`, which
-only the installer and the fixer run, so after every Node.js update:
+`node-update.sh` sets them again after the installation, before ioBroker is started. It also does so when
+there is nothing to update, so `iob nodejs-update` restores them after a plain `sudo apt upgrade nodejs`,
+which drops them as well. A capability that is missing from the bounding set - a container started without
+`--cap-add=NET_ADMIN`, for example - is skipped with a warning, because node would not start with it.
 
-```bash
-iob fix
-```
-
-This applies in both modes. Without `--hardened` the service account could in principle call `setcap`
-itself, because it is in the sudo list; under `--hardened` it cannot, so the fixer is the only way.
+The script runs with the sudo rights of whoever calls it, not those of the `iobroker` service account, so
+this works under `--hardened` too. If `setcap` fails, the script warns and continues; `iob fix` sets the
+capabilities as well.
 
 ## Common Parameters Across Commands
 
@@ -333,7 +332,7 @@ use `docker`, `arp-scan`, `nmcli`, `vcgencmd`, `mysqldump` or other tools via su
 Note that `--hardened` does not change how the **installation** itself runs: the installer and the fixer use
 the privileges of whoever starts them (`sudo` for a normal user), so the sudoers file and the Node.js
 capabilities are written either way. The flag only decides what the `iobroker` service account may do
-afterwards - which is why a Node.js update needs `iob fix` to restore the capabilities.
+afterwards. The same holds for `iob nodejs-update`, which sets the capabilities again after an update.
 
 To go back to the default setup, delete the sudoers file and run the fixer. Hardened mode exists on
 Linux and FreeBSD only - macOS never writes such a file. The path differs between the two, and

@@ -28,7 +28,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-10-01"
+readonly VERSION="2026-10-13"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -482,6 +482,45 @@ remove_old_nodejs() {
     fi
 }
 
+# --- Capabilities ---
+# Installing the nodejs package replaces the node binary, and file capabilities do not survive
+# that. Grant again what install_necessary_packages in installer_library.sh grants, otherwise
+# adapters that need privileged ports or raw sockets (ping, BLE, ports below 1024) stop working.
+set_node_capabilities() {
+    local node_bin
+    node_bin=$(readlink -f "$(command -v node)" 2>/dev/null || echo "")
+    if [[ -z "$node_bin" ]]; then
+        log "warn" "Node.js binary not found. Capabilities were not set, please run 'iob fix'."
+        return
+    fi
+
+    # A capability missing from the bounding set (a container started without
+    # --cap-add=NET_ADMIN, for example) must not be granted: the kernel would then refuse to
+    # start node at all. Bits: 10 = cap_net_bind_service, 12 = cap_net_admin, 13 = cap_net_raw.
+    local capbnd caps=() name bit
+    capbnd=$(awk '/^CapBnd:/ {print $2}' /proc/self/status 2>/dev/null || echo "")
+    for name in cap_net_admin:12 cap_net_bind_service:10 cap_net_raw:13; do
+        bit=${name#*:}
+        if [[ -z "$capbnd" ]] || (( (16#$capbnd >> bit) & 1 )); then
+            caps+=("${name%%:*}")
+        else
+            log "warn" "${name%%:*} is not available on this system and was not granted to Node.js."
+        fi
+    done
+    if [[ ${#caps[@]} -eq 0 ]]; then
+        return
+    fi
+
+    local caps_arg
+    caps_arg="$(IFS=,; echo "${caps[*]}")+eip"
+    log "info" "Granting $caps_arg to $node_bin..."
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would execute: $SUDOX setcap $caps_arg $node_bin"
+    elif ! $SUDOX setcap "$caps_arg" "$node_bin"; then
+        log "warn" "Failed to set the capabilities. Adapters that need privileged ports or raw sockets will not work until you run 'iob fix'."
+    fi
+}
+
 # --- Compatibility Check ---
 compatibility_check() {
     log "info" "Checking npm dependencies for compatibility with Node.js $NODE_MAJOR..."
@@ -657,6 +696,9 @@ main() {
         fi
 
         log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
+        # An "apt upgrade" of nodejs since the last run drops the capabilities as well. Setting
+        # them again is harmless, and it makes this command the way to restore them.
+        set_node_capabilities
         log "info" "You can keep your system up-to-date using: sudo apt update && sudo apt full-upgrade"
         log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
         log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
@@ -687,6 +729,9 @@ main() {
     # Compatibility check
     compatibility_check
 
+    # The new binary has lost the capabilities, set them before ioBroker starts again
+    set_node_capabilities
+
     # Start ioBroker with 'iob start' after successful Node.js installation
     start_iobroker
 
@@ -697,6 +742,7 @@ main() {
         log "info" "Node.js update completed successfully!"
         log "info" "The NodeSource repository has been permanently added to your system."
         log "info" "You can now update Node.js in the future using: sudo apt update && sudo apt upgrade nodejs"
+        log "info" "Every such upgrade replaces the Node.js binary and drops its capabilities. Run 'iob fix' afterwards to set them again."
         log "warn" "DO NOT use 'nodejs-update' as part of your regular update process!"
         log "warn" "DO NOT use node version managers like 'nvm', 'n' and others in parallel. They will break your installation!"
         if [[ -f "/var/run/reboot-required" ]]; then

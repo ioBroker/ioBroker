@@ -1,5 +1,8 @@
 # Changelog for Node.js Updater Script
 
+## 2026-10-13
+* Set the Node.js capabilities (`cap_net_admin`, `cap_net_bind_service`, `cap_net_raw`) again after an update, and also when there is nothing to update
+
 ## 2026-10-01
 * Fix first-run NodeSource GPG fingerprint parsing and use non-interactive sudo probing on passwordless cloud images.
 
