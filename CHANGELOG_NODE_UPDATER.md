@@ -1,4 +1,9 @@
 # Changelog for Node.js Updater Script
+
+## 2026-10-13
+* Set the Node.js capabilities (`cap_net_admin`, `cap_net_bind_service`, `cap_net_raw`) again after an update, and also when there is nothing to update
+* The `iob fix` prompt no longer leaves ioBroker stopped when there is no answer (no terminal, EOF) or when `iob fix` fails
+
 ## 2026-10-07
 * Added interactive prompt to run `iob fix` after successful Node.js installation to resolve potential issues. The user can choose to execute it immediately or skip it.
 
