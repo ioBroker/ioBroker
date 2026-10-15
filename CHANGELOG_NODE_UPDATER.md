@@ -1,4 +1,6 @@
 # Changelog for Node.js Updater Script
+## 2026-10-15
+* check_architecture added, armhf fails now early
 
 ## 2026-10-13
 * Set the Node.js capabilities (`cap_net_admin`, `cap_net_bind_service`, `cap_net_raw`) again after an update, and also when there is nothing to update
