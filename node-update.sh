@@ -28,7 +28,7 @@
 set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-10-13"
+readonly VERSION="2026-10-15"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -282,6 +282,20 @@ detect_platform() {
         log "error" "Only Debian-based systems are supported."
         exit 1
     fi
+}
+
+check_architecture() {
+    local arch
+    arch=$(dpkg --print-architecture)
+    case "$arch" in
+        amd64|arm64)
+            log "info" "Supported architecture detected: $arch"
+            ;;
+        *)
+            log "error" "Unsupported architecture: $arch. NodeSource does not provide a 32bit nodejs anymore, only amd64 and arm64 are supported. You will have to reinstall a 64bit Operating System."
+            exit 1
+            ;;
+    esac
 }
 
 # --- Check and remove hold from nodejs package ---
@@ -648,6 +662,7 @@ prompt_and_run_iob_fix() {
     check_wsl
     check_debian
     detect_platform
+    check_architecture
 
     # Check package database consistency (BEFORE init_logging to catch errors early)
     check_package_database_consistency
