@@ -25,10 +25,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-set -euo pipefail  # Fail on errors, unset variables, or pipeline errors
+set -euo pipefail # Fail on errors, unset variables, or pipeline errors
 
 # --- Constants ---
-readonly VERSION="2026-10-13"
+readonly VERSION="2026-10-15"
 # Overridable for CI, see installer_library.sh. The default is applied before
 # readonly, otherwise a value from the environment would be overwritten here.
 readonly VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/ioBroker/ioBroker/master/versions.json}"
@@ -49,20 +49,20 @@ NODERECOM=""
 VERNODE=""
 HOST_PLATFORM=""
 INSTALL_CMD=""
-INSTALL_CMD_ARGS=()  # Array for proper quoting
-VERSIONS_JSON=""        # cache, versions.json is downloaded at most once per run
+INSTALL_CMD_ARGS=() # Array for proper quoting
+VERSIONS_JSON=""    # cache, versions.json is downloaded at most once per run
 VERSIONS_JSON_FETCHED=false
-LOG_FILE=""             # set by init_logging()
+LOG_FILE="" # set by init_logging()
 
 # --- Logging ---
 log() {
     local level="$1"
     local message="$2"
     case "$level" in
-        "error") echo -e "\033[31m[ERROR] $message\033[0m" >&2 ;;
-        "warn")  echo -e "\033[33m[WARN] $message\033[0m" >&2 ;;
-        "info")  echo -e "\033[32m[INFO] $message\033[0m" ;;
-        *)       echo -e "$message" ;;
+    "error") echo -e "\033[31m[ERROR] $message\033[0m" >&2 ;;
+    "warn") echo -e "\033[33m[WARN] $message\033[0m" >&2 ;;
+    "info") echo -e "\033[32m[INFO] $message\033[0m" ;;
+    *) echo -e "$message" ;;
     esac
 }
 
@@ -94,8 +94,8 @@ cleanup() {
 
     # Remove ANSI color codes and "Reading database" progress lines from the log
     $SUDOX sed -i -e 's/\x1b\[[0-9;]*m//g' \
-                  -e 's/\r/\n/g' \
-                  -e '/^\(Reading database \.\.\. .*%)$/d' "$LOG_FILE" 2>/dev/null || true
+        -e 's/\r/\n/g' \
+        -e '/^\(Reading database \.\.\. .*%)$/d' "$LOG_FILE" 2>/dev/null || true
 }
 
 trap cleanup EXIT
@@ -258,30 +258,44 @@ detect_platform() {
     local unamestr
     unamestr=$(uname)
     case "$unamestr" in
-        "Linux")
-            HOST_PLATFORM="linux"
-            INSTALL_CMD="apt-get"
-            INSTALL_CMD_ARGS=("install" "-qq" "--allow-downgrades")  # Array for proper quoting
-            ;;
-        "Darwin")
-            HOST_PLATFORM="osx"
-            INSTALL_CMD="brew"
-            INSTALL_CMD_ARGS=("install")  # Array for proper quoting
-            ;;
-        "FreeBSD")
-            HOST_PLATFORM="freebsd"
-            INSTALL_CMD="pkg"
-            INSTALL_CMD_ARGS=("install")  # Array for proper quoting
-            ;;
-        *)
-            log "error" "Unsupported platform: $unamestr"
-            exit 1
-            ;;
+    "Linux")
+        HOST_PLATFORM="linux"
+        INSTALL_CMD="apt-get"
+        INSTALL_CMD_ARGS=("install" "-qq" "--allow-downgrades") # Array for proper quoting
+        ;;
+    "Darwin")
+        HOST_PLATFORM="osx"
+        INSTALL_CMD="brew"
+        INSTALL_CMD_ARGS=("install") # Array for proper quoting
+        ;;
+    "FreeBSD")
+        HOST_PLATFORM="freebsd"
+        INSTALL_CMD="pkg"
+        INSTALL_CMD_ARGS=("install") # Array for proper quoting
+        ;;
+    *)
+        log "error" "Unsupported platform: $unamestr"
+        exit 1
+        ;;
     esac
     if [[ "$INSTALL_CMD" != "apt-get" ]]; then
         log "error" "Only Debian-based systems are supported."
         exit 1
     fi
+}
+
+check_architecture() {
+    local arch
+    arch=$(dpkg --print-architecture)
+    case "$arch" in
+    amd64 | arm64)
+        log "info" "Supported architecture detected: $arch"
+        ;;
+    *)
+        log "error" "Unsupported architecture: $arch. NodeSource does not provide a 32bit nodejs anymore, only amd64 and arm64 are supported. You will have to reinstall a 64bit Operating System."
+        exit 1
+        ;;
+    esac
 }
 
 # --- Check and remove hold from nodejs package ---
@@ -359,7 +373,7 @@ setup_nodesource_repo() {
     if [[ "$DRY_RUN" == true ]]; then
         log "info" "[DRY RUN] Would download GPG key from https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key"
     else
-        if ! curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+        if ! curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key |
             $SUDOX gpg --dearmor -o /usr/share/keyrings/nodesource.gpg; then
             log "error" "Failed to download and import the NodeSource GPG key."
             exit 1
@@ -501,7 +515,7 @@ set_node_capabilities() {
     capbnd=$(awk '/^CapBnd:/ {print $2}' /proc/self/status 2>/dev/null || echo "")
     for name in cap_net_admin:12 cap_net_bind_service:10 cap_net_raw:13; do
         bit=${name#*:}
-        if [[ -z "$capbnd" ]] || (( (16#$capbnd >> bit) & 1 )); then
+        if [[ -z "$capbnd" ]] || (((16#$capbnd >> bit) & 1)); then
             caps+=("${name%%:*}")
         else
             log "warn" "${name%%:*} is not available on this system and was not granted to Node.js."
@@ -512,7 +526,10 @@ set_node_capabilities() {
     fi
 
     local caps_arg
-    caps_arg="$(IFS=,; echo "${caps[*]}")+eip"
+    caps_arg="$(
+        IFS=,
+        echo "${caps[*]}"
+    )+eip"
     log "info" "Granting $caps_arg to $node_bin..."
     if [[ "$DRY_RUN" == true ]]; then
         log "info" "[DRY RUN] Would execute: $SUDOX setcap $caps_arg $node_bin"
@@ -586,57 +603,57 @@ main() {
     local custom_version=""
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --dry-run)
-                DRY_RUN=true
-                shift
-                ;;
-            --help|-h)
-                echo "Usage: $0 [OPTIONS] [NODE_MAJOR_VERSION]"
-                echo ""
-                echo "Options:"
-                echo "  --dry-run    Show what would be done without making changes"
-                echo "  --help, -h   Show this help message"
-                echo ""
-                echo "Arguments:"
-                echo "  NODE_MAJOR_VERSION   Major version of Node.js to install (e.g., 20, 22)"
-                echo "                      If omitted, the recommended version from ioBroker or versions.json will be used."
-                exit 0
-                ;;
-            *)
-                if [[ -n "$custom_version" ]]; then
-                    log "error" "Only one version argument is allowed."
-                    exit 1
-                fi
-                custom_version="$1"
-                shift
-                ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --help | -h)
+            echo "Usage: $0 [OPTIONS] [NODE_MAJOR_VERSION]"
+            echo ""
+            echo "Options:"
+            echo "  --dry-run    Show what would be done without making changes"
+            echo "  --help, -h   Show this help message"
+            echo ""
+            echo "Arguments:"
+            echo "  NODE_MAJOR_VERSION   Major version of Node.js to install (e.g., 20, 22)"
+            echo "                      If omitted, the recommended version from ioBroker or versions.json will be used."
+            exit 0
+            ;;
+        *)
+            if [[ -n "$custom_version" ]]; then
+                log "error" "Only one version argument is allowed."
+                exit 1
+            fi
+            custom_version="$1"
+            shift
+            ;;
         esac
     done
 
-# --- iob fix prompt ---
-prompt_and_run_iob_fix() {
-    if [[ "$DRY_RUN" == true ]]; then
-        log "info" "[DRY RUN] Would prompt for running 'iob fix'"
-        return
-    fi
-
-    # ioBroker is stopped at this point and only started after this function, and set -e would
-    # end the script right here: neither a missing answer nor a failing fixer may abort it.
-    local answer
-    log "info" "It is strongly recommended to run 'iob fix' after updating Node.js to resolve potential dependency issues."
-    # read fails without a terminal or on EOF, which counts as "no"
-    read -rp "Do you want to run 'iob fix' now? [y/N] " answer || answer=""
-    if [[ "$answer" =~ ^[Yy]$ ]]; then
-        log "info" "Running 'iob fix'..."
-        if ! iob fix; then
-            log "warn" "Failed to run 'iob fix'. Please check the output above and run it again later. ioBroker is started anyway."
+    # --- iob fix prompt ---
+    prompt_and_run_iob_fix() {
+        if [[ "$DRY_RUN" == true ]]; then
+            log "info" "[DRY RUN] Would prompt for running 'iob fix'"
             return
         fi
-        log "info" "'iob fix' completed successfully."
-    else
-        log "info" "Skipping 'iob fix'. You can run it manually later if needed."
-    fi
-}
+
+        # ioBroker is stopped at this point and only started after this function, and set -e would
+        # end the script right here: neither a missing answer nor a failing fixer may abort it.
+        local answer
+        log "info" "It is strongly recommended to run 'iob fix' after updating Node.js to resolve potential dependency issues."
+        # read fails without a terminal or on EOF, which counts as "no"
+        read -rp "Do you want to run 'iob fix' now? [y/N] " answer || answer=""
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+            log "info" "Running 'iob fix'..."
+            if ! iob fix; then
+                log "warn" "Failed to run 'iob fix'. Please check the output above and run it again later. ioBroker is started anyway."
+                return
+            fi
+            log "info" "'iob fix' completed successfully."
+        else
+            log "info" "Skipping 'iob fix'. You can run it manually later if needed."
+        fi
+    }
 
     # Check dependencies
     check_dependencies
@@ -648,6 +665,7 @@ prompt_and_run_iob_fix() {
     check_wsl
     check_debian
     detect_platform
+    check_architecture
 
     # Check package database consistency (BEFORE init_logging to catch errors early)
     check_package_database_consistency
@@ -698,7 +716,7 @@ prompt_and_run_iob_fix() {
                         wrong_location_binaries+=("$location")
                         all_binaries_found+=("$location")
                     fi
-                done <<< "$binary_locations"
+                done <<<"$binary_locations"
             fi
         done
 
@@ -713,11 +731,11 @@ prompt_and_run_iob_fix() {
                 fi
             done
             log "info" "Restarting script to ensure proper installation..."
-                if [[ -x "$0" ]]; then
-                    exec "$0" "$@"
-                else
-                    exec bash "$0" "$@"
-                fi
+            if [[ -x "$0" ]]; then
+                exec "$0" "$@"
+            else
+                exec bash "$0" "$@"
+            fi
         fi
 
         log "info" "Nothing to do. Node.js $VERNODE is already installed and the NodeSource repository is set up."
