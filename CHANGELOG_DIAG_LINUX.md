@@ -1,4 +1,7 @@
 # Changelog for Linux-Diag-Script
+
+## 2026-10-02
+* Removed the --allow-root option; run ioBroker commands as the iobroker user instead (sudo -u iobroker iob ...)
 ## 2026-10-01
 * Readded nodejs recommended version hint
 

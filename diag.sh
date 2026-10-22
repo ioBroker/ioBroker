@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-10-01" #version of this script
+SKRIPTV="2026-10-02" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -31,7 +31,6 @@ Optionen:
   --short / -s      Alias für --summary.
   --kurz / -k       Alias für --summary.
   --zusammenfassung Alias für --summary (deutsch).
-  --allow-root      Erlaubt die Ausführung als Root (nicht empfohlen).
 
 Beispiele:
   $0 --de              # Deutsche Ausgabe
@@ -52,8 +51,15 @@ fi
 DOCKER=/opt/scripts/.docker_config/.thisisdocker
 #if [[ -f "/opt/scripts/.docker_config/.thisisdocker" ]]
 if [[ $(id -u) -eq 0 ]] && [[ ! -f "$DOCKER" ]]; then
-    printf "You should not be root on your system!\nBetter use your standard user!\n\n"
-    sleep 15
+    # Hard stop, not a warning: every iob call below goes through the wrapper, which
+    # refuses to run as root. The queries would return nothing and the report would look
+    # complete while missing versions, instances and counts.
+    printf "This script cannot run as root.\n\n"
+    printf "It queries ioBroker through the iob command, which refuses to run as root,\n"
+    printf "so the report would silently come out empty.\n\n"
+    printf "Run it as a normal user that is a member of the iobroker group:\n"
+    printf "  iob diag\n"
+    exit 1
 fi
 clear
 if [[ "$*" =~ --de ]]; then SKRPTLANG="--de"; fi
@@ -89,8 +95,6 @@ HEADLINE='\033[34;107m'
 # VARIABLES
 export LC_ALL=C
 #NODE_MAJOR=22           this is the recommended major nodejs version for ioBroker, please adjust accordingly if the recommendation changes
-ALLOWROOT=""
-if [[ "$*" =~ "--allow-root" ]]; then ALLOWROOT="--allow-root"; fi
 MASKED=""
 if [[ "$*" =~ --unmask ]]; then MASKED="unmasked"; fi
 SUMMARY=""
@@ -98,8 +102,8 @@ if [[ "$*" =~ (--summary|--short|--zusammenfassung|--kurz|-s|-k) ]]; then SUMMAR
 ARCH=$(getconf LONG_BIT);
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
-NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
-NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext $ALLOWROOT)   #recommended npm version
+NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext) #recommended node version
+NPMRECOM=$(iobroker state getValue system.host."$HOST".versions.npmNewestNext)   #recommended npm version
 #NODEUSED=$(iobroker state getValue system.host."$HOST".versions.nodeCurrent);      #current node version in use
 #NPMUSED=$(iobroker state getValue system.host."$HOST".versions.npmCurrent);        #current npm version in use
 APT=0
@@ -107,7 +111,7 @@ INSTENV=0
 INSTENV2=0
 SYSTDDVIRT=""
 NODENOTCORR=0
-IOBLISTINST=$(iobroker list instances $ALLOWROOT)
+IOBLISTINST=$(iobroker list instances)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
 # Versuche, die Geburtszeit zu holen
@@ -1082,13 +1086,13 @@ check_architecture
 
 printf "\n\n%b%s%b" "$HEADLINE" "*** ioBroker-Installation ***" "$NC"
 printf "\n%b%s%b\n" "$GREEN" "ioBroker Status" "$NC"
-iob status $ALLOWROOT
+iob status
 printf "\n%b%s%b\n" "$GREEN" "Hosts:" "$NC"
-iob list hosts $ALLOWROOT
+iob list hosts
 printf "\n%b%s%b" "$GREEN" "Core adapters versions" "$NC"
-printf "\n%s\t%s" "js-controller: " "$(iob -v $ALLOWROOT)"
-printf "\n%s\t\t%s" "admin: " "$(iob version admin $ALLOWROOT)"
-printf "\n%s\t%s" "javascript: " "$(iob version javascript $ALLOWROOT)"
+printf "\n%s\t%s" "js-controller: " "$(iob -v)"
+printf "\n%s\t\t%s" "admin: " "$(iob version admin)"
+printf "\n%s\t%s" "javascript: " "$(iob version javascript)"
 printf '\n\n%b%s%b\t%d\n' "$GREEN" "nodejs modules from github: " "$NC" "$(grep -c 'github.com' <<< "$NPMLS")"
 grep 'github.com' <<< "$(printf '\n\n%s\n' "$NPMLS")"
 printf "\n\n%b%s%b\n" "$GREEN" "Adapter State" "$NC"
@@ -1097,16 +1101,16 @@ printf "%b%s%b\n" "$GREEN" "Enabled adapters with bindings" "$NC"
 printf "%s" "$IOBLISTINST" | grep -E "enabled.*port"
 echo ""
 printf "\n%b%s%b\n" "$GREEN" "ioBroker-Repositories" "$NC"
-iob repo list $ALLOWROOT
+iob repo list
 printf "\n\n%b%s%b\n" "$GREEN" "Installed ioBroker-Adapters" "$NC"
-iob list adapters $ALLOWROOT
+iob list adapters
 printf "\n\n%b%s%b\n" "$GREEN" "ioBroker-Adapter Versions and update status" "$NC"
-iob update -i $ALLOWROOT
+iob update -i
 printf "\n\n%b%s%b\n" "$GREEN" "Objects and States" "$NC"
 echo "Please stand by - This may take a while"
-IOBOBJECTS=$(iob list objects $ALLOWROOT 2>/dev/null | wc -l)
+IOBOBJECTS=$(iob list objects 2>/dev/null | wc -l)
 printf "\n%s\t%d" "Objects: " "$IOBOBJECTS"
-IOBSTATES=$(iob list states $ALLOWROOT 2>/dev/null | wc -l)
+IOBSTATES=$(iob list states 2>/dev/null | wc -l)
 printf "\n%s\t%d" "States: " "$IOBSTATES"
 
 printf "\n\n%b%s%b\n\n" "$HEADLINE" "*** OS-Repositories and Updates ***" "$NC"
@@ -1261,10 +1265,10 @@ fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%s\t%s" "Offene OS-Updates: " "$APT"
-    printf "\n%s\t%s" "Offene iob updates: " "$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
+    printf "\n%s\t%s" "Offene iob updates: " "$(iob update -u | grep -c 'Updatable\|Updateable')"
 else
     printf "\n%s\t%s" "Pending OS-Updates: " "$APT"
-    printf "\n%s\t%s" "Pending iob updates: " "$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
+    printf "\n%s\t%s" "Pending iob updates: " "$(iob update -u | grep -c 'Updatable\|Updateable')"
 fi
 if [[ -f "/var/run/reboot-required" ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1307,10 +1311,10 @@ printf "\n\n%s\n" "MEMORY: "
 free -ht --mega
 printf "\n%s%s\n" "Active iob-Instances: " "$(echo "$IOBLISTINST" | grep -c ^+)"
 
-printf "\n%s\n%s\t\t%s\n" "ioBroker Core:" "js-controller" "$(iob -v $ALLOWROOT)"
-printf "%s\t\t\t%s\t\t\n" "admin " "$(iob version admin $ALLOWROOT)"
-printf "\n%s\n%s\n" "ioBroker Status: " "$(iobroker status $ALLOWROOT)"
-iob repo list $ALLOWROOT | tail -n1
+printf "\n%s\n%s\t\t%s\n" "ioBroker Core:" "js-controller" "$(iob -v)"
+printf "%s\t\t\t%s\t\t\n" "admin " "$(iob version admin)"
+printf "\n%s\n%s\n" "ioBroker Status: " "$(iobroker status)"
+iob repo list | tail -n1
 
 # iobroker status all | grep MULTIHOSTSERVICE/enabled;
 printf "\n%s\n" "Status admin and web instance:"
