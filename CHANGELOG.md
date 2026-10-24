@@ -1,6 +1,7 @@
 # Changelog for Windows-Installer-NPX
-<!-- ## **WORK IN PROGRESS**
--->
+## **WORK IN PROGRESS**
+* Windows: Added `iob docker`, which shows whether Docker is installed and its engine is running
+
 ## 7.0.0 (2026-10-01)
 * Read the supported Node.js and npm versions from versions.json instead of hardcoding them
 * Abort when the installed Node.js is not one of the supported versions

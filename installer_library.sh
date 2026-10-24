@@ -4,7 +4,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-10-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-10-24" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -175,6 +175,9 @@ function set_some_common_params() {
 
     # Where the nodejs Update script is located
     NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
+
+    # Where the Docker helper script is located
+    DOCKER_URL="https://iobroker.net/docker.sh"
 
     # Remember the full path of bash
     BASH_CMDLINE=$(which bash)
