@@ -154,13 +154,14 @@ iob [COMMAND] [OPTIONS]
 - `fix` - Run the fix/repair script
 - `nodejs-update` - Run Node.js update script
 - `diag` - Run diagnostic script
+- `docker` - Show the Docker status and install Docker if it is missing, see [iob docker](#iob-docker)
 
 **Global Options:**
 - `--allow-root` - Allow running commands as root (applies to `fix` and `diag`). It has no effect on
   `nodejs-update`: the wrapper accepts the flag, but the script refuses to run as root in any case,
   so it is not forwarded.
 
-**Note:** `fix`, `diag` and `nodejs-update` are not run from this repository. The `iob` wrapper downloads
+**Note:** `fix`, `diag`, `nodejs-update` and `docker` are not run from this repository. The `iob` wrapper downloads
 them from `https://iobroker.net/` at invocation time, so they are always the released version, never a
 local change. All options are forwarded, so `iob diag --de --unmask` works as written.
 
@@ -252,10 +253,61 @@ The script runs with the sudo rights of whoever calls it, not those of the `iobr
 this works under `--hardened` too. If `setcap` fails, the script warns and continues; `iob fix` sets the
 capabilities as well.
 
+## Docker
+
+### iob docker
+
+```bash
+iob docker [OPTIONS]
+```
+
+Shows whether Docker is installed, whether the Docker daemon is running, which Docker Compose version
+is available and whether the `iobroker` user is a member of the `docker` group. If Docker is missing,
+it asks whether it should be installed now.
+
+**Parameters:**
+- `-y, --yes` - Answer all questions with yes, so Docker is installed without asking
+- `-h, --help` - Show the usage information and exit
+
+**Examples:**
+```bash
+# Show the status, ask before installing
+iob docker
+
+# Install without asking, e.g. from a script
+iob docker -y
+```
+
+**What it does:**
+- Installs Docker with Docker's convenience script from `https://get.docker.com` (Debian, Ubuntu,
+  Raspberry Pi OS, Fedora, CentOS, RHEL), then enables and starts the service on systemd
+- Adds the `iobroker` user to the `docker` group, so that ioBroker can reach the Docker socket.
+  Restart ioBroker afterwards (`iob restart`) so the running processes get the new membership.
+  A `--hardened` installation is left alone, because membership in the `docker` group is equivalent
+  to root rights
+- If Docker is already installed but the `iobroker` user is not in the `docker` group, it offers to add it
+- Without a terminal and without `-y`, nothing is installed: a missing answer counts as "no"
+- Exit code `0` if Docker is installed at the end, `1` otherwise
+
+**Not supported:**
+- macOS (install Docker Desktop instead) and FreeBSD (no Docker available)
+- ioBroker running inside a container (install Docker on the host)
+- WSL (use Docker Desktop with its WSL integration)
+
+The command is part of the `iob` wrapper written by the installer and the fixer. On an existing
+installation run `iob fix` once to get it.
+
+**Windows:** `iob docker` only shows the status there (Docker installed, engine running, Docker Compose
+version) and does not install anything. Docker on Windows means Docker Desktop, which needs WSL2 or Hyper-V,
+administrator rights and, for larger companies, a paid subscription. Its engine only runs while a user is
+logged on, so after a reboot it is not available to the ioBroker service until someone logs on. `-y` is
+accepted but has no effect. The script is `install/windows/docker.js`, copied into the ioBroker directory
+by `npx @iobroker/install` and `npx @iobroker/fix`.
+
 ## Common Parameters Across Commands
 
 ### --allow-root
-This parameter is available for most maintenance commands (`fix`, `diag`, `nodejs-update`) and allows running the command as the root user. 
+This parameter is available for most maintenance commands (`fix`, `diag`, `nodejs-update`, `docker`) and allows running the command as the root user. 
 
 **Important Notes:**
 - Running as root is NOT recommended for security reasons

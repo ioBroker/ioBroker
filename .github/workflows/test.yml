@@ -71,8 +71,15 @@ jobs:
           fix_installation.sh \
           diag.sh \
           node-update.sh \
+          docker.sh \
           .github/testFiles.sh \
           .github/testFreeBSD.sh
+
+    # The runner has Docker preinstalled, so this covers the status path only, not the installation
+    - name: Smoke test docker.sh
+      run: |
+        bash docker.sh --help
+        bash docker.sh
 
   # ===================
   # Runs unit tests on all supported node versions and OSes
