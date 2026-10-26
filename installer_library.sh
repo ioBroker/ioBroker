@@ -4,7 +4,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-10-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-10-26" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -76,6 +76,10 @@ print_step() {
     echo "${bold}    ${stepname} ${blue}(${stepnr}/${steptotal})${normal}"
     echo "${bold}${HLINE}${normal}"
     echo
+    # In the interactive display the banner above only goes to the log
+    if [ "$TUI_RUNNING" = true ]; then
+        tui_step "$stepnr" "$steptotal" "$stepname"
+    fi
 }
 
 print_bold() {
@@ -101,6 +105,861 @@ print_msg() {
 
 HLINE="=========================================================================="
 enable_colored_output
+
+# ------------------------------
+# Interactive display (TUI)
+# ------------------------------
+# A full screen display with the ioBroker logo, a menu, dialogs and a progress view of the steps.
+# It is only used on a real terminal with someone in front of it: --silent, --no-tui,
+# IOB_NO_TUI=true, CI, TERM=dumb, a terminal smaller than 70x24 and a missing /dev/tty (cron,
+# cloud-init, rc.local, ssh without -t) all keep the classic line output. Keys are read from
+# /dev/tty, so "curl ... | bash -", where stdin is the script itself, works too.
+# Plain ANSI sequences and bash 3.2 only: whiptail and dialog are missing on macOS, FreeBSD and
+# minimal installations, and macOS ships bash 3.2.
+TUI=false         # the interactive display is used
+TUI_SCREEN=false  # the alternate screen is shown
+TUI_RUNNING=false # the steps run: their output goes to TUI_LOG, the screen shows the progress
+TUI_LOG=""
+TUI_STEPS=()
+TUI_STEP=0
+TUI_NOTES=()
+TUI_TICKER_PID=""
+TUI_SUDO_PID=""
+TUI_SUDO_DONE=false
+TUI_ESC=$'\033'
+
+# The ioBroker logo, computed from the geometry of img/logos/ioBroker_Logo_Vector_Small.svg:
+# D is the dark ring, L the light "i". One terminal row shows two pixel rows.
+TUI_LOGO_BIG=(
+    "............LLLL............"
+    "........DD..LLLL..DD........"
+    "......DDDD..LLLL..DDDD......"
+    ".....DDDDD..LLLL..DDDDD....."
+    "....DDDDDD........DDDDDD...."
+    "...DDDDD....LLLL....DDDDD..."
+    "..DDDDD.....LLLL.....DDDDD.."
+    "..DDDD......LLLL......DDDD.."
+    ".DDDD.......LLLL.......DDDD."
+    ".DDDD.......LLLL.......DDDD."
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    "DDDD........LLLL........DDDD"
+    ".DDDD.......LLLL.......DDDD."
+    ".DDDD.......LLLL.......DDDD."
+    "..DDDD......LLLL......DDDD.."
+    "..DDDDD.....LLLL.....DDDDD.."
+    "...DDDDD....LLLL....DDDDD..."
+    "....DDDDDD........DDDDDD...."
+    ".....DDDDDDDDDDDDDDDDDD....."
+    "......DDDDDDDDDDDDDDDD......"
+    "........DDDDDDDDDDDD........"
+    "..........DDDDDDDD.........."
+)
+TUI_LOGO_SMALL=(
+    ".....D.LL.D....."
+    "...DDD.LL.DDD..."
+    "..DDDD....DDDD.."
+    ".DDD...LL...DDD."
+    ".DD....LL....DD."
+    "DDD....LL....DDD"
+    "DD.....LL.....DD"
+    "DD.....LL.....DD"
+    "DD.....LL.....DD"
+    "DD.....LL.....DD"
+    "DDD....LL....DDD"
+    ".DD....LL....DD."
+    ".DDD...LL...DDD."
+    "..DDDD....DDDD.."
+    "...DDDDDDDDDD..."
+    ".....DDDDDD....."
+)
+
+# Decides whether the interactive display is used and prepares it. $1 is the log file for the
+# output of the steps, the other arguments are those of the script. Returns 1 for the classic output.
+tui_init() {
+    local log_file="$1"
+    shift
+    TUI=false
+    if [[ "$*" == *--silent* || "$*" == *--no-tui* ]] || [ "$IOB_NO_TUI" = "true" ] || [ -n "$CI" ]; then
+        return 1
+    fi
+    case "$TERM" in
+    "" | dumb | unknown) return 1 ;;
+    esac
+    # stdout must be the terminal, and /dev/tty only opens with a controlling terminal
+    if ! test -t 1 || ! { : </dev/tty; } 2>/dev/null; then
+        return 1
+    fi
+    TUI_ROWS=0
+    TUI_COLS=0
+    tui_size
+    if [ "$TUI_ROWS" -lt 24 ] || [ "$TUI_COLS" -lt 70 ]; then
+        return 1
+    fi
+    if ! : >"$log_file" 2>/dev/null; then
+        log_file=$(mktemp 2>/dev/null) || return 1
+    fi
+    TUI_LOG="$log_file"
+    tui_setup_style
+    TUI=true
+}
+
+tui_setup_style() {
+    local e="$TUI_ESC" colors
+    TUI_RESET="${e}[0m"
+    TUI_BOLD="${e}[1m"
+    TUI_DIM="${e}[2m"
+    TUI_REVERSE="${e}[7m"
+    TUI_GREEN="${e}[32m"
+    TUI_RED="${e}[31m"
+    TUI_YELLOW="${e}[33m"
+    # The two blues of the logo, as close as the terminal can show them
+    colors=$(tput colors 2>/dev/null)
+    if [ "$COLORTERM" = "truecolor" ] || [ "$COLORTERM" = "24bit" ]; then
+        TUI_FG_DARK="38;2;22;68;119" TUI_BG_DARK="48;2;22;68;119"
+        TUI_FG_LIGHT="38;2;51;153;204" TUI_BG_LIGHT="48;2;51;153;204"
+    elif [[ "$colors" =~ ^[0-9]+$ ]] && [ "$colors" -ge 256 ]; then
+        TUI_FG_DARK="38;5;24" TUI_BG_DARK="48;5;24"
+        TUI_FG_LIGHT="38;5;32" TUI_BG_LIGHT="48;5;32"
+    else
+        TUI_FG_DARK="34" TUI_BG_DARK="44"
+        TUI_FG_LIGHT="36" TUI_BG_LIGHT="46"
+    fi
+    TUI_LIGHT="${e}[${TUI_FG_LIGHT}m"
+    # Frames and symbols need a UTF-8 locale that really exists, otherwise they show up as garbage
+    # and bash counts their bytes instead of their characters. Only characters of the old PC
+    # character set (CP437): the Linux console of a Raspberry Pi and PuTTY with its default font
+    # have no rounded corners, check marks or braille spinners.
+    if [ "$(locale charmap 2>/dev/null)" = "UTF-8" ]; then
+        TUI_UTF8=true
+        TUI_G_H="─" TUI_G_V="│" TUI_G_TL="┌" TUI_G_TR="┐" TUI_G_BL="└" TUI_G_BR="┘"
+        TUI_G_OK="√" TUI_G_FAIL="×" TUI_G_TODO="·" TUI_G_PTR="►" TUI_G_MORE="»"
+        TUI_G_BAR="█" TUI_G_BAR_EMPTY="░"
+        TUI_G_SPIN=("|" "/" "-" "\\")
+        TUI_KEYS_UPDOWN="↑↓" TUI_KEYS_LEFTRIGHT="←→"
+    else
+        TUI_UTF8=false
+        TUI_G_H="-" TUI_G_V="|" TUI_G_TL="+" TUI_G_TR="+" TUI_G_BL="+" TUI_G_BR="+"
+        TUI_G_OK="*" TUI_G_FAIL="x" TUI_G_TODO="-" TUI_G_PTR=">" TUI_G_MORE="~"
+        TUI_G_BAR="#" TUI_G_BAR_EMPTY="."
+        TUI_G_SPIN=("|" "/" "-" "\\")
+        TUI_KEYS_UPDOWN="Up/Down" TUI_KEYS_LEFTRIGHT="Left/Right"
+    fi
+}
+
+# Reads the terminal size again, it may have changed since the last screen
+tui_size() {
+    local size
+    size=$(stty size </dev/tty 2>/dev/null)
+    if [[ "$size" =~ ^[0-9]+[[:space:]][0-9]+$ ]]; then
+        TUI_ROWS=${size% *}
+        TUI_COLS=${size#* }
+    fi
+    # Short terminals, like the 80x24 of PuTTY, get the small logo beside the box: above it there
+    # would be no room left for the logo at all
+    if [ "$TUI_ROWS" -lt 32 ] && [ "$TUI_COLS" -ge 79 ]; then
+        TUI_LOGO_MODE=side
+        TUI_BOX_W=$((TUI_COLS - ${#TUI_LOGO_SMALL[0]} - 5))
+    else
+        TUI_LOGO_MODE=top
+        TUI_BOX_W=$((TUI_COLS - 4))
+    fi
+    if [ "$TUI_BOX_W" -gt 76 ]; then
+        TUI_BOX_W=76
+    fi
+    TUI_TEXT_W=$((TUI_BOX_W - 6))
+}
+
+# Sets TUI_PLAIN to $1 without its color codes, to measure the width of a line
+tui_strip() {
+    local text="$1"
+    TUI_PLAIN=""
+    while [[ "$text" == *"$TUI_ESC"* ]]; do
+        TUI_PLAIN+="${text%%"$TUI_ESC"*}"
+        text="${text#*"$TUI_ESC"}"
+        text="${text#*m}"
+    done
+    TUI_PLAIN+="$text"
+}
+
+# Sets TUI_REPEATED to $1 repeated $2 times
+tui_repeat() {
+    local i
+    TUI_REPEATED=""
+    for ((i = 0; i < $2; i++)); do
+        TUI_REPEATED+="$1"
+    done
+}
+
+tui_pixel() {
+    if [ "$1" = "D" ]; then
+        TUI_PX_FG=$TUI_FG_DARK TUI_PX_BG=$TUI_BG_DARK
+    else
+        TUI_PX_FG=$TUI_FG_LIGHT TUI_PX_BG=$TUI_BG_LIGHT
+    fi
+}
+
+# Renders a logo bitmap into TUI_LOGO_LINES. With UTF-8 a terminal row shows two pixel rows as upper
+# and lower half blocks, otherwise one colored space, which is coarser but needs no special font.
+tui_render_logo() {
+    local -a bitmap=("$@")
+    local rows=${#bitmap[@]} width=${#1} y x top bottom bg line
+    TUI_LOGO_LINES=()
+    for ((y = 0; y < rows; y += 2)); do
+        line=""
+        for ((x = 0; x < width; x++)); do
+            top=${bitmap[y]:x:1}
+            bottom=${bitmap[y + 1]:x:1}
+            if [ -z "$bottom" ]; then
+                bottom="."
+            fi
+            if [ "$top" = "." ] && [ "$bottom" = "." ]; then
+                line+="${TUI_RESET} "
+            elif [ "$TUI_UTF8" != true ]; then
+                if [ "$top" = "." ]; then
+                    top=$bottom
+                fi
+                tui_pixel "$top"
+                line+="${TUI_ESC}[0;${TUI_PX_BG}m "
+            elif [ "$bottom" = "." ]; then
+                tui_pixel "$top"
+                line+="${TUI_ESC}[0;${TUI_PX_FG}m▀"
+            elif [ "$top" = "." ]; then
+                tui_pixel "$bottom"
+                line+="${TUI_ESC}[0;${TUI_PX_FG}m▄"
+            elif [ "$top" = "$bottom" ]; then
+                tui_pixel "$top"
+                line+="${TUI_ESC}[0;${TUI_PX_FG}m█"
+            else
+                tui_pixel "$bottom"
+                bg=$TUI_PX_BG
+                tui_pixel "$top"
+                line+="${TUI_ESC}[0;${TUI_PX_FG};${bg}m▀"
+            fi
+        done
+        TUI_LOGO_LINES+=("${line}${TUI_RESET}")
+    done
+}
+
+# Sets TUI_LOGO to the lines of the logo "big" or "small" and TUI_LOGO_W to its width. Each size is
+# rendered only once, a small Raspberry Pi needs a moment for it.
+tui_logo() {
+    if [ "$1" = big ]; then
+        if [ ${#TUI_LOGO_BIG_LINES[@]} -eq 0 ]; then
+            tui_render_logo "${TUI_LOGO_BIG[@]}"
+            TUI_LOGO_BIG_LINES=("${TUI_LOGO_LINES[@]}")
+        fi
+        TUI_LOGO=("${TUI_LOGO_BIG_LINES[@]}")
+        TUI_LOGO_W=${#TUI_LOGO_BIG[0]}
+    else
+        if [ ${#TUI_LOGO_SMALL_LINES[@]} -eq 0 ]; then
+            tui_render_logo "${TUI_LOGO_SMALL[@]}"
+            TUI_LOGO_SMALL_LINES=("${TUI_LOGO_LINES[@]}")
+        fi
+        TUI_LOGO=("${TUI_LOGO_SMALL_LINES[@]}")
+        TUI_LOGO_W=${#TUI_LOGO_SMALL[0]}
+    fi
+}
+
+# Starts a new screen for a box of $1 lines: picks the biggest logo that still fits
+tui_layout() {
+    local free
+    tui_size
+    TUI_OUT=()
+    TUI_LOGO=()
+    TUI_LOGO_W=0
+    if [ "$TUI_LOGO_MODE" = side ]; then
+        tui_logo small
+        return
+    fi
+    # The box adds four rows of frame and padding, the key hints one more
+    free=$((TUI_ROWS - $1 - 5))
+    if [ "$free" -ge 15 ]; then
+        tui_logo big
+    elif [ "$free" -ge 9 ]; then
+        tui_logo small
+    fi
+}
+
+# Appends the text $1, wrapped to the width of the box, to TUI_CONTENT, each line in the style $2.
+# \n starts a new line, leading empty lines are dropped. $3 pads it to at least that many lines.
+tui_wrap() {
+    local text="$1" style="$2" min="${3:-0}" line count=0
+    while IFS= read -r line; do
+        while [[ "$line" == *" " ]]; do
+            line=${line% }
+        done
+        if [ "$count" -eq 0 ] && [ -z "$line" ]; then
+            continue
+        fi
+        TUI_CONTENT+=("${style}${line}${TUI_RESET}")
+        count=$((count + 1))
+    done < <(printf '%b\n' "$text" | fold -s -w "$TUI_TEXT_W")
+    while [ "$count" -lt "$min" ]; do
+        TUI_CONTENT+=("")
+        count=$((count + 1))
+    done
+}
+
+# Renders the box with the lines of TUI_CONTENT into TUI_OUT. $1 is the title, $2 the color of the
+# frame. Content line k ends up in row 2 + k of the box.
+tui_render_box() {
+    local title="$1" frame="${2:-$TUI_LIGHT}" line empty
+    tui_repeat "$TUI_G_H" $((TUI_BOX_W - ${#title} - 5))
+    TUI_OUT+=("${frame}${TUI_G_TL}${TUI_G_H}${TUI_RESET} ${TUI_BOLD}${title}${TUI_RESET} ${frame}${TUI_REPEATED}${TUI_G_TR}${TUI_RESET}")
+    tui_repeat " " "$TUI_TEXT_W"
+    empty="${frame}${TUI_G_V}${TUI_RESET}  ${TUI_REPEATED}  ${frame}${TUI_G_V}${TUI_RESET}"
+    TUI_OUT+=("$empty")
+    for line in "${TUI_CONTENT[@]}"; do
+        tui_strip "$line"
+        if [ "${#TUI_PLAIN}" -gt "$TUI_TEXT_W" ]; then
+            line="${TUI_PLAIN:0:TUI_TEXT_W - 1}${TUI_G_MORE}"
+            TUI_PLAIN=$line
+        fi
+        tui_repeat " " $((TUI_TEXT_W - ${#TUI_PLAIN}))
+        TUI_OUT+=("${frame}${TUI_G_V}${TUI_RESET}  ${line}${TUI_RESET}${TUI_REPEATED}  ${frame}${TUI_G_V}${TUI_RESET}")
+    done
+    TUI_OUT+=("$empty")
+    tui_repeat "$TUI_G_H" $((TUI_BOX_W - 2))
+    TUI_OUT+=("${frame}${TUI_G_BL}${TUI_REPEATED}${TUI_G_BR}${TUI_RESET}")
+}
+
+# Places the logo and the box: sets TUI_LOGO_ROW/TUI_LOGO_COL and TUI_BOX_ROW/TUI_BOX_LEFT, either
+# for the whole screen or, with $1 = flow, for lines printed one after another
+tui_place() {
+    local n=${#TUI_OUT[@]} logo_n=${#TUI_LOGO[@]} rows=$TUI_ROWS block top left
+    if [ "$1" = flow ]; then
+        rows=0
+    fi
+    if [ "$TUI_LOGO_MODE" = side ] && [ "$logo_n" -gt 0 ]; then
+        block=$n
+        if [ "$logo_n" -gt "$block" ]; then
+            block=$logo_n
+        fi
+        left=$(((TUI_COLS - TUI_LOGO_W - 3 - TUI_BOX_W) / 2 + 1))
+        TUI_LOGO_COL=$left
+        TUI_BOX_LEFT=$((left + TUI_LOGO_W + 3))
+    else
+        block=$n
+        if [ "$logo_n" -gt 0 ]; then
+            block=$((n + logo_n + 1))
+        fi
+        TUI_LOGO_COL=$(((TUI_COLS - TUI_LOGO_W) / 2 + 1))
+        TUI_BOX_LEFT=$(((TUI_COLS - TUI_BOX_W) / 2 + 1))
+    fi
+    top=$(((rows - block - 1) / 2 + 1))
+    if [ "$top" -lt 1 ]; then
+        top=1
+    fi
+    if [ "$TUI_LOGO_MODE" = side ]; then
+        TUI_LOGO_ROW=$((top + (block - logo_n) / 2))
+        TUI_BOX_ROW=$((top + (block - n) / 2))
+    else
+        TUI_LOGO_ROW=$top
+        TUI_BOX_ROW=$((block - n + top))
+    fi
+    TUI_BLOCK_ROWS=$block
+}
+
+# Switches to the alternate screen, which brings back the terminal content of before at the end
+tui_enter() {
+    if [ "$TUI_SCREEN" = true ]; then
+        return
+    fi
+    trap tui_on_exit EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    printf '%s[?1049h%s[?25l' "$TUI_ESC" "$TUI_ESC" >/dev/tty
+    TUI_SCREEN=true
+}
+
+# Back to the normal screen, e.g. before a message that must stay visible or a program with its
+# own full screen display. The next screen of the display switches over again.
+tui_leave() {
+    tui_ticker_stop
+    if [ "$TUI_SCREEN" != true ]; then
+        return 0
+    fi
+    printf '%s[0m%s[?25h%s[?1049l' "$TUI_ESC" "$TUI_ESC" "$TUI_ESC" >/dev/tty
+    stty echo </dev/tty 2>/dev/null
+    TUI_SCREEN=false
+}
+
+# Clears the screen and shows the logo and the box in TUI_OUT, with the key hints $1 below the box
+tui_show() {
+    local hints="$1" i buf
+    tui_enter
+    tui_place
+    buf="${TUI_RESET}${TUI_ESC}[2J"
+    for ((i = 0; i < ${#TUI_LOGO[@]}; i++)); do
+        buf+="${TUI_ESC}[$((TUI_LOGO_ROW + i));${TUI_LOGO_COL}H${TUI_LOGO[i]}"
+    done
+    for ((i = 0; i < ${#TUI_OUT[@]}; i++)); do
+        buf+="${TUI_ESC}[$((TUI_BOX_ROW + i));${TUI_BOX_LEFT}H${TUI_OUT[i]}"
+    done
+    if [ -n "$hints" ]; then
+        tui_strip "$hints"
+        buf+="${TUI_ESC}[$((TUI_BOX_ROW + ${#TUI_OUT[@]}));$((TUI_BOX_LEFT + (TUI_BOX_W - ${#TUI_PLAIN}) / 2))H${TUI_DIM}${hints}${TUI_RESET}"
+    fi
+    printf '%s' "$buf" >/dev/tty
+}
+
+# Reads one key from the terminal into TUI_KEY: up, down, left, right, tab, enter, space, esc or the
+# character itself. A closed terminal counts as esc, so no dialog can loop forever.
+tui_read_key() {
+    local key rest
+    if ! IFS= read -rsn1 key </dev/tty; then
+        TUI_KEY=esc
+        return
+    fi
+    case "$key" in
+    "$TUI_ESC")
+        IFS= read -rsn2 -t 1 rest </dev/tty || rest=""
+        case "$rest" in
+        "[A" | "OA") TUI_KEY=up ;;
+        "[B" | "OB") TUI_KEY=down ;;
+        "[C" | "OC") TUI_KEY=right ;;
+        "[D" | "OD") TUI_KEY=left ;;
+        *) TUI_KEY=esc ;;
+        esac
+        ;;
+    "" | $'\r' | $'\n') TUI_KEY=enter ;;
+    " ") TUI_KEY=space ;;
+    $'\t') TUI_KEY=tab ;;
+    *) TUI_KEY=$key ;;
+    esac
+}
+
+# Menu of actions and on/off options. The items come from TUI_MENU_LABELS, TUI_MENU_TYPES (action,
+# toggle or quit), TUI_MENU_VALUES (true/false for a toggle) and TUI_MENU_HELP, the lines above
+# them from TUI_MENU_HEAD and the warnings below them from TUI_NOTES. $1 is the title.
+# Sets TUI_MENU_CHOICE to the index of the chosen action; Q and Esc choose the quit item.
+tui_menu() {
+    local title="$1" sel=0 n=${#TUI_MENU_LABELS[@]} i label quit=0 help_lines=0 note line
+    tui_size
+    # The help of the selected item always gets the same height, so the box does not jump
+    for ((i = 0; i < n; i++)); do
+        if [ "${TUI_MENU_TYPES[i]}" = quit ]; then
+            quit=$i
+        fi
+        TUI_CONTENT=()
+        tui_wrap "${TUI_MENU_HELP[i]}"
+        if [ ${#TUI_CONTENT[@]} -gt "$help_lines" ]; then
+            help_lines=${#TUI_CONTENT[@]}
+        fi
+    done
+    while true; do
+        TUI_CONTENT=()
+        for line in "${TUI_MENU_HEAD[@]}"; do
+            tui_wrap "$line"
+        done
+        TUI_CONTENT+=("")
+        for ((i = 0; i < n; i++)); do
+            label=${TUI_MENU_LABELS[i]}
+            if [ "${TUI_MENU_TYPES[i]}" = toggle ]; then
+                if [ "${TUI_MENU_VALUES[i]}" = true ]; then
+                    label="[x] $label"
+                else
+                    label="[ ] $label"
+                fi
+            fi
+            if [ "$i" -eq "$sel" ]; then
+                TUI_CONTENT+=("${TUI_LIGHT}${TUI_G_PTR} ${TUI_BOLD}${label}${TUI_RESET}")
+            else
+                TUI_CONTENT+=("  ${label}")
+            fi
+        done
+        TUI_CONTENT+=("")
+        tui_wrap "${TUI_MENU_HELP[sel]}" "$TUI_DIM" "$help_lines"
+        for note in "${TUI_NOTES[@]}"; do
+            TUI_CONTENT+=("")
+            tui_wrap "$note" "$TUI_YELLOW"
+        done
+        tui_layout ${#TUI_CONTENT[@]}
+        tui_render_box "$title"
+        tui_show "${TUI_KEYS_UPDOWN} choose   Space switch   Enter select   Q quit"
+        tui_read_key
+        case "$TUI_KEY" in
+        up | k) sel=$(((sel + n - 1) % n)) ;;
+        down | j | tab) sel=$(((sel + 1) % n)) ;;
+        space | enter)
+            if [ "${TUI_MENU_TYPES[sel]}" = toggle ]; then
+                if [ "${TUI_MENU_VALUES[sel]}" = true ]; then
+                    TUI_MENU_VALUES[sel]=false
+                else
+                    TUI_MENU_VALUES[sel]=true
+                fi
+            elif [ "$TUI_KEY" = enter ]; then
+                TUI_MENU_CHOICE=$sel
+                return 0
+            fi
+            ;;
+        q | Q | esc)
+            TUI_MENU_CHOICE=$quit
+            return 0
+            ;;
+        esac
+    done
+}
+
+# Yes/no dialog: $1 is the title, $2 the question. Returns 0 for yes, "No" is preselected.
+tui_confirm() {
+    local sel=1 yes no
+    while true; do
+        tui_size
+        TUI_CONTENT=()
+        tui_wrap "$2"
+        if [ "$sel" -eq 0 ]; then
+            yes="${TUI_REVERSE}${TUI_LIGHT}[ Yes ]${TUI_RESET}" no="[ No ]"
+        else
+            yes="[ Yes ]" no="${TUI_REVERSE}${TUI_LIGHT}[ No ]${TUI_RESET}"
+        fi
+        tui_repeat " " $(((TUI_TEXT_W - 16) / 2))
+        TUI_CONTENT+=("" "${TUI_REPEATED}${yes}   ${no}")
+        tui_layout ${#TUI_CONTENT[@]}
+        tui_render_box "$1"
+        tui_show "${TUI_KEYS_LEFTRIGHT} choose   Enter confirm   Y yes   N no"
+        tui_read_key
+        case "$TUI_KEY" in
+        left | right | up | down | tab) sel=$((1 - sel)) ;;
+        y | Y | j | J) return 0 ;;
+        n | N | q | Q | esc) return 1 ;;
+        enter | space) return "$sel" ;;
+        esac
+    done
+}
+
+# Asks for a text: $1 is the title, $2 the question, "secret" as $3 hides the input.
+# The answer is in TUI_INPUT.
+tui_input() {
+    local row
+    tui_size
+    TUI_CONTENT=()
+    tui_wrap "$2"
+    TUI_CONTENT+=("" "${TUI_LIGHT}>${TUI_RESET}")
+    tui_layout ${#TUI_CONTENT[@]}
+    tui_render_box "$1"
+    tui_show "Enter confirm"
+    # The last line of the box content, behind the "> "
+    row=$((TUI_BOX_ROW + 1 + ${#TUI_CONTENT[@]}))
+    printf '%s[%d;%dH%s[?25h' "$TUI_ESC" "$row" "$((TUI_BOX_LEFT + 5))" "$TUI_ESC" >/dev/tty
+    if [ "$3" = secret ]; then
+        IFS= read -rs TUI_INPUT </dev/tty
+    else
+        IFS= read -r TUI_INPUT </dev/tty
+    fi
+    printf '%s[?25l' "$TUI_ESC" >/dev/tty
+}
+
+# Shows the text $2 under the title $1 and waits for a key. $3 is the color of the frame.
+tui_message() {
+    tui_size
+    TUI_CONTENT=()
+    tui_wrap "$2"
+    tui_layout ${#TUI_CONTENT[@]}
+    tui_render_box "$1" "$3"
+    tui_show "Enter continue"
+    tui_read_key
+}
+
+# Yes/no question of the scripts: a dialog in the interactive display, otherwise the classic prompt
+# that reads one key. $1 is the title of the dialog, $2 the question, \n starts a new line.
+# Returns 0 for yes.
+ask_yes_no() {
+    local char
+    if [ "$TUI" = true ]; then
+        tui_confirm "$1" "$2"
+        return
+    fi
+    echo -e "$2 (y/N)"
+    read -r -s -n 1 char
+    [[ "$char" = "y" || "$char" = "Y" ]]
+}
+
+# Asks for a text: $1 is the title of the dialog, $2 the prompt, "secret" as $3 hides the input.
+# The answer is in ANSWER.
+ask_text() {
+    if [ "$TUI" = true ]; then
+        tui_input "$1" "$2" "$3"
+        ANSWER=$TUI_INPUT
+    elif [ "$3" = secret ]; then
+        read -r -s -p "$2" ANSWER
+        echo
+    else
+        read -r -p "$2" ANSWER
+    fi
+}
+
+# A hint for the user: on the start screen of the interactive display, otherwise printed right away.
+# \n starts a new line.
+tui_note() {
+    if [ "$TUI" = true ]; then
+        TUI_NOTES+=("$1")
+    else
+        echo -e "$1"
+    fi
+}
+
+# A message for the user: a dialog in the interactive display, otherwise printed. $1 is the title
+# of the dialog, $2 the text.
+tui_say() {
+    if [ "$TUI" = true ]; then
+        tui_message "$1" "$2"
+    else
+        echo -e "$2"
+    fi
+}
+
+# A readable name of the operating system for the start screens
+tui_os_name() {
+    if [ -r /etc/os-release ]; then
+        # shellcheck disable=SC1091
+        (. /etc/os-release && echo "${PRETTY_NAME:-$NAME}")
+    elif [ "$(uname)" = "Darwin" ]; then
+        echo "macOS $(sw_vers -productVersion 2>/dev/null)"
+    else
+        uname -sr
+    fi
+}
+
+# Asks for the sudo password once and keeps it valid, so that no password prompt breaks into the
+# progress display. Without sudo rights the script ends. If sudo does not keep the password
+# (timestamp_timeout=0), the display is turned off and the classic output continues.
+tui_need_sudo() {
+    if [ "$TUI_SUDO_DONE" = true ] || [ "$EUID" -eq 0 ]; then
+        TUI_SUDO_DONE=true
+        return 0
+    fi
+    if ! sudo -n true 2>/dev/null; then
+        TUI_CONTENT=()
+        tui_wrap "Some steps need administrator rights. Please enter the password of the user $USER for sudo."
+        tui_layout ${#TUI_CONTENT[@]}
+        tui_render_box "Administrator rights"
+        tui_show ""
+        printf '%s[%d;%dH%s[?25h' "$TUI_ESC" "$((TUI_BOX_ROW + ${#TUI_OUT[@]} + 1))" "$TUI_BOX_LEFT" "$TUI_ESC" >/dev/tty
+        if ! sudo -v </dev/tty; then
+            tui_leave
+            echo "${red}sudo privileges are required but not available.${normal}"
+            exit 1
+        fi
+        printf '%s[?25l' "$TUI_ESC" >/dev/tty
+        if ! sudo -n true 2>/dev/null; then
+            tui_leave
+            TUI=false
+            echo "sudo does not keep the password, so the interactive display is turned off."
+            return 1
+        fi
+    fi
+    # Without its own output: an inherited terminal would keep "script" and ssh sessions open.
+    # sudo finds the terminal of its ticket through the session, not through these descriptors.
+    (while kill -0 "$$" 2>/dev/null; do
+        sudo -n true 2>/dev/null
+        sleep 30
+    done) </dev/null >/dev/null 2>&1 &
+    TUI_SUDO_PID=$!
+    disown "$TUI_SUDO_PID" 2>/dev/null
+    TUI_SUDO_DONE=true
+}
+
+# Switches to the progress display of TUI_STEPS, $1 is its title. From here on the output of the
+# steps goes to TUI_LOG. Returns 1 if the display had to be turned off.
+tui_start_steps() {
+    TUI_PROGRESS_TITLE="$1"
+    tui_need_sudo || return 1
+    exec 7>&1 8>&2
+    exec >>"$TUI_LOG" 2>&1
+    TUI_RUNNING=true
+    TUI_STEP=0
+    tui_draw_progress
+}
+
+# Called by print_step: marks the steps before $1 as done. $2 is the number of steps, $3 the name.
+tui_step() {
+    tui_ticker_stop
+    TUI_STEP=$1
+    TUI_STEP_TOTAL=$2
+    if [ -z "${TUI_STEPS[$1 - 1]}" ]; then
+        TUI_STEPS[$1 - 1]="$3"
+    fi
+    tui_draw_progress
+    tui_ticker_start
+}
+
+tui_draw_progress() {
+    local i total=${TUI_STEP_TOTAL:-${#TUI_STEPS[@]}} bar_w filled=0 done_bar percent=0
+    TUI_CONTENT=()
+    TUI_SPIN_LINE=-1
+    for ((i = 1; i <= total; i++)); do
+        if [ "$i" -lt "$TUI_STEP" ]; then
+            TUI_CONTENT+=("${TUI_GREEN}${TUI_G_OK}${TUI_RESET} ${TUI_STEPS[i - 1]}")
+        elif [ "$i" -eq "$TUI_STEP" ]; then
+            TUI_SPIN_LINE=${#TUI_CONTENT[@]}
+            TUI_CONTENT+=("${TUI_LIGHT}${TUI_G_SPIN[0]}${TUI_RESET} ${TUI_BOLD}${TUI_STEPS[i - 1]}${TUI_RESET}")
+        else
+            TUI_CONTENT+=("${TUI_DIM}${TUI_G_TODO} ${TUI_STEPS[i - 1]}${TUI_RESET}")
+        fi
+    done
+    # The bar counts the finished steps
+    bar_w=$((TUI_TEXT_W - 6))
+    if [ "$total" -gt 0 ] && [ "$TUI_STEP" -gt 1 ]; then
+        filled=$((bar_w * (TUI_STEP - 1) / total))
+        percent=$((100 * (TUI_STEP - 1) / total))
+    fi
+    tui_repeat "$TUI_G_BAR" "$filled"
+    done_bar=$TUI_REPEATED
+    tui_repeat "$TUI_G_BAR_EMPTY" $((bar_w - filled))
+    TUI_CONTENT+=("" "${TUI_LIGHT}${done_bar}${TUI_DIM}${TUI_REPEATED}${TUI_RESET} $(printf '%4d%%' "$percent")" "")
+    # Filled in by the ticker with the last line of the log
+    TUI_TICK_LINE=${#TUI_CONTENT[@]}
+    TUI_CONTENT+=("")
+    tui_layout ${#TUI_CONTENT[@]}
+    tui_render_box "$TUI_PROGRESS_TITLE"
+    tui_show "Log: $TUI_LOG"
+    TUI_TEXT_COL=$((TUI_BOX_LEFT + 3))
+    TUI_TICK_ROW=$((TUI_BOX_ROW + 2 + TUI_TICK_LINE))
+    TUI_SPIN_ROW=0
+    if [ "$TUI_SPIN_LINE" -ge 0 ]; then
+        TUI_SPIN_ROW=$((TUI_BOX_ROW + 2 + TUI_SPIN_LINE))
+    fi
+}
+
+tui_ticker_start() {
+    if [ "$TUI_RUNNING" != true ]; then
+        return 0
+    fi
+    tui_ticker &
+    TUI_TICKER_PID=$!
+    disown "$TUI_TICKER_PID" 2>/dev/null
+}
+
+tui_ticker_stop() {
+    local i
+    if [ -z "$TUI_TICKER_PID" ]; then
+        return 0
+    fi
+    kill "$TUI_TICKER_PID" 2>/dev/null
+    # Wait until it is gone, so that it cannot draw over the next screen
+    for ((i = 0; i < 50; i++)); do
+        kill -0 "$TUI_TICKER_PID" 2>/dev/null || break
+        sleep 0.1 2>/dev/null || sleep 1
+    done
+    TUI_TICKER_PID=""
+}
+
+# Runs in the background while a step works: turns the spinner and shows the last line of the log,
+# so that a long npm install does not look like a hang
+tui_ticker() {
+    local i=0 n=${#TUI_G_SPIN[@]} line blank buf
+    tui_repeat " " "$TUI_TEXT_W"
+    blank=$TUI_REPEATED
+    while kill -0 "$$" 2>/dev/null; do
+        line=$(tail -n 1 "$TUI_LOG" 2>/dev/null)
+        # Progress output rewrites its line with \r, only the last part is current
+        line=${line##*$'\r'}
+        # Without CSI sequences and the charset switch ESC ( B that "tput sgr0" emits
+        line=$(printf '%s' "$line" | sed -e "s/${TUI_ESC}\[[0-9;?]*[A-Za-z]//g" -e "s/${TUI_ESC}[()][A-Za-z0-9]//g" | tr -d '\000-\037\177')
+        line=${line:0:TUI_TEXT_W}
+        buf="${TUI_ESC}[${TUI_TICK_ROW};${TUI_TEXT_COL}H${blank}${TUI_ESC}[${TUI_TICK_ROW};${TUI_TEXT_COL}H${TUI_DIM}${line}${TUI_RESET}"
+        if [ "$TUI_SPIN_ROW" -gt 0 ]; then
+            buf+="${TUI_ESC}[${TUI_SPIN_ROW};${TUI_TEXT_COL}H${TUI_LIGHT}${TUI_G_SPIN[i]}${TUI_RESET}"
+        fi
+        printf '%s' "$buf" >/dev/tty
+        i=$(((i + 1) % n))
+        sleep 0.2 2>/dev/null || sleep 1
+    done
+}
+
+# Ends the progress display after the last step and returns to the normal terminal
+tui_finish() {
+    if [ "$TUI_RUNNING" != true ]; then
+        return 0
+    fi
+    tui_ticker_stop
+    exec 1>&7 2>&8 7>&- 8>&-
+    TUI_RUNNING=false
+    tui_leave
+}
+
+# Prints the logo and a box with TUI_CONTENT into the normal terminal, where it stays visible after
+# the script. $1 is the title, $2 the color of the frame, "nologo" as $3 leaves out the logo.
+tui_summary() {
+    local row logo box
+    tui_layout ${#TUI_CONTENT[@]}
+    if [ "$3" = nologo ]; then
+        TUI_LOGO=()
+    fi
+    tui_render_box "$1" "$2"
+    tui_place flow
+    tui_repeat " " "$TUI_LOGO_W"
+    echo
+    for ((row = 1; row <= TUI_BLOCK_ROWS; row++)); do
+        logo=""
+        box=""
+        if [ "$row" -ge "$TUI_LOGO_ROW" ] && [ "$row" -lt $((TUI_LOGO_ROW + ${#TUI_LOGO[@]})) ]; then
+            logo=${TUI_LOGO[row - TUI_LOGO_ROW]}
+        fi
+        if [ "$row" -ge "$TUI_BOX_ROW" ] && [ "$row" -lt $((TUI_BOX_ROW + ${#TUI_OUT[@]})) ]; then
+            box=${TUI_OUT[row - TUI_BOX_ROW]}
+        fi
+        if [ "$TUI_LOGO_MODE" = side ] && [ ${#TUI_LOGO[@]} -gt 0 ]; then
+            printf '%*s%s   %s\n' $((TUI_LOGO_COL - 1)) "" "${logo:-$TUI_REPEATED}" "$box"
+        elif [ -n "$logo" ]; then
+            printf '%*s%s\n' $((TUI_LOGO_COL - 1)) "" "$logo"
+        else
+            printf '%*s%s\n' $((TUI_BOX_LEFT - 1)) "" "$box"
+        fi
+    done
+}
+
+# The box of the summary lists the steps as done
+tui_steps_done() {
+    local step
+    for step in "${TUI_STEPS[@]}"; do
+        TUI_CONTENT+=("${TUI_GREEN}${TUI_G_OK}${TUI_RESET} $step")
+    done
+}
+
+# EXIT trap of the display: restores the terminal and, after an error, shows where it happened
+tui_on_exit() {
+    local rc=$?
+    if [ "$TUI_RUNNING" = true ]; then
+        tui_finish
+        if [ "$rc" -ne 0 ]; then
+            tui_failure "$rc"
+        fi
+    else
+        tui_leave
+    fi
+    if [ -n "$TUI_SUDO_PID" ]; then
+        kill "$TUI_SUDO_PID" 2>/dev/null
+    fi
+}
+
+tui_failure() {
+    local rc="$1" total=${TUI_STEP_TOTAL:-${#TUI_STEPS[@]}} where=""
+    TUI_CONTENT=()
+    if [ "$TUI_STEP" -gt 0 ]; then
+        where="step $TUI_STEP of $total: ${TUI_STEPS[TUI_STEP - 1]}"
+    fi
+    if [ "$rc" -eq 130 ] || [ "$rc" -eq 143 ]; then
+        TUI_CONTENT+=("${TUI_RED}${TUI_G_FAIL}${TUI_RESET} Aborted${where:+ in $where}")
+    elif [ -n "$where" ]; then
+        TUI_CONTENT+=("${TUI_RED}${TUI_G_FAIL}${TUI_RESET} Failed in $where")
+    else
+        TUI_CONTENT+=("${TUI_RED}${TUI_G_FAIL}${TUI_RESET} Failed with exit code $rc")
+    fi
+    TUI_CONTENT+=("")
+    tui_wrap "Above are the last lines of the log. The whole log is in $TUI_LOG"
+    # The log first, so that the box is what stays in view
+    echo
+    tail -n 30 "$TUI_LOG"
+    tui_summary "$TUI_PROGRESS_TITLE" "$TUI_RED" nologo
+}
 
 get_platform_params() {
     # Test which platform this script is being run on

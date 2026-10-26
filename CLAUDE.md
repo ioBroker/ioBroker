@@ -98,6 +98,25 @@ literal contents of `installer_library.sh`**, producing self-contained `dist/ins
 So: shared bash helpers (platform detection, package install, user creation, Node.js install, permissions,
 Redis) belong in `installer_library.sh`; each entry-point script keeps only its own flow.
 
+### Interactive display (TUI)
+
+The `tui_*` functions in the library give `installer.sh` and `fix_installation.sh` a full screen display:
+logo, start menu (`tui_menu`), dialogs (`ask_yes_no`/`ask_text` fall back to the classic `read` prompts),
+and a progress view. `tui_init` decides once at the start; every non-interactive case (no terminal,
+`--silent`, `--no-tui`, `IOB_NO_TUI`, `CI`, `TERM=dumb`, < 70x24) keeps the classic output, so **both paths
+must keep working** — branch on `$TUI`, never assume it. That is also why the library is loaded at the
+very top of both scripts now: the early checks put their hints on the start screen via `tui_note`.
+
+- `tui_start_steps` redirects stdout/stderr into `~/iobroker-{install,fix}.log`; `print_step` drives the
+  progress view. Anything a step echoes ends up in the log, not on screen.
+- Keys come from `/dev/tty`, never stdin: under `curl ... | bash` stdin is the script itself.
+- `tui_need_sudo` asks for the password before the steps and keeps the timestamp alive, otherwise sudo
+  prompts would break into the screen.
+- An EXIT trap restores the terminal; on failure it prints the log tail, then a box naming the step.
+  Before an intentional `exit` from a dialog flow, call `tui_leave` so the message stays visible.
+- bash 3.2 (macOS) and CP437 glyphs only: no `${x,,}`, namerefs, `mapfile` or `read -t 0.1`; no rounded
+  corners, check marks or braille, which the Raspberry Pi console and PuTTY's default font lack.
+
 ### The deployment loop — why edits do not take effect locally
 
 The installed `iob` wrapper does **not** call scripts from this repo. It downloads them from
@@ -202,13 +221,16 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
 
 ## CI
 
-- `test.yml` — four jobs: `node-versions` reads `nodeJsAccepted` and feeds the matrix;
+- `test.yml` — seven jobs: `shellcheck` (see Linting); `node-versions` reads `nodeJsAccepted` and feeds the matrix;
   `versions-url` checks that the runtime download of `versions.json` from `master` still works and parses,
   which the installing jobs no longer cover because they read the checkout instead; `test-install`
   installs on `ubuntu`/`macos` for every accepted major, then checks permissions, admin reachability and
   that the service really resolves the matrix version (systemd expands `which node` at start, so a plain
   `setup-node` would not have covered it); `test-nodejs-install` purges Node.js first, so the installer
-  has to run `install_nodejs` and the NodeSource path is exercised at all.
+  has to run `install_nodejs` and the NodeSource path is exercised at all; `test-tui` runs installer and
+  fixer under `script` with typed keys and `test-tui-macos` the installer under the bash 3.2 of `/bin/bash`,
+  the only jobs where the interactive display is on (every other job has no terminal or passes
+  `--silent`/`--no-tui`).
 - `npx_install.yml` / `deploy_windows.yml` — `npm link` + `npx iobroker` on windows-latest; the `deploy` job
   publishes both `@iobroker/install` and `@iobroker/fix` on version tags.
 - `deploy.yml` — on GitHub release, runs `npm run deploy` (SFTP to iobroker.net).

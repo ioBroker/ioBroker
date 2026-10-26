@@ -39,10 +39,11 @@ curl -sL https://iobroker.net/install.sh | bash -
 ```
 
 **Available Parameters:**
-- `--silent` - Skip all user prompts and run an automated installation
+- `--silent` - Skip all user prompts and run an automated installation, with the classic output
 - `--redis` - Install and configure Redis as the database backend
 - `--no-autostart` - Do not start ioBroker after the installation has finished
 - `--hardened` - Do not give the `iobroker` user any sudo rights, see [Hardened mode](#hardened-mode)
+- `--no-tui` - Classic line output instead of the [interactive display](#interactive-display)
 
 The piped installation accepts the same options:
 ```bash
@@ -50,8 +51,34 @@ curl -sL https://iobroker.net/install.sh | bash -s -- --hardened
 ```
 
 **Notes:**
+- On a terminal the installer starts with the [interactive display](#interactive-display): a start screen
+  where `--redis`, `--no-autostart` and `--hardened` can also be switched, then a progress view of the steps
 - The installer creates an `iob` command with additional parameters (see [Service Control Commands](#service-control-commands))
 - Root user detection is automatic with warnings and recommendations
+
+### Interactive display
+
+On a terminal, the installer and `iob fix` show a full screen display: the ioBroker logo, a start screen
+with the options, dialogs for the questions and a progress view of the steps. The output of the steps
+goes into a log file instead of the screen, the last line of it is shown under the progress bar:
+`~/iobroker-install.log` for the installer, `~/iobroker-fix.log` for the fixer. At the end the display
+disappears and a summary with the address of the admin stays in the terminal; if a step fails, the last
+lines of the log are shown instead.
+
+Keys: `↑`/`↓` choose, `Space` switches an option, `Enter` selects, `Q` quits without changing anything.
+In the dialogs `←`/`→` choose and `Y`/`N` answer directly, `No` is preselected.
+
+The display needs a terminal with someone in front of it. The classic line output stays in every other case,
+so scripts, CI and automated installations behave as before:
+- `--silent` or `--no-tui`, or the environment variable `IOB_NO_TUI=true` or `CI`
+- no terminal: cron, cloud-init, `/etc/rc.local`, `ssh host 'curl ... | bash'` without `-t`, output into a
+  file or a pipe
+- `TERM` unset or `dumb`, or a terminal smaller than 70 x 24 characters
+
+`curl -sL https://iobroker.net/install.sh | bash -` gets the display too: the keys are read from the
+terminal, not from stdin, which carries the script. Without sudo rights that are remembered for a while
+(`timestamp_timeout=0`), the password prompts would break into the display, so it switches to the classic
+output after the first one.
 
 ## Diagnostic Commands
 
@@ -108,6 +135,11 @@ iob fix [OPTIONS]
 - `--no-update` - Skip updating the system package repositories
 - `--hardened` - Switch an existing installation to [Hardened mode](#hardened-mode). An installation that is
   already hardened stays hardened on every later `iob fix`, the flag is not needed again.
+- `--no-tui` - Classic line output instead of the [interactive display](#interactive-display)
+
+On a terminal the fixer starts with the [interactive display](#interactive-display), where `--no-update`
+and `--hardened` can also be switched. It first checks that ioBroker is installed and stopped, and only
+then asks its questions (user account, boot target, timezone).
 
 **Examples:**
 ```bash
@@ -285,6 +317,7 @@ When using the NPX installer on Windows:
 ### Linux/macOS Installation  
 When using the shell installer:
 - `--silent` skips all user prompts
+- `--no-tui` keeps the classic output on a terminal, see [Interactive display](#interactive-display)
 - Automatic platform detection
 - Creates system user and service setup
 
@@ -298,6 +331,13 @@ export IOB_FORCE_INITD=true
 ./installer.sh
 ```
 Forces the installer to use init.d instead of systemd, even if systemd is available.
+
+### IOB_NO_TUI
+```bash
+IOB_NO_TUI=true iob fix
+```
+Keeps the classic line output on a terminal, like `--no-tui`. Useful where options cannot be passed, e.g.
+a wrapper script. See [Interactive display](#interactive-display).
 
 ### AUTOMATED_INSTALLER
 This is automatically set by the installer to indicate an automated installation is in progress. Not intended for manual use.
