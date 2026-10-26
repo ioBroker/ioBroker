@@ -2,6 +2,8 @@
 
 // "iob docker" on Windows: shows whether Docker is installed and running.
 // Status only - the Linux counterpart is docker.sh, which can also install Docker.
+// Not named docker.js: it is copied into the ioBroker directory, and cmd.exe searches the current
+// directory with PATHEXT (.JS included) before PATH, so "docker" there would run this file.
 
 const { spawnSync } = require('node:child_process');
 
@@ -25,8 +27,8 @@ function usage() {
     console.log('Exit code: 0 if Docker is installed, 1 otherwise.');
 }
 
-// iob.bat passes all arguments, including "docker" itself
-const args = process.argv.slice(2).filter(arg => arg !== 'docker' && arg !== '--allow-root');
+// iob.bat passes all arguments, starting with "docker" itself
+const args = process.argv.slice(3).filter(arg => arg !== '--allow-root');
 if (args.includes('-h') || args.includes('--help')) {
     usage();
     process.exit(0);

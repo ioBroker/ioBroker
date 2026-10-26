@@ -48,7 +48,7 @@ const commandLine = `@echo off
 if [%1]==[fix] (
     npx @iobroker/fix
 ) else if [%1]==[docker] (
-    node "%~dp0docker.js" %*
+    node "%~dp0dockerStatus.js" %*
 ) else (
     if exist serviceIoBroker.bat (
         if [%1]==[start] (

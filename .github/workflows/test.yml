@@ -81,6 +81,21 @@ jobs:
         bash docker.sh --help
         bash docker.sh
 
+    # Hides Docker behind a PATH with only the tools the not-installed path needs (bash too: the
+    # command itself is looked up in that PATH). Without a terminal the missing answer counts as
+    # "no", so nothing is installed and the exit code is 1.
+    - name: Smoke test docker.sh without Docker
+      run: |
+        nodocker="$RUNNER_TEMP/nodocker"
+        mkdir -p "$nodocker"
+        for tool in bash uname grep id tr; do ln -s "$(command -v "$tool")" "$nodocker/$tool"; done
+        rc=0
+        PATH="$nodocker" bash docker.sh </dev/null >"$RUNNER_TEMP/docker.log" 2>&1 || rc=$?
+        cat "$RUNNER_TEMP/docker.log"
+        test "$rc" -eq 1
+        grep -q "Docker:          not installed" "$RUNNER_TEMP/docker.log"
+        grep -q "Docker was not installed" "$RUNNER_TEMP/docker.log"
+
   # ===================
   # Runs unit tests on all supported node versions and OSes
   test-install:

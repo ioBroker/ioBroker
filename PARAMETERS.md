@@ -285,14 +285,25 @@ iob docker -y
   Restart ioBroker afterwards (`iob restart`) so the running processes get the new membership.
   A `--hardened` installation is left alone, because membership in the `docker` group is equivalent
   to root rights
-- If Docker is already installed but the `iobroker` user is not in the `docker` group, it offers to add it
-- Without a terminal and without `-y`, nothing is installed: a missing answer counts as "no"
+- If Docker is already installed but the `iobroker` user is not in the `docker` group, it offers to add it.
+  With root or passwordless sudo, a `--hardened` installation is recognized before that question
+- If Docker is installed but its service is not running (systemd), it offers to start and enable it
+- Questions accept `y`/`yes` and the German `j`/`ja`. Without a terminal and without `-y`, nothing is
+  installed or changed: a missing answer counts as "no"
 - Exit code `0` if Docker is installed at the end, `1` otherwise
 
-**Not supported:**
+The status works for every user. Installing Docker, starting its service and changing the group need
+sudo rights: the `iob` wrapper downloads the script as `iobroker`, but runs it as the user who called
+`iob docker`.
+
+**Installation not supported:**
 - macOS (install Docker Desktop instead) and FreeBSD (no Docker available)
 - ioBroker running inside a container (install Docker on the host)
 - WSL (use Docker Desktop with its WSL integration)
+
+With an existing Docker, e.g. Docker Desktop's WSL integration, `iob docker` still shows the status and
+adds the `iobroker` user to the `docker` group, which the WSL integration needs as well. Inside a
+container the group is left alone, because it is not the group of the host's socket.
 
 The command is part of the `iob` wrapper written by the installer and the fixer. On an existing
 installation run `iob fix` once to get it.
@@ -301,8 +312,8 @@ installation run `iob fix` once to get it.
 version) and does not install anything. Docker on Windows means Docker Desktop, which needs WSL2 or Hyper-V,
 administrator rights and, for larger companies, a paid subscription. Its engine only runs while a user is
 logged on, so after a reboot it is not available to the ioBroker service until someone logs on. `-y` is
-accepted but has no effect. The script is `install/windows/docker.js`, copied into the ioBroker directory
-by `npx @iobroker/install` and `npx @iobroker/fix`.
+accepted but has no effect. The script is `install/windows/dockerStatus.js`, copied into the ioBroker
+directory by `npx @iobroker/install` and `npx @iobroker/fix`.
 
 ## Common Parameters Across Commands
 

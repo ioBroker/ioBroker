@@ -132,7 +132,9 @@ read from the bundled `versions.json`) → `installCopyFiles.js` (copies the pac
 
 `install/windows/` holds the Windows service payload: `install.js` (WinSW3-based service registration),
 `serviceIoBroker.bat` (UAC self-elevation + net start/stop), `controller.js`, `shortcuts.js`,
-`uninstall.js`, `docker.js` (status-only `iob docker`, called from `iob.bat`). `installSetup.js` copies these into the install root.
+`uninstall.js`, `dockerStatus.js` (status-only `iob docker`, called from `iob.bat`). `installSetup.js` copies these into the install root.
+Because of that, none of them may share its basename with a command: `cmd.exe` searches the current directory
+with `PATHEXT` (which includes `.JS`) before `PATH`, so a `docker.js` there would shadow `docker.exe`.
 
 **Install vs. fix is selected by package name**: `install.js` and `installSetup.js` branch on
 `pack.name.includes('fix')`. `npm run make-fix` flips the name to `@iobroker/fix` before the second publish,
