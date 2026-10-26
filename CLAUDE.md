@@ -231,7 +231,9 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   that the service really resolves the matrix version (systemd expands `which node` at start, so a plain
   `setup-node` would not have covered it); `test-nodejs-install` purges Node.js first, so the installer
   has to run `install_nodejs` and the NodeSource path is exercised at all; `test-tui` runs installer and
-  fixer under `script` with typed keys and `test-tui-macos` the installer under the bash 3.2 of `/bin/bash`,
+  fixer under `script` through `.github/tuiDrive.sh`, which presses Enter whenever the screen stops
+  changing (keys typed ahead get swallowed by sudo-rs, and the util-linux `script` only ends at EOF on
+  its stdin), and `test-tui-macos` the installer under the bash 3.2 of `/bin/bash`,
   the only jobs where the interactive display is on (every other job has no terminal or passes
   `--silent`/`--no-tui`).
 - `npx_install.yml` / `deploy_windows.yml` — `npm link` + `npx iobroker` on windows-latest; the `deploy` job
