@@ -110,8 +110,8 @@ enable_colored_output
 # Interactive display (TUI)
 # ------------------------------
 # A full screen display with the ioBroker logo, a menu, dialogs and a progress view of the steps.
-# It is only used on a real terminal with someone in front of it: --silent, --no-tui,
-# IOB_NO_TUI=true, CI, TERM=dumb, a terminal smaller than 70x24 and a missing /dev/tty (cron,
+# It is only used on a real terminal with someone in front of it: --silent, --no-tui or its alias
+# --classic, IOB_NO_TUI=true, CI, TERM=dumb, a terminal smaller than 70x24 and a missing /dev/tty (cron,
 # cloud-init, rc.local, ssh without -t) all keep the classic line output. Keys are read from
 # /dev/tty, so "curl ... | bash -", where stdin is the script itself, works too.
 # Plain ANSI sequences and bash 3.2 only: whiptail and dialog are missing on macOS, FreeBSD and
@@ -185,7 +185,7 @@ tui_init() {
     local log_file="$1"
     shift
     TUI=false
-    if [[ "$*" == *--silent* || "$*" == *--no-tui* ]] || [ "$IOB_NO_TUI" = "true" ] || [ -n "$CI" ]; then
+    if [[ "$*" == *--silent* || "$*" == *--no-tui* || "$*" == *--classic* ]] || [ "$IOB_NO_TUI" = "true" ] || [ -n "$CI" ]; then
         return 1
     fi
     case "$TERM" in
@@ -388,19 +388,25 @@ tui_logo() {
     fi
 }
 
-# Starts a new screen for a box of $1 lines: picks the biggest logo that still fits
+# Starts a new screen for a box with the lines of TUI_CONTENT: picks the biggest logo that still
+# fits. "flow" as $1 is for the summary, which is printed into the terminal and may scroll.
 tui_layout() {
-    local free
+    local free max
     tui_size
     TUI_OUT=()
     TUI_LOGO=()
     TUI_LOGO_W=0
+    # The box adds four rows of frame and padding, the key hints one more. A box taller than the
+    # screen would run off it, so its end is cut: hints are there, the choices come before them.
+    max=$((TUI_ROWS - 5))
+    if [ "$1" != flow ] && [ "${#TUI_CONTENT[@]}" -gt "$max" ]; then
+        TUI_CONTENT=("${TUI_CONTENT[@]:0:max - 1}" "${TUI_DIM}${TUI_G_MORE} (the terminal is too small for the rest)${TUI_RESET}")
+    fi
     if [ "$TUI_LOGO_MODE" = side ]; then
         tui_logo small
         return
     fi
-    # The box adds four rows of frame and padding, the key hints one more
-    free=$((TUI_ROWS - $1 - 5))
+    free=$((TUI_ROWS - ${#TUI_CONTENT[@]} - 5))
     if [ "$free" -ge 15 ]; then
         tui_logo big
     elif [ "$free" -ge 9 ]; then
@@ -559,7 +565,8 @@ tui_read_key() {
 
 # Menu of actions and on/off options. The items come from TUI_MENU_LABELS, TUI_MENU_TYPES (action,
 # toggle or quit), TUI_MENU_VALUES (true/false for a toggle) and TUI_MENU_HELP, the lines above
-# them from TUI_MENU_HEAD and the warnings below them from TUI_NOTES. $1 is the title.
+# them from TUI_MENU_HEAD, the warnings below them from TUI_NOTES and a last hint, shown dimmed, from
+# TUI_MENU_FOOT. $1 is the title.
 # Sets TUI_MENU_CHOICE to the index of the chosen action; Q and Esc choose the quit item.
 tui_menu() {
     local title="$1" sel=0 n=${#TUI_MENU_LABELS[@]} i label quit=0 help_lines=0 note line
@@ -602,7 +609,11 @@ tui_menu() {
             TUI_CONTENT+=("")
             tui_wrap "$note" "$TUI_YELLOW"
         done
-        tui_layout ${#TUI_CONTENT[@]}
+        if [ -n "$TUI_MENU_FOOT" ]; then
+            TUI_CONTENT+=("")
+            tui_wrap "$TUI_MENU_FOOT" "$TUI_DIM"
+        fi
+        tui_layout
         tui_render_box "$title"
         tui_show "${TUI_KEYS_UPDOWN} choose   Space switch   Enter select   Q quit"
         tui_read_key
@@ -643,7 +654,7 @@ tui_confirm() {
         fi
         tui_repeat " " $(((TUI_TEXT_W - 16) / 2))
         TUI_CONTENT+=("" "${TUI_REPEATED}${yes}   ${no}")
-        tui_layout ${#TUI_CONTENT[@]}
+        tui_layout
         tui_render_box "$1"
         tui_show "${TUI_KEYS_LEFTRIGHT} choose   Enter confirm   Y yes   N no"
         tui_read_key
@@ -664,7 +675,7 @@ tui_input() {
     TUI_CONTENT=()
     tui_wrap "$2"
     TUI_CONTENT+=("" "${TUI_LIGHT}>${TUI_RESET}")
-    tui_layout ${#TUI_CONTENT[@]}
+    tui_layout
     tui_render_box "$1"
     tui_show "Enter confirm"
     # The last line of the box content, behind the "> "
@@ -683,7 +694,7 @@ tui_message() {
     tui_size
     TUI_CONTENT=()
     tui_wrap "$2"
-    tui_layout ${#TUI_CONTENT[@]}
+    tui_layout
     tui_render_box "$1" "$3"
     tui_show "Enter continue"
     tui_read_key
@@ -760,7 +771,7 @@ tui_need_sudo() {
     if ! sudo -n true 2>/dev/null; then
         TUI_CONTENT=()
         tui_wrap "Some steps need administrator rights. Please enter the password of the user $USER for sudo."
-        tui_layout ${#TUI_CONTENT[@]}
+        tui_layout
         tui_render_box "Administrator rights"
         tui_show ""
         printf '%s[%d;%dH%s[?25h' "$TUI_ESC" "$((TUI_BOX_ROW + ${#TUI_OUT[@]} + 1))" "$TUI_BOX_LEFT" "$TUI_ESC" >/dev/tty
@@ -839,7 +850,7 @@ tui_draw_progress() {
     # Filled in by the ticker with the last line of the log
     TUI_TICK_LINE=${#TUI_CONTENT[@]}
     TUI_CONTENT+=("")
-    tui_layout ${#TUI_CONTENT[@]}
+    tui_layout
     tui_render_box "$TUI_PROGRESS_TITLE"
     tui_show "Log: $TUI_LOG"
     TUI_TEXT_COL=$((TUI_BOX_LEFT + 3))
@@ -911,7 +922,7 @@ tui_finish() {
 # the script. $1 is the title, $2 the color of the frame, "nologo" as $3 leaves out the logo.
 tui_summary() {
     local row logo box
-    tui_layout ${#TUI_CONTENT[@]}
+    tui_layout flow
     if [ "$3" = nologo ]; then
         TUI_LOGO=()
     fi

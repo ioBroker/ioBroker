@@ -103,9 +103,10 @@ Redis) belong in `installer_library.sh`; each entry-point script keeps only its 
 The `tui_*` functions in the library give `installer.sh` and `fix_installation.sh` a full screen display:
 logo, start menu (`tui_menu`), dialogs (`ask_yes_no`/`ask_text` fall back to the classic `read` prompts),
 and a progress view. `tui_init` decides once at the start; every non-interactive case (no terminal,
-`--silent`, `--no-tui`, `IOB_NO_TUI`, `CI`, `TERM=dumb`, < 70x24) keeps the classic output, so **both paths
-must keep working** — branch on `$TUI`, never assume it. That is also why the library is loaded at the
-very top of both scripts now: the early checks put their hints on the start screen via `tui_note`.
+`--silent`, `--classic`/`--no-tui`, `IOB_NO_TUI`, `CI`, `TERM=dumb`, < 70x24) keeps the classic output,
+so **both paths must keep working** — branch on `$TUI`, never assume it. That is also why the library is
+loaded at the very top of both scripts now: the early checks put their hints on the start screen via
+`tui_note`.
 
 - `tui_start_steps` redirects stdout/stderr into `~/iobroker-{install,fix}.log`; `print_step` drives the
   progress view. Anything a step echoes ends up in the log, not on screen.

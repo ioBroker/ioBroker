@@ -43,7 +43,8 @@ curl -sL https://iobroker.net/install.sh | bash -
 - `--redis` - Install and configure Redis as the database backend
 - `--no-autostart` - Do not start ioBroker after the installation has finished
 - `--hardened` - Do not give the `iobroker` user any sudo rights, see [Hardened mode](#hardened-mode)
-- `--no-tui` - Classic line output instead of the [interactive display](#interactive-display)
+- `--classic` (or `--no-tui`) - The classic flow with every line of output instead of the
+  [interactive display](#interactive-display), see [Classic output](#classic-output)
 
 The piped installation accepts the same options:
 ```bash
@@ -62,15 +63,15 @@ On a terminal, the installer and `iob fix` show a full screen display: the ioBro
 with the options, dialogs for the questions and a progress view of the steps. The output of the steps
 goes into a log file instead of the screen, the last line of it is shown under the progress bar:
 `~/iobroker-install.log` for the installer, `~/iobroker-fix.log` for the fixer. At the end the display
-disappears and a summary with the address of the admin and the path of the log stays in the terminal; if a step fails, the last
-lines of the log are shown instead.
+disappears and a summary with the address of the admin and the path of the log stays in the terminal;
+if a step fails, the last lines of the log are shown instead.
 
 Keys: `↑`/`↓` choose, `Space` switches an option, `Enter` selects, `Q` quits without changing anything.
 In the dialogs `←`/`→` choose and `Y`/`N` answer directly, `No` is preselected.
 
 The display needs a terminal with someone in front of it. The classic line output stays in every other case,
 so scripts, CI and automated installations behave as before:
-- `--silent` or `--no-tui`, or the environment variable `IOB_NO_TUI=true` or `CI`
+- `--classic`, `--no-tui` or `--silent`, or the environment variable `IOB_NO_TUI=true` or `CI`
 - no terminal: cron, cloud-init, `/etc/rc.local`, `ssh host 'curl ... | bash'` without `-t`, output into a
   file or a pipe
 - `TERM` unset or `dumb`, or a terminal smaller than 70 x 24 characters
@@ -79,6 +80,31 @@ so scripts, CI and automated installations behave as before:
 terminal, not from stdin, which carries the script. Without sudo rights that are remembered for a while
 (`timestamp_timeout=0`), the password prompts would break into the display, so it switches to the classic
 output after the first one.
+
+### Classic output
+
+`--classic` runs the installer or the fixer the way they ran before the interactive display: every command
+prints its output into the terminal as it happens (package manager, npm, service setup), the steps are
+marked by `====` banners, and the questions of the fixer are plain `(y/N)` prompts. Nothing is written to
+`~/iobroker-install.log` or `~/iobroker-fix.log`. Use it to watch exactly what happens, to copy the output
+into a forum post, or when the display does not work with a terminal. `--no-tui` is the same option under
+its technical name; the start screen of the display mentions `--classic` in its last line.
+
+```bash
+# Installer
+curl -sL https://iobroker.net/install.sh | bash -s -- --classic
+
+# Fixer
+iob fix --classic
+
+# Combined with other options
+curl -sL https://iobroker.net/install.sh | bash -s -- --classic --redis
+iob fix --classic --no-update
+```
+
+To keep the classic output for good, set `IOB_NO_TUI=true`, e.g. in `~/.bashrc`, see
+[IOB_NO_TUI](#iob_no_tui). To keep the display and still watch every line, follow the log from a second
+terminal instead: `tail -f ~/iobroker-install.log`.
 
 ## Diagnostic Commands
 
@@ -135,7 +161,8 @@ iob fix [OPTIONS]
 - `--no-update` - Skip updating the system package repositories
 - `--hardened` - Switch an existing installation to [Hardened mode](#hardened-mode). An installation that is
   already hardened stays hardened on every later `iob fix`, the flag is not needed again.
-- `--no-tui` - Classic line output instead of the [interactive display](#interactive-display)
+- `--classic` (or `--no-tui`) - The classic flow with every line of output instead of the
+  [interactive display](#interactive-display), see [Classic output](#classic-output)
 
 On a terminal the fixer starts with the [interactive display](#interactive-display), where `--no-update`
 and `--hardened` can also be switched. It first checks that ioBroker is installed and stopped, and only
@@ -317,7 +344,7 @@ When using the NPX installer on Windows:
 ### Linux/macOS Installation  
 When using the shell installer:
 - `--silent` skips all user prompts
-- `--no-tui` keeps the classic output on a terminal, see [Interactive display](#interactive-display)
+- `--classic` (or `--no-tui`) keeps the classic output on a terminal, see [Classic output](#classic-output)
 - Automatic platform detection
 - Creates system user and service setup
 
@@ -336,7 +363,7 @@ Forces the installer to use init.d instead of systemd, even if systemd is availa
 ```bash
 IOB_NO_TUI=true iob fix
 ```
-Keeps the classic line output on a terminal, like `--no-tui`. Useful where options cannot be passed, e.g.
+Keeps the classic line output on a terminal, like `--classic`. Useful where options cannot be passed, e.g.
 a wrapper script. See [Interactive display](#interactive-display).
 
 ### AUTOMATED_INSTALLER

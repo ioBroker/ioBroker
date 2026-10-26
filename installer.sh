@@ -121,6 +121,7 @@ tui_install_menu() {
         "Adapters that need root rights (OS packages, reboot, mount, docker, ...) will not work then (--hardened)."
         "Ends the installer without changing anything."
     )
+    TUI_MENU_FOOT="Classic output with every detail instead of this display: start the installer with --classic."
     tui_menu "ioBroker Installer $INSTALLER_VERSION"
     if [ "${TUI_MENU_TYPES[TUI_MENU_CHOICE]}" = quit ]; then
         tui_leave

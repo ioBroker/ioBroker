@@ -111,6 +111,7 @@ tui_fix_menu() {
         "The iobroker user loses its sudo rights and the docker group, adapters that need root rights will not work (--hardened). A hardened installation stays hardened anyway."
         "Ends the fixer without changing anything."
     )
+    TUI_MENU_FOOT="Classic output with every detail instead of this display: iob fix --classic"
     tui_menu "ioBroker Fixer $FIXER_VERSION"
     if [ "${TUI_MENU_TYPES[TUI_MENU_CHOICE]}" = quit ]; then
         tui_leave
