@@ -302,7 +302,13 @@ fi
 SYSTEMD_FILE="/lib/systemd/system/iobroker.service"
 if [ -f "$SYSTEMD_FILE" ]; then
     $SUDOX rm "$SYSTEMD_FILE"
-    systemctl stop iobroker &>/dev/null
+    # With the interactive display the stop runs with sudo: without it polkit asks on the
+    # terminal via pkttyagent, outside the display, and breaks its screen
+    if [ "$TUI_RUNNING" = true ]; then
+        $SUDOX systemctl stop iobroker &>/dev/null
+    else
+        systemctl stop iobroker &>/dev/null
+    fi
     $SUDOX systemctl daemon-reload
 fi
 
