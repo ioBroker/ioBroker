@@ -19,7 +19,7 @@ One source tree feeds two delivery channels:
 
 ```bash
 npm install                 # ~30 s
-node tasks --create         # build dist/install.sh, dist/fix.sh, dist/diag.sh, dist/node-update.sh
+node tasks --create         # build dist/install.sh, dist/fix.sh, dist/diag.sh, dist/node-update.sh, dist/docker.sh
 node tasks --deploy         # SFTP upload of dist/ (needs SFTP_HOST/PORT/USER/PASS env vars)
 npm run deploy              # = create + deploy (what the release workflow runs)
 npm run make-fix            # rewrites package.json name to @iobroker/fix, for the second npm publish
@@ -78,7 +78,7 @@ Re-adding it means a flat config plus a `lint` script, not just the dependency.
 The shell scripts **are** linted. `shellcheck` runs in CI at severity `error`:
 
 ```bash
-shellcheck -S error installer.sh installer_library.sh fix_installation.sh diag.sh node-update.sh
+shellcheck -S error installer.sh installer_library.sh fix_installation.sh diag.sh node-update.sh docker.sh
 ```
 
 Below `error` there are still plenty of findings (warning/info/style), so raising the severity means
@@ -93,7 +93,7 @@ sourced and has no shebang.
 `# get and load the LIB => START` / `# get and load the LIB => END` that, at runtime, curls
 `installer_library.sh` from GitHub and sources it. `node tasks --create` **replaces that block with the
 literal contents of `installer_library.sh`**, producing self-contained `dist/install.sh` and `dist/fix.sh`.
-`diag.sh` and `node-update.sh` have no library dependency and are copied verbatim.
+`diag.sh`, `node-update.sh` and `docker.sh` have no library dependency and are copied verbatim.
 
 So: shared bash helpers (platform detection, package install, user creation, Node.js install, permissions,
 Redis) belong in `installer_library.sh`; each entry-point script keeps only its own flow.
@@ -121,8 +121,8 @@ loaded at the very top of both scripts now: the early checks put their hints on 
 ### The deployment loop — why edits do not take effect locally
 
 The installed `iob` wrapper does **not** call scripts from this repo. It downloads them from
-`https://iobroker.net/` at invocation time (`FIXER_URL`, `DIAG_URL`, `NODE_UPDATER_URL` in
-`installer_library.sh`). A change to `fix_installation.sh`, `diag.sh` or `node-update.sh` reaches users only
+`https://iobroker.net/` at invocation time (`FIXER_URL`, `DIAG_URL`, `NODE_UPDATER_URL`, `DOCKER_URL` in
+`installer_library.sh`). A change to `fix_installation.sh`, `diag.sh`, `node-update.sh` or `docker.sh` reaches users only
 after a GitHub release triggers `deploy.yml` → `npm run deploy` → SFTP. Test locally by running the script
 directly (`./fix_installation.sh`), not via `iob fix`.
 
@@ -132,9 +132,8 @@ directly (`./fix_installation.sh`), not via `iob fix`.
 `/usr/local/bin`) as both `iob` and `iobroker`. It:
 
 - routes `start`/`stop`/`restart` (exactly one argument) to `systemctl`, `launchctl`, or init.d;
-- intercepts `fix`, `diag`, `nodejs-update` and downloads + runs the remote script as `$IOB_USER` —
-  forwarding only `"$2"`, so **only the first option reaches the script**: `iob diag --de --unmask` silently
-  drops `--unmask`;
+- intercepts `fix`, `diag`, `nodejs-update`, `docker`, downloads the remote script as `$IOB_USER` and
+  runs it with all remaining options (`"$@"`);
 - refuses to run as root unless `--allow-root` is passed;
 - passes everything else through to `node node_modules/iobroker.js-controller/iobroker.js`.
 
@@ -153,7 +152,9 @@ read from the bundled `versions.json`) → `installCopyFiles.js` (copies the pac
 
 `install/windows/` holds the Windows service payload: `install.js` (WinSW3-based service registration),
 `serviceIoBroker.bat` (UAC self-elevation + net start/stop), `controller.js`, `shortcuts.js`,
-`uninstall.js`. `installSetup.js` copies these into the install root.
+`uninstall.js`, `dockerStatus.js` (status-only `iob docker`, called from `iob.bat`). `installSetup.js` copies these into the install root.
+Because of that, none of them may share its basename with a command: `cmd.exe` searches the current directory
+with `PATHEXT` (which includes `.JS`) before `PATH`, so a `docker.js` there would shadow `docker.exe`.
 
 **Install vs. fix is selected by package name**: `install.js` and `installSetup.js` branch on
 `pack.name.includes('fix')`. `npm run make-fix` flips the name to `@iobroker/fix` before the second publish,
@@ -178,6 +179,7 @@ adding a changelog entry:
 | `fix_installation.sh`  | `FIXER_VERSION`     | `CHANGELOG_FIXER_LINUX.md`           |
 | `diag.sh`              | `SKRIPTV`           | `CHANGELOG_DIAG_LINUX.md`            |
 | `node-update.sh`       | `VERSION`           | `CHANGELOG_NODE_UPDATER.md`          |
+| `docker.sh`            | `VERSION`           | `CHANGELOG_DOCKER.md`                |
 
 Changes to `lib-npx/` or `install/windows/` go in `CHANGELOG.md` (semver-versioned, the npm package).
 

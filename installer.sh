@@ -384,6 +384,9 @@ if [ "$INITSYSTEM" = "systemd" ]; then
 			nu_args=()
 			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
+		elif [ "\$1" = "docker" ]; then
+			shift
+			sudo -u $IOB_USER curl -sLf $DOCKER_URL --output /home/$IOB_USER/.docker.sh && bash /home/$IOB_USER/.docker.sh "\$@"
 		elif [ "\$1" = "diag" ]; then
 			shift
 			sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && sudo -u $IOB_USER bash /home/$IOB_USER/.diag.sh "\$@" &> /home/$IOB_USER/iob_diag.log
@@ -414,6 +417,9 @@ elif [ "$INITSYSTEM" = "launchctl" ]; then
 			nu_args=()
 			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /Users/$IOB_USER/.nodejs-update.sh && bash /Users/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
+		elif [ "\$1" = "docker" ]; then
+			shift
+			sudo -u $IOB_USER curl -sLf $DOCKER_URL --output /Users/$IOB_USER/.docker.sh && bash /Users/$IOB_USER/.docker.sh "\$@"
 		elif [ "\$1" = "diag" ]; then
 			shift
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /Users/$IOB_USER/.diag.sh && bash /Users/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /Users/$IOB_USER/iob_diag.log
@@ -437,6 +443,9 @@ else
 			nu_args=()
 			for a in "\$@"; do if [ "\$a" != "--allow-root" ]; then nu_args+=("\$a"); fi; done
 			sudo -u $IOB_USER curl -sLf $NODE_UPDATER_URL --output /home/$IOB_USER/.nodejs-update.sh && bash /home/$IOB_USER/.nodejs-update.sh "\${nu_args[@]}"
+		elif [ "\$1" = "docker" ]; then
+			shift
+			sudo -u $IOB_USER curl -sLf $DOCKER_URL --output /home/$IOB_USER/.docker.sh && bash /home/$IOB_USER/.docker.sh "\$@"
 		elif [ "\$1" = "diag" ]; then
 			shift
 		  sudo -u $IOB_USER curl -sLf $DIAG_URL --output /home/$IOB_USER/.diag.sh && bash /home/$IOB_USER/.diag.sh "\$@" | sudo -u $IOB_USER tee /home/$IOB_USER/iob_diag.log
