@@ -220,6 +220,12 @@ tui_setup_style() {
     TUI_YELLOW="${e}[33m"
     # The two blues of the logo, as close as the terminal can show them
     colors=$(tput colors 2>/dev/null)
+    # A terminal without colors (e.g. TERM=vt100 on a serial console) gets the logo from characters.
+    # Without tput the colors are assumed, almost every terminal has them.
+    TUI_COLOR=true
+    if [[ "$colors" =~ ^-?[0-9]+$ ]] && [ "$colors" -lt 8 ]; then
+        TUI_COLOR=false
+    fi
     if [ "$COLORTERM" = "truecolor" ] || [ "$COLORTERM" = "24bit" ]; then
         TUI_FG_DARK="38;2;22;68;119" TUI_BG_DARK="48;2;22;68;119"
         TUI_FG_LIGHT="38;2;51;153;204" TUI_BG_LIGHT="48;2;51;153;204"
@@ -305,7 +311,10 @@ tui_pixel() {
 }
 
 # Renders a logo bitmap into TUI_LOGO_LINES. With UTF-8 a terminal row shows two pixel rows as upper
-# and lower half blocks, otherwise one colored space, which is coarser but needs no special font.
+# and lower half blocks, colored or, without colors, in the color of the text. Without UTF-8 it shows
+# only the upper one of the two pixel rows, as a colored space or, without colors, as # for the ring
+# and | for the "i": coarser, but it needs no special font, and the gap between the dot and the stroke
+# of the "i" stays, which merging the two rows would close.
 tui_render_logo() {
     local -a bitmap=("$@")
     local rows=${#bitmap[@]} width=${#1} y x top bottom bg line
@@ -315,17 +324,30 @@ tui_render_logo() {
         for ((x = 0; x < width; x++)); do
             top=${bitmap[y]:x:1}
             bottom=${bitmap[y + 1]:x:1}
-            if [ -z "$bottom" ]; then
+            if [ -z "$bottom" ] || [ "$TUI_UTF8" != true ]; then
                 bottom="."
             fi
             if [ "$top" = "." ] && [ "$bottom" = "." ]; then
                 line+="${TUI_RESET} "
             elif [ "$TUI_UTF8" != true ]; then
-                if [ "$top" = "." ]; then
-                    top=$bottom
+                if [ "$TUI_COLOR" != true ]; then
+                    if [ "$top" = "D" ]; then
+                        line+="#"
+                    else
+                        line+="|"
+                    fi
+                else
+                    tui_pixel "$top"
+                    line+="${TUI_ESC}[0;${TUI_PX_BG}m "
                 fi
-                tui_pixel "$top"
-                line+="${TUI_ESC}[0;${TUI_PX_BG}m "
+            elif [ "$TUI_COLOR" != true ]; then
+                if [ "$top" = "." ]; then
+                    line+="▄"
+                elif [ "$bottom" = "." ]; then
+                    line+="▀"
+                else
+                    line+="█"
+                fi
             elif [ "$bottom" = "." ]; then
                 tui_pixel "$top"
                 line+="${TUI_ESC}[0;${TUI_PX_FG}m▀"
