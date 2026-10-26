@@ -781,6 +781,7 @@ if [ "$TUI" = true ]; then
         TUI_CONTENT+=("")
         tui_wrap "Please run 'iob fix' after the required re-login to fix some common issues." "$TUI_YELLOW"
     fi
+    tui_log_hint
     tui_summary "ioBroker Installer $INSTALLER_VERSION"
     exit 0
 fi

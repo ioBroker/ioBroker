@@ -946,6 +946,12 @@ tui_steps_done() {
     done
 }
 
+# The last lines of the summary box: where the output of the steps went
+tui_log_hint() {
+    TUI_CONTENT+=("")
+    tui_wrap "You can check the logs under $TUI_LOG"
+}
+
 # EXIT trap of the display: restores the terminal and, after an error, shows where it happened
 tui_on_exit() {
     local rc=$?

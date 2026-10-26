@@ -683,6 +683,7 @@ if [ "$TUI" = true ]; then
     TUI_CONTENT=()
     tui_steps_done
     TUI_CONTENT+=("" "${TUI_GREEN}${TUI_BOLD}Your installation was fixed successfully${TUI_RESET}" "Run ${TUI_BOLD}iobroker start${TUI_RESET} to start ioBroker again!")
+    tui_log_hint
     tui_summary "ioBroker Fixer $FIXER_VERSION"
 else
     print_bold "${green}Your installation was fixed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker again!"

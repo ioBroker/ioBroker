@@ -62,7 +62,7 @@ On a terminal, the installer and `iob fix` show a full screen display: the ioBro
 with the options, dialogs for the questions and a progress view of the steps. The output of the steps
 goes into a log file instead of the screen, the last line of it is shown under the progress bar:
 `~/iobroker-install.log` for the installer, `~/iobroker-fix.log` for the fixer. At the end the display
-disappears and a summary with the address of the admin stays in the terminal; if a step fails, the last
+disappears and a summary with the address of the admin and the path of the log stays in the terminal; if a step fails, the last
 lines of the log are shown instead.
 
 Keys: `↑`/`↓` choose, `Space` switches an option, `Enter` selects, `Q` quits without changing anything.
