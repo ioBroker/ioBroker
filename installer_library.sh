@@ -4,7 +4,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-10-01" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-10-26" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -175,6 +175,9 @@ function set_some_common_params() {
 
     # Where the nodejs Update script is located
     NODE_UPDATER_URL="https://iobroker.net/node-update.sh"
+
+    # Where the Docker helper script is located
+    DOCKER_URL="https://iobroker.net/docker.sh"
 
     # Remember the full path of bash
     BASH_CMDLINE=$(which bash)
@@ -678,6 +681,7 @@ function add2sudoers() {
 
 # First line of the sudoers file in hardened mode. The fixer looks for it, so that a hardened
 # installation stays hardened on "iob fix" without passing --hardened again.
+# docker.sh carries a copy, so that "iob docker" leaves the docker group alone: change both together.
 HARDENED_SUDOERS_MARKER="# ioBroker hardened mode: no root rights for the iobroker user"
 
 # Returns 0 if the installation should be hardened: either --hardened was passed (IOB_HARDENED=true)
