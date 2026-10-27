@@ -108,11 +108,13 @@ function deploy() {
     const fix = readFileSync(`${dist}fix.sh`);
     const diag = readFileSync(`${dist}diag.sh`);
     const nodeUpdate = readFileSync(`${dist}node-update.sh`);
+    const docker = readFileSync(`${dist}docker.sh`);
 
     return uploadOneFile('/install.sh', install)
         .then(() => uploadOneFile('/fix.sh', fix))
         .then(() => uploadOneFile('/diag.sh', diag))
-        .then(() => uploadOneFile('/node-update.sh', nodeUpdate));
+        .then(() => uploadOneFile('/node-update.sh', nodeUpdate))
+        .then(() => uploadOneFile('/docker.sh', docker));
 }
 
 function create() {
@@ -125,6 +127,7 @@ function create() {
     const lib      = readFileSync(`${__dirname}/installer_library.sh`).toString('utf8');
     const diag     = readFileSync(`${__dirname}/diag.sh`).toString('utf8');
     const nodeUpdate = readFileSync(`${__dirname}/node-update.sh`).toString('utf8');
+    const docker   = readFileSync(`${__dirname}/docker.sh`).toString('utf8');
 
     // replace
     // LIB_NAME="installer_library.sh"
@@ -134,6 +137,7 @@ function create() {
     writeFileSync(`${dist}fix.sh`, replaceLib(fix, lib));
     writeFileSync(`${dist}diag.sh`, diag);
     writeFileSync(`${dist}node-update.sh`, nodeUpdate);
+    writeFileSync(`${dist}docker.sh`, docker);
 }
 
 function fix() {

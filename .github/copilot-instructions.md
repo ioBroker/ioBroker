@@ -9,7 +9,7 @@ ioBroker is a comprehensive home automation and IoT integration platform install
 ### Bootstrap and Build
 - Install dependencies: `npm install` -- takes 30 seconds
 - Build distribution scripts: `node tasks --create` -- takes 1 second. Creates scripts in `dist/` directory
-- Lint shell scripts: `shellcheck -S error installer.sh installer_library.sh fix_installation.sh diag.sh node-update.sh`. This also runs in CI. There is no JavaScript linter; eslint was removed.
+- Lint shell scripts: `shellcheck -S error installer.sh installer_library.sh fix_installation.sh diag.sh node-update.sh docker.sh`. This also runs in CI. There is no JavaScript linter; eslint was removed.
 - Test basic functionality: `node test.js` -- tests if admin interface is reachable on localhost:8081
 
 ### Installation Testing (Linux/macOS)
@@ -65,6 +65,7 @@ npm run deploy
 - `fix_installation.sh` + `installer_library.sh` → `dist/fix.sh` (combined)
 - `diag.sh` → `dist/diag.sh` (copied)
 - `node-update.sh` → `dist/node-update.sh` (copied)
+- `docker.sh` → `dist/docker.sh` (copied)
 
 ### Repository Structure
 ```bash
@@ -78,6 +79,7 @@ installer_library.sh   # Shared library functions
 fix_installation.sh    # System repair and maintenance script
 diag.sh               # Diagnostic tool
 node-update.sh        # Node.js update utility
+docker.sh             # Docker status and installation (iob docker)
 lib-npx/              # Windows NPX installation logic
   install.js          # Main NPX entry point
   installCopyFiles.js # File copying logic
@@ -141,6 +143,7 @@ When making changes to shell scripts, **ALWAYS** update the corresponding change
 - `fix_installation.sh` → `CHANGELOG_FIXER_LINUX.md`
 - `installer.sh` → `CHANGELOG_INSTALLER_LINUX.md`
 - `node-update.sh` → `CHANGELOG_NODE_UPDATER.md`
+- `docker.sh` → `CHANGELOG_DOCKER.md`
 
 ### Version Variables in Scripts
 When modifying shell scripts, **ALWAYS** update the version variable to current date (YYYY-MM-DD format):
@@ -149,6 +152,7 @@ When modifying shell scripts, **ALWAYS** update the version variable to current 
 - `fix_installation.sh`: Update `FIXER_VERSION="YYYY-MM-DD"`
 - `installer.sh`: Update `INSTALLER_VERSION="YYYY-MM-DD"`
 - `node-update.sh`: Update `VERSION="YYYY-MM-DD"`
+- `docker.sh`: Update `VERSION="YYYY-MM-DD"`
 
 ### Changelog Update Process
 1. **Before making script changes**: Note the current date in YYYY-MM-DD format
