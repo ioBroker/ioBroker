@@ -295,5 +295,11 @@ gh run list --workflow=deploy_windows.yml --branch vX.Y.Z
 npm view @iobroker/install version
 ```
 
-`v7.0.0` (2026-10-01) got no workflow run at all and was never published; npm is still at 6.0.1. The job
-has not published anything since 6.0.1, so check that the `NPM_TOKEN` secret is still valid before tagging.
+`v7.0.0` (2026-10-01) got no workflow run at all and was never published, which went unnoticed for weeks.
+
+Publishing uses npm **trusted publishing** (OIDC), not a token: on npmjs.com both packages name
+`ioBroker/ioBroker` + `deploy_windows.yml` as their trusted publisher, and the `deploy` job has
+`id-token: write`. So do not rename that file or move the publish into another workflow, and keep that job
+on a Node.js whose npm is >= 11.5.1 (Node.js 24; 22 bundles npm 10). The org secret `NPM_TOKEN` was a
+classic token from 2020 and is no longer used. The trust relationship can be inspected with
+`npx npm@latest trust list @iobroker/install` (needs a login and 2FA).
