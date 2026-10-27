@@ -1,5 +1,5 @@
 # Changelog for Windows-Installer-NPX
-## **WORK IN PROGRESS**
+## 7.1.0 (2026-10-27)
 * Windows: Added `iob docker`, which shows whether Docker is installed and its engine is running
 
 ## 7.0.0 (2026-10-01)
