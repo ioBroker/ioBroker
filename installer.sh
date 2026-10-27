@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-10-24" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-10-26" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -20,51 +20,6 @@ else
 fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
-
-# Check for Redis installation flag
-INSTALL_REDIS="false"
-if [[ "$*" == *--redis* ]]; then
-    INSTALL_REDIS="true"
-    echo "Redis installation requested"
-fi
-
-# Check for --hardened flag: the iobroker user gets no sudo rights and is not added to the docker group.
-# Adapters that need root rights (OS packages, reboot, mount, docker, ...) will not work then.
-IOB_HARDENED="false"
-if [[ "$*" == *--hardened* ]]; then
-    IOB_HARDENED="true"
-    echo "Hardened installation requested"
-fi
-
-RECOMMEND_FIXER_AFTER_INSTALL="false"
-# Check for --no-autostart flag to skip starting ioBroker after installation
-SKIP_IOBROKER_START="false"
-if [[ "$*" == *--no-autostart* ]]; then
-    SKIP_IOBROKER_START="true"
-fi
-# use --automated-run to skip all user prompts
-if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-    if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
-        # Prompt for username
-        echo "You started the installer as root or the iobroker user. This is not recommended."
-        echo "For security reasons a default user should be created. Please run 'iob fix' after the installation."
-        RECOMMEND_FIXER_AFTER_INSTALL="true"
-    fi
-
-    # Check and fix boot.target on systemd
-
-    if [[ $(systemctl get-default) == "graphical.target" ]]; then
-        echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to save RAM. Please run 'iob fix' after the installation to change this."
-        RECOMMEND_FIXER_AFTER_INSTALL="true"
-    fi
-
-    # Check and fix timezone
-    TIMEZONE=$(timedatectl show --property=Timezone --value)
-    if [[ $(command -v apt-get) ]] && [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo -e "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
-        RECOMMEND_FIXER_AFTER_INSTALL="true"
-    fi
-fi
 
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
@@ -91,11 +46,100 @@ if [ "$RET" == "" ]; then
 fi
 echo "Library version=$RET"
 
+# Interactive display on a terminal, the classic output everywhere else (see tui_init).
+# Loaded this early so that the checks below can put their hints on its start screen.
+tui_init "$HOME/iobroker-install.log" "$@"
+
+# Check for Redis installation flag
+INSTALL_REDIS="false"
+if [[ "$*" == *--redis* ]]; then
+    INSTALL_REDIS="true"
+    echo "Redis installation requested"
+fi
+
+# Check for --hardened flag: the iobroker user gets no sudo rights and is not added to the docker group.
+# Adapters that need root rights (OS packages, reboot, mount, docker, ...) will not work then.
+IOB_HARDENED="false"
+if [[ "$*" == *--hardened* ]]; then
+    IOB_HARDENED="true"
+    echo "Hardened installation requested"
+fi
+
+RECOMMEND_FIXER_AFTER_INSTALL="false"
+# Check for --no-autostart flag to skip starting ioBroker after installation
+SKIP_IOBROKER_START="false"
+if [[ "$*" == *--no-autostart* ]]; then
+    SKIP_IOBROKER_START="true"
+fi
+# use --automated-run to skip all user prompts
+if [[ "$*" != *--silent* ]] || [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+    if [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+        # Prompt for username
+        tui_note "You started the installer as root or the iobroker user. This is not recommended.\nFor security reasons a default user should be created. Please run 'iob fix' after the installation."
+        RECOMMEND_FIXER_AFTER_INSTALL="true"
+    fi
+
+    # Check and fix boot.target on systemd
+
+    if [[ $(systemctl get-default) == "graphical.target" ]]; then
+        tui_note "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop for security reasons and to save RAM. Please run 'iob fix' after the installation to change this."
+        RECOMMEND_FIXER_AFTER_INSTALL="true"
+    fi
+
+    # Check and fix timezone
+    TIMEZONE=$(timedatectl show --property=Timezone --value)
+    if [[ $(command -v apt-get) ]] && [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+        tui_note "\nYour timezone '$TIMEZONE' is probably wrong. Please run 'iob fix' after the installation to change this."
+        RECOMMEND_FIXER_AFTER_INSTALL="true"
+    fi
+fi
+
 # Test which platform this script is being run on
 get_platform_params
 set_some_common_params
 
-if [ "$IS_ROOT" = "true" ]; then
+# Start screen of the interactive display: the options of the flags, then install or quit
+tui_install_menu() {
+    local node_info="Node.js will be installed"
+    if [[ $(type -P "node" 2>/dev/null) == *"/node" ]]; then
+        node_info="Node.js $(node -v 2>/dev/null)"
+    fi
+    TUI_MENU_HEAD=(
+        "Installs ioBroker into ${TUI_BOLD}$IOB_DIR${TUI_RESET}."
+        "${TUI_DIM}$(tui_os_name) ($(uname -m)), $node_info${TUI_RESET}"
+    )
+    TUI_MENU_LABELS=("Install ioBroker" "Start ioBroker after the installation" "Install Redis for objects and states" "Hardened: no root rights for the iobroker user" "Quit")
+    TUI_MENU_TYPES=(action toggle toggle toggle quit)
+    TUI_MENU_VALUES=("" true "$INSTALL_REDIS" "$IOB_HARDENED" "")
+    if [ "$SKIP_IOBROKER_START" = "true" ]; then
+        TUI_MENU_VALUES[1]=false
+    fi
+    TUI_MENU_HELP=(
+        "Installs Node.js if needed, the ioBroker packages and the service that starts ioBroker at boot."
+        "Off: run 'iob start' yourself after the installation (--no-autostart)."
+        "Only worth it for large installations, Redis needs additional RAM (--redis)."
+        "Adapters that need root rights (OS packages, reboot, mount, docker, ...) will not work then (--hardened)."
+        "Ends the installer without changing anything."
+    )
+    TUI_MENU_FOOT="Classic output with every detail instead of this display: start the installer with --classic."
+    tui_menu "ioBroker Installer $INSTALLER_VERSION"
+    if [ "${TUI_MENU_TYPES[TUI_MENU_CHOICE]}" = quit ]; then
+        tui_leave
+        echo "The installation was cancelled, nothing was changed."
+        exit 1
+    fi
+    if [ "${TUI_MENU_VALUES[1]}" = true ]; then
+        SKIP_IOBROKER_START="false"
+    else
+        SKIP_IOBROKER_START="true"
+    fi
+    INSTALL_REDIS=${TUI_MENU_VALUES[2]}
+    IOB_HARDENED=${TUI_MENU_VALUES[3]}
+}
+
+if [ "$TUI" = true ]; then
+    tui_install_menu
+elif [ "$IS_ROOT" = "true" ]; then
     print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION"
 else
     print_bold "Welcome to the ioBroker installer!" "Installer version: $INSTALLER_VERSION" "" "You might need to enter your password a couple of times."
@@ -112,6 +156,16 @@ if [ "$INSTALL_REDIS" = "true" ]; then
     NUM_STEPS=5
 else
     NUM_STEPS=4
+fi
+
+# The progress display lists all steps from the beginning
+TUI_STEPS=("Installing prerequisites" "Creating ioBroker user and directory" "Installing ioBroker")
+if [ "$INSTALL_REDIS" = "true" ]; then
+    TUI_STEPS+=("Installing and configuring Redis")
+fi
+TUI_STEPS+=("Finalizing installation")
+if [ "$TUI" = true ]; then
+    tui_start_steps "Installing ioBroker"
 fi
 
 # ########################################################
@@ -721,6 +775,27 @@ unset AUTOMATED_INSTALLER
 
 # Detect IP address
 IP=$(detect_ip_address)
+if [ "$TUI" = true ]; then
+    tui_finish
+    TUI_CONTENT=()
+    tui_steps_done
+    TUI_CONTENT+=("" "${TUI_GREEN}${TUI_BOLD}ioBroker was installed successfully${TUI_RESET}" "")
+    if [ "$SKIP_IOBROKER_START" = "true" ]; then
+        TUI_CONTENT+=("Run ${TUI_BOLD}iobroker start${TUI_RESET} to start ioBroker, then open in a browser:")
+    else
+        TUI_CONTENT+=("Open in a browser and start configuring:")
+    fi
+    TUI_CONTENT+=("  ${TUI_LIGHT}${TUI_BOLD}http://$IP:8081${TUI_RESET}" "")
+    tui_wrap "You need to re-login before doing anything else on the console! Please run 'iob fix' first after the required re-login to finalize the setup." "$TUI_YELLOW"
+    if [ "$RECOMMEND_FIXER_AFTER_INSTALL" = "true" ]; then
+        TUI_CONTENT+=("")
+        tui_wrap "Please run 'iob fix' after the required re-login to fix some common issues." "$TUI_YELLOW"
+    fi
+    tui_log_hint
+    tui_summary "ioBroker Installer $INSTALLER_VERSION"
+    exit 0
+fi
+
 if [ "$SKIP_IOBROKER_START" = "true" ]; then
     print_bold "${green}ioBroker was installed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker, then open http://$IP:8081 in a browser and start configuring!"
 else

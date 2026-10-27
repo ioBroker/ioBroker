@@ -89,7 +89,8 @@ cd "$WORKSPACE"
 echo "::endgroup::"
 
 echo "::group::Run the fixer"
-bash "$WORKSPACE/dist/fix.sh"
+# --no-tui: if the VM session has a terminal, the fixer would wait on its start screen
+bash "$WORKSPACE/dist/fix.sh" --no-tui
 echo "::endgroup::"
 
 echo "::group::File permissions after the fixer"

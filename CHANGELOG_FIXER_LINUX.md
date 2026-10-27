@@ -1,5 +1,9 @@
 # Changelog for Linux-Fixer-Script
 
+## 2026-10-26
+* Interactive display on a terminal: ioBroker logo, a start screen to choose `--no-update` and `--hardened`, dialogs for the questions about user account, boot target and timezone, and a progress view of the steps with their output in `~/iobroker-fix.log`. Without a terminal, with `--classic` (alias `--no-tui`), `IOB_NO_TUI=true` or `CI` the classic output stays; the start screen mentions `--classic`
+* Checks that ioBroker is installed and stopped before asking any question, not after them
+
 ## 2026-10-24
 * Added the `iob docker` command to the `iob` wrapper, which runs docker.sh from iobroker.net
 

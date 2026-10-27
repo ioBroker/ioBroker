@@ -73,7 +73,8 @@ jobs:
           node-update.sh \
           docker.sh \
           .github/testFiles.sh \
-          .github/testFreeBSD.sh
+          .github/testFreeBSD.sh \
+          .github/tuiDrive.sh
 
     # The runner has Docker preinstalled, so this covers the status path only, not the installation
     - name: Smoke test docker.sh
@@ -251,3 +252,154 @@ jobs:
         done
         echo "admin did not become reachable within 180s"
         exit 1
+
+  # ===================
+  # The interactive display of installer and fixer. Every other job runs without a terminal,
+  # where both scripts keep the classic output, so this is the only run of the display path:
+  # "script" gives them a terminal, and the keys are typed into it. The keys wait in the
+  # terminal until a dialog reads them, so no timing is involved. stdin has to stay open,
+  # otherwise "script" ends the session; the leftover sleep is killed afterwards.
+  test-tui:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Use Node.js 24.x
+      uses: actions/setup-node@v7
+      with:
+        node-version: 24.x
+
+    # See test-install: the systemd unit resolves "node" without the tool cache on PATH
+    - name: Make the selected Node.js the system Node.js
+      run: |
+        sudo ln -sf "$(command -v node)" /usr/local/bin/node
+        sudo ln -sf "$(command -v npm)" /usr/local/bin/npm
+
+    - name: Build the self-contained scripts
+      run: node tasks --create
+
+    # tuiDrive.sh presses Enter whenever a dialog waits, so the start screen installs with the
+    # preselected options. It unsets CI, with which the scripts keep the classic output.
+    - name: Install ioBroker with the interactive display
+      timeout-minutes: 30
+      env:
+        VERSIONS_URL: file://${{ github.workspace }}/versions.json
+      run: |
+        bash .github/tuiDrive.sh install.typescript 40 120 ./dist/install.sh
+        # The display was really used, and the installation reached its end
+        grep -qaF $'\033[?1049h' install.typescript
+        grep -qa "ioBroker was installed successfully" install.typescript
+
+    - name: Test permissions
+      run: bash .github/testFiles.sh
+
+    - name: Test if ioBroker starts by checking the admin adapter output
+      run: |
+        for i in $(seq 1 36); do
+          if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "admin did not become reachable within 180s"
+        exit 1
+
+    - name: Stop ioBroker for the fixer
+      run: |
+        sudo systemctl stop iobroker
+        sleep 10
+
+    # Enter on the start screen repairs with the preselected options, and answers the questions the
+    # runner triggers, boot target and timezone, with the preselected "No"
+    - name: Run the fixer with the interactive display
+      timeout-minutes: 30
+      run: |
+        bash .github/tuiDrive.sh fix.typescript 24 80 ./dist/fix.sh
+        grep -qaF $'\033[?1049h' fix.typescript
+        grep -qa "Your installation was fixed successfully" fix.typescript
+
+    - name: Test permissions after the fixer
+      run: bash .github/testFiles.sh
+
+    - name: Test if ioBroker starts again after the fixer
+      run: |
+        sudo systemctl start iobroker
+        for i in $(seq 1 36); do
+          if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "admin did not become reachable within 180s"
+        exit 1
+
+    # The screens themselves are escape sequences; the logs hold the output of the steps
+    - name: Show the logs of the steps
+      if: failure()
+      run: |
+        for f in ~/iobroker-install.log ~/iobroker-fix.log; do
+          echo "::group::$f"
+          cat "$f" 2>/dev/null || echo "missing"
+          echo "::endgroup::"
+        done
+        for f in install.typescript fix.typescript; do
+          echo "::group::$f, text only"
+          sed -e 's/\x1b\[[0-9;?]*[A-Za-z]//g' -e 's/\x1b[()][A-Za-z0-9]//g' "$f" 2>/dev/null | tail -100 || echo "missing"
+          echo "::endgroup::"
+        done
+
+  # The display on macOS, with the bash 3.2 of /bin/bash that the installer gets there: the library
+  # avoids everything newer, and this is where a slip would show. macOS has the BSD "script",
+  # which takes the command after the file and has no -e, so the result is checked in the output.
+  test-tui-macos:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Use Node.js 24.x
+      uses: actions/setup-node@v7
+      with:
+        node-version: 24.x
+
+    - name: Build the self-contained installer
+      run: node tasks --create
+
+    - name: Install ioBroker with the interactive display under bash 3.2
+      timeout-minutes: 30
+      env:
+        VERSIONS_URL: file://${{ github.workspace }}/versions.json
+      run: |
+        /bin/bash --version | head -n 1
+        script -q install.typescript /bin/bash -c "stty rows 40 cols 120; env -u CI TERM=xterm-256color /bin/bash ./dist/install.sh" \
+          < <(printf '\r'; exec sleep 1700 2>/dev/null) > /dev/null || true
+        pkill -f "sleep 1700" || true
+        grep -qaF $'\033[?1049h' install.typescript
+        grep -qa "ioBroker was installed successfully" install.typescript
+
+    - name: Test if ioBroker starts by checking the admin adapter output
+      run: |
+        for i in $(seq 1 36); do
+          if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "admin did not become reachable within 180s"
+        exit 1
+
+    - name: Show the log of the steps
+      if: failure()
+      run: |
+        cat ~/iobroker-install.log 2>/dev/null || echo "missing"
+        sed -e 's/\x1b\[[0-9;?]*[A-Za-z]//g' install.typescript 2>/dev/null | tail -100 || true

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2026-10-24" # format YYYY-MM-DD
+FIXER_VERSION="2026-10-26" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -30,85 +30,6 @@ fi
 ROOT_GROUP="root"
 USER_GROUP="$USER"
 
-# Check for user names and create a default user if necessary
-if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
-    # Prompt for username
-    echo "It seems you run ioBroker as root or the iobroker user. This is not recommended."
-    echo "For security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'."
-    echo "A root login is not required in most Linux Distributions."
-    echo "Do you want to setup a user now? (y/N)"
-    read -r -s -n 1 char
-    if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-        read -p "Enter the username for a new user (Not 'root' and not 'iobroker'!): " USERNAME
-
-        # Check if the user already exists
-        if id "$USERNAME" &>/dev/null; then
-            echo "User '$USERNAME' already exists. Please login as this user and restart the fixer."
-            exit 1
-        else
-            # Prompt for password
-            read -s -p "Enter the password for the new user: " PASSWORD
-            echo
-            read -s -p "Confirm the password for the new user: " PASSWORD_CONFIRM
-            echo
-
-            # Check if passwords match
-            if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
-                echo "Passwords do not match. Exiting."
-                exit 1
-            fi
-
-            # Add a new user account with sudo access, set the password and grant iobroker group access to ~/iobroker
-            echo "Adding new user account..."
-            $SUDOX /usr/sbin/useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
-            echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd
-            $SUDOX chmod 750 /home/iobroker
-            echo "Please login with this newly created user account and restart the fixer."
-            exit 1
-        fi
-    fi
-fi
-
-# Check and fix boot.target on systemd
-
-if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-    if [[ $(systemctl get-default) == "graphical.target" ]]; then
-        echo -e "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'? (y/N)"
-        read -r -s -n 1 char
-        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-            # Set up multi-user.target
-            echo "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards."
-            sudo systemctl set-default multi-user.target
-        fi
-    fi
-fi
-
-# Check and fix timezone
-
-TIMEZONE=$(timedatectl show --property=Timezone --value)
-if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
-
-    if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
-        echo "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it? (y/N)"
-        read -r -s -n 1 char
-        if [[ "$char" = "y" ]] || [[ "$char" = "Y" ]]; then
-            if [[ -f "/usr/sbin/dpkg-reconfigure" ]]; then
-                sudo dpkg-reconfigure tzdata
-            else
-                # Setup the timezone for the server (Default value is "Europe/Berlin")
-                echo "Setting up timezone"
-                read -r -p "Enter the timezone for the server (default is Europe/Berlin): " TIMEZONE
-                TIMEZONE=${TIMEZONE:-"Europe/Berlin"}
-                $(sudo timedatectl set-timezone "$TIMEZONE")
-            fi
-            # Set up time synchronization with systemd-timesyncd
-            echo "Setting up time synchronization with systemd-timesyncd"
-            $(sudo systemctl enable systemd-timesyncd)
-            $(sudo systemctl start systemd-timesyncd)
-        fi
-    fi
-fi
-
 # get and load the LIB => START
 LIB_NAME="installer_library.sh"
 LIB_URL="https://raw.githubusercontent.com/ioBroker/ioBroker/master/$LIB_NAME"
@@ -134,6 +55,9 @@ if [ "$RET" == "" ]; then
 fi
 echo "Library version=$RET"
 
+# Interactive display on a terminal, the classic output everywhere else (see tui_init)
+tui_init "$HOME/iobroker-fix.log" "$@"
+
 # Test which platform this script is being run on
 get_platform_params
 set_some_common_params
@@ -152,6 +76,7 @@ if [[ "$*" == *--hardened* ]]; then
     echo "Hardening of the installation requested"
 fi
 
+# Checked before any question: there is nothing to ask about if the fixer cannot run anyway
 # Test if ioBroker is installed
 if [ ! -d "$IOB_DIR" ] || [ ! -d "$CONTROLLER_DIR" ]; then
     echo "ioBroker is not installed in $IOB_DIR! Cannot fix anything..."
@@ -166,6 +91,123 @@ if pgrep "^io(broker\.|\.)" &>/dev/null; then
     exit 1
 fi
 
+# Start screen of the interactive display: the options of the flags, then repair or quit
+tui_fix_menu() {
+    local controller_version
+    controller_version=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$CONTROLLER_DIR/package.json" 2>/dev/null | head -n 1)
+    TUI_MENU_HEAD=(
+        "Checks and repairs the ioBroker installation in ${TUI_BOLD}$IOB_DIR${TUI_RESET}."
+        "${TUI_DIM}$(tui_os_name) ($(uname -m)), Node.js $(node -v 2>/dev/null), js-controller ${controller_version:-unknown}${TUI_RESET}"
+    )
+    TUI_MENU_LABELS=("Repair the installation" "Update the package lists of the system" "Hardened: no root rights for the iobroker user" "Quit")
+    TUI_MENU_TYPES=(action toggle toggle quit)
+    TUI_MENU_VALUES=("" true "$IOB_HARDENED" "")
+    if [ "$SKIP_UPDATE" = true ]; then
+        TUI_MENU_VALUES[1]=false
+    fi
+    TUI_MENU_HELP=(
+        "Installs missing packages, repairs the user, the permissions and the autostart, and compresses the databases."
+        "Off: missing packages are installed from the package lists as they are (--no-update)."
+        "The iobroker user loses its sudo rights and the docker group, adapters that need root rights will not work (--hardened). A hardened installation stays hardened anyway."
+        "Ends the fixer without changing anything."
+    )
+    TUI_MENU_FOOT="Classic output with every detail instead of this display:\niob fix --classic"
+    tui_menu "ioBroker Fixer $FIXER_VERSION"
+    if [ "${TUI_MENU_TYPES[TUI_MENU_CHOICE]}" = quit ]; then
+        tui_leave
+        echo "The fixer was cancelled, nothing was changed."
+        exit 1
+    fi
+    if [ "${TUI_MENU_VALUES[1]}" = true ]; then
+        SKIP_UPDATE=false
+    else
+        SKIP_UPDATE=true
+    fi
+    IOB_HARDENED=${TUI_MENU_VALUES[2]}
+}
+
+if [ "$TUI" = true ]; then
+    tui_fix_menu
+    # The questions below may already need sudo, so ask for the password before them
+    tui_need_sudo
+fi
+
+# Check for user names and create a default user if necessary
+if [[ $(ps -p 1 -o comm=) == "systemd" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
+    # Prompt for username
+    if ask_yes_no "User account" "It seems you run ioBroker as root or the iobroker user. This is not recommended.\nFor security reasons a default user should be created. This user will be enabled to temporarily switch to root via 'sudo'.\nA root login is not required in most Linux Distributions.\nDo you want to setup a user now?"; then
+        ask_text "User account" "Enter the username for a new user (Not 'root' and not 'iobroker'!): "
+        USERNAME=$ANSWER
+
+        # Check if the user already exists
+        if id "$USERNAME" &>/dev/null; then
+            tui_leave
+            echo "User '$USERNAME' already exists. Please login as this user and restart the fixer."
+            exit 1
+        else
+            # Prompt for password
+            ask_text "User account" "Enter the password for the new user: " secret
+            PASSWORD=$ANSWER
+            ask_text "User account" "Confirm the password for the new user: " secret
+            PASSWORD_CONFIRM=$ANSWER
+
+            # Check if passwords match
+            if [ "$PASSWORD" != "$PASSWORD_CONFIRM" ]; then
+                tui_leave
+                echo "Passwords do not match. Exiting."
+                exit 1
+            fi
+
+            # Add a new user account with sudo access, set the password and grant iobroker group access to ~/iobroker
+            tui_leave
+            echo "Adding new user account..."
+            $SUDOX /usr/sbin/useradd -m -s /bin/bash -G adm,dialout,sudo,audio,video,plugdev,users,iobroker "$USERNAME"
+            echo "$USERNAME:$PASSWORD" | $SUDOX /usr/sbin/chpasswd
+            $SUDOX chmod 750 /home/iobroker
+            echo "Please login with this newly created user account and restart the fixer."
+            exit 1
+        fi
+    fi
+fi
+
+# Check and fix boot.target on systemd
+
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+    if [[ $(systemctl get-default) == "graphical.target" ]]; then
+        if ask_yes_no "Boot target" "\nYour system is booting into 'graphical.target', which means that a user interface or desktop is available. Usually a server is running without a desktop to have more RAM available. Do you want to switch to 'multi-user.target'?"; then
+            # Set up multi-user.target
+            tui_say "Boot target" "New boot target is multi-user now! The system needs to be restarted. Please restart the fixer afterwards."
+            sudo systemctl set-default multi-user.target
+        fi
+    fi
+fi
+
+# Check and fix timezone
+
+TIMEZONE=$(timedatectl show --property=Timezone --value)
+if [[ $(ps -p 1 -o comm=) == "systemd" ]]; then
+
+    if [[ $TIMEZONE == *Etc/UTC* ]] || [[ $TIMEZONE == *Europe/London* ]]; then
+        if ask_yes_no "Timezone" "Timezone '$TIMEZONE' is probably wrong. Do you want to reconfigure it?"; then
+            if [[ -f "/usr/sbin/dpkg-reconfigure" ]]; then
+                # It has its own full screen dialog
+                tui_leave
+                sudo dpkg-reconfigure tzdata
+            else
+                # Setup the timezone for the server (Default value is "Europe/Berlin")
+                echo "Setting up timezone"
+                ask_text "Timezone" "Enter the timezone for the server (default is Europe/Berlin): "
+                TIMEZONE=${ANSWER:-"Europe/Berlin"}
+                $(sudo timedatectl set-timezone "$TIMEZONE")
+            fi
+            # Set up time synchronization with systemd-timesyncd
+            echo "Setting up time synchronization with systemd-timesyncd"
+            $(sudo systemctl enable systemd-timesyncd)
+            $(sudo systemctl start systemd-timesyncd)
+        fi
+    fi
+fi
+
 # Create the log file if it doesn't exist
 if [ ! -f "$INSTALLER_INFO_FILE" ]; then
     touch $INSTALLER_INFO_FILE
@@ -174,13 +216,19 @@ fi
 echo "Fixer version: $FIXER_VERSION" >>$INSTALLER_INFO_FILE
 echo "Fix date $(date +%F)" >>$INSTALLER_INFO_FILE
 
-if [ "$IS_ROOT" = true ]; then
+if [ "$TUI" = true ]; then
+    : # the start screen of the interactive display was the welcome
+elif [ "$IS_ROOT" = true ]; then
     print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION"
 else
     print_bold "Welcome to the ioBroker installation fixer!" "Script version: $FIXER_VERSION" "" "You might need to enter your password a couple of times."
 fi
 
 NUM_STEPS=5
+TUI_STEPS=("Installing prerequisites" "Checking ioBroker user and directory permissions" "Check and cleanup npm temporary directories" "Database maintenance" "Checking autostart")
+if [ "$TUI" = true ]; then
+    tui_start_steps "Repairing ioBroker"
+fi
 
 # ########################################################
 print_step "Installing prerequisites" 1 "$NUM_STEPS"
@@ -254,7 +302,13 @@ fi
 SYSTEMD_FILE="/lib/systemd/system/iobroker.service"
 if [ -f "$SYSTEMD_FILE" ]; then
     $SUDOX rm "$SYSTEMD_FILE"
-    systemctl stop iobroker &>/dev/null
+    # With the interactive display the stop runs with sudo: without it polkit asks on the
+    # terminal via pkttyagent, outside the display, and breaks its screen
+    if [ "$TUI_RUNNING" = true ]; then
+        $SUDOX systemctl stop iobroker &>/dev/null
+    else
+        systemctl stop iobroker &>/dev/null
+    fi
     $SUDOX systemctl daemon-reload
 fi
 
@@ -640,4 +694,13 @@ else
     echo "Autostart: false" >>"$INSTALLER_INFO_FILE"
 fi
 
-print_bold "${green}Your installation was fixed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker again!"
+if [ "$TUI" = true ]; then
+    tui_finish
+    TUI_CONTENT=()
+    tui_steps_done
+    TUI_CONTENT+=("" "${TUI_GREEN}${TUI_BOLD}Your installation was fixed successfully${TUI_RESET}" "Run ${TUI_BOLD}iobroker start${TUI_RESET} to start ioBroker again!")
+    tui_log_hint
+    tui_summary "ioBroker Fixer $FIXER_VERSION"
+else
+    print_bold "${green}Your installation was fixed successfully${normal}" "Run ${green}iobroker start${normal} to start ioBroker again!"
+fi
