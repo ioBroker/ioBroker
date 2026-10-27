@@ -244,4 +244,56 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   2024, leaving the platform uncovered for two years. It blocks like any other job; the defects that
   surfaced when it came back — rc.d pidfile path, `detect_ip_address`, GNU-form `sed -i`,
   `--unsafe-perm` under npm 12, and the missing `iobroker setup first` — are all fixed.
-- Releases are cut with `@alcalzone/release-script` (`npm run release-patch|minor|major`).
+
+## Releasing
+
+The two delivery channels are released separately, with different tags and different workflows. Nothing is
+bumped at release time: version variables and changelog entries are maintained in each PR (see
+Mandatory conventions).
+
+### Shell scripts → iobroker.net
+
+A GitHub release on `master` whose tag and title are the date, `YYYY-MM-DD`; a second one on the same day
+gets `-2` (`2026-09-30-2`):
+
+```bash
+gh release create 2026-10-27 --target master --title 2026-10-27 --notes "see changelogs"
+```
+
+`deploy.yml` then builds `dist/` and uploads it. It triggers on `release: created` only, which a release
+saved as a draft and published later never fires, so publish directly. Marking a release as pre-release
+does not stop the upload. Check the run and the live files:
+
+```bash
+gh run list --workflow=deploy.yml --limit 1
+curl -sL https://iobroker.net/install.sh | grep INSTALLER_VERSION=
+```
+
+### npm package → `@iobroker/install` and `@iobroker/fix`
+
+Needs entries under `## **WORK IN PROGRESS**` in `CHANGELOG.md` and a clean `master` in sync with origin:
+
+```bash
+npm run release -- minor --dry   # preview
+npm run release-minor            # or release-patch / release-major
+```
+
+`@alcalzone/release-script` bumps `package.json`, turns the WIP header into the version, commits
+`chore: release vX.Y.Z` and pushes the commit and the annotated tag `vX.Y.Z`. Only that tag pattern starts
+the `deploy` job in `deploy_windows.yml` (a date tag never publishes to npm): it publishes
+`@iobroker/install`, runs `make-fix`, publishes `@iobroker/fix` and creates the GitHub release
+`Release vX.Y.Z`.
+
+That GitHub release is created with `GITHUB_TOKEN`, and events caused by `GITHUB_TOKEN` start no further
+workflows — so an npm release does **not** update iobroker.net. When shell scripts changed as well, cut a
+date release too.
+
+Confirm that the tag really got a run and that npm moved:
+
+```bash
+gh run list --workflow=deploy_windows.yml --branch vX.Y.Z
+npm view @iobroker/install version
+```
+
+`v7.0.0` (2026-10-01) got no workflow run at all and was never published; npm is still at 6.0.1. The job
+has not published anything since 6.0.1, so check that the `NPM_TOKEN` secret is still valid before tagging.
