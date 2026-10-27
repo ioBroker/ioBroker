@@ -71,8 +71,31 @@ jobs:
           fix_installation.sh \
           diag.sh \
           node-update.sh \
+          docker.sh \
           .github/testFiles.sh \
-          .github/testFreeBSD.sh
+          .github/testFreeBSD.sh \
+          .github/tuiDrive.sh
+
+    # The runner has Docker preinstalled, so this covers the status path only, not the installation
+    - name: Smoke test docker.sh
+      run: |
+        bash docker.sh --help
+        bash docker.sh
+
+    # Hides Docker behind a PATH with only the tools the not-installed path needs (bash too: the
+    # command itself is looked up in that PATH). Without a terminal the missing answer counts as
+    # "no", so nothing is installed and the exit code is 1.
+    - name: Smoke test docker.sh without Docker
+      run: |
+        nodocker="$RUNNER_TEMP/nodocker"
+        mkdir -p "$nodocker"
+        for tool in bash uname grep id tr; do ln -s "$(command -v "$tool")" "$nodocker/$tool"; done
+        rc=0
+        PATH="$nodocker" bash docker.sh </dev/null >"$RUNNER_TEMP/docker.log" 2>&1 || rc=$?
+        cat "$RUNNER_TEMP/docker.log"
+        test "$rc" -eq 1
+        grep -q "Docker:          not installed" "$RUNNER_TEMP/docker.log"
+        grep -q "Docker was not installed" "$RUNNER_TEMP/docker.log"
 
   # ===================
   # Runs unit tests on all supported node versions and OSes
@@ -259,16 +282,14 @@ jobs:
     - name: Build the self-contained scripts
       run: node tasks --create
 
-    # Enter on the start screen installs with the preselected options. CI is unset because
-    # the scripts keep the classic output when it is set.
+    # tuiDrive.sh presses Enter whenever a dialog waits, so the start screen installs with the
+    # preselected options. It unsets CI, with which the scripts keep the classic output.
     - name: Install ioBroker with the interactive display
       timeout-minutes: 30
       env:
         VERSIONS_URL: file://${{ github.workspace }}/versions.json
       run: |
-        script -qfec "stty rows 40 cols 120; env -u CI TERM=xterm-256color bash ./dist/install.sh" install.typescript \
-          < <(printf '\r'; exec sleep 1700 2>/dev/null) > /dev/null
-        pkill -f "sleep 1700" || true
+        bash .github/tuiDrive.sh install.typescript 40 120 ./dist/install.sh
         # The display was really used, and the installation reached its end
         grep -qaF $'\033[?1049h' install.typescript
         grep -qa "ioBroker was installed successfully" install.typescript
@@ -293,15 +314,12 @@ jobs:
         sudo systemctl stop iobroker
         sleep 10
 
-    # Enter on the start screen repairs with the preselected options. The further Enters answer
-    # the questions the runner may trigger, boot target and timezone, with the preselected "No";
-    # an Enter that no dialog reads is dropped with the terminal.
+    # Enter on the start screen repairs with the preselected options, and answers the questions the
+    # runner triggers, boot target and timezone, with the preselected "No"
     - name: Run the fixer with the interactive display
       timeout-minutes: 30
       run: |
-        script -qfec "stty rows 24 cols 80; env -u CI TERM=xterm-256color bash ./dist/fix.sh" fix.typescript \
-          < <(printf '\r\r\r'; exec sleep 1700 2>/dev/null) > /dev/null
-        pkill -f "sleep 1700" || true
+        bash .github/tuiDrive.sh fix.typescript 24 80 ./dist/fix.sh
         grep -qaF $'\033[?1049h' fix.typescript
         grep -qa "Your installation was fixed successfully" fix.typescript
 
