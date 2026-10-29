@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the fixer
-FIXER_VERSION="2026-10-26" # format YYYY-MM-DD
+FIXER_VERSION="2026-10-29" # format YYYY-MM-DD
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -98,19 +98,23 @@ tui_fix_menu() {
     TUI_MENU_HEAD=(
         "Checks and repairs the ioBroker installation in ${TUI_BOLD}$IOB_DIR${TUI_RESET}."
         "${TUI_DIM}$(tui_os_name) ($(uname -m)), Node.js $(node -v 2>/dev/null), js-controller ${controller_version:-unknown}${TUI_RESET}"
+        "${TUI_BOLD}Standard users should not change the defaults, just press Enter.${TUI_RESET}"
     )
-    TUI_MENU_LABELS=("Repair the installation" "Update the package lists of the system" "Hardened: no root rights for the iobroker user" "Quit")
-    TUI_MENU_TYPES=(action toggle toggle quit)
-    TUI_MENU_VALUES=("" true "$IOB_HARDENED" "")
+    # Hardened mode is for experts only and therefore not offered here, only via --hardened
+    TUI_MENU_LABELS=("Repair the installation" "Update the package lists of the system" "Quit")
+    TUI_MENU_TYPES=(action toggle quit)
+    TUI_MENU_VALUES=("" true "")
     if [ "$SKIP_UPDATE" = true ]; then
         TUI_MENU_VALUES[1]=false
     fi
     TUI_MENU_HELP=(
         "Installs missing packages, repairs the user, the permissions and the autostart, and compresses the databases."
         "Off: missing packages are installed from the package lists as they are (--no-update)."
-        "The iobroker user loses its sudo rights and the docker group, adapters that need root rights will not work (--hardened). A hardened installation stays hardened anyway."
         "Ends the fixer without changing anything."
     )
+    if [ "$IOB_HARDENED" = "true" ]; then
+        TUI_NOTES+=("Hardened mode (--hardened): the iobroker user loses its sudo rights and the docker group, adapters that need root rights will not work.")
+    fi
     TUI_MENU_FOOT="Classic output with every detail instead of this display:\niob fix --classic"
     tui_menu "ioBroker Fixer $FIXER_VERSION"
     if [ "${TUI_MENU_TYPES[TUI_MENU_CHOICE]}" = quit ]; then
@@ -123,7 +127,6 @@ tui_fix_menu() {
     else
         SKIP_UPDATE=true
     fi
-    IOB_HARDENED=${TUI_MENU_VALUES[2]}
 }
 
 if [ "$TUI" = true ]; then

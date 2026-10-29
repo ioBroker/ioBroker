@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-10-29
+* The start screen no longer offers hardened mode, it is for experts and only available via `--hardened`, which the start screen then shows as a note; a new line says that standard users should not change the defaults
+
 ## 2026-10-26
 * Interactive display on a terminal: ioBroker logo, a start screen to choose `--redis`, `--no-autostart` and `--hardened`, a progress view of the steps with their output in `~/iobroker-install.log`, and a summary with the address of the admin. Without a terminal, with `--silent`, `--classic` (alias `--no-tui`), `IOB_NO_TUI=true` or `CI` the classic output stays; the start screen mentions `--classic`
 

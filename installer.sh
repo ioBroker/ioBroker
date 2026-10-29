@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-10-26" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-10-29" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -107,10 +107,12 @@ tui_install_menu() {
     TUI_MENU_HEAD=(
         "Installs ioBroker into ${TUI_BOLD}$IOB_DIR${TUI_RESET}."
         "${TUI_DIM}$(tui_os_name) ($(uname -m)), $node_info${TUI_RESET}"
+        "${TUI_BOLD}Standard users should not change the defaults, just press Enter.${TUI_RESET}"
     )
-    TUI_MENU_LABELS=("Install ioBroker" "Start ioBroker after the installation" "Install Redis for objects and states" "Hardened: no root rights for the iobroker user" "Quit")
-    TUI_MENU_TYPES=(action toggle toggle toggle quit)
-    TUI_MENU_VALUES=("" true "$INSTALL_REDIS" "$IOB_HARDENED" "")
+    # Hardened mode is for experts only and therefore not offered here, only via --hardened
+    TUI_MENU_LABELS=("Install ioBroker" "Start ioBroker after the installation" "Install Redis for objects and states" "Quit")
+    TUI_MENU_TYPES=(action toggle toggle quit)
+    TUI_MENU_VALUES=("" true "$INSTALL_REDIS" "")
     if [ "$SKIP_IOBROKER_START" = "true" ]; then
         TUI_MENU_VALUES[1]=false
     fi
@@ -118,9 +120,11 @@ tui_install_menu() {
         "Installs Node.js if needed, the ioBroker packages and the service that starts ioBroker at boot."
         "Off: run 'iob start' yourself after the installation (--no-autostart)."
         "Only worth it for large installations, Redis needs additional RAM (--redis)."
-        "Adapters that need root rights (OS packages, reboot, mount, docker, ...) will not work then (--hardened)."
         "Ends the installer without changing anything."
     )
+    if [ "$IOB_HARDENED" = "true" ]; then
+        TUI_NOTES+=("Hardened mode (--hardened): the iobroker user gets no root rights, adapters that need them (OS packages, reboot, mount, docker, ...) will not work.")
+    fi
     TUI_MENU_FOOT="Classic output with every detail instead of this display: start the installer with --classic."
     tui_menu "ioBroker Installer $INSTALLER_VERSION"
     if [ "${TUI_MENU_TYPES[TUI_MENU_CHOICE]}" = quit ]; then
@@ -134,7 +138,6 @@ tui_install_menu() {
         SKIP_IOBROKER_START="true"
     fi
     INSTALL_REDIS=${TUI_MENU_VALUES[2]}
-    IOB_HARDENED=${TUI_MENU_VALUES[3]}
 }
 
 if [ "$TUI" = true ]; then
