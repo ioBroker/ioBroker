@@ -53,7 +53,9 @@ curl -sL https://iobroker.net/install.sh | bash -s -- --hardened
 
 **Notes:**
 - On a terminal the installer starts with the [interactive display](#interactive-display): a start screen
-  where `--redis`, `--no-autostart` and `--hardened` can also be switched, then a progress view of the steps
+  where `--redis` and `--no-autostart` can also be switched, then a progress view of the steps.
+  [Hardened mode](#hardened-mode) is for experts and only available via `--hardened`, the start screen
+  shows it as a note then
 - The installer creates an `iob` command with additional parameters (see [Service Control Commands](#service-control-commands))
 - Root user detection is automatic with warnings and recommendations
 
@@ -165,7 +167,8 @@ iob fix [OPTIONS]
   [interactive display](#interactive-display), see [Classic output](#classic-output)
 
 On a terminal the fixer starts with the [interactive display](#interactive-display), where `--no-update`
-and `--hardened` can also be switched. It first checks that ioBroker is installed and stopped, and only
+can also be switched. [Hardened mode](#hardened-mode) is for experts and only available via `--hardened`,
+the start screen shows it as a note then. It first checks that ioBroker is installed and stopped, and only
 then asks its questions (user account, boot target, timezone).
 
 **Examples:**
