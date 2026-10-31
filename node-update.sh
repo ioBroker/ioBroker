@@ -43,8 +43,12 @@ readonly LOG_DIR="/opt/iobroker/log"
 
 # --- Global Variables ---
 DRY_RUN=false
+FORCE=false
 SUDOX=""
 NODE_MAJOR=""
+# Full semver string (e.g. "27.0.0-alpha.1") if the user passed one with --force,
+# empty otherwise. Only the major part goes into the NodeSource repository.
+NODE_VERSION_FULL=""
 NODERECOM=""
 VERNODE=""
 HOST_PLATFORM=""
@@ -60,9 +64,9 @@ log() {
     local message="$2"
     case "$level" in
     "error") echo -e "\033[31m[ERROR] $message\033[0m" >&2 ;;
-    "warn") echo -e "\033[33m[WARN] $message\033[0m" >&2 ;;
-    "info") echo -e "\033[32m[INFO] $message\033[0m" ;;
-    *) echo -e "$message" ;;
+    "warn")  echo -e "\033[33m[WARN] $message\033[0m" >&2 ;;
+    "info")  echo -e "\033[32m[INFO] $message\033[0m" ;;
+    *)       echo -e "$message" ;;
     esac
 }
 
@@ -95,22 +99,37 @@ cleanup() {
     # Remove ANSI color codes and "Reading database" progress lines from the log
     $SUDOX sed -i -e 's/\x1b\[[0-9;]*m//g' \
         -e 's/\r/\n/g' \
-        -e '/^\(Reading database \.\.\. .*%)$/d' "$LOG_FILE" 2>/dev/null || true
+        -e '/^\(Reading database \.\.\. .*\)$/d' "$LOG_FILE" 2>/dev/null || true
 }
 
 trap cleanup EXIT
 
 # --- Validation Functions ---
+# Accepts, depending on the mode:
+#   normal: a plain major version ("22") that ioBroker accepts (versions.json)
+#   --force: any semver string or major ("27", "27.0.0", "27.0.0-alpha.1")
 validate_node_major() {
-    local major="$1"
-    if [[ ! "$major" =~ ^[0-9]+$ ]]; then
-        log "error" "Invalid Node.js major version: $major. Must be a number (e.g., 20, 22)."
+    local version="$1"
+    version="${version#v}" # tolerate a leading "v"
+
+    if [[ "$FORCE" == true ]]; then
+        # Relaxed semver check: major[.minor[.patch]][-prerelease]
+        if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+){0,2}(-[A-Za-z0-9.]+)?$ ]]; then
+            log "error" "Invalid Node.js version: $version. Expected a semver string like '22', '27.0.0' or '27.0.0-alpha.1'."
+            exit 1
+        fi
+        log "warn" "Force mode: skipping the ioBroker acceptance check for Node.js $version. This version is UNSUPPORTED, use it at your own risk!"
+        return
+    fi
+
+    if [[ ! "$version" =~ ^[0-9]+$ ]]; then
+        log "error" "Invalid Node.js major version: $version. Must be a number (e.g., 20, 22). Use --force for unsupported or prerelease versions."
         exit 1
     fi
     local accepted
     accepted=$(get_accepted_node_majors)
-    if [[ " $accepted " != *" $major "* ]]; then
-        log "error" "ioBroker does not support Node.js $major. Accepted major versions: $accepted."
+    if [[ " $accepted " != *" $version "* ]]; then
+        log "error" "ioBroker does not support Node.js $version. Accepted major versions: $accepted. Use --force to install it anyway."
         exit 1
     fi
 }
@@ -158,7 +177,8 @@ get_recommended_node_major() {
 get_accepted_node_majors() {
     local accepted
     # Extract accepted versions from versions.json, fallback to default if empty
-    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[\K[^]]*' | grep -oP '[0-9]+' | tr '\n' ' ' || true)
+
+    accepted=$(fetch_versions_json | grep -oP '"nodeJsAccepted"\s*:\s*\[[^\]]*' | grep -oP '[0-9]+' | tr '\n' ' ' || true)
 
     # Remove duplicate and leading/trailing spaces
     accepted=${accepted// / }
@@ -465,6 +485,21 @@ install_nodejs() {
         fi
     fi
 
+    # If the user passed a full semver string with --force, try to install exactly
+    # that version from the repository of its major release first.
+    if [[ -n "$NODE_VERSION_FULL" ]]; then
+        log "info" "Trying to install Node.js $NODE_VERSION_FULL exactly..."
+        if [[ "$DRY_RUN" == true ]]; then
+            log "info" "[DRY RUN] Would execute: $SUDOX $INSTALL_CMD ${INSTALL_CMD_ARGS[*]} nodejs=$NODE_VERSION_FULL*"
+        elif $SUDOX "$INSTALL_CMD" "${INSTALL_CMD_ARGS[@]}" "nodejs=$NODE_VERSION_FULL*"; then
+            log "info" "Node.js $NODE_VERSION_FULL installed successfully."
+            verify_installed_nodejs
+            return
+        else
+            log "warn" "Node.js $NODE_VERSION_FULL is not available in the NodeSource repository. Falling back to the latest release of the v$NODE_MAJOR tree."
+        fi
+    fi
+
     log "info" "Installing Node.js $NODE_MAJOR..."
     if [[ "$DRY_RUN" == true ]]; then
         log "info" "[DRY RUN] Would execute: $SUDOX $INSTALL_CMD ${INSTALL_CMD_ARGS[*]}"
@@ -476,6 +511,10 @@ install_nodejs() {
         fi
     fi
 
+    verify_installed_nodejs
+}
+
+verify_installed_nodejs() {
     # Verify installation
     local new_version
     new_version=$(get_current_node_version)
@@ -597,6 +636,32 @@ validate_node_paths() {
     fi
 }
 
+# --- iob fix prompt ---
+prompt_and_run_iob_fix() {
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would prompt for running 'iob fix'"
+        return
+    fi
+
+    # ioBroker is stopped at this point and only started after this function, and set -e would
+    # end the script right here: neither a missing answer nor a failing fixer may abort it.
+    local answer
+
+    log "info" "It is strongly recommended to run 'iob fix' after updating Node.js to resolve potential dependency issues."
+    # read fails without a terminal or on EOF, which counts as "no"
+    read -rp "Do you want to run 'iob fix' now? [y/N] " answer || answer=""
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        log "info" "Running 'iob fix'..."
+        if ! iob fix; then
+            log "warn" "Failed to run 'iob fix'. Please check the output above and run it again later. ioBroker is started anyway."
+            return
+        fi
+        log "info" "'iob fix' completed successfully."
+    else
+        log "info" "Skipping 'iob fix'. You can run it manually later if needed."
+    fi
+}
+
 # --- Main Function ---
 main() {
     # Parse arguments
@@ -607,16 +672,24 @@ main() {
             DRY_RUN=true
             shift
             ;;
+        --force)
+            FORCE=true
+            shift
+            ;;
         --help | -h)
-            echo "Usage: $0 [OPTIONS] [NODE_MAJOR_VERSION]"
+            echo "Usage: $0 [OPTIONS] [NODE_VERSION]"
             echo ""
             echo "Options:"
             echo "  --dry-run    Show what would be done without making changes"
+            echo "  --force      Install Node.js even if ioBroker does not accept the version."
+            echo "               Also allows full semver strings like '27.0.0-alpha.1'."
+            echo "               The installed version is UNSUPPORTED, use it at your own risk!"
             echo "  --help, -h   Show this help message"
             echo ""
             echo "Arguments:"
-            echo "  NODE_MAJOR_VERSION   Major version of Node.js to install (e.g., 20, 22)"
-            echo "                      If omitted, the recommended version from ioBroker or versions.json will be used."
+            echo "  NODE_VERSION   Major version of Node.js to install (e.g., 20, 22)"
+            echo "                If omitted, the recommended version from ioBroker or versions.json will be used."
+            echo "                With --force, a full semver string (e.g., 27.0.0-alpha.1) is accepted as well."
             exit 0
             ;;
         *)
@@ -629,31 +702,6 @@ main() {
             ;;
         esac
     done
-
-    # --- iob fix prompt ---
-    prompt_and_run_iob_fix() {
-        if [[ "$DRY_RUN" == true ]]; then
-            log "info" "[DRY RUN] Would prompt for running 'iob fix'"
-            return
-        fi
-
-        # ioBroker is stopped at this point and only started after this function, and set -e would
-        # end the script right here: neither a missing answer nor a failing fixer may abort it.
-        local answer
-        log "info" "It is strongly recommended to run 'iob fix' after updating Node.js to resolve potential dependency issues."
-        # read fails without a terminal or on EOF, which counts as "no"
-        read -rp "Do you want to run 'iob fix' now? [y/N] " answer || answer=""
-        if [[ "$answer" =~ ^[Yy]$ ]]; then
-            log "info" "Running 'iob fix'..."
-            if ! iob fix; then
-                log "warn" "Failed to run 'iob fix'. Please check the output above and run it again later. ioBroker is started anyway."
-                return
-            fi
-            log "info" "'iob fix' completed successfully."
-        else
-            log "info" "Skipping 'iob fix'. You can run it manually later if needed."
-        fi
-    }
 
     # Check dependencies
     check_dependencies
@@ -676,8 +724,17 @@ main() {
     # Determine Node.js version
     if [[ -n "$custom_version" ]]; then
         validate_node_major "$custom_version"
-        NODE_MAJOR="$custom_version"
-        log "info" "Custom installation of Node.js v$NODE_MAJOR requested."
+        custom_version="${custom_version#v}" # tolerate a leading "v"
+        # Only the major goes into the NodeSource repository URL, a full semver
+        # string is remembered separately and pinned during installation.
+        NODE_MAJOR="${custom_version%%-*}"
+        NODE_MAJOR="${NODE_MAJOR%%.*}"
+        if [[ "$FORCE" == true && "$custom_version" != "$NODE_MAJOR" ]]; then
+            NODE_VERSION_FULL="$custom_version"
+            log "info" "Custom installation of Node.js v$NODE_VERSION_FULL requested (major: v$NODE_MAJOR)."
+        else
+            log "info" "Custom installation of Node.js v$NODE_MAJOR requested."
+        fi
     else
         local recommended_major
         recommended_major=$(get_recommended_node_major)
@@ -697,7 +754,7 @@ main() {
     current_major="${current_major%%.*}"
 
     # Check if update is needed - Fixed SC2144: Use explicit file check instead of glob pattern
-    if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources ]]; then
+    if [[ "$current_major" == "$NODERECOM" && -f /etc/apt/sources.list.d/nodesource.sources && "$FORCE" == false ]]; then
         # Check if any Node.js binaries exist in directories other than /usr/bin/ or /bin/
         # This is important for identifying 'wild' installations done via tools like nvm or n.
         # We only want nodesource installations done via packagemanager and they live in above directories.
