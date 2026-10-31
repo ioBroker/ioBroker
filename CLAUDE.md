@@ -238,7 +238,12 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   `--silent`/`--no-tui`).
 - `npx_install.yml` / `deploy_windows.yml` — `npm link` + `npx iobroker` on windows-latest; the `deploy` job
   publishes both `@iobroker/install` and `@iobroker/fix` on version tags.
-- `deploy.yml` — on GitHub release, runs `npm run deploy` (SFTP to iobroker.net).
+- `deploy.yml` — on GitHub release, runs `npm run deploy` (SFTP to iobroker.net), then downloads every
+  `dist/*.sh` from `https://iobroker.net/` and compares it with the build. The upload lands on
+  iobroker.live; iobroker.net only redirects there, by one server rule per script, kept outside this repo.
+  A script without its rule gets the website's login page with HTTP 200, so `curl -f` alone would pass:
+  `docker.sh` shipped that way and `iob docker` ran HTML until the rule was added. A new script needs
+  that rule before its release.
 - `freebsd.yml` — FreeBSD install + fixer round-trip in a `vmactions/freebsd-vm`, driven by
   `.github/testFreeBSD.sh`. Replaces `.cirrus.yml`, which had silently stopped producing check runs in
   2024, leaving the platform uncovered for two years. It blocks like any other job; the defects that

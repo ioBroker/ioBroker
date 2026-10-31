@@ -24,3 +24,23 @@ jobs:
           SFTP_PORT: ${{secrets.SFTP_PORT}}
           SFTP_USER: ${{secrets.SFTP_USER}}
 
+      # Users and the iob wrapper download the scripts from iobroker.net, which redirects each of them
+      # to iobroker.live by a rule of its own. A script without such a rule gets the login page of the
+      # website instead, so check that every uploaded script really arrives there unchanged.
+      - name: Check the scripts on iobroker.net
+        run: |
+          failed=0
+          for path in dist/*.sh; do
+            file=$(basename "$path")
+            if ! curl -sLf --retry 3 "https://iobroker.net/$file" -o "live-$file"; then
+              echo "::error::https://iobroker.net/$file cannot be downloaded"
+              failed=1
+            elif ! cmp -s "$path" "live-$file"; then
+              echo "::error::https://iobroker.net/$file is not the uploaded file (redirect to iobroker.live missing?), it starts with: $(head -n 1 "live-$file")"
+              failed=1
+            else
+              echo "https://iobroker.net/$file OK"
+            fi
+          done
+          exit $failed
+
