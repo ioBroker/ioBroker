@@ -34,16 +34,34 @@ const recommendedNpmMajor = supported.npmRecommended || FALLBACK_RECOMMENDED_NPM
 
 const versions = getSystemVersions();
 
-// A Node.js version outside nodeJsAccepted is fatal: the adapters pinned by this
-// installer declare an engines range of their own, so npm would fail on them anyway,
-// with an EBADENGINE error that says far less than the message below.
+/*
+ * A Node.js version outside nodeJsAccepted is fatal: the adapters pinned by this
+ * installer declare an engines range of their own, so npm would fail on them anyway,
+ * with an EBADENGINE error that says far less than the message below.
+ *
+ * The marker file $IOB_DIR/.nodejs-force is created by 'node-update.sh --force' for
+ * testing unsupported Node.js versions (e.g. prereleases). It only relaxes THIS
+ * check, nothing else: the engines ranges of the adapters still apply. It is meant
+ * for test systems and must never be present on a production installation.
+ */
 if (versions.node && !acceptedNodeMajors.includes(semver.major(semver.coerce(versions.node)))) {
-    console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.error(`ioBroker supports Node.JS ${acceptedNodeMajors.join(', ')}. You have installed ${versions.node}`);
-    console.error('Please install a supported Node.JS version and start the installation again!');
-    // TODO: Print manual how to update Node.js
-    console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    process.exit(2);
+    const fs = require('fs');
+    const path = require('path');
+    const forceMarker = path.join(__dirname, '..', '.nodejs-force');
+    if (process.env.IOB_FORCE_NODE === '1' || fs.existsSync(forceMarker)) {
+        console.warn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        console.warn(`ioBroker supports Node.JS ${acceptedNodeMajors.join(', ')}. You have installed ${versions.node}`);
+        console.warn('The force marker was found, continuing anyway. This installation is UNSUPPORTED!');
+        console.warn(`Remove ${forceMarker} to re-enable the version check.`);
+        console.warn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    } else {
+        console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        console.error(`ioBroker supports Node.JS ${acceptedNodeMajors.join(', ')}. You have installed ${versions.node}`);
+        console.error('Please install a supported Node.JS version and start the installation again!');
+        // TODO: Print manual how to update Node.js
+        console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        process.exit(2);
+    }
 }
 
 if (versions.npm == null) {

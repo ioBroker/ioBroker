@@ -39,6 +39,10 @@ readonly DEFAULT_ACCEPTED_NODE_MAJORS="22 24 26"
 readonly DOCKER_MARKER="/opt/scripts/.docker_config/.thisisdocker"
 readonly IOB_DIR="/opt/iobroker"
 readonly IOB_USER="iobroker"
+# Marker file that tells lib-npx/checkVersions.js (and thereby the ioBroker
+# installation) to tolerate an unsupported Node.js version. Only written in
+# --force mode, removed again on every normal run.
+readonly FORCE_MARKER="$IOB_DIR/.nodejs-force"
 readonly LOG_DIR="/opt/iobroker/log"
 
 # --- Global Variables ---
@@ -539,6 +543,34 @@ remove_old_nodejs() {
 # Installing the nodejs package replaces the node binary, and file capabilities do not survive
 # that. Grant again what install_necessary_packages in installer_library.sh grants, otherwise
 # adapters that need privileged ports or raw sockets (ping, BLE, ports below 1024) stop working.
+set_force_marker() {
+    if [[ "$FORCE" != true ]]; then
+        return
+    fi
+    if [[ "$DRY_RUN" == true ]]; then
+        log "info" "[DRY RUN] Would create $FORCE_MARKER"
+        return
+    fi
+    if ! printf 'Created by node-update.sh --force on %s\n' "$(date '+%Y-%m-%d %H-%M-%S')" > "$FORCE_MARKER" 2>/dev/null; then
+        $SUDOX sh -c "printf 'Created by node-update.sh --force on %s\n' "$(date '+%Y-%m-%d %H-%M-%S')" > '$FORCE_MARKER'"
+    fi
+    log "warn" "Force marker created at $FORCE_MARKER. ioBroker will tolerate the unsupported Node.js version."
+    log "warn" "Remove it (or run this script without --force) to return to a supported setup."
+}
+
+remove_force_marker() {
+    # A normal run installs an accepted version again, so a stale marker
+    # from a previous --force run must not survive it.
+    if [[ -f "$FORCE_MARKER" ]]; then
+        if [[ "$DRY_RUN" == true ]]; then
+            log "info" "[DRY RUN] Would remove $FORCE_MARKER"
+        else
+            $SUDOX rm -f "$FORCE_MARKER"
+            log "info" "Removed force marker $FORCE_MARKER. The ioBroker version check is active again."
+        fi
+    fi
+}
+
 set_node_capabilities() {
     local node_bin
     node_bin=$(readlink -f "$(command -v node)" 2>/dev/null || echo "")
@@ -831,6 +863,13 @@ main() {
 
     # The new binary has lost the capabilities, set them before ioBroker starts again
     set_node_capabilities
+
+    # Manage the force marker for the ioBroker version check (lib-npx/checkVersions.js)
+    if [[ "$FORCE" == true ]]; then
+        set_force_marker
+    else
+        remove_force_marker
+    fi
 
     # Prompt for iob fix
     prompt_and_run_iob_fix
