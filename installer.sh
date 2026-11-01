@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-10-29" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-11-01" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -100,13 +100,39 @@ set_some_common_params
 
 # Start screen of the interactive display: the options of the flags, then install or quit
 tui_install_menu() {
-    local node_info="Node.js will be installed"
+    # Say what happens with Node.js, not only which version there is: a bare "Node.js v26.13.0"
+    # under "Installs ioBroker into ..." was read as the version the installer is going to install.
+    # Mirrors the decision in step 1 below. No color codes inside node_info: the line may wrap,
+    # and fold counts them as characters.
+    local node_info node_version node_major
     if [[ $(type -P "node" 2>/dev/null) == *"/node" ]]; then
-        node_info="Node.js $(node -v 2>/dev/null)"
+        node_version=$(node -v 2>/dev/null)
+        node_major="${node_version#v}"
+        node_major="${node_major%%.*}"
+        if [[ " $NODE_ACCEPTED " == *" $node_major "* ]]; then
+            if [ "$node_major" = "$NODE_MAJOR" ]; then
+                node_info="Node.js $node_version found, it will be used."
+            else
+                node_info="Node.js $node_version found, it will be used (recommended: $NODE_MAJOR)."
+            fi
+        elif [ "$INSTALL_CMD" = "brew" ]; then
+            node_info="Node.js $node_version found, but ioBroker supports only $NODE_ACCEPTED."
+            TUI_NOTES+=("Please install Node.js $NODE_MAJOR from $NODE_JS_BREW_URL. The installation continues, but this Node.js version is not supported.")
+        else
+            node_info="Node.js $node_version found, but ioBroker supports only $NODE_ACCEPTED: it will be replaced by Node.js $NODE_MAJOR."
+        fi
+    elif [ "$INSTALL_CMD" = "brew" ]; then
+        node_info="Node.js not found."
+        TUI_NOTES+=("Node.js cannot be installed via brew. Please install Node.js $NODE_MAJOR from $NODE_JS_BREW_URL first, otherwise the installation stops.")
+    elif [ "$INSTALL_CMD" = "pkg" ]; then
+        node_info="Node.js not found, it will be installed."
+    else
+        node_info="Node.js not found, Node.js $NODE_MAJOR will be installed."
     fi
     TUI_MENU_HEAD=(
         "Installs ioBroker into ${TUI_BOLD}$IOB_DIR${TUI_RESET}."
-        "${TUI_DIM}$(tui_os_name) ($(uname -m)), $node_info${TUI_RESET}"
+        "${TUI_DIM}System: $(tui_os_name) ($(uname -m))${TUI_RESET}"
+        "$node_info"
         "${TUI_BOLD}Standard users should not change the defaults, just press Enter.${TUI_RESET}"
     )
     # Hardened mode is for experts only and therefore not offered here, only via --hardened
@@ -198,6 +224,8 @@ else
         else
             NODE_INSTALL_REQUIRED="true"
         fi
+    else
+        echo "Using the already installed Node.js $(node -v 2>/dev/null)."
     fi
 fi
 if [ "$NODE_INSTALL_REQUIRED" = "true" ]; then
