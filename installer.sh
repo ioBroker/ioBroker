@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-10-29" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-11-02" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -317,12 +317,11 @@ if ! NPM_OUTPUT=$(npm i --production --loglevel error 2>&1); then
     exit 1
 fi
 
-# Install and configure Redis if requested
+# Install Redis if requested. The ioBroker configuration for it is written at the
+# end of the script, after "setup first" has created the controller settings.
 if [ "$INSTALL_REDIS" = "true" ]; then
     print_step "Installing and configuring Redis" 4 "$NUM_STEPS"
     install_redis
-    configure_iobroker_redis
-    set_valid_redis_locale
 fi
 
 # ########################################################
@@ -760,6 +759,28 @@ if [ ! -f "$IOB_DIR/iobroker-data/iobroker.json" ]; then
         echo "Initializing the ioBroker settings failed. Output of 'iobroker setup first':"
         printf '%s\n' "$SETUP_OUTPUT" >&2
         exit 1
+    fi
+fi
+
+# Switch ioBroker to Redis only now that the controller settings exist: "setup
+# first" above runs only when iobroker.json is missing, so writing the Redis
+# configuration earlier would leave a config with only objects/states, skip the
+# setup and leave the Redis databases uninitialized.
+if [ "$INSTALL_REDIS" = "true" ]; then
+    if ! configure_iobroker_redis; then
+        exit 1
+    fi
+    set_valid_redis_locale
+    # systemd and launchctl already started the service with the default file
+    # backend, so restart it to pick up the Redis configuration. rc.d is started
+    # below, after this block.
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        if [ "$INITSYSTEM" = "systemd" ]; then
+            $SUDOX systemctl restart iobroker.service
+        elif [ "$INITSYSTEM" = "launchctl" ]; then
+            launchctl unload -w "$SERVICE_FILENAME" &>/dev/null
+            launchctl load -w "$SERVICE_FILENAME"
+        fi
     fi
 fi
 
