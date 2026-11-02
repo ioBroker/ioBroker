@@ -4,7 +4,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-10-26" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-11-02" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -2026,39 +2026,41 @@ install_redis() {
 
 configure_iobroker_redis() {
     echo "Configuring ioBroker to use Redis..."
-    
-    # Create Redis configuration for ioBroker
-    local IOB_REDIS_CONFIG=$(cat <<-EOF
-{
-  "objects": {
-    "type": "redis",
-    "host": "127.0.0.1",
-    "port": 6379,
-    "options": {
-      "db": 0
-    }
-  },
-  "states": {
-    "type": "redis", 
-    "host": "127.0.0.1",
-    "port": 6379,
-    "options": {
-      "db": 1
-    }
-  }
-}
-EOF
-)
 
-    # Write Redis configuration to ioBroker config
     local IOB_CONFIG_FILE="$IOB_DIR/iobroker-data/iobroker.json"
     if [ ! -d "$IOB_DIR/iobroker-data" ]; then
         mkdir -p "$IOB_DIR/iobroker-data"
+        change_owner "$IOB_USER" "$IOB_DIR/iobroker-data"
     fi
-    
-    echo "$IOB_REDIS_CONFIG" > "$IOB_CONFIG_FILE"
+
+    # The controller settings must exist before the Redis backend is merged in:
+    # the installer runs "setup first" only when iobroker.json is missing, so a
+    # config written before that would skip the setup and leave ioBroker without
+    # its default settings and initialized databases.
+    if [ ! -f "$IOB_CONFIG_FILE" ]; then
+        # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
+        # shellcheck disable=SC2086
+        $IOB_NODE_CMDLINE "$CONTROLLER_DIR/iobroker.js" setup first || return 1
+    fi
+
+    # Merge objects/states into the existing config instead of overwriting the
+    # file, so the settings created by "setup first" are kept.
+    # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
+    # shellcheck disable=SC2086
+    if ! REDIS_CONFIG_OUTPUT=$($IOB_NODE_CMDLINE -e '
+        const fs = require("fs");
+        const file = process.argv[1];
+        const config = JSON.parse(fs.readFileSync(file, "utf8"));
+        config.objects = { type: "redis", host: "127.0.0.1", port: 6379, options: { db: 0 } };
+        config.states = { type: "redis", host: "127.0.0.1", port: 6379, options: { db: 1 } };
+        fs.writeFileSync(file, JSON.stringify(config, null, 2) + "\n");
+    ' "$IOB_CONFIG_FILE" 2>&1); then
+        echo "Configuring ioBroker to use Redis failed. Output:"
+        printf '%s\n' "$REDIS_CONFIG_OUTPUT" >&2
+        return 1
+    fi
     change_owner "$IOB_USER" "$IOB_CONFIG_FILE"
-    
+
     echo "ioBroker configured to use Redis backend"
 }
 

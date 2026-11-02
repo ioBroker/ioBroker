@@ -1,5 +1,8 @@
 # Changelog for Linux-Installer-Script
 
+## 2026-11-02
+* Fixed `--redis`: `configure_iobroker_redis` wrote `iobroker.json` in step 4, so the `iobroker setup first` at the end was skipped (it only runs when the file is missing) and the Redis databases were never initialized; the Redis `objects`/`states` are now merged into the existing config after the setup, and the already started service is restarted to pick them up
+
 ## 2026-10-29
 * The start screen no longer offers hardened mode, it is for experts and only available via `--hardened`, which the start screen then shows as a note; a new line says that standard users should not change the defaults
 
