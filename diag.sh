@@ -168,7 +168,7 @@ if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-inf
         ubuntu-distro-info --all 2>/dev/null
     )
     # Prüfen ob CODENAME gesetzt und in ALLRELEASES enthalten ist, Meldung in RELEASESTATUS schreiben
-    if [[ "$lang" == "--de" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         if [ -z "${CODENAME:-}" ]; then
             RELEASESTATUS+="Unbenannte Veröffentlichung - Bitte den Status selber prüfen"
         else
@@ -1134,7 +1134,7 @@ fi
 
 # Check if malware process pawns-cli is running
 if pgrep "pawns-cli" >/dev/null; then
-    if [ "$SKRPTLANG" == "--de" ]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%b%s" "$RED" "WARNUNG: Der Prozess 'pawns-cli' läuft auf diesem System!"
         printf "\n%s" "Dies könnte ein Hinweis auf Malwarebefall sein."
         printf "\n%s" "Bitte überprüfen Sie das System und entfernen Sie den Prozess, falls er nicht legitim ist."
