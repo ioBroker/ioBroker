@@ -125,6 +125,17 @@ get_install_info() {
         [[ -n "$ts" ]] && { echo "$ts pacmanlog"; return; }
     fi
 
+    # 2b) Debian-basierte Systeme: erster Eintrag des ältesten dpkg-Logs ≈ Installationsdatum
+    local dpkg_oldest first_line
+    dpkg_oldest=$(ls -v1 /var/log/dpkg.log* 2>/dev/null | tail -n1)
+    if [[ -n "$dpkg_oldest" ]]; then
+        first_line=$(zcat -f "$dpkg_oldest" 2>/dev/null | head -n1)
+        if [[ "$first_line" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+            ts=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null)
+            [[ -n "$ts" ]] && { echo "$ts dpkglog"; return; }
+        fi
+    fi
+
     # 3) Älteste Datei in /etc (Birth Time), funktioniert auch bei kopierten Systemen
     local oldest
     oldest=$(stat -c '%W %n' /etc/* 2>/dev/null | awk '$1>0' | sort -n | head -n1 | cut -d' ' -f1)
@@ -293,6 +304,7 @@ if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_inst
     if [[ "$SKRPTLANG" == "--de" ]]; then
         case "$install_method" in
             pacmanlog)     note=" (ermittelt über pacman.log)" ;;
+            dpkglog)       note=" (ermittelt über dpkg-Log)" ;;
             etc-birthtime) note=" (geschätzt: älteste Datei in /etc)" ;;
             root-mtime)    note=" (grobe Schätzung: mtime von /)" ;;
             *)             note="" ;;
@@ -301,6 +313,7 @@ if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_inst
     else
         case "$install_method" in
             pacmanlog)     note=" (determined via pacman.log)" ;;
+            dpkglog)       note=" (determined via dpkg log)" ;;
             etc-birthtime) note=" (estimated: oldest file in /etc)" ;;
             root-mtime)    note=" (rough estimate: mtime of /)" ;;
             *)             note="" ;;
