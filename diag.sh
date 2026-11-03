@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-11-01" #version of this script
+SKRIPTV="2026-11-03" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -110,28 +110,42 @@ NODENOTCORR=0
 IOBLISTINST=$(iobroker list instances $ALLOWROOT)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
-# Versuche, die Geburtszeit zu holen
-birth_time_raw=$(stat -c %w / 2>/dev/null)
+# Installationsdatum ermitteln: Fallback-Kette mit Kennung der verwendeten Methode
+get_install_info() {
+    # 1) Birth Time des Root-Inodes (Epoch-Sekunden; "-", "0" oder leer = nicht verfügbar)
+    local btime
+    btime=$(stat -c %W / 2>/dev/null)
+    [[ "$btime" =~ ^[0-9]+$ && "$btime" -gt 0 ]] && { echo "$btime birthtime"; return; }
 
-if [[ "$birth_time_raw" != "-" ]]; then
-    # Geburtszeit ist verfügbar → verwende sie
-    #install_date=$(echo "$birth_time_raw" | cut -d. -f1)
-    install_timestamp=$(date -d "$birth_time_raw" +%s 2>/dev/null)
-
-    # Falls `date -d` scheitert (z. B. wegen Nanosekunden oder exotischem Format)
-    if ! install_timestamp=$(date -d "$birth_time_raw" +%s 2>/dev/null); then
-        # Fallback: Letzte Änderung von /
-        install_timestamp=$(stat -c %Y /)
-        #install_date=$(date -d "@$install_timestamp" +%Y-%m-%d)
+    # 2) Arch-basierte Systeme: erster pacman-Log-Eintrag ≈ Installationsdatum
+    local first_log ts
+    first_log=$(head -n1 /var/log/pacman.log 2>/dev/null)
+    if [[ "$first_log" =~ ^\[([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+-]+)\] ]]; then
+        ts=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null)
+        [[ -n "$ts" ]] && { echo "$ts pacmanlog"; return; }
     fi
-else
-    # Fallback: Letzte Änderung von /
-    install_timestamp=$(stat -c %Y /)
-    #install_date=$(date -d "@$install_timestamp" +%Y-%m-%d)
-fi
 
-current_timestamp=$(date +%s)
-days_since_install=$(((current_timestamp - install_timestamp) / 86400))
+    # 3) Älteste Datei in /etc (Birth Time), funktioniert auch bei kopierten Systemen
+    local oldest
+    oldest=$(stat -c '%W %n' /etc/* 2>/dev/null | awk '$1>0' | sort -n | head -n1 | cut -d' ' -f1)
+    [[ -n "$oldest" ]] && { echo "$oldest etc-birthtime"; return; }
+
+    # 4) Last Resort: mtime von / – unzuverlässig, daher nur als letzter Fallback
+    local mtime_root
+    mtime_root=$(stat -c %Y / 2>/dev/null)
+    [[ "$mtime_root" =~ ^[0-9]+$ && "$mtime_root" -gt 0 ]] && echo "$mtime_root root-mtime"
+}
+
+IFS=' ' read -r install_timestamp install_method < <(get_install_info)
+
+if [[ -n "${install_timestamp:-}" ]]; then
+    current_timestamp=$(date +%s)
+    days_since_install=$(((current_timestamp - install_timestamp) / 86400))
+else
+    install_timestamp=""
+    install_method=""
+    days_since_install=-1
+fi
 
 CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
 
@@ -275,17 +289,35 @@ printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
-if [[ "$days_since_install" -gt 0 ]] && [[ "$days_since_install" -lt 36524 ]]; then # 100 Jahre als Obergrenze
+if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_install < 36525)); then # 100 Jahre als Obergrenze
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+        case "$install_method" in
+            pacmanlog)     note=" (ermittelt über pacman.log)" ;;
+            etc-birthtime) note=" (geschätzt: älteste Datei in /etc)" ;;
+            root-mtime)    note=" (grobe Schätzung: mtime von /)" ;;
+            *)             note="" ;;
+        esac
+        INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
     else
-        INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
+        case "$install_method" in
+            pacmanlog)     note=" (determined via pacman.log)" ;;
+            etc-birthtime) note=" (estimated: oldest file in /etc)" ;;
+            root-mtime)    note=" (rough estimate: mtime of /)" ;;
+            *)             note="" ;;
+        esac
+        INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))$note."
+    fi
+elif [[ -z "$install_timestamp" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        INSTALL_STATUS="Installationsdatum konnte nicht ermittelt werden."
+    else
+        INSTALL_STATUS="Installation date could not be determined."
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        INSTALL_STATUS="Installationsdatum unbekannt (Dateisystem unterstützt keine Geburtszeit)."
+        INSTALL_STATUS="Installationsdatum unklar: Methode '$install_method' lieferte einen unplausiblen Wert ($days_since_install Tage)."
     else
-        INSTALL_STATUS="Installation date unknown (filesystem does not support birth time)."
+        INSTALL_STATUS="Installation date unclear: method '$install_method' returned an implausible value ($days_since_install days)."
     fi
 fi
 
