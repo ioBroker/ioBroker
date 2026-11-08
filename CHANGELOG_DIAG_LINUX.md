@@ -1,4 +1,9 @@
 # Changelog for Linux-Diag-Script
+## 2026-11-03
+* Fixed installation date detection: fallback chain with method annotation (root inode birth time -> first pacman.log entry -> first entry of oldest dpkg.log rotation -> oldest file in /etc (birth time) -> mtime of /); fresh installs (0 days) are no longer reported as "installation date unknown"
+* dpkg.log result is reported as a lower bound ("at least N days ago"), since rotated logs may not reach back to the installation
+* Language checks now consistently use SKRPTLANG and [[ ]]
+
 ## 2026-11-01
 * Fixed Raspberry Throttling check
 

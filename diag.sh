@@ -309,7 +309,11 @@ if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_inst
             root-mtime)    note=" (grobe Schätzung: mtime von /)" ;;
             *)             note="" ;;
         esac
-        INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
+        if [[ "$install_method" == "dpkglog" ]]; then
+            INSTALL_STATUS="Das System wurde mindestens vor $days_since_install Tagen installiert (am oder vor dem $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
+        else
+            INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
+        fi
     else
         case "$install_method" in
             pacmanlog)     note=" (determined via pacman.log)" ;;
@@ -318,7 +322,11 @@ if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_inst
             root-mtime)    note=" (rough estimate: mtime of /)" ;;
             *)             note="" ;;
         esac
-        INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))$note."
+        if [[ "$install_method" == "dpkglog" ]]; then
+            INSTALL_STATUS="System was installed at least $days_since_install days ago (on or before $(date -d "@$install_timestamp" +%Y-%m-%d))$note."
+        else
+            INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))$note."
+        fi
     fi
 elif [[ -z "$install_timestamp" ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
