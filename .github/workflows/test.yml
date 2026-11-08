@@ -189,6 +189,60 @@ jobs:
   # when "node" is absent, and every runner image ships with Node.js preinstalled. The
   # NodeSource path - GPG key import, nodesource.sources, apt pinning - was therefore
   # completely uncovered. Remove Node.js first so the installer has to install it itself.
+  # Exercises the --redis path: the installer must switch the config to Redis after "setup
+  # first" and initialize the Redis databases with a second "setup first", so the objects
+  # (system.config, the admin instance) land in Redis and the admin UI comes up. Without
+  # that second setup the Redis databases stay empty and nothing is reachable on 8081.
+  test-redis:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Use Node.js 24.x
+      uses: actions/setup-node@v7
+      with:
+        node-version: 24.x
+
+    - name: Make the selected Node.js the system Node.js
+      run: |
+        sudo ln -sf "$(command -v node)" /usr/local/bin/node
+        sudo ln -sf "$(command -v npm)" /usr/local/bin/npm
+
+    - name: Build the self-contained installer
+      run: node tasks --create
+
+    - name: Install ioBroker with Redis
+      env:
+        VERSIONS_URL: file://${{ github.workspace }}/versions.json
+      run: bash ./dist/install.sh --silent --redis
+
+    # Objects are plain keys in db 0, states in db 1. If the second "setup first" is
+    # missing, these keys do not exist and the checks below fail.
+    - name: Verify the Redis databases were initialized
+      run: |
+        redis-cli -n 0 EXISTS system.config | grep -q 1
+        redis-cli -n 0 EXISTS system.adapter.admin.0 | grep -q 1
+        if [ "$(redis-cli -n 1 DBSIZE)" -eq 0 ]; then
+          echo "states db 0 is empty"
+          exit 1
+        fi
+
+    - name: Test if ioBroker starts by checking the admin adapter output
+      run: |
+        for i in $(seq 1 36); do
+          if curl -s --insecure http://127.0.0.1:8081 | grep -q '<title>Admin</title>'; then
+            echo "admin is reachable after $((i * 5))s"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "admin did not become reachable within 180s"
+        exit 1
+
   test-nodejs-install:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
 

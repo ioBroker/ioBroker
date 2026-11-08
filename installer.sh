@@ -771,6 +771,19 @@ if [ "$INSTALL_REDIS" = "true" ]; then
         exit 1
     fi
     set_valid_redis_locale
+    # The "setup first" above initialized the file backend, not Redis: it
+    # creates the system objects and the admin, discovery and backitup
+    # instances in the database that iobroker.json configured at that time.
+    # Run it again now that the config points to Redis, so the Redis
+    # databases get the same content.
+    echo "Initializing the Redis databases..."
+    # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
+    # shellcheck disable=SC2086
+    if ! SETUP_OUTPUT=$($IOB_NODE_CMDLINE "$CONTROLLER_DIR/iobroker.js" setup first 2>&1); then
+        echo "Initializing the Redis databases failed. Output of 'iobroker setup first':"
+        printf '%s\n' "$SETUP_OUTPUT" >&2
+        exit 1
+    fi
     # systemd and launchctl already started the service with the default file
     # backend, so restart it to pick up the Redis configuration. rc.d is started
     # below, after this block.

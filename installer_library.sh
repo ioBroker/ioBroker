@@ -2033,15 +2033,9 @@ configure_iobroker_redis() {
         change_owner "$IOB_USER" "$IOB_DIR/iobroker-data"
     fi
 
-    # The controller settings must exist before the Redis backend is merged in:
-    # the installer runs "setup first" only when iobroker.json is missing, so a
-    # config written before that would skip the setup and leave ioBroker without
-    # its default settings and initialized databases.
-    if [ ! -f "$IOB_CONFIG_FILE" ]; then
-        # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
-        # shellcheck disable=SC2086
-        $IOB_NODE_CMDLINE "$CONTROLLER_DIR/iobroker.js" setup first || return 1
-    fi
+    # The caller ensures that the controller settings exist before the Redis
+    # backend is merged in: in installer.sh "setup first" runs first and this
+    # function is called only afterwards.
 
     # Merge objects/states into the existing config instead of overwriting the
     # file, so the settings created by "setup first" are kept.
