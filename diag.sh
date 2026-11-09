@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-10-01" #version of this script
+SKRIPTV="2026-11-09" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -83,7 +83,7 @@ fi
 GREEN=$(printf '\033[0;32m')
 RED=$(printf '\033[0;31m')
 YELLOW=$(printf '\033[1;33m')
-NC=$(printf '\033[0m')  # No Color
+NC=$(printf '\033[0m') # No Color
 HEADLINE='\033[34;107m'
 
 # VARIABLES
@@ -95,7 +95,7 @@ MASKED=""
 if [[ "$*" =~ --unmask ]]; then MASKED="unmasked"; fi
 SUMMARY=""
 if [[ "$*" =~ (--summary|--short|--zusammenfassung|--kurz|-s|-k) ]]; then SUMMARY="summary"; fi
-ARCH=$(getconf LONG_BIT);
+ARCH=$(getconf LONG_BIT)
 HOST=$(uname -n)
 ID_LIKE=$(awk -F= '$1=="ID_LIKE" { print $2 ;}' /usr/lib/os-release | xargs)
 NODERECOM=$(iobroker state getValue system.host."$HOST".versions.nodeNewestNext $ALLOWROOT) #recommended node version
@@ -110,31 +110,55 @@ NODENOTCORR=0
 IOBLISTINST=$(iobroker list instances $ALLOWROOT)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
-# Versuche, die Geburtszeit zu holen
-birth_time_raw=$(stat -c %w / 2>/dev/null)
+# Installationsdatum ermitteln: Fallback-Kette mit Kennung der verwendeten Methode
+get_install_info() {
+    # 1) Birth Time des Root-Inodes (Epoch-Sekunden; "-", "0" oder leer = nicht verfügbar)
+    local btime
+    btime=$(stat -c %W / 2>/dev/null)
+    [[ "$btime" =~ ^[0-9]+$ && "$btime" -gt 0 ]] && { echo "$btime birthtime"; return; }
 
-if [[ "$birth_time_raw" != "-" ]]; then
-    # Geburtszeit ist verfügbar → verwende sie
-    #install_date=$(echo "$birth_time_raw" | cut -d. -f1)
-    install_timestamp=$(date -d "$birth_time_raw" +%s 2>/dev/null)
-
-    # Falls `date -d` scheitert (z. B. wegen Nanosekunden oder exotischem Format)
-    if ! install_timestamp=$(date -d "$birth_time_raw" +%s 2>/dev/null); then
-        # Fallback: Letzte Änderung von /
-        install_timestamp=$(stat -c %Y /)
-        #install_date=$(date -d "@$install_timestamp" +%Y-%m-%d)
+    # 2) Arch-basierte Systeme: erster pacman-Log-Eintrag ≈ Installationsdatum
+    local first_log ts
+    first_log=$(head -n1 /var/log/pacman.log 2>/dev/null)
+    if [[ "$first_log" =~ ^\[([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+-]+)\] ]]; then
+        ts=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null)
+        [[ -n "$ts" ]] && { echo "$ts pacmanlog"; return; }
     fi
+
+    # 2b) Debian-basierte Systeme: erster Eintrag des ältesten dpkg-Logs ≈ Installationsdatum
+    local dpkg_oldest first_line
+    dpkg_oldest=$(ls -v1 /var/log/dpkg.log* 2>/dev/null | tail -n1)
+    if [[ -n "$dpkg_oldest" ]]; then
+        first_line=$(zcat -f "$dpkg_oldest" 2>/dev/null | head -n1)
+        if [[ "$first_line" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}) ]]; then
+            ts=$(date -d "${BASH_REMATCH[1]}" +%s 2>/dev/null)
+            [[ -n "$ts" ]] && { echo "$ts dpkglog"; return; }
+        fi
+    fi
+
+    # 3) Älteste Datei in /etc (Birth Time), funktioniert auch bei kopierten Systemen
+    local oldest
+    oldest=$(stat -c '%W %n' /etc/* 2>/dev/null | awk '$1>0' | sort -n | head -n1 | cut -d' ' -f1)
+    [[ -n "$oldest" ]] && { echo "$oldest etc-birthtime"; return; }
+
+    # 4) Last Resort: mtime von / – unzuverlässig, daher nur als letzter Fallback
+    local mtime_root
+    mtime_root=$(stat -c %Y / 2>/dev/null)
+    [[ "$mtime_root" =~ ^[0-9]+$ && "$mtime_root" -gt 0 ]] && echo "$mtime_root root-mtime"
+}
+
+IFS=' ' read -r install_timestamp install_method < <(get_install_info)
+
+if [[ -n "${install_timestamp:-}" ]]; then
+    current_timestamp=$(date +%s)
+    days_since_install=$(((current_timestamp - install_timestamp) / 86400))
 else
-    # Fallback: Letzte Änderung von /
-    install_timestamp=$(stat -c %Y /)
-    #install_date=$(date -d "@$install_timestamp" +%Y-%m-%d)
+    install_timestamp=""
+    install_method=""
+    days_since_install=-1
 fi
 
-current_timestamp=$(date +%s)
-days_since_install=$(( (current_timestamp - install_timestamp) / 86400 ))
-
 CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
-
 
 # Prüfe, ob distro-info verfügbar ist (enthält ubuntu-distro-info und debian-distro-info)
 DISTRO_INFO_AVAILABLE=false
@@ -150,25 +174,28 @@ if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-inf
     mapfile -t OLDSTABLE < <(debian-distro-info --oldstable 2>/dev/null)
     mapfile -t TESTING < <(debian-distro-info --testing 2>/dev/null)
     # All
-    mapfile -t ALLRELEASES < <(debian-distro-info --all 2>/dev/null; ubuntu-distro-info --all 2>/dev/null)
+    mapfile -t ALLRELEASES < <(
+        debian-distro-info --all 2>/dev/null
+        ubuntu-distro-info --all 2>/dev/null
+    )
     # Prüfen ob CODENAME gesetzt und in ALLRELEASES enthalten ist, Meldung in RELEASESTATUS schreiben
-if [[ "$lang" == "--de" ]]; then
-  if [ -z "${CODENAME:-}" ]; then
-    RELEASESTATUS+="Unbenannte Veröffentlichung - Bitte den Status selber prüfen"
-  else
-    if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -Fxq -- "$CODENAME"; then
-      RELEASESTATUS+="Veröffentlichung '$CODENAME' ist nicht bekannt - Bitte den Status selber prüfen"
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        if [ -z "${CODENAME:-}" ]; then
+            RELEASESTATUS+="Unbenannte Veröffentlichung - Bitte den Status selber prüfen"
+        else
+            if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -Fxq -- "$CODENAME"; then
+                RELEASESTATUS+="Veröffentlichung '$CODENAME' ist nicht bekannt - Bitte den Status selber prüfen"
+            fi
+        fi
+    else
+        if [ -z "${CODENAME:-}" ]; then
+            RELEASESTATUS+="Unnamed Release - Please check support status yourself"
+        else
+            if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -Fxq -- "$CODENAME"; then
+                RELEASESTATUS+="Release  '$CODENAME' is unknown - Please check support status yourself"
+            fi
+        fi
     fi
-  fi
-else
-  if [ -z "${CODENAME:-}" ]; then
-    RELEASESTATUS+="Unnamed Release - Please check support status yourself"
-  else
-    if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -Fxq -- "$CODENAME"; then
-      RELEASESTATUS+="Release  '$CODENAME' is unknown - Please check support status yourself"
-    fi
-  fi
-fi
 
 fi
 
@@ -185,10 +212,8 @@ if [[ "$DISTRO_INFO_AVAILABLE" == false ]]; then
         echo "Install it manually with:"
         echo "  sudo apt-get update && sudo apt-get install distro-info"
     fi
-    UNKNOWNRELEASE=1  # Überspringe die Prüfung
+    UNKNOWNRELEASE=1 # Überspringe die Prüfung
 fi
-
-
 
 clear
 if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -275,24 +300,52 @@ printf "%s%s\n" "Virtualization  : " "$SYSTDDVIRT"
 printf "\n%s%s" "Kernel          : " "$(uname -m)"
 printf "\n%s%s%s\n" "Userland        : " "$(getconf LONG_BIT)" "bit"
 
-if [[ "$days_since_install" -gt 0 ]] && [[ "$days_since_install" -lt 36524 ]]; then  # 100 Jahre als Obergrenze
+if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_install < 36525)); then # 100 Jahre als Obergrenze
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))."
+        case "$install_method" in
+            pacmanlog)     note=" (ermittelt über pacman.log)" ;;
+            dpkglog)       note=" (ermittelt über dpkg-Log)" ;;
+            etc-birthtime) note=" (geschätzt: älteste Datei in /etc)" ;;
+            root-mtime)    note=" (grobe Schätzung: mtime von /)" ;;
+            *)             note="" ;;
+        esac
+        if [[ "$install_method" == "dpkglog" ]]; then
+            INSTALL_STATUS="Das System wurde vor mindestens $days_since_install Tagen installiert (am oder vor dem $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
+        else
+            INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
+        fi
     else
-        INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))."
+        case "$install_method" in
+            pacmanlog)     note=" (determined via pacman.log)" ;;
+            dpkglog)       note=" (determined via dpkg log)" ;;
+            etc-birthtime) note=" (estimated: oldest file in /etc)" ;;
+            root-mtime)    note=" (rough estimate: mtime of /)" ;;
+            *)             note="" ;;
+        esac
+        if [[ "$install_method" == "dpkglog" ]]; then
+            INSTALL_STATUS="System was installed at least $days_since_install days ago (on or before $(date -d "@$install_timestamp" +%Y-%m-%d))$note."
+        else
+            INSTALL_STATUS="System was installed $days_since_install days ago (on $(date -d "@$install_timestamp" +%Y-%m-%d))$note."
+        fi
+    fi
+elif [[ -z "$install_timestamp" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        INSTALL_STATUS="Installationsdatum konnte nicht ermittelt werden."
+    else
+        INSTALL_STATUS="Installation date could not be determined."
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        INSTALL_STATUS="Installationsdatum unbekannt (Dateisystem unterstützt keine Geburtszeit)."
+        INSTALL_STATUS="Installationsdatum unklar: Methode '$install_method' lieferte einen unplausiblen Wert ($days_since_install Tage)."
     else
-        INSTALL_STATUS="Installation date unknown (filesystem does not support birth time)."
+        INSTALL_STATUS="Installation date unclear: method '$install_method' returned an implausible value ($days_since_install days)."
     fi
 fi
 
 printf "\n%s\n" "$INSTALL_STATUS"
 
 check_architecture() {
-    if (( ARCH == 32 )); then
+    if ((ARCH == 32)); then
         printf "\n\e[1;33mOutdated 32Bit architecture detected. Only a pure 64Bit-System will be supported in the future. You will have to reinstall your operating system with full 64Bit support or upgrade to more modern hardware soon.\e[0m"
     fi
 }
@@ -331,32 +384,32 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         fi
     done
 
-# --- UBUSUP als Schleife einbinden (Deutsch) ---
-for RELEASE in "${UBUSUP[@]}"; do
-    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-        IS_LTS=0
-        for LTS in "${UBULTS[@]}"; do
-            if [[ "$RELEASE" == "$LTS" ]]; then
-                RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '${UBULTS[0]}'!\e[0m"
-                IS_LTS=1
+    # --- UBUSUP als Schleife einbinden (Deutsch) ---
+    for RELEASE in "${UBUSUP[@]}"; do
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+            IS_LTS=0
+            for LTS in "${UBULTS[@]}"; do
+                if [[ "$RELEASE" == "$LTS" ]]; then
+                    RELEASESTATUS="\e[32mDas Betriebssystem ist die aktuelle Ubuntu LTS Version '${UBULTS[0]}'!\e[0m"
+                    IS_LTS=1
+                    break
+                fi
+            done
+            if ((IS_LTS == 0)); then
+                RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
+                UNKNOWNRELEASE=0
                 break
             fi
-        done
-        if (( IS_LTS == 0 )); then
-            RELEASESTATUS="\e[1;33mDie Unterstützung für das Betriebssystem mit dem Codenamen '$CODENAME' läuft aus. Es sollte in nächster Zeit auf die aktuelle Version '${UBULTS[0]}' mit Langzeitunterstützung gebracht werden.\e[0m"
+        fi
+    done
+
+    for RELEASE in "${EOLUBU[@]}"; do
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+            RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' wird nicht mehr unterstützt und muss JETZT auf das aktuelle LTS release '${UBULTS[0]}' aktualisiert werden!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
-    fi
-done
-
-for RELEASE in "${EOLUBU[@]}"; do
-    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-        RELEASESTATUS="\e[31mDas Ubuntu Release '$CODENAME' wird nicht mehr unterstützt und muss JETZT auf das aktuelle LTS release '${UBULTS[0]}' aktualisiert werden!\e[0m"
-        UNKNOWNRELEASE=0
-        break
-    fi
-done
+    done
 
     for RELEASE in "${TESTING[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -374,29 +427,29 @@ done
         fi
     done
 
-if (( UNKNOWNRELEASE == 1 )); then
-    if [[ -z "$CODENAME" ]]; then
-        RELEASESTATUS="Die Version ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
-    else
-        # Prüfe ob CODENAME in ALLRELEASES vorkommt
-        if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
-        RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+    if ((UNKNOWNRELEASE == 1)); then
+        if [[ -z "$CODENAME" ]]; then
+            RELEASESTATUS="Die Version ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+        else
+            # Prüfe ob CODENAME in ALLRELEASES vorkommt
+            if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
+                RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
+            fi
         fi
     fi
-fi
 
-echo -e "$RELEASESTATUS"
+    echo -e "$RELEASESTATUS"
     #printf "%s\n\n" "$RELEASESTATUS"
 
 else
     printf "\n%b%s%b\n" "$HEADLINE" "*** LIFE CYCLE STATUS ***" "$NC"
 
-        if ! command -v distro-info >/dev/null; then
-            echo "ERROR: Package 'distro-info' is not installed. Please do:"
-            echo "sudo apt update && sudo apt install distro-info"
-            echo "Alternatively execute the 'iob fix'"
-            exit 1
-        fi
+    if ! command -v distro-info >/dev/null; then
+        echo "ERROR: Package 'distro-info' is not installed. Please do:"
+        echo "sudo apt update && sudo apt install distro-info"
+        echo "Alternatively execute the 'iob fix'"
+        exit 1
+    fi
 
     for RELEASE in "${EOLDEB[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -414,60 +467,60 @@ else
         fi
     done
 
-# --- Ubuntu-Prüfungen (Englisch) ---
-for RELEASE in "${EOLUBU[@]}"; do
-    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-        RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '${UBULTS[0]}' NOW!\e[0m"
-        UNKNOWNRELEASE=0
-        break
-    fi
-done
-
-for RELEASE in "${UBULTS[@]}"; do
-    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-        RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '${UBULTS[0]}'!\e[0m"
-        UNKNOWNRELEASE=0
-        break
-    fi
-done
-
-# --- NEU: UBUSUP als Schleife einbinden ---
-for RELEASE in "${UBUSUP[@]}"; do
-    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-        # Prüfe, ob RELEASE in UBULTS enthalten ist
-        IS_LTS=0
-        for LTS in "${UBULTS[@]}"; do
-            if [[ "$RELEASE" == "$LTS" ]]; then
-                IS_LTS=1
-                break
-            fi
-        done
-        # Nur ausgeben, wenn es KEINE LTS-Version ist
-        if (( IS_LTS == 0 )); then
-            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
+    # --- Ubuntu-Prüfungen (Englisch) ---
+    for RELEASE in "${EOLUBU[@]}"; do
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+            RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '${UBULTS[0]}' NOW!\e[0m"
             UNKNOWNRELEASE=0
             break
         fi
-    fi
-done
+    done
 
-# --- Weitere Prüfungen (TESTING, etc.) ---
-for RELEASE in "${TESTING[@]}"; do
-    if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-        RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
-        UNKNOWNRELEASE=0
-        break
-    fi
-done
+    for RELEASE in "${UBULTS[@]}"; do
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+            RELEASESTATUS="\e[32mOperating System is the current Ubuntu LTS release codenamed '${UBULTS[0]}'!\e[0m"
+            UNKNOWNRELEASE=0
+            break
+        fi
+    done
 
-# --- Fallback: Unknown Release ---
-if (( UNKNOWNRELEASE == 1 )); then
-    if [[ -z "$CODENAME" ]]; then
-    RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
-    else
-    RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+    # --- NEU: UBUSUP als Schleife einbinden ---
+    for RELEASE in "${UBUSUP[@]}"; do
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+            # Prüfe, ob RELEASE in UBULTS enthalten ist
+            IS_LTS=0
+            for LTS in "${UBULTS[@]}"; do
+                if [[ "$RELEASE" == "$LTS" ]]; then
+                    IS_LTS=1
+                    break
+                fi
+            done
+            # Nur ausgeben, wenn es KEINE LTS-Version ist
+            if ((IS_LTS == 0)); then
+                RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
+                UNKNOWNRELEASE=0
+                break
+            fi
+        fi
+    done
+
+    # --- Weitere Prüfungen (TESTING, etc.) ---
+    for RELEASE in "${TESTING[@]}"; do
+        if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
+            RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
+            UNKNOWNRELEASE=0
+            break
+        fi
+    done
+
+    # --- Fallback: Unknown Release ---
+    if ((UNKNOWNRELEASE == 1)); then
+        if [[ -z "$CODENAME" ]]; then
+            RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
+        else
+            RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+        fi
     fi
-fi
 
     for RELEASE in "${OLDSTABLE[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
@@ -477,32 +530,25 @@ fi
         fi
     done
 
-if (( UNKNOWNRELEASE == 1 )); then
-    if [[ -z "$CODENAME" ]]; then
-        RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
-    else
-        # Prüfe ob CODENAME in ALLRELEASES vorkommt
-        if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
-            RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+    if ((UNKNOWNRELEASE == 1)); then
+        if [[ -z "$CODENAME" ]]; then
+            RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
+        else
+            # Prüfe ob CODENAME in ALLRELEASES vorkommt
+            if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
+                RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
+            fi
         fi
     fi
-fi
 
     echo -e "$RELEASESTATUS"
 fi
 
-
 # RASPBERRY only
 if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
-    #        echo "Raspberry only:";
-    #        vcgencmd get_throttled 2> /dev/null;
-    #        echo "Other values than 0x0 hint to temperature/voltage problems";
-    #        vcgencmd measure_temp;
-    #        vcgencmd measure_volts;
-
     echo ""
     printf "\033[34;107m*** RASPBERRY THROTTLING ***\033[0m\n"
-    # CODE from https://github.com/alwye/get_throttled under MIT Licence
+
     ISSUES_MAP=(
         [0]="Under-voltage detected"
         [1]="Arm frequency capped"
@@ -511,65 +557,35 @@ if [[ $(type -P "vcgencmd" 2>/dev/null) = *"/vcgencmd" ]]; then
         [16]="Under-voltage has occurred"
         [17]="Arm frequency capping has occurred"
         [18]="Throttling has occurred"
-        [19]="Soft temperature limit has occurred")
-
-    HEX_BIN_MAP=(
-        ["0"]="0000"
-        ["1"]="0001"
-        ["2"]="0010"
-        ["3"]="0011"
-        ["4"]="0100"
-        ["5"]="0101"
-        ["6"]="0110"
-        ["7"]="0111"
-        ["8"]="1000"
-        ["9"]="1001"
-        ["A"]="1010"
-        ["B"]="1011"
-        ["C"]="1100"
-        ["D"]="1101"
-        ["E"]="1110"
-        ["F"]="1111"
+        [19]="Soft temperature limit has occurred"
     )
 
     THROTTLED_OUTPUT=$(vcgencmd get_throttled)
-    IFS='x'
-    read -r -a strarr <<<"$THROTTLED_OUTPUT"
-    THROTTLED_CODE_HEX=${strarr[1]}
+    THROTTLED_HEX=${THROTTLED_OUTPUT#*x}
+    THROTTLED_HEX=${THROTTLED_HEX:-0}
+    VAL=$((16#$THROTTLED_HEX))
 
-    # Display current issues
     echo "Current issues:"
-    CURRENT_HEX=${THROTTLED_CODE_HEX:4:1}
-    CURRENT_BIN=${HEX_BIN_MAP[$CURRENT_HEX]}
-    if [ "$CURRENT_HEX" == "0" ] || [ -z "$CURRENT_HEX" ]; then
+    CURRENT=$((VAL & 0xF))
+    if [ "$CURRENT" -eq 0 ]; then
         printf "\e[32mNo throttling issues detected.\e[0m\n"
     else
-        bit_n=0
-        for ((i = ${#CURRENT_BIN} - 1; i >= 0; i--)); do
-            if [ "${CURRENT_BIN:$i:1}" = "1" ]; then
-                echo "~ ${ISSUES_MAP[$bit_n]}"
-                bit_n=$((bit_n + 1))
-            fi
+        for ((b = 0; b < 4; b++)); do
+            ((CURRENT & (1 << b))) && echo "~ ${ISSUES_MAP[$b]}"
         done
     fi
 
     echo ""
-
-    # Display past issues
     printf "Previously detected issues:\n"
-    PAST_HEX=${THROTTLED_CODE_HEX:0:1}
-    PAST_BIN=${HEX_BIN_MAP[$PAST_HEX]}
-    if [ "$PAST_HEX" = "0" ]; then
+    PAST=$(((VAL >> 16) & 0xF))
+    if [ "$PAST" -eq 0 ]; then
         printf "\e[32mNo throttling issues detected.\e[0m\n"
     else
-        bit_n=16
-        for ((i = ${#PAST_BIN} - 1; i >= 0; i--)); do
-            if [ "${PAST_BIN:$i:1}" = "1" ]; then
-                echo "~ ${ISSUES_MAP[$bit_n]}"
-                bit_n=$((bit_n + 1))
-            fi
+        for ((b = 0; b < 4; b++)); do
+            ((PAST & (1 << b))) && echo "~ ${ISSUES_MAP[$((16 + b))]}"
         done
     fi
+    true
 fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -629,10 +645,10 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         printf "\n%s\n" "$IOUSER"
-        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "%s%s\n" "HOME=" "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
-    printf "\n%b%s%b" "$RED" "js-controller läuft nicht" "$NC"
+        printf "\n%b%s%b" "$RED" "js-controller läuft nicht" "$NC"
     fi
 
     if [[ ! -f "$DOCKER" ]] && [[ "$(whoami)" = "root" || "$(whoami)" = "iobroker" ]]; then
@@ -651,7 +667,7 @@ else
     if pgrep -f iobroker.js-controller >/dev/null; then
         IOUSER=$(ps -o user= -p "$(pgrep -f iobroker.js-controller | head -1)")
         printf "\n%s\n" "$IOUSER"
-        printf "%s%s\n" "HOME="  "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
+        printf "%s%s\n" "HOME=" "$(sudo -H -u "$IOUSER" bash -c 'echo $HOME')"
         printf "%s%s" "GROUPS=" "$(sudo -u "$IOUSER" groups)"
     else
         printf "\n%b%s%b" "$RED" "js-controller is not running" "$NC"
@@ -696,7 +712,7 @@ fi
 
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** MEMORY ***" "$NC"
 free -th --mega
-printf "\n%s\t%d\n\n" "Active iob-Instances: "  "$(grep -c '^+' <<< "$IOBLISTINST")"
+printf "\n%s\t%d\n\n" "Active iob-Instances: " "$(grep -c '^+' <<<"$IOBLISTINST")"
 vmstat -S M -s | head -n 10
 
 printf "\n%b%s%b\n" "$HEADLINE" "*** top - Table Of Processes  ***" "\033[0m"
@@ -718,7 +734,7 @@ else
     echo "WARNING: Cannot check dmesg (no sudo rights)."
 fi
 
-if (( CRITERROR > 0 )); then
+if ((CRITERROR > 0)); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "%b%s%s%s\n%b%s" "$RED" "Es wurden " "$CRITERROR" " KRITISCHE FEHLER gefunden." "$NC" "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
@@ -756,8 +772,6 @@ du -h /opt/iobroker/iobroker-data/ | sort -rh | head -5
 printf "\n%b%s%b\n" "$GREEN" "The five largest files in iobroker-data are:" "$NC"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 
-
-
 # USB-Geräte by-id
 printf "\n%b%s%b\n" "$GREEN" "USB-Devices by-id:" "$NC"
 if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -767,7 +781,6 @@ else
     printf "USB-Sticks - Avoid direct links to /dev/tty* in your adapter setups,\n"
     printf "please always prefer the links 'by-id':\n\n"
 fi
-
 
 # Finde alle USB-Geräte by-id
 SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null)
@@ -789,7 +802,6 @@ for d in /opt/iobroker/iobroker-data/zigbee_*; do
         break
     fi
 done
-
 
 # masked output
 
@@ -836,7 +848,7 @@ fi
 shorten_port() {
     local port="$1"
     if [[ "$port" == tcp://* ]]; then
-        printf "%s" "$port"  # TCP connections are not shortened
+        printf "%s" "$port" # TCP connections are not shortened
     elif [[ ${#port} -gt 25 ]]; then
         printf "%s" "...${port: -25}"
     else
@@ -955,7 +967,6 @@ fi
 
 ############ TESTCODE ENDE ####################
 
-
 #### NODEJS-CHECK
 
 PATHNODEJS=$(type -P nodejs)
@@ -1027,13 +1038,13 @@ fi
 
 ANZNPMTMP=$(find /opt/iobroker/node_modules -type d -iname '.*-????????' ! -iname '.local-chromium' | wc -l)
 printf "\n%b%s%b%s\n" "$GREEN" "Temp directories causing deletion problem: " "$NC" "$ANZNPMTMP"
-if (( ANZNPMTMP > 0 )); then
+if ((ANZNPMTMP > 0)); then
     printf "%b%s%b" "$RED" "Some problems detected, please run 'iob fix'" "$NC"
 else
     printf "%b%s%b" "$GREEN" "No problems detected" "$NC"
 fi
 
-if grep -q ERR <<< "$NPMLS"; then
+if grep -q ERR <<<"$NPMLS"; then
     printf "\n\n%b%s%b" "$GREEN" "Errors in npm tree:" "$NC"
     echo "$NPMLS" | grep ERR
     echo ""
@@ -1049,11 +1060,11 @@ if [[ $NODENOTCORR -eq 0 ]]; then
     if [ -d "/home/iobroker" ]; then
         cd /home/iobroker || exit
         sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-        sudo -H -u iobroker npx is-my-node-vulnerable > /dev/null 2>&1
+        sudo -H -u iobroker npx is-my-node-vulnerable >/dev/null 2>&1
     else
         cd ~ || exit
         sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
-        sudo -H -u "$(whoami)" npx is-my-node-vulnerable > /dev/null 2>&1
+        sudo -H -u "$(whoami)" npx is-my-node-vulnerable >/dev/null 2>&1
     fi
 
     EXIT_CODE=$?
@@ -1068,11 +1079,11 @@ if [[ $NODENOTCORR -eq 0 ]]; then
         fi
     else
         if [ "$EXIT_CODE" -ne 0 ]; then
-                printf '%sVulnerabilities detected in the Node.js version!\n' "$RED"
-                npx is-my-node-vulnerable
-                printf '%s' "$NC"
-            else
-                printf '%sNo known Vulnerabilities detected!%s\n' "$GREEN" "$NC"
+            printf '%sVulnerabilities detected in the Node.js version!\n' "$RED"
+            npx is-my-node-vulnerable
+            printf '%s' "$NC"
+        else
+            printf '%sNo known Vulnerabilities detected!%s\n' "$GREEN" "$NC"
         fi
     fi
     cd || exit
@@ -1089,8 +1100,8 @@ printf "\n%b%s%b" "$GREEN" "Core adapters versions" "$NC"
 printf "\n%s\t%s" "js-controller: " "$(iob -v $ALLOWROOT)"
 printf "\n%s\t\t%s" "admin: " "$(iob version admin $ALLOWROOT)"
 printf "\n%s\t%s" "javascript: " "$(iob version javascript $ALLOWROOT)"
-printf '\n\n%b%s%b\t%d\n' "$GREEN" "nodejs modules from github: " "$NC" "$(grep -c 'github.com' <<< "$NPMLS")"
-grep 'github.com' <<< "$(printf '\n\n%s\n' "$NPMLS")"
+printf '\n\n%b%s%b\t%d\n' "$GREEN" "nodejs modules from github: " "$NC" "$(grep -c 'github.com' <<<"$NPMLS")"
+grep 'github.com' <<<"$(printf '\n\n%s\n' "$NPMLS")"
 printf "\n\n%b%s%b\n" "$GREEN" "Adapter State" "$NC"
 printf "%s\n\n" "$IOBLISTINST"
 printf "%b%s%b\n" "$GREEN" "Enabled adapters with bindings" "$NC"
@@ -1115,14 +1126,14 @@ if [ -f /usr/bin/apt-get ]; then
     APT=$(apt-get upgrade -s | grep -P '^\d+ upgraded' | cut -d" " -f1)
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        if (( APT == 0 )); then
+        if ((APT == 0)); then
             printf "\n%b%s%d%b" "$GREEN" "Offene Systemupdates: " "$APT" "$NC"
         else
-            printf "\n%b%s%d%b"  "$RED" "Offene Systemupdates: " "$APT" "$NC"
+            printf "\n%b%s%d%b" "$RED" "Offene Systemupdates: " "$APT" "$NC"
         fi
     else
-        if (( APT == 0 )); then
-            printf "\n%b%s%d%b"  "$GREEN" "Pending systemupdates: " "$APT" "$NC"
+        if ((APT == 0)); then
+            printf "\n%b%s%d%b" "$GREEN" "Pending systemupdates: " "$APT" "$NC"
         else
             printf "\n%b%s%d%b" "$RED" "Pending systemupdates: " "$APT" "$NC"
         fi
@@ -1136,22 +1147,21 @@ else
 fi
 
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** Listening Ports ***" "$NC"
-if command -v ss &> /dev/null; then
+if command -v ss &>/dev/null; then
     sudo ss -tulp
 else
     sudo netstat -tulpn
 fi
 
 # Check if malware process pawns-cli is running
-if pgrep "pawns-cli" > /dev/null; then
-    if [ "$SKRPTLANG" == "--de" ]; then
+if pgrep "pawns-cli" >/dev/null; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%b%s" "$RED" "WARNUNG: Der Prozess 'pawns-cli' läuft auf diesem System!"
         printf "\n%s" "Dies könnte ein Hinweis auf Malwarebefall sein."
         printf "\n%s" "Bitte überprüfen Sie das System und entfernen Sie den Prozess, falls er nicht legitim ist."
         printf "\n%s" "Schauen Sie im Ordner Global bei den Skripten nach verdächtigen Einträgen"
         printf "\n%s" "Oftmals ist ein offen im Internet stehender ioBroker die Ursache. Das System muss abgesichert neuinstalliert werden."
         printf "\n%s%b" "Ein Backup muss aus der Zeit vor dem Befall stammen." "$NC"
-
 
     else
         printf "\n%b%s" "$RED" "WARNING: The process 'pawns-cli' is running on this system!"
@@ -1194,7 +1204,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n\n%s" "Beliebige Taste für eine Zusammenfassung drücken"
     fi
 else
-    printf "\n%b%s%b"  "$YELLOW" "============= Mark until here for C&P =============" "$NC"
+    printf "\n%b%s%b" "$YELLOW" "============= Mark until here for C&P =============" "$NC"
     printf "\n\n%s\n\n" "iob diag has finished."
     if [[ $SUMMARY != "summary" ]]; then
         exit
@@ -1224,9 +1234,9 @@ else
     INSTENV=0
 fi
 INSTENV2=$(
-    if (( INSTENV == 2 )); then
+    if ((INSTENV == 2)); then
         printf "%s" "Docker"
-    elif (( INSTENV == 1 )); then
+    elif ((INSTENV == 1)); then
         printf "%s" "$SYSTDDVIRT"
     else
         printf "%s" "native"
@@ -1270,7 +1280,7 @@ if [[ -f "/var/run/reboot-required" ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%b%s%b\n\n" "$RED" "Das System muss JETZT neugestartet werden!" "$NC"
     else
-        printf "\n%b%s%b\n\n" "$RED"  "This system needs to be REBOOTED NOW!" "$NC"
+        printf "\n%b%s%b\n\n" "$RED" "This system needs to be REBOOTED NOW!" "$NC"
     fi
 fi
 
@@ -1321,7 +1331,7 @@ printf "\n\n%s\n" "Size of iob-Database:"
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*objects\* -exec du -sh {} + | sort -rh | head -n 5
 find /opt/iobroker/iobroker-data -maxdepth 1 -type f -name \*states\* -exec du -sh {} + | sort -rh | head -n 5
 
-if (( ANZNPMTMP > 0 )); then
+if ((ANZNPMTMP > 0)); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n\n\n%s" "**********************************************************************"
         printf "\n%s" "Probleme wurden erkannt, bitte \e[031miob fix\e[0m ausführen"
@@ -1332,14 +1342,14 @@ if (( ANZNPMTMP > 0 )); then
         printf "\n%s\n\n" "**********************************************************************"
     fi
 fi
-if (( CRITERROR > 0 )); then
+if ((CRITERROR > 0)); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%s%s%s\n%s\n" "Es wurden " "$CRITERROR" " KRITISCHE FEHLER gefunden. " "Siehe 'sudo dmesg --level=emerg,alert,crit -T' für Details"
     else
         printf "\n%s%s\n%s" "$CRITERROR" " CRITICAL ERRORS DETECTED! " "Check 'sudo dmesg --level=emerg,alert,crit -T' for details"
     fi
 fi
-echo -e  "$RELEASESTATUS"
+echo -e "$RELEASESTATUS"
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%s" "=================== ENDE DER ZUSAMMENFASSUNG ===================="

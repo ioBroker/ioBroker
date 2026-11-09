@@ -263,7 +263,11 @@ iob nodejs-update [VERSION]
   - If not specified, installs the recommended version (`nodeJsRecommended` from `versions.json`, currently 24)
   - Must be one of the accepted major versions (`nodeJsAccepted` from `versions.json`, currently 22, 24, 26).
     The script reads that list at runtime, so the set of allowed versions can change without a new release.
-  - Only major version numbers are accepted
+  - Only major version numbers are accepted, except with `--force`
+- `--force` - For test systems: installs a version outside `nodeJsAccepted`, and also accepts an exact version
+  (`26.1.0`, or `26.1` for the newest 26.1.x) or a prerelease (`27.0.0-alpha.0`). The version must exist at
+  NodeSource; this is checked before anything is stopped or removed. The result is **unsupported**: adapters
+  declare their own `engines` range, and `iob fix` / a new installation still reject a major outside `nodeJsAccepted`.
 - `--dry-run` - Show what would be done without making any changes
 - `-h, --help` - Show the usage information and exit
 
@@ -275,6 +279,11 @@ iob nodejs-update
 # Install specific major version (must be one of nodeJsAccepted)
 iob nodejs-update 22
 iob nodejs-update 26
+
+# Test systems only: a version ioBroker does not accept, an exact version or a prerelease
+iob nodejs-update --force 27
+iob nodejs-update --force 26.1.0
+iob nodejs-update --force 27.0.0-alpha.0
 ```
 
 ### Direct Node Update Script

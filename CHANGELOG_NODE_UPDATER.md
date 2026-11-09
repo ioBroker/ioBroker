@@ -1,4 +1,8 @@
 # Changelog for Node.js Updater Script
+## 2026-11-01
+* New `--force` for test systems: installs a Node.js version outside `nodeJsAccepted`, an exact version (`26.1.0`) or a prerelease (`27.0.0-alpha.0`). Before ioBroker is stopped and Node.js removed, the script checks that NodeSource provides that version, and stops with "Nothing was changed" otherwise; the exact package is pinned, without a fallback to another version
+* The log file is cleaned up again: a broken `sed` expression had stopped the removal of color codes, and the "Reading database" progress lines are removed now
+
 ## 2026-10-15
 * check_architecture added, armhf fails now early
 
