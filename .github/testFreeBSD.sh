@@ -5,9 +5,17 @@
 # This is a port of the former .cirrus.yml test_script. It runs dist/install.sh and
 # dist/fix.sh rather than installer.sh and fix_installation.sh, because those download
 # installer_library.sh from master at runtime and would test that instead of this branch.
+#
+# With --redis it installs with Redis, verifies the Redis databases and stops there: the
+# adapter and fixer round trip is not specific to the database backend.
 set -eu
 
 WORKSPACE=$(pwd)
+
+REDIS_RUN="false"
+if [ "${1:-}" = "--redis" ]; then
+    REDIS_RUN="true"
+fi
 
 # The VM is emulated by QEMU on the runner, with no nested virtualisation, so ioBroker
 # starts far more slowly here than on a native runner - 10s on ubuntu is no yardstick.
@@ -43,7 +51,11 @@ node tasks --create
 echo "::endgroup::"
 
 echo "::group::Install ioBroker"
-bash "$WORKSPACE/dist/install.sh" --silent
+if [ "$REDIS_RUN" = "true" ]; then
+    bash "$WORKSPACE/dist/install.sh" --silent --redis
+else
+    bash "$WORKSPACE/dist/install.sh" --silent
+fi
 echo "::endgroup::"
 
 # installer.sh now aborts when its "npm i" fails, so this should no longer be reachable.
@@ -73,6 +85,17 @@ if ! wait_for_admin; then
     exit 1
 fi
 echo "::endgroup::"
+
+if [ "$REDIS_RUN" = "true" ]; then
+    echo "::group::Verify the Redis databases"
+    # Objects are in db 0 with the key prefix "cfg.o.", states in db 1
+    test "$(redis-cli -n 0 EXISTS cfg.o.system.config)" = 1
+    test "$(redis-cli -n 0 EXISTS cfg.o.system.adapter.admin.0)" = 1
+    test "$(redis-cli -n 1 DBSIZE)" -gt 0
+    echo "::endgroup::"
+    echo "FreeBSD Redis installation test finished successfully"
+    exit 0
+fi
 
 # Installing this adapter needs python, so it also covers the python dependency
 echo "::group::Install an adapter that requires python"

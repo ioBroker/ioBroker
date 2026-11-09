@@ -4,7 +4,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-11-02" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-11-09" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -1978,50 +1978,68 @@ detect_ip_address() {
     echo "$IP"
 }
 
+# Waits until Redis answers on the address that configure_iobroker_redis writes into iobroker.json
+wait_for_redis() {
+    local i
+    for i in {1..30}; do
+        if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+            return 0
+        fi
+        sleep 1
+    done
+    echo "${red}Redis does not answer on 127.0.0.1:6379, cannot continue the installation with --redis.${normal}"
+    return 1
+}
+
 install_redis() {
     echo "Installing and configuring Redis..."
-    
+
     # Install Redis server
     if [ "$HOST_PLATFORM" = "linux" ]; then
         install_package redis-server
-        
-        # Configure Redis
+
+        # Configure Redis. Tested via sudo: /etc/redis is not readable for a normal user, so a
+        # plain -f skipped this block on every installation that was not started as root.
         REDIS_CONF="/etc/redis/redis.conf"
-        if [ -f "$REDIS_CONF" ]; then
+        if $SUDOX test -f "$REDIS_CONF"; then
             echo "Configuring Redis..."
-            
+
             # Backup original config
             $SUDOX cp "$REDIS_CONF" "$REDIS_CONF.backup"
-            
+
             # Configure bind to localhost and potentially other interfaces
             $SUDOX sed -i 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' "$REDIS_CONF"
-
-            # Detect init system and enable/start Redis service
-            if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
-                $SUDOX systemctl enable redis-server
-                $SUDOX systemctl start redis-server
-            elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
-                $SUDOX service redis-server start
-                $SUDOX update-rc.d redis-server defaults
-            fi
-            
-            echo "Redis installed and configured successfully"
         else
             echo "Warning: Redis configuration file not found at $REDIS_CONF"
+        fi
+
+        # Detect init system and enable/start Redis service
+        if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
+            $SUDOX systemctl enable redis-server
+            $SUDOX systemctl start redis-server
+        elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
+            $SUDOX service redis-server start
+            $SUDOX update-rc.d redis-server defaults
         fi
     elif [ "$HOST_PLATFORM" = "osx" ]; then
         # macOS installation
         if command -v brew >/dev/null 2>&1; then
             brew install redis
-            echo "Redis installed on macOS"
+            brew services start redis
         else
             echo "Homebrew not found. Please install Redis manually on macOS"
         fi
     elif [ "$HOST_PLATFORM" = "freebsd" ]; then
         # FreeBSD installation
         install_package redis
-        echo "Redis installed on FreeBSD"
+        $SUDOX sysrc redis_enable=YES
+        $SUDOX service redis start
     fi
+
+    # The Redis databases are initialized at the end of the installer, which has no way to
+    # work without a running Redis. Stop here with a clear message rather than there.
+    wait_for_redis || return 1
+    echo "Redis installed and running"
 }
 
 configure_iobroker_redis() {

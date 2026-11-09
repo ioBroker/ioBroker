@@ -185,18 +185,20 @@ jobs:
         test "$actual" = "$expected"
 
   # ===================
-  # Exercises install_nodejs, which no CI run has ever reached: installer.sh only calls it
-  # when "node" is absent, and every runner image ships with Node.js preinstalled. The
-  # NodeSource path - GPG key import, nodesource.sources, apt pinning - was therefore
-  # completely uncovered. Remove Node.js first so the installer has to install it itself.
   # Exercises the --redis path: the installer must switch the config to Redis after "setup
   # first" and initialize the Redis databases with a second "setup first", so the objects
   # (system.config, the admin instance) land in Redis and the admin UI comes up. Without
   # that second setup the Redis databases stay empty and nothing is reachable on 8081.
+  # macOS is in the matrix because Redis does not start by itself there: brew only installs
+  # it, while the Ubuntu package starts the service on its own. FreeBSD: see freebsd.yml.
   test-redis:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
     - name: Checkout code
@@ -220,16 +222,13 @@ jobs:
         VERSIONS_URL: file://${{ github.workspace }}/versions.json
       run: bash ./dist/install.sh --silent --redis
 
-    # Objects are plain keys in db 0, states in db 1. If the second "setup first" is
-    # missing, these keys do not exist and the checks below fail.
-    - name: Verify the Redis databases were initialized
+    # Objects are in db 0 with the key prefix "cfg.o." (redisNamespace of
+    # @iobroker/db-objects-redis). If the second "setup first" is missing, these keys do
+    # not exist.
+    - name: Verify the objects were written to Redis
       run: |
-        redis-cli -n 0 EXISTS system.config | grep -q 1
-        redis-cli -n 0 EXISTS system.adapter.admin.0 | grep -q 1
-        if [ "$(redis-cli -n 1 DBSIZE)" -eq 0 ]; then
-          echo "states db 0 is empty"
-          exit 1
-        fi
+        test "$(redis-cli -n 0 EXISTS cfg.o.system.config)" = 1
+        test "$(redis-cli -n 0 EXISTS cfg.o.system.adapter.admin.0)" = 1
 
     - name: Test if ioBroker starts by checking the admin adapter output
       run: |
@@ -243,6 +242,18 @@ jobs:
         echo "admin did not become reachable within 180s"
         exit 1
 
+    # After the admin check: the running controller is what fills the states db 1
+    - name: Verify the states were written to Redis
+      run: |
+        dbsize=$(redis-cli -n 1 DBSIZE)
+        echo "states db 1 holds $dbsize keys"
+        test "$dbsize" -gt 0
+
+  # ===================
+  # Exercises install_nodejs, which no CI run has ever reached: installer.sh only calls it
+  # when "node" is absent, and every runner image ships with Node.js preinstalled. The
+  # NodeSource path - GPG key import, nodesource.sources, apt pinning - was therefore
+  # completely uncovered. Remove Node.js first so the installer has to install it itself.
   test-nodejs-install:
     if: contains(github.event.head_commit.message, '[skip ci]') == false
 

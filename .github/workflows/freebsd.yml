@@ -32,3 +32,23 @@ jobs:
           pkg install -y bash node npm libnghttp2 python sudo curl
         run: |
           bash .github/testFreeBSD.sh
+
+  # The --redis path: pkg only installs Redis, the installer has to enable and start it itself
+  test-redis-freebsd:
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Install ioBroker with Redis in a FreeBSD VM
+      uses: vmactions/freebsd-vm@v1
+      with:
+        release: '14.2'
+        usesh: true
+        prepare: |
+          pkg install -y bash node npm libnghttp2 python sudo curl
+        run: |
+          bash .github/testFreeBSD.sh --redis

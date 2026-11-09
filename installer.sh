@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-11-02" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-11-09" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -321,7 +321,9 @@ fi
 # end of the script, after "setup first" has created the controller settings.
 if [ "$INSTALL_REDIS" = "true" ]; then
     print_step "Installing and configuring Redis" 4 "$NUM_STEPS"
-    install_redis
+    if ! install_redis; then
+        exit 1
+    fi
 fi
 
 # ########################################################
@@ -771,6 +773,10 @@ if [ "$INSTALL_REDIS" = "true" ]; then
         exit 1
     fi
     set_valid_redis_locale
+    # set_valid_redis_locale may have restarted Redis
+    if ! wait_for_redis; then
+        exit 1
+    fi
     # The "setup first" above initialized the file backend, not Redis: it
     # creates the system objects and the admin, discovery and backitup
     # instances in the database that iobroker.json configured at that time.
