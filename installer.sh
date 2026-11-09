@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Increase this version number whenever you update the installer
-INSTALLER_VERSION="2026-11-01" # format YYYY-MM-DD
+INSTALLER_VERSION="2026-11-09" # format YYYY-MM-DD
 
 # Check if this is a pure 64bit architecture
 
@@ -104,6 +104,9 @@ tui_install_menu() {
     # under "Installs ioBroker into ..." was read as the version the installer is going to install.
     # Mirrors the decision in step 1 below. No color codes inside node_info: the line may wrap,
     # and fold counts them as characters.
+    # An unsupported version is only "tried": install_nodejs leaves an already installed nodejs
+    # package alone, and pkg installs the version it provides, so a replacement is not guaranteed.
+    # The Node.js notes go in front of the others, because a small terminal cuts the end of the box.
     local node_info node_version node_major
     if [[ $(type -P "node" 2>/dev/null) == *"/node" ]]; then
         node_version=$(node -v 2>/dev/null)
@@ -117,13 +120,15 @@ tui_install_menu() {
             fi
         elif [ "$INSTALL_CMD" = "brew" ]; then
             node_info="Node.js $node_version found, but ioBroker supports only $NODE_ACCEPTED."
-            TUI_NOTES+=("Please install Node.js $NODE_MAJOR from $NODE_JS_BREW_URL. The installation continues, but this Node.js version is not supported.")
+            TUI_NOTES=("Please install Node.js $NODE_MAJOR from $NODE_JS_BREW_URL. The installation continues, but this Node.js version is not supported." "${TUI_NOTES[@]}")
+        elif [ "$INSTALL_CMD" = "pkg" ]; then
+            node_info="Node.js $node_version found, but ioBroker supports only $NODE_ACCEPTED: the installer will try to install the version from pkg."
         else
-            node_info="Node.js $node_version found, but ioBroker supports only $NODE_ACCEPTED: it will be replaced by Node.js $NODE_MAJOR."
+            node_info="Node.js $node_version found, but ioBroker supports only $NODE_ACCEPTED: the installer will try to install Node.js $NODE_MAJOR."
         fi
     elif [ "$INSTALL_CMD" = "brew" ]; then
         node_info="Node.js not found."
-        TUI_NOTES+=("Node.js cannot be installed via brew. Please install Node.js $NODE_MAJOR from $NODE_JS_BREW_URL first, otherwise the installation stops.")
+        TUI_NOTES=("Node.js cannot be installed via brew. Please install Node.js $NODE_MAJOR from $NODE_JS_BREW_URL first, otherwise the installation stops." "${TUI_NOTES[@]}")
     elif [ "$INSTALL_CMD" = "pkg" ]; then
         node_info="Node.js not found, it will be installed."
     else

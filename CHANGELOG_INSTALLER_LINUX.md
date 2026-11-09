@@ -1,7 +1,7 @@
 # Changelog for Linux-Installer-Script
 
-## 2026-11-01
-* The start screen says what happens with Node.js: an installed version is reported as found and used (with the recommended major when it differs), replaced when ioBroker does not support it, or installed when none is found. The bare "Node.js v26.13.0" was read as the version the installer would install. The classic output now also says when the installed Node.js is used
+## 2026-11-09
+* The start screen says what happens with Node.js: an installed version is reported as found and used (with the recommended major when it differs), the installer tries to install a supported one when ioBroker does not support it, or installs one when none is found. The bare "Node.js v26.13.0" was read as the version the installer would install. The classic output now also says when the installed Node.js is used
 
 ## 2026-10-29
 * The start screen no longer offers hardened mode, it is for experts and only available via `--hardened`, which the start screen then shows as a note; a new line says that standard users should not change the defaults
