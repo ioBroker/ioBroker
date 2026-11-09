@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-11-03" #version of this script
+SKRIPTV="2026-11-09" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -310,7 +310,7 @@ if [[ -n "$install_timestamp" ]] && ((days_since_install >= 0 && days_since_inst
             *)             note="" ;;
         esac
         if [[ "$install_method" == "dpkglog" ]]; then
-            INSTALL_STATUS="Das System wurde mindestens vor $days_since_install Tagen installiert (am oder vor dem $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
+            INSTALL_STATUS="Das System wurde vor mindestens $days_since_install Tagen installiert (am oder vor dem $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
         else
             INSTALL_STATUS="Das System wurde vor $days_since_install Tagen installiert (am $(date -d "@$install_timestamp" +%d.%m.%Y))$note."
         fi
