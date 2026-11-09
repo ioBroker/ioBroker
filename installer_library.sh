@@ -4,7 +4,7 @@
 # ------------------------------
 # Increase this version number whenever you update the lib
 # ------------------------------
-LIBRARY_VERSION="2026-10-26" # format YYYY-MM-DD
+LIBRARY_VERSION="2026-11-09" # format YYYY-MM-DD
 
 # ------------------------------
 # Supported and suggested node versions
@@ -1978,87 +1978,101 @@ detect_ip_address() {
     echo "$IP"
 }
 
+# Waits until Redis answers on the address that configure_iobroker_redis writes into iobroker.json
+wait_for_redis() {
+    local i
+    for i in {1..30}; do
+        if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -q PONG; then
+            return 0
+        fi
+        sleep 1
+    done
+    echo "${red}Redis does not answer on 127.0.0.1:6379, cannot continue the installation with --redis.${normal}"
+    return 1
+}
+
 install_redis() {
     echo "Installing and configuring Redis..."
-    
+
     # Install Redis server
     if [ "$HOST_PLATFORM" = "linux" ]; then
         install_package redis-server
-        
-        # Configure Redis
+
+        # Configure Redis. Tested via sudo: /etc/redis is not readable for a normal user, so a
+        # plain -f skipped this block on every installation that was not started as root.
         REDIS_CONF="/etc/redis/redis.conf"
-        if [ -f "$REDIS_CONF" ]; then
+        if $SUDOX test -f "$REDIS_CONF"; then
             echo "Configuring Redis..."
-            
+
             # Backup original config
             $SUDOX cp "$REDIS_CONF" "$REDIS_CONF.backup"
-            
+
             # Configure bind to localhost and potentially other interfaces
             $SUDOX sed -i 's/^bind 127.0.0.1 ::1/bind 127.0.0.1/' "$REDIS_CONF"
-
-            # Detect init system and enable/start Redis service
-            if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
-                $SUDOX systemctl enable redis-server
-                $SUDOX systemctl start redis-server
-            elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
-                $SUDOX service redis-server start
-                $SUDOX update-rc.d redis-server defaults
-            fi
-            
-            echo "Redis installed and configured successfully"
         else
             echo "Warning: Redis configuration file not found at $REDIS_CONF"
+        fi
+
+        # Detect init system and enable/start Redis service
+        if [[ $(ps -p 1 -o comm=) = "systemd" ]] &>/dev/null; then
+            $SUDOX systemctl enable redis-server
+            $SUDOX systemctl start redis-server
+        elif [[ -f /etc/init.d/cron && ! -L /etc/init.d/cron ]]; then
+            $SUDOX service redis-server start
+            $SUDOX update-rc.d redis-server defaults
         fi
     elif [ "$HOST_PLATFORM" = "osx" ]; then
         # macOS installation
         if command -v brew >/dev/null 2>&1; then
             brew install redis
-            echo "Redis installed on macOS"
+            brew services start redis
         else
             echo "Homebrew not found. Please install Redis manually on macOS"
         fi
     elif [ "$HOST_PLATFORM" = "freebsd" ]; then
         # FreeBSD installation
         install_package redis
-        echo "Redis installed on FreeBSD"
+        $SUDOX sysrc redis_enable=YES
+        $SUDOX service redis start
     fi
+
+    # The Redis databases are initialized at the end of the installer, which has no way to
+    # work without a running Redis. Stop here with a clear message rather than there.
+    wait_for_redis || return 1
+    echo "Redis installed and running"
 }
 
 configure_iobroker_redis() {
     echo "Configuring ioBroker to use Redis..."
-    
-    # Create Redis configuration for ioBroker
-    local IOB_REDIS_CONFIG=$(cat <<-EOF
-{
-  "objects": {
-    "type": "redis",
-    "host": "127.0.0.1",
-    "port": 6379,
-    "options": {
-      "db": 0
-    }
-  },
-  "states": {
-    "type": "redis", 
-    "host": "127.0.0.1",
-    "port": 6379,
-    "options": {
-      "db": 1
-    }
-  }
-}
-EOF
-)
 
-    # Write Redis configuration to ioBroker config
     local IOB_CONFIG_FILE="$IOB_DIR/iobroker-data/iobroker.json"
     if [ ! -d "$IOB_DIR/iobroker-data" ]; then
         mkdir -p "$IOB_DIR/iobroker-data"
+        change_owner "$IOB_USER" "$IOB_DIR/iobroker-data"
     fi
-    
-    echo "$IOB_REDIS_CONFIG" > "$IOB_CONFIG_FILE"
+
+    # The caller ensures that the controller settings exist before the Redis
+    # backend is merged in: in installer.sh "setup first" runs first and this
+    # function is called only afterwards.
+
+    # Merge objects/states into the existing config instead of overwriting the
+    # file, so the settings created by "setup first" are kept.
+    # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
+    # shellcheck disable=SC2086
+    if ! REDIS_CONFIG_OUTPUT=$($IOB_NODE_CMDLINE -e '
+        const fs = require("fs");
+        const file = process.argv[1];
+        const config = JSON.parse(fs.readFileSync(file, "utf8"));
+        config.objects = { type: "redis", host: "127.0.0.1", port: 6379, options: { db: 0 } };
+        config.states = { type: "redis", host: "127.0.0.1", port: 6379, options: { db: 1 } };
+        fs.writeFileSync(file, JSON.stringify(config, null, 2) + "\n");
+    ' "$IOB_CONFIG_FILE" 2>&1); then
+        echo "Configuring ioBroker to use Redis failed. Output:"
+        printf '%s\n' "$REDIS_CONFIG_OUTPUT" >&2
+        return 1
+    fi
     change_owner "$IOB_USER" "$IOB_CONFIG_FILE"
-    
+
     echo "ioBroker configured to use Redis backend"
 }
 

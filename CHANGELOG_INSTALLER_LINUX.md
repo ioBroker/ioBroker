@@ -1,6 +1,7 @@
 # Changelog for Linux-Installer-Script
 
 ## 2026-11-09
+* Fixed `--redis`: `configure_iobroker_redis` wrote `iobroker.json` in step 4, so the `iobroker setup first` at the end was skipped (it only runs when the file is missing) and the Redis databases were never initialized; the Redis `objects`/`states` are now merged into the existing config after the setup, `setup first` runs a second time so the Redis databases get the system objects and the initial instances, and the already started service is restarted to pick them up. `install_redis` now starts Redis on macOS and FreeBSD too and on Linux also when the installer does not run as root, and the installer stops with a clear message when Redis does not answer
 * The start screen says what happens with Node.js: an installed version is reported as found and used (with the recommended major when it differs), the installer tries to install a supported one when ioBroker does not support it, or installs one when none is found. The bare "Node.js v26.13.0" was read as the version the installer would install. The classic output now also says when the installed Node.js is used
 
 ## 2026-10-29

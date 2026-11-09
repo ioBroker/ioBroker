@@ -350,12 +350,13 @@ if ! NPM_OUTPUT=$(npm i --production --loglevel error 2>&1); then
     exit 1
 fi
 
-# Install and configure Redis if requested
+# Install Redis if requested. The ioBroker configuration for it is written at the
+# end of the script, after "setup first" has created the controller settings.
 if [ "$INSTALL_REDIS" = "true" ]; then
     print_step "Installing and configuring Redis" 4 "$NUM_STEPS"
-    install_redis
-    configure_iobroker_redis
-    set_valid_redis_locale
+    if ! install_redis; then
+        exit 1
+    fi
 fi
 
 # ########################################################
@@ -793,6 +794,45 @@ if [ ! -f "$IOB_DIR/iobroker-data/iobroker.json" ]; then
         echo "Initializing the ioBroker settings failed. Output of 'iobroker setup first':"
         printf '%s\n' "$SETUP_OUTPUT" >&2
         exit 1
+    fi
+fi
+
+# Switch ioBroker to Redis only now that the controller settings exist: "setup
+# first" above runs only when iobroker.json is missing, so writing the Redis
+# configuration earlier would leave a config with only objects/states, skip the
+# setup and leave the Redis databases uninitialized.
+if [ "$INSTALL_REDIS" = "true" ]; then
+    if ! configure_iobroker_redis; then
+        exit 1
+    fi
+    set_valid_redis_locale
+    # set_valid_redis_locale may have restarted Redis
+    if ! wait_for_redis; then
+        exit 1
+    fi
+    # The "setup first" above initialized the file backend, not Redis: it
+    # creates the system objects and the admin, discovery and backitup
+    # instances in the database that iobroker.json configured at that time.
+    # Run it again now that the config points to Redis, so the Redis
+    # databases get the same content.
+    echo "Initializing the Redis databases..."
+    # unquoted on purpose: IOB_NODE_CMDLINE may carry a sudo prefix
+    # shellcheck disable=SC2086
+    if ! SETUP_OUTPUT=$($IOB_NODE_CMDLINE "$CONTROLLER_DIR/iobroker.js" setup first 2>&1); then
+        echo "Initializing the Redis databases failed. Output of 'iobroker setup first':"
+        printf '%s\n' "$SETUP_OUTPUT" >&2
+        exit 1
+    fi
+    # systemd and launchctl already started the service with the default file
+    # backend, so restart it to pick up the Redis configuration. rc.d is started
+    # below, after this block.
+    if [ "$SKIP_IOBROKER_START" != "true" ]; then
+        if [ "$INITSYSTEM" = "systemd" ]; then
+            $SUDOX systemctl restart iobroker.service
+        elif [ "$INITSYSTEM" = "launchctl" ]; then
+            launchctl unload -w "$SERVICE_FILENAME" &>/dev/null
+            launchctl load -w "$SERVICE_FILENAME"
+        fi
     fi
 fi
 

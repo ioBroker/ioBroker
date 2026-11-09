@@ -224,13 +224,15 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
 
 ## CI
 
-- `test.yml` — seven jobs: `shellcheck` (see Linting); `node-versions` reads `nodeJsAccepted` and feeds the matrix;
+- `test.yml` — eight jobs: `shellcheck` (see Linting); `node-versions` reads `nodeJsAccepted` and feeds the matrix;
   `versions-url` checks that the runtime download of `versions.json` from `master` still works and parses,
   which the installing jobs no longer cover because they read the checkout instead; `test-install`
   installs on `ubuntu`/`macos` for every accepted major, then checks permissions, admin reachability and
   that the service really resolves the matrix version (systemd expands `which node` at start, so a plain
   `setup-node` would not have covered it); `test-nodejs-install` purges Node.js first, so the installer
-  has to run `install_nodejs` and the NodeSource path is exercised at all; `test-tui` runs installer and
+  has to run `install_nodejs` and the NodeSource path is exercised at all; `test-redis` installs with
+  `--redis` on `ubuntu`/`macos` and checks that objects and states land in Redis (objects carry the key
+  prefix `cfg.o.`) and that admin answers; `test-tui` runs installer and
   fixer under `script` through `.github/tuiDrive.sh`, which presses Enter whenever the screen stops
   changing (keys typed ahead get swallowed by sudo-rs, and the util-linux `script` only ends at EOF on
   its stdin), and `test-tui-macos` the installer under the bash 3.2 of `/bin/bash`,
@@ -248,7 +250,8 @@ a non-empty string — it does **not** compare the two dates. Bumping `INSTALLER
   `.github/testFreeBSD.sh`. Replaces `.cirrus.yml`, which had silently stopped producing check runs in
   2024, leaving the platform uncovered for two years. It blocks like any other job; the defects that
   surfaced when it came back — rc.d pidfile path, `detect_ip_address`, GNU-form `sed -i`,
-  `--unsafe-perm` under npm 12, and the missing `iobroker setup first` — are all fixed.
+  `--unsafe-perm` under npm 12, and the missing `iobroker setup first` — are all fixed. A second job,
+  `test-redis-freebsd`, runs the same script with `--redis`.
 
 ## Releasing
 
