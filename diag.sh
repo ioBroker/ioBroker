@@ -1357,9 +1357,9 @@ JSCONTROLLERVER=$(iob -v $ALLOWROOT)
 printf "\n%s\t%s" "js-controller: " "$JSCONTROLLERVER"
 if [[ "$JSCONTROLLERVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
-        printf "%b%s%s%s%s%b\n" "$YELLOW" "" "ACHTUNG: Der js-controller '" "$JSCONTROLLERVER" "' ist eine Vorab-/Nightly-Version! Solche Versionen sind nicht für den Produktivbetrieb vorgesehen." "$NC"
+        printf "\n%b%s%s%s%b\n" "$YELLOW" "ACHTUNG: Der js-controller '" "$JSCONTROLLERVER" "' ist eine Vorab-/Nightly-Version! Solche Versionen sind nicht für den Produktivbetrieb vorgesehen." "$NC"
     else
-        printf "%b%s%s%s%s%b\n" "$YELLOW" "" "ATTENTION: The js-controller '" "$JSCONTROLLERVER" "' is a pre-release/nightly build! Such versions are not meant for production use." "$NC"
+        printf "\n%b%s%s%s%b\n" "$YELLOW" "ATTENTION: The js-controller '" "$JSCONTROLLERVER" "' is a pre-release/nightly build! Such versions are not meant for production use." "$NC"
     fi
 fi
 printf "\n%s\t\t%s" "admin: " "$(iob version admin $ALLOWROOT)"
