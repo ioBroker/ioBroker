@@ -1,4 +1,26 @@
 # Changelog for Linux-Diag-Script
+## 2026-11-16
+* smartctl now runs via non-interactive sudo (sudo -n), so a sudo password prompt can no longer appear inside the diag output; the existing "SMART data could not be read" message covers this case
+* CPU temperature output localized: German verdict lines for the --de variant
+* Memory usage of ioBroker processes uses full process titles (ps args instead of comm), so long adapter names like io.zigbee2mqtt.0 are no longer truncated at 15 characters
+* Removed a trailing empty line at the end of this file
+
+## 2026-11-14
+* Added CPU temperature check (vcgencmd or thermal_zone, warning thresholds)
+* Added storage check: warning if the root filesystem is on an SD card; SMART health and attribute summary if smartctl is available
+* Added swap evaluation (zram detection, no-swap warning)
+* Added top 10 memory usage of ioBroker processes plus total RSS
+* Added zombie process listing (pid/ppid/comm)
+* Node.js/npm: pre-release detection with a clear warning instead of a plain "installation is correct"; warning if the installed major version differs from the recommended one
+* The vulnerability check no longer misreports a crashing check as "vulnerabilities detected": pre-release versions are detected and skipped, fetch errors are reported as "check could not be executed"
+* Added capabilities (getcap) check on the node binary with a hint to 'iobroker fix'
+* js-controller: pre-release/nightly detection and a notice when the controller uptime is significantly shorter than the system uptime (restart after boot)
+* Added admin authentication status (native.auth of admin.0)
+* Added last local backup age check for /opt/iobroker/backups
+* Added history adapter storage aggregation per data point (top 10)
+* Added log analysis over the available log files: error/warning counts per instance, instance start counts and restart-loop detection
+* Summary extended by: Node.js pre-release, js-controller pre-release, log error/warning totals, backup age and SD card warning
+
 ## 2026-11-09
 * Fixed installation date detection: fallback chain with method annotation (root inode birth time -> first pacman.log entry -> first entry of oldest dpkg.log rotation -> oldest file in /etc (birth time) -> mtime of /); fresh installs (0 days) are no longer reported as "installation date unknown"
 * dpkg.log result is reported as a lower bound ("at least N days ago"), since rotated logs may not reach back to the installation

@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-11-09" #version of this script
+SKRIPTV="2026-11-16" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -355,6 +355,96 @@ check_architecture
 printf "\n%s\n" "Systemuptime and Load:"
 uptime
 printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
+
+# CPU-Temperatur ermitteln (vcgencmd auf Raspberry Pi, sonst thermal_zone)
+CPU_TEMP=""
+if command -v vcgencmd >/dev/null 2>&1; then
+    CPU_TEMP=$(vcgencmd measure_temp 2>/dev/null | sed "s/temp=//;s/'C//")
+elif [[ -r /sys/class/thermal/thermal_zone0/temp ]]; then
+    CPUTMPRAW=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null)
+    if [[ "$CPUTMPRAW" =~ ^[0-9]+$ ]]; then
+        CPU_TEMP=$((CPUTMPRAW / 1000))
+    fi
+fi
+if [[ "$CPU_TEMP" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+    TEMPCAT=$(awk -v t="$CPU_TEMP" 'BEGIN{print (t>=80)?"crit":(t>=70)?"warn":"ok"}')
+    case "$TEMPCAT" in
+        crit)
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%s%s°C%s\n" "$RED" "CPU-Temperatur   : " "$CPU_TEMP" " - KRITISCH, Kühlung/Lüftung prüfen!" "$NC"
+            else
+                printf "%b%s%s%s°C%s\n" "$RED" "CPU temperature  : " "$CPU_TEMP" " - CRITICAL, cooling/airflow check required!" "$NC"
+            fi
+            ;;
+        warn)
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%s%s°C%s\n" "$YELLOW" "CPU-Temperatur   : " "$CPU_TEMP" " - erhöht, bitte im Auge behalten" "$NC"
+            else
+                printf "%b%s%s%s°C%s\n" "$YELLOW" "CPU temperature  : " "$CPU_TEMP" " - elevated, keep an eye on it" "$NC"
+            fi
+            ;;
+        *)
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%s%s°C\n" "CPU-Temperatur   : " "$CPU_TEMP"
+            else
+                printf "%s%s°C\n" "CPU temperature  : " "$CPU_TEMP"
+            fi
+            ;;
+    esac
+fi
+
+# Root-Dateisystem: SD-Karte? Plus SMART-Kurzbefund, falls smartctl vorhanden
+ROOTONSD=0
+if [ ! -f "$DOCKER" ]; then
+    ROOTSRC=$(findmnt -no SOURCE / 2>/dev/null)
+    ROOTPK=$(lsblk -no PKNAME "$ROOTSRC" 2>/dev/null | tail -n1)
+    if [[ -n "$ROOTPK" ]]; then
+        if [[ "$ROOTPK" == mmcblk* ]]; then
+            ROOTONSD=1
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%s%s%b\n" "$RED" "Das Root-Dateisystem (" "$ROOTSRC" ") liegt auf einer SD-KARTE. SD-Karten nutzen sich ab und sind die häufigste Fehlerursache auf Raspberry Pi. Eine Migration auf eine SSD wird empfohlen." "$NC"
+            else
+                printf "%b%s%s%s%b\n" "$RED" "The root filesystem (" "$ROOTSRC" ") is on an SD CARD. SD cards wear out and are the most common cause of failure on Raspberry Pi. Consider migrating to an SSD." "$NC"
+            fi
+        else
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%s%s%b\n" "$GREEN" "Das Root-Dateisystem liegt nicht auf einer SD-Karte (Gerät: " "$ROOTPK" ")." "$NC"
+            else
+                printf "%b%s%s%s%b\n" "$GREEN" "The root filesystem is not on an SD card (device: " "$ROOTPK" ")." "$NC"
+            fi
+        fi
+        if command -v smartctl >/dev/null 2>&1; then
+            if command -v timeout >/dev/null 2>&1; then
+                SMARTRUN=$(timeout 10 sudo -n smartctl -H -A "/dev/$ROOTPK" 2>/dev/null)
+            else
+                SMARTRUN=$(sudo -n smartctl -H -A "/dev/$ROOTPK" 2>/dev/null)
+            fi
+            if [[ -n "$SMARTRUN" ]]; then
+                SMARTHEALTH=$(grep -m1 -Ei 'overall-health|health status' <<<"$SMARTRUN" | sed 's/^ *//')
+                if [[ -n "$SMARTHEALTH" ]]; then
+                    if grep -qi 'FAILED' <<<"$SMARTHEALTH"; then
+                        printf "%b%s%s%b\n" "$RED" "SMART: " "$SMARTHEALTH" "$NC"
+                    else
+                        printf "%s%s\n" "SMART: " "$SMARTHEALTH"
+                    fi
+                fi
+                printf "%s\n" "$(grep -Ei 'Reallocated_Sector_Ct|Wear_Leveling_Count|Percentage_Used|Temperature_Cel|Composite Temperature|Media_Wearout' <<<"$SMARTRUN" | sed 's/^ *//' | head -n 4)"
+            else
+                if [[ "$SKRPTLANG" == "--de" ]]; then
+                    printf "%s\n" "SMART-Daten konnten nicht gelesen werden (z. B. kein sudo oder USB-Bridge ohne SMART-Passthrough)."
+                else
+                    printf "%s\n" "SMART data could not be read (e.g. no sudo rights or USB bridge without SMART passthrough)."
+                fi
+            fi
+        else
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%s\n" "smartctl ist nicht installiert, SMART-Gesundheitsdaten wurden nicht geprüft (Paket 'smartmontools')."
+            else
+                printf "%s\n" "smartctl is not installed, SMART health data was not checked (package 'smartmontools')."
+            fi
+        fi
+    fi
+fi
 
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** LEBENSZYKLUS STATUS ***" "$NC"
@@ -715,8 +805,60 @@ free -th --mega
 printf "\n%s\t%d\n\n" "Active iob-Instances: " "$(grep -c '^+' <<<"$IOBLISTINST")"
 vmstat -S M -s | head -n 10
 
+# Swap-Typ bewerten: zram, Device oder gar kein Swap
+if [[ -r /proc/swaps ]]; then
+    if grep -q '^/dev/zram' /proc/swaps; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%b\n" "$GREEN" "Swap wird per zram bereitgestellt (komprimierter RAM-Swap)." "$NC"
+        else
+            printf "%b%s%b\n" "$GREEN" "Swap is provided by zram (compressed RAM swap)." "$NC"
+        fi
+    elif [[ $(awk 'NR>1' /proc/swaps | wc -l) -gt 0 ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%s\n" "Swap wird über ein Laufwerk/Gerät bereitgestellt."
+        else
+            printf "%s\n" "Swap is provided by a disk/device."
+        fi
+    else
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%b\n" "$YELLOW" "Es ist kein Swap konfiguriert. Auf speicherschwachen Systemen kann das zu Out-of-Memory-Situationen führen." "$NC"
+        else
+            printf "%b%s%b\n" "$YELLOW" "No swap is configured. On low-memory systems this can lead to out-of-memory situations." "$NC"
+        fi
+    fi
+fi
+
+# Speicherverbrauch der ioBroker-Prozesse (RSS, Top 10)
+if pgrep -f iobroker.js-controller >/dev/null; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%s\n" "Speicherverbrauch der ioBroker-Prozesse (RSS, Top 10):"
+    else
+        printf "\n%s\n" "Memory usage of ioBroker processes (RSS, top 10):"
+    fi
+    ps -eo rss=,args= 2>/dev/null | awk '$2 ~ /^(io\.|iobroker)/ {sum[$2]+=$1} END {for (c in sum) printf "%10.1f MB  %s\n", sum[c]/1024, c}' | sort -rn | head -n 10
+    ps -eo rss=,args= 2>/dev/null | awk '$2 ~ /^(io\.|iobroker)/ {total+=$1} END {printf "%s%.1f MB\n", "Total RSS of ioBroker processes: ", total/1024}'
+fi
+
 printf "\n%b%s%b\n" "$HEADLINE" "*** top - Table Of Processes  ***" "\033[0m"
 top -b -n 1 | head -n 5
+
+# Zombie-Prozesse benennen
+printf "\n%b%s%b\n" "$HEADLINE" "*** ZOMBIE PROCESSES ***" "$NC"
+ZOMBIES=$(ps -eo pid=,ppid=,stat=,comm= 2>/dev/null | awk '$3 ~ /^Z/')
+if [[ -n "$ZOMBIES" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$YELLOW" "Zombie-Prozesse erkannt (meist harmlos, wenn vorübergehend; ggf. den Elternprozess prüfen):" "$NC"
+    else
+        printf "%b%s%b\n" "$YELLOW" "Zombie processes detected (usually harmless if transient; consider checking the parent process):" "$NC"
+    fi
+    printf "%s\n" "$ZOMBIES"
+else
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$GREEN" "Keine Zombie-Prozesse erkannt." "$NC"
+    else
+        printf "%b%s%b\n" "$GREEN" "No zombie processes detected." "$NC"
+    fi
+fi
 
 if [ ! -f "$DOCKER" ]; then
     printf "\n%b%s%b\n" "$HEADLINE" "*** FAILED SERVICES ***" "$NC"
@@ -767,10 +909,58 @@ if [[ ! -f "$DOCKER" ]]; then
 fi
 printf "\n%b%s%b\n" "$GREEN" "/opt/iobroker/backups:" "$NC"
 du -h /opt/iobroker/backups/ | sort -rh | head -5
+
+# Frische des letzten lokalen Backups prüfen
+printf "\n%b%s%b\n" "$GREEN" "Last local backup:" "$NC"
+NEWESTBACKUPFILE=$(find /opt/iobroker/backups/ -type f -exec stat -c '%Y %n' {} + 2>/dev/null | sort -rn | head -n1)
+if [[ -n "$NEWESTBACKUPFILE" ]]; then
+    BACKUPTS=${NEWESTBACKUPFILE%% *}
+    BACKUPFILE=${NEWESTBACKUPFILE#* }
+    BACKUPAGE=$(( ($(date +%s) - BACKUPTS) / 86400 ))
+    if ((BACKUPAGE > 7)); then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%d%s%b\n" "$YELLOW" "Das letzte lokale Backup ist " "$BACKUPAGE" " Tage alt: $BACKUPFILE - bitte die Backup-Konfiguration prüfen!" "$NC"
+        else
+            printf "%b%s%d%s%b\n" "$YELLOW" "The last local backup is " "$BACKUPAGE" " days old: $BACKUPFILE - please check your backup configuration!" "$NC"
+        fi
+    else
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%d%s%b\n" "$GREEN" "Das letzte lokale Backup ist " "$BACKUPAGE" " Tage alt: $BACKUPFILE" "$NC"
+        else
+            printf "%b%s%d%s%b\n" "$GREEN" "The last local backup is " "$BACKUPAGE" " days old: $BACKUPFILE" "$NC"
+        fi
+    fi
+else
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$YELLOW" "In /opt/iobroker/backups/ wurden keine Backup-Dateien gefunden. Falls die Backups extern (NAS, Cloud) liegen, dort verifizieren, sonst jetzt ein Backup einrichten (backitup-Adapter oder 'iobroker backup')." "$NC"
+    else
+        printf "%b%s%b\n" "$YELLOW" "No backup files found in /opt/iobroker/backups/. If your backups are stored externally (NAS, cloud), verify them there; otherwise set up a backup now (backitup adapter or 'iobroker backup')." "$NC"
+    fi
+fi
+
 printf "\n%b%s%b\n" "$GREEN" "/opt/iobroker/iobroker-data:" "$NC"
 du -h /opt/iobroker/iobroker-data/ | sort -rh | head -5
 printf "\n%b%s%b\n" "$GREEN" "The five largest files in iobroker-data are:" "$NC"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
+
+# history-Adapter: Speicherbedarf pro Datenpunkt aggregieren
+if [[ -d /opt/iobroker/iobroker-data/history ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%b%s%b\n" "$GREEN" "History-Speicherbedarf pro Datenpunkt (Top 10, Standardpfad):" "$NC"
+    else
+        printf "\n%b%s%b\n" "$GREEN" "History data storage per data point (top 10, default path):" "$NC"
+    fi
+    HISTORYSTATS=$(find /opt/iobroker/iobroker-data/history -mindepth 2 -maxdepth 2 -type f -name 'history.*.json' -exec du -b {} + 2>/dev/null | awk '{ n=$2; sub(/^.*\//, "", n); s[n]+=$1 } END { for (f in s) printf "%10.1f MB\t%s\n", s[f]/1048576, f }' | sort -rn | head -n 10)
+    if [[ -n "$HISTORYSTATS" ]]; then
+        printf "%s\n" "$HISTORYSTATS" | awk -F'\t' '{printf "%-12s %s\n", $1, $2}'
+    else
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%s\n" "Keine History-Daten im Standardpfad gefunden (oder ein individueller Speicherpfad konfiguriert)."
+        else
+            printf "%s\n" "No history data found at the default path (or an individual storage directory is configured)."
+        fi
+    fi
+fi
 
 # USB-Geräte by-id
 printf "\n%b%s%b\n" "$GREEN" "USB-Devices by-id:" "$NC"
@@ -1032,6 +1222,58 @@ printf "\n%s\t\t%s" "$PATHNPX" "$VERNPX"
 
 check_nodejs_installation
 
+# Node.js/npm: Pre-Release- und Major-Abweichungs-Erkennung
+NODE_PRERELEASE=0
+if [[ "$VERNODE" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+- ]]; then
+    NODE_PRERELEASE=1
+fi
+NODEMAJOR=$(printf '%s' "$VERNODE" | sed 's/^v//;s/-.*//;s/\..*//')
+NPMMAJOR=$(printf '%s' "$VERNPM" | sed 's/^v//;s/-.*//;s/\..*//')
+RECNODEMAJOR=$(printf '%s' "$NODERECOM" | sed 's/^v//;s/-.*//;s/\..*//')
+RECNPMMAJOR=$(printf '%s' "$NPMRECOM" | sed 's/^v//;s/-.*//;s/\..*//')
+
+if ((NODE_PRERELEASE == 1)); then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%s%s%b\n" "$RED" "*** ACHTUNG: Node.js '" "$VERNODE" "' ist eine Vorabversion (Pre-Release)! ***" "$NC"
+        printf "%b%s%s%s%b\n" "$RED" "Vorabversionen erhalten keine Sicherheitsupdates und sind für den Produktivbetrieb nicht vorgesehen. Bitte die empfohlene stabile Version " "$NODERECOM" " verwenden." "$NC"
+    else
+        printf "%b%s%s%s%b\n" "$RED" "*** ATTENTION: Node.js '" "$VERNODE" "' is a pre-release version! ***" "$NC"
+        printf "%b%s%s%s%b\n" "$RED" "Pre-release versions do not receive security updates and are not meant for production use. Please use the recommended stable version " "$NODERECOM" "." "$NC"
+    fi
+elif [[ -n "$RECNODEMAJOR" && -n "$NODEMAJOR" && "$NODEMAJOR" != "$RECNODEMAJOR" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s (%s, %s)%b\n" "$YELLOW" "Die installierte Node.js-Hauptversion ($NODEMAJOR) weicht von der aktuell empfohlenen Hauptversion ab: " "$RECNODEMAJOR" "$NODERECOM" "$NC"
+    else
+        printf "%b%s (%s, %s)%b\n" "$YELLOW" "The installed Node.js major version ($NODEMAJOR) differs from the currently recommended major version: " "$RECNODEMAJOR" "$NODERECOM" "$NC"
+    fi
+fi
+if [[ -n "$RECNPMMAJOR" && -n "$NPMMAJOR" && "$NPMMAJOR" != "$RECNPMMAJOR" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s (%s, %s)%b\n" "$YELLOW" "Die installierte npm-Hauptversion ($NPMMAJOR) weicht von der aktuell empfohlenen Hauptversion ab: " "$RECNPMMAJOR" "$NPMRECOM" "$NC"
+    else
+        printf "%b%s (%s, %s)%b\n" "$YELLOW" "The installed npm major version ($NPMMAJOR) differs from the currently recommended major version: " "$RECNPMMAJOR" "$NPMRECOM" "$NC"
+    fi
+fi
+
+# Capabilities auf dem Node-Binary prüfen (z. B. für BLE-/Raw-Socket-Adapter nötig)
+if command -v getcap >/dev/null 2>&1 && [[ -n "$PATHNODE" ]]; then
+    NODECAPS=$(getcap "$PATHNODE" 2>/dev/null)
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%s" "Capabilities auf dem Node-Binary: "
+    else
+        printf "\n%s" "Capabilities on node binary: "
+    fi
+    if [[ -n "$NODECAPS" ]]; then
+        printf "%s\n" "$NODECAPS"
+    else
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%b\n" "$YELLOW" "keine gesetzt. Adapter mit Raw-Sockets (z. B. BLE) können dadurch gestört sein; 'iobroker fix' setzt sie wieder." "$NC"
+        else
+            printf "%b%s%b\n" "$YELLOW" "none set. Adapters using raw sockets (e.g. BLE) may be impaired by this; 'iobroker fix' restores them." "$NC"
+        fi
+    fi
+fi
+
 if [ -f /usr/bin/apt-cache ]; then
     apt-cache policy nodejs
 fi
@@ -1057,36 +1299,47 @@ fi
 
 if [[ $NODENOTCORR -eq 0 ]]; then
     printf "\n\n%b%s%b\n" "$GREEN" "Checking for nodejs vulnerability:" "$NC"
-    if [ -d "/home/iobroker" ]; then
-        cd /home/iobroker || exit
-        sudo -H -u iobroker npm i --silent is-my-node-vulnerable
-        sudo -H -u iobroker npx is-my-node-vulnerable >/dev/null 2>&1
-    else
-        cd ~ || exit
-        sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
-        sudo -H -u "$(whoami)" npx is-my-node-vulnerable >/dev/null 2>&1
-    fi
-
-    EXIT_CODE=$?
-
-    if [[ "$SKRPTLANG" == "--de" ]]; then
-        if [ "$EXIT_CODE" -ne 0 ]; then
-            printf '%sSicherheitslücken in der Node.js-Version erkannt!\n' "$RED"
-            npx is-my-node-vulnerable
-            printf '%s' "$NC"
+    if ((NODE_PRERELEASE == 1)); then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%s%s%b\n" "$YELLOW" "Vorabversion erkannt (" "$VERNODE" "). Der Vulnerability-Check unterstützt keine Vorabversionen; das Ergebnis ist damit weder positiv noch negativ aussagekräftig. Bitte eine stabile Node.js-Version einsetzen." "$NC"
         else
-            printf '%sKeine bekannten Sicherheitslücken in der Node.js-Version erkannt!%s\n' "$GREEN" "$NC"
+            printf "%b%s%s%s%b\n" "$YELLOW" "Pre-release version detected (" "$VERNODE" "). The vulnerability check does not support pre-releases; the result is neither an all-clear nor a warning. Please use a stable Node.js version." "$NC"
         fi
     else
-        if [ "$EXIT_CODE" -ne 0 ]; then
-            printf '%sVulnerabilities detected in the Node.js version!\n' "$RED"
-            npx is-my-node-vulnerable
-            printf '%s' "$NC"
+        if [ -d "/home/iobroker" ]; then
+            cd /home/iobroker || exit
+            sudo -H -u iobroker npm i --silent is-my-node-vulnerable
+            VULNOUT=$(sudo -H -u iobroker npx is-my-node-vulnerable 2>&1)
+            EXIT_CODE=$?
         else
-            printf '%sNo known Vulnerabilities detected!%s\n' "$GREEN" "$NC"
+            cd ~ || exit
+            sudo -H -u "$(whoami)" npm i --silent is-my-node-vulnerable
+            VULNOUT=$(sudo -H -u "$(whoami)" npx is-my-node-vulnerable 2>&1)
+            EXIT_CODE=$?
         fi
+
+        if [[ "$VULNOUT" =~ Could\ not\ fetch\ version\ information ]]; then
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%b\n" "$YELLOW" "Der Vulnerability-Check konnte nicht ausgeführt werden (Versionsinformationen nicht abrufbar). Bitte später erneut prüfen." "$NC"
+            else
+                printf "%b%s%b\n" "$YELLOW" "The vulnerability check could not be executed (version information could not be fetched). Please check again later." "$NC"
+            fi
+        elif [ "$EXIT_CODE" -ne 0 ]; then
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf '%b%s%s\n' "$RED" "Sicherheitslücken in der Node.js-Version erkannt!" "$NC"
+            else
+                printf '%b%s%s\n' "$RED" "Vulnerabilities detected in the Node.js version!" "$NC"
+            fi
+            printf '%s\n' "$VULNOUT"
+        else
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf '%b%s%s\n' "$GREEN" "Keine bekannten Sicherheitslücken in der Node.js-Version erkannt!" "$NC"
+            else
+                printf '%b%s%s\n' "$GREEN" "No known vulnerabilities detected!" "$NC"
+            fi
+        fi
+        cd || exit
     fi
-    cd || exit
 fi
 
 check_architecture
@@ -1095,11 +1348,51 @@ printf "\n\n%b%s%b" "$HEADLINE" "*** ioBroker-Installation ***" "$NC"
 printf "\n%b%s%b\n" "$GREEN" "ioBroker Status" "$NC"
 iob status $ALLOWROOT
 printf "\n%b%s%b\n" "$GREEN" "Hosts:" "$NC"
-iob list hosts $ALLOWROOT
+IOBHOSTS=$(iob list hosts $ALLOWROOT 2>/dev/null)
+printf "%s\n" "$IOBHOSTS"
+
+# Controller-Uptime gegen System-Uptime prüfen (Neustart nach Systemboot?)
+if [ ! -f "$DOCKER" ] && [[ -r /proc/uptime ]]; then
+    CONTROLLERUPTIME=$(printf '%s\n' "$IOBHOSTS" | grep -o 'uptime: [0-9]*' | head -n1 | grep -o '[0-9]*')
+    SYSUPTIME=$(cut -d. -f1 /proc/uptime 2>/dev/null)
+    if [[ -n "${CONTROLLERUPTIME:-}" && -n "${SYSUPTIME:-}" ]] && ((SYSUPTIME - CONTROLLERUPTIME > 300)); then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%b\n" "$YELLOW" "Die js-controller-Uptime ist deutlich kürzer als die System-Uptime: Der Controller wurde nach dem Systemboot neu gestartet (Grund prüfen, z. B. Absturz oder Update)." "$NC"
+        else
+            printf "%b%s%b\n" "$YELLOW" "The js-controller uptime is significantly shorter than the system uptime: the controller was restarted after the system booted (check why, e.g. crash or update)." "$NC"
+        fi
+    fi
+fi
+
 printf "\n%b%s%b" "$GREEN" "Core adapters versions" "$NC"
-printf "\n%s\t%s" "js-controller: " "$(iob -v $ALLOWROOT)"
+JSCONTROLLERVER=$(iob -v $ALLOWROOT)
+printf "\n%s\t%s" "js-controller: " "$JSCONTROLLERVER"
+if [[ "$JSCONTROLLERVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%b%s%s%s%b\n" "$YELLOW" "ACHTUNG: Der js-controller '" "$JSCONTROLLERVER" "' ist eine Vorab-/Nightly-Version! Solche Versionen sind nicht für den Produktivbetrieb vorgesehen." "$NC"
+    else
+        printf "\n%b%s%s%s%b\n" "$YELLOW" "ATTENTION: The js-controller '" "$JSCONTROLLERVER" "' is a pre-release/nightly build! Such versions are not meant for production use." "$NC"
+    fi
+fi
 printf "\n%s\t\t%s" "admin: " "$(iob version admin $ALLOWROOT)"
 printf "\n%s\t%s" "javascript: " "$(iob version javascript $ALLOWROOT)"
+
+# Admin-Authentifizierungs-Status (native.auth von admin.0)
+printf "\n"
+ADMAUTHRESULT=$(iobroker object get system.adapter.admin.0 $ALLOWROOT 2>/dev/null | tr -d '[:space:]')
+if grep -q '"auth":true' <<<"$ADMAUTHRESULT" 2>/dev/null; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$GREEN" "Admin: Anmeldung ist erzwungen ('Login erzwingen' aktiv)." "$NC"
+    else
+        printf "%b%s%b\n" "$GREEN" "Admin: login is enforced ('force login' enabled)." "$NC"
+    fi
+elif grep -q '"auth":false' <<<"$ADMAUTHRESULT" 2>/dev/null; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$YELLOW" "Admin: Anmeldung ist NICHT erzwungen - das Admin-Interface lässt sich ohne Authentifizierung öffnen. Sofern keine andere Schutzschicht (Firewall, VPN) wirkt, bitte 'Login erzwingen' aktivieren." "$NC"
+    else
+        printf "%b%s%b\n" "$YELLOW" "Admin: login is NOT enforced - the admin interface can be opened without authentication. Unless another security layer (firewall, VPN) is in place, please enable 'force login'." "$NC"
+    fi
+fi
 printf '\n\n%b%s%b\t%d\n' "$GREEN" "nodejs modules from github: " "$NC" "$(grep -c 'github.com' <<<"$NPMLS")"
 grep 'github.com' <<<"$(printf '\n\n%s\n' "$NPMLS")"
 printf "\n\n%b%s%b\n" "$GREEN" "Adapter State" "$NC"
@@ -1192,6 +1485,83 @@ if pgrep "pawns-cli" >/dev/null; then
     fi
 fi
 
+printf "\n\n%b%s%b\n" "$HEADLINE" "*** Log Analysis (available log files) ***" "$NC"
+
+EXISTINGLOGS=()
+for CURLOG in /opt/iobroker/log/iobroker.current.log /opt/iobroker/log/iobroker.????????.log; do
+    [[ -r "$CURLOG" ]] && EXISTINGLOGS+=("$CURLOG")
+done
+
+if ((${#EXISTINGLOGS[@]} == 0)); then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%s\n" "In /opt/iobroker/log/ wurden keine lesbaren Logdateien gefunden."
+    else
+        printf "%s\n" "No readable log files found in /opt/iobroker/log/."
+    fi
+else
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%s\n" "Analyse von ${#EXISTINGLOGS[@]} verfügbaren Logdatei(en):"
+        printf "%s\n" "${EXISTINGLOGS[@]}"
+    else
+        printf "%s\n" "Analyzing ${#EXISTINGLOGS[@]} available log file(s):"
+        printf "%s\n" "${EXISTINGLOGS[@]}"
+    fi
+
+    LOGERRTOTAL=$(grep -h -- ' - error: ' "${EXISTINGLOGS[@]}" 2>/dev/null | awk 'END {print NR}')
+    LOGWARNTOTAL=$(grep -h -- ' - warn: ' "${EXISTINGLOGS[@]}" 2>/dev/null | awk 'END {print NR}')
+    printf "\n%s%d%s%d\n" "Errors: " "$LOGERRTOTAL" " / Warnings: " "$LOGWARNTOTAL"
+
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%s\n" "Fehler und Warnungen pro Instanz (Top 10):"
+    else
+        printf "\n%s\n" "Errors and warnings per instance (top 10):"
+    fi
+    printf "%-10s %-10s %s\n" "Errors" "Warnings" "Instance"
+    LOGSTATS=$(grep -h -E -- ' - (error|warn): ' "${EXISTINGLOGS[@]}" 2>/dev/null | awk '
+        match($0, /- (error|warn): /) {
+            lvl = substr($0, RSTART+2, RLENGTH-4)
+            rest = substr($0, RSTART+RLENGTH)
+            split(rest, a, " ")
+            inst = a[1]
+            sub(/\(.*/, "", inst)
+            if (inst !~ /^[a-z0-9_-]+\.[0-9]+$/) next
+            if (lvl == "error") err[inst]++
+            else wrn[inst]++
+        }
+        END {
+            for (i in err) printf "%d\t%d\t%s\n", err[i], wrn[i]+0, i
+            for (i in wrn) if (!(i in err)) printf "0\t%d\t%s\n", wrn[i], i
+        }' | sort -rn | head -n 10)
+    if [[ -n "$LOGSTATS" ]]; then
+        printf "%s\n" "$LOGSTATS" | awk -F'\t' '{printf "%-10s %-10s %s\n", $1, $2, $3}'
+    else
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%b\n" "$GREEN" "In den verfügbaren Logdateien wurden keine Fehler oder Warnungen gefunden." "$NC"
+        else
+            printf "%b%s%b\n" "$GREEN" "No errors or warnings found in the available log files." "$NC"
+        fi
+    fi
+
+    # Instanz-Starts und Restart-Schleifen aus den verfügbaren Logdateien
+    RESTARTCOUNTS=$(grep -h -E -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+ .* started with pid' "${EXISTINGLOGS[@]}" 2>/dev/null | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
+    if [[ -n "$RESTARTCOUNTS" ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "\n%s\n" "Instanz-Starts innerhalb der verfügbaren Logdateien:"
+        else
+            printf "\n%s\n" "Instance starts within the available log files:"
+        fi
+        printf "%s\n" "$RESTARTCOUNTS"
+    fi
+    LOOPCOUNT=$(grep -h -- 'restart loop detected' "${EXISTINGLOGS[@]}" 2>/dev/null | awk 'END {print NR}')
+    if ((LOOPCOUNT > 0)); then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%d%s%b\n" "$RED" "ACHTUNG: Es wurde eine RESTART-SCHLEIFE erkannt (" "$LOOPCOUNT" " Vorkommnisse)! Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
+        else
+            printf "%b%s%d%s%b\n" "$RED" "ATTENTION: A RESTART LOOP was detected (" "$LOOPCOUNT" " occurrences)! Check the log or 'iobroker logs' for details." "$NC"
+        fi
+    fi
+fi
+
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** Log File - Last 25 Lines ***" "$NC"
 tail -n 25 /opt/iobroker/log/iobroker.current.log
 printf "%s\n\n" '```'
@@ -1275,6 +1645,49 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 else
     printf "\n%s\t%s" "Pending OS-Updates: " "$APT"
     printf "\n%s\t%s" "Pending iob updates: " "$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
+fi
+
+# Ergänzende Diagnose-Kurzinfos
+if [[ "${NODE_PRERELEASE:-0}" == 1 ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%b%s%s (%s)%b\n" "$RED" "Node.js-VORABVERSION im Einsatz: " "$VERNODE" "$NODERECOM" "$NC"
+    else
+        printf "\n%b%s%s (%s)%b\n" "$RED" "Node.js PRE-RELEASE in use: " "$VERNODE" "$NODERECOM" "$NC"
+    fi
+fi
+if [[ "${JSCONTROLLERVER:-}" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%b%s%s%b\n" "$YELLOW" "js-controller-Vorabversion im Einsatz: " "$JSCONTROLLERVER" "$NC"
+    else
+        printf "\n%b%s%s%b\n" "$YELLOW" "js-controller pre-release in use: " "$JSCONTROLLERVER" "$NC"
+    fi
+fi
+if [[ "${LOGERRTOTAL:-}" =~ ^[0-9]+$ ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%s%d%s%d" "Log-Fehler (verfügbare Dateien): " "$LOGERRTOTAL" " / Warnungen: " "${LOGWARNTOTAL:-0}"
+    else
+        printf "\n%s%d%s%d" "Log errors (available files): " "$LOGERRTOTAL" " / warnings: " "${LOGWARNTOTAL:-0}"
+    fi
+fi
+if [[ "${BACKUPAGE:-}" =~ ^[0-9]+$ ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%s%d%s" "Letztes lokales Backup: vor " "$BACKUPAGE" " Tagen"
+    else
+        printf "\n%s%d%s" "Last local backup: " "$BACKUPAGE" " days ago"
+    fi
+elif [[ "${NEWESTBACKUPFILE:-}" == "" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%s" "Letztes lokales Backup: keine lokalen Backup-Dateien gefunden"
+    else
+        printf "\n%s" "Last local backup: no local backup files found"
+    fi
+fi
+if [[ "${ROOTONSD:-0}" == 1 ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "\n%b%s%b\n" "$RED" "Das Root-Dateisystem liegt auf einer SD-KARTE!" "$NC"
+    else
+        printf "\n%b%s%b\n" "$RED" "The root filesystem is on an SD CARD!" "$NC"
+    fi
 fi
 if [[ -f "/var/run/reboot-required" ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1361,3 +1774,4 @@ else
     printf "\n%s\n\n" "=== Mark text until here for copying ==="
 fi
 exit
+
