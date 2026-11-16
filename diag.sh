@@ -1562,7 +1562,7 @@ else
     fi
 
     # Instanz-Starts und Restart-Schleifen aus den verfügbaren Logdateien
-    RESTARTCOUNTS=$(read_logs | grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+ started with pid' | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
+    RESTARTCOUNTS=$(read_logs | grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+( .*)? started with pid' | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
     if [[ -n "$RESTARTCOUNTS" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
             printf "\n%s\n" "Instanz-Starts innerhalb der verfügbaren Logdateien:"
