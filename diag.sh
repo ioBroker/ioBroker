@@ -1488,9 +1488,28 @@ fi
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** Log Analysis (available log files) ***" "$NC"
 
 EXISTINGLOGS=()
-for CURLOG in /opt/iobroker/log/iobroker.current.log /opt/iobroker/log/iobroker.????????.log; do
+for CURLOG in /opt/iobroker/log/iobroker.current.log /opt/iobroker/log/iobroker.????????.log /opt/iobroker/log/iobroker.????-??-??.log /opt/iobroker/log/iobroker.????-??-??.log.gz; do
     [[ -r "$CURLOG" ]] && EXISTINGLOGS+=("$CURLOG")
 done
+# iobroker.current.log ist ein Symlink auf die Tagesdatei -> Duplikate entfernen,
+# sonst wird jede Zeile doppelt gezaehlt
+mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readlink -f -- | sort -u)
+
+# ioBroker-Logdateien enthalten per Default ANSI-Farbcodes um den Schweregrad
+# (js-controller aktiviert winston-colorize per Default) und zusaetzlich
+# moeglicherweise Binaermuell (NUL-Bytes) einzelner Adapter.
+# - ANSI-Codes strippen, sonst matchen die Muster (' - error: ') nicht
+# - grep -a verarbeitet Zeilen mit NUL-Bytes trotzdem als Text
+ESEQ=$(printf '\033')
+read_logs() {
+    local f
+    for f in "${EXISTINGLOGS[@]}"; do
+        case "$f" in
+            *.gz) gzip -dc -- "$f" 2>/dev/null ;;
+            *) cat -- "$f" 2>/dev/null ;;
+        esac
+    done | sed "s/${ESEQ}\[[0-9;]*m//g"
+}
 
 if ((${#EXISTINGLOGS[@]} == 0)); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1507,8 +1526,8 @@ else
         printf "%s\n" "${EXISTINGLOGS[@]}"
     fi
 
-    LOGERRTOTAL=$(grep -h -- ' - error: ' "${EXISTINGLOGS[@]}" 2>/dev/null | awk 'END {print NR}')
-    LOGWARNTOTAL=$(grep -h -- ' - warn: ' "${EXISTINGLOGS[@]}" 2>/dev/null | awk 'END {print NR}')
+    LOGERRTOTAL=$(read_logs | grep -ac -- ' - error: ')
+    LOGWARNTOTAL=$(read_logs | grep -ac -- ' - warn: ')
     printf "\n%s%d%s%d\n" "Errors: " "$LOGERRTOTAL" " / Warnings: " "$LOGWARNTOTAL"
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1517,7 +1536,7 @@ else
         printf "\n%s\n" "Errors and warnings per instance (top 10):"
     fi
     printf "%-10s %-10s %s\n" "Errors" "Warnings" "Instance"
-    LOGSTATS=$(grep -h -E -- ' - (error|warn): ' "${EXISTINGLOGS[@]}" 2>/dev/null | awk '
+    LOGSTATS=$(read_logs | grep -aE -- ' - (error|warn): ' | awk '
         match($0, /- (error|warn): /) {
             lvl = substr($0, RSTART+2, RLENGTH-4)
             rest = substr($0, RSTART+RLENGTH)
@@ -1543,7 +1562,7 @@ else
     fi
 
     # Instanz-Starts und Restart-Schleifen aus den verfügbaren Logdateien
-    RESTARTCOUNTS=$(grep -h -E -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+ .* started with pid' "${EXISTINGLOGS[@]}" 2>/dev/null | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
+    RESTARTCOUNTS=$(read_logs | grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+ started with pid' | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
     if [[ -n "$RESTARTCOUNTS" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
             printf "\n%s\n" "Instanz-Starts innerhalb der verfügbaren Logdateien:"
@@ -1552,7 +1571,7 @@ else
         fi
         printf "%s\n" "$RESTARTCOUNTS"
     fi
-    LOOPCOUNT=$(grep -h -- 'restart loop detected' "${EXISTINGLOGS[@]}" 2>/dev/null | awk 'END {print NR}')
+    LOOPCOUNT=$(read_logs | grep -ac -- 'restart loop detected')
     if ((LOOPCOUNT > 0)); then
         if [[ "$SKRPTLANG" == "--de" ]]; then
             printf "%b%s%d%s%b\n" "$RED" "ACHTUNG: Es wurde eine RESTART-SCHLEIFE erkannt (" "$LOOPCOUNT" " Vorkommnisse)! Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
@@ -1560,10 +1579,18 @@ else
             printf "%b%s%d%s%b\n" "$RED" "ATTENTION: A RESTART LOOP was detected (" "$LOOPCOUNT" " occurrences)! Check the log or 'iobroker logs' for details." "$NC"
         fi
     fi
+
+    if read_logs | grep -qaP -- '\x00'; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "%b%s%b\n" "$YELLOW" "WARNUNG: Mindestens ein Adapter loggt Binärmüll (NUL-Bytes) ins Log! Die Zählung bleibt davon unberührt, der Verursacher sollte aber geprüft werden." "$NC"
+        else
+            printf "%b%s%b\n" "$YELLOW" "WARNING: At least one adapter logs binary garbage (NUL bytes) into the log! Counts are not affected by this, but the originator should be checked." "$NC"
+        fi
+    fi
 fi
 
 printf "\n\n%b%s%b\n" "$HEADLINE" "*** Log File - Last 25 Lines ***" "$NC"
-tail -n 25 /opt/iobroker/log/iobroker.current.log
+sed "s/${ESEQ}\[[0-9;]*m//g" /opt/iobroker/log/iobroker.current.log | tail -n 25
 printf "%s\n\n" '```'
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "\n%b%s%b" "$YELLOW" "============ Langfassung bis hier markieren =============" "$NC"
