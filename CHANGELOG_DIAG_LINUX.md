@@ -1,4 +1,10 @@
 # Changelog for Linux-Diag-Script
+## 2026-11-16
+* smartctl now runs via non-interactive sudo (sudo -n), so a sudo password prompt can no longer appear inside the diag output; the existing "SMART data could not be read" message covers this case
+* CPU temperature output localized: German verdict lines for the --de variant
+* Memory usage of ioBroker processes uses full process titles (ps args instead of comm), so long adapter names like io.zigbee2mqtt.0 are no longer truncated at 15 characters
+* Removed a trailing empty line at the end of this file
+
 ## 2026-11-14
 * Added CPU temperature check (vcgencmd or thermal_zone, warning thresholds)
 * Added storage check: warning if the root filesystem is on an SD card; SMART health and attribute summary if smartctl is available
@@ -146,4 +152,3 @@
 
 ## 2022-12-09
 * Initial release
-

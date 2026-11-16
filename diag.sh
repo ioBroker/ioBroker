@@ -11,7 +11,7 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-11-14" #version of this script
+SKRIPTV="2026-11-16" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
@@ -370,13 +370,25 @@ if [[ "$CPU_TEMP" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
     TEMPCAT=$(awk -v t="$CPU_TEMP" 'BEGIN{print (t>=80)?"crit":(t>=70)?"warn":"ok"}')
     case "$TEMPCAT" in
         crit)
-            printf "%b%s%s%s°C%s\n" "$RED" "CPU temperature  : " "$CPU_TEMP" " - CRITICAL, cooling/airflow check required!" "$NC"
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%s%s°C%s\n" "$RED" "CPU-Temperatur   : " "$CPU_TEMP" " - KRITISCH, Kühlung/Lüftung prüfen!" "$NC"
+            else
+                printf "%b%s%s%s°C%s\n" "$RED" "CPU temperature  : " "$CPU_TEMP" " - CRITICAL, cooling/airflow check required!" "$NC"
+            fi
             ;;
         warn)
-            printf "%b%s%s%s°C%s\n" "$YELLOW" "CPU temperature  : " "$CPU_TEMP" " - elevated, keep an eye on it" "$NC"
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%b%s%s%s°C%s\n" "$YELLOW" "CPU-Temperatur   : " "$CPU_TEMP" " - erhöht, bitte im Auge behalten" "$NC"
+            else
+                printf "%b%s%s%s°C%s\n" "$YELLOW" "CPU temperature  : " "$CPU_TEMP" " - elevated, keep an eye on it" "$NC"
+            fi
             ;;
         *)
-            printf "%s%s°C\n" "CPU temperature  : " "$CPU_TEMP"
+            if [[ "$SKRPTLANG" == "--de" ]]; then
+                printf "%s%s°C\n" "CPU-Temperatur   : " "$CPU_TEMP"
+            else
+                printf "%s%s°C\n" "CPU temperature  : " "$CPU_TEMP"
+            fi
             ;;
     esac
 fi
@@ -403,9 +415,9 @@ if [ ! -f "$DOCKER" ]; then
         fi
         if command -v smartctl >/dev/null 2>&1; then
             if command -v timeout >/dev/null 2>&1; then
-                SMARTRUN=$(timeout 10 sudo smartctl -H -A "/dev/$ROOTPK" 2>/dev/null)
+                SMARTRUN=$(timeout 10 sudo -n smartctl -H -A "/dev/$ROOTPK" 2>/dev/null)
             else
-                SMARTRUN=$(sudo smartctl -H -A "/dev/$ROOTPK" 2>/dev/null)
+                SMARTRUN=$(sudo -n smartctl -H -A "/dev/$ROOTPK" 2>/dev/null)
             fi
             if [[ -n "$SMARTRUN" ]]; then
                 SMARTHEALTH=$(grep -m1 -Ei 'overall-health|health status' <<<"$SMARTRUN" | sed 's/^ *//')
@@ -823,8 +835,8 @@ if pgrep -f iobroker.js-controller >/dev/null; then
     else
         printf "\n%s\n" "Memory usage of ioBroker processes (RSS, top 10):"
     fi
-    ps -eo rss=,comm= 2>/dev/null | awk '$2 ~ /^(io\.|iobroker)/ {sum[$2]+=$1} END {for (c in sum) printf "%10.1f MB  %s\n", sum[c]/1024, c}' | sort -rn | head -n 10
-    ps -eo rss=,comm= 2>/dev/null | awk '$2 ~ /^(io\.|iobroker)/ {total+=$1} END {printf "%s%.1f MB\n", "Total RSS of ioBroker processes: ", total/1024}'
+    ps -eo rss=,args= 2>/dev/null | awk '$2 ~ /^(io\.|iobroker)/ {sum[$2]+=$1} END {for (c in sum) printf "%10.1f MB  %s\n", sum[c]/1024, c}' | sort -rn | head -n 10
+    ps -eo rss=,args= 2>/dev/null | awk '$2 ~ /^(io\.|iobroker)/ {total+=$1} END {printf "%s%.1f MB\n", "Total RSS of ioBroker processes: ", total/1024}'
 fi
 
 printf "\n%b%s%b\n" "$HEADLINE" "*** top - Table Of Processes  ***" "\033[0m"
