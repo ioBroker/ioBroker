@@ -1561,6 +1561,17 @@ else
         fi
     fi
 
+    # Erhoehtes globales Loglevel des js-controllers unterdrueckt Host-Meldungen
+    # ('instance ... started with pid'), Instanz-Starts sind dann nicht zaehlbar
+    IOLOGLEVEL=$(awk '/"log" *:/ {inlog=1} inlog && match($0, /"level" *: *"[a-z]+"/) {lvl=substr($0, RSTART, RLENGTH); sub(/^.*:/, "", lvl); gsub(/[" ]/, "", lvl); print lvl; exit}' /opt/iobroker/iobroker-data/iobroker.json 2>/dev/null)
+    if [[ "$IOLOGLEVEL" == 'warn' || "$IOLOGLEVEL" == 'error' ]]; then
+        if [[ "$SKRPTLANG" == "--de" ]]; then
+            printf "\n%b%s%b\n" "$YELLOW" "HINWEIS: Das globale Loglevel des js-controllers ist auf '${IOLOGLEVEL}' gesetzt ('log'/'level' in /opt/iobroker/iobroker-data/iobroker.json). Host-Meldungen wie 'instance ... started with pid' werden nicht in die Logdateien geschrieben, deshalb können Instanz-Starts nicht gezählt werden." "$NC"
+        else
+            printf "\n%b%s%b\n" "$YELLOW" "NOTE: The js-controller global log level is set to '${IOLOGLEVEL}' ('log'/'level' in /opt/iobroker/iobroker-data/iobroker.json). Host messages like 'instance ... started with pid' are not written to the log files, therefore instance starts cannot be counted." "$NC"
+        fi
+    fi
+
     # Instanz-Starts und Restart-Schleifen aus den verfügbaren Logdateien
     RESTARTCOUNTS=$(read_logs | grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+( .*)? started with pid' | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
     if [[ -n "$RESTARTCOUNTS" ]]; then
