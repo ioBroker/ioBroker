@@ -1505,18 +1505,61 @@ mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readli
 # einer temporaeren Datei abgelegt; alle Analysen greifen nur noch diese Datei
 # ab. Zuvor wurde der Bestand (inkl. .gz-Archive) fuer jede Analyse erneut
 # gelesen und entpackt (Performance-Hinweis aus dem Review zu #792).
+#
+# Ablageort (Hinweise aus dem Review zu #793): Debian 13 mounted /tmp per
+# Default als tmpfs; der komplett entpackte Logbestand wuerde also im RAM
+# liegen, was auf kleinen Systemen (Pi) mit vielen/grossen .gz-Archiven eng
+# werden kann. Bevorzugt wird daher ein Verzeichnis auf einer 'echten' Platte
+# (die ioBroker-Installation selbst), das klassische TMPDIR/tmp bleibt
+# Fallback. IOB_DIAG_TMPDIR erlaubt jederzeit einen bewussten Override (z. B.
+# Docker mit read-only /opt).
+# Schlaegt das Schreiben des Snapshots fehl (z. B. voller tmpfs), wird die
+# Analyse uebersprungen statt still zu niedrige Zaehlergebnisse auszugeben.
 ESEQ=$(printf '\033')
+
+# Verzeichnis der temporaeren Log-Snapshot-Datei bestimmen
+get_tmplog_dir() {
+    local d fs
+    # expliziter Override gewinnt
+    if [[ -n ${IOB_DIAG_TMPDIR:-} && -d ${IOB_DIAG_TMPDIR:-} ]]; then
+        printf '%s\n' "$IOB_DIAG_TMPDIR"
+        return
+    fi
+    for d in "${TMPDIR:-/tmp}" /opt/iobroker; do
+        [[ -d $d ]] || continue
+        fs=$(df -PT -- "$d" 2>/dev/null | awk 'NR==2 {print $2}')
+        # kein tmpfs -> Verzeichnis auf einer 'echten' Platte
+        if [[ $fs != tmpfs ]]; then
+            printf '%s\n' "$d"
+            return
+        fi
+    done
+    # nur tmpfs verfuegbar -> klassisches Verhalten beibehalten
+    printf '%s\n' "${TMPDIR:-/tmp}"
+}
+
 TMPLOG=""
+LOGWRITEOK=0
 if ((${#EXISTINGLOGS[@]} > 0)); then
-    if TMPLOG=$(mktemp "${TMPDIR:-/tmp}/iobdiag.XXXXXXXX" 2>/dev/null); then
+    TMPLOGDIR=$(get_tmplog_dir)
+    if ! TMPLOG=$(mktemp "$TMPLOGDIR/iobdiag.XXXXXXXX" 2>/dev/null); then
+        # gewaehltes Verzeichnis ist doch nicht beschreibbar -> klassischer Fallback
+        TMPLOG=$(mktemp "${TMPDIR:-/tmp}/iobdiag.XXXXXXXX" 2>/dev/null)
+    fi
+    if [[ -n "$TMPLOG" ]]; then
         # Aufraeumen bei Skript-Ende, auch bei den spaeteren exit-Aufrufen
         trap 'rm -f -- "$TMPLOG"' EXIT
-        for f in "${EXISTINGLOGS[@]}"; do
-            case "$f" in
-                *.gz) gzip -dc -- "$f" 2>/dev/null ;;
-                *) cat -- "$f" 2>/dev/null ;;
-            esac
-        done | sed "s/${ESEQ}\[[0-9;]*m//g" > "$TMPLOG"
+        # Exit-Status des Schreibens pruefen: ein (fast) voller tmpfs wuerde
+        # sonst ein still abgebrochenes Snapshot hinterlassen und die
+        # Zaehlergebnisse waeren ohne Warnung zu niedrig.
+        if { for f in "${EXISTINGLOGS[@]}"; do
+                case "$f" in
+                    *.gz) gzip -dc -- "$f" 2>/dev/null ;;
+                    *) cat -- "$f" 2>/dev/null ;;
+                esac
+            done | sed "s/${ESEQ}\[[0-9;]*m//g" > "$TMPLOG"; }; then
+            LOGWRITEOK=1
+        fi
     fi
 fi
 
@@ -1531,6 +1574,12 @@ elif [[ -z "$TMPLOG" ]]; then
         printf "%b%s%b\n" "$RED" "FEHLER: Es konnte keine temporäre Datei für die Log-Analyse angelegt werden (mktemp). Die Log-Analyse wird übersprungen." "$NC"
     else
         printf "%b%s%b\n" "$RED" "ERROR: Could not create a temporary file for the log analysis (mktemp). The log analysis will be skipped." "$NC"
+    fi
+elif ((LOGWRITEOK == 0)); then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$RED" "FEHLER: Die temporäre Datei für die Log-Analyse konnte nicht vollständig geschrieben werden (kein Speicherplatz mehr?). Die Log-Analyse wird übersprungen." "$NC"
+    else
+        printf "%b%s%b\n" "$RED" "ERROR: The temporary file for the log analysis could not be written completely (out of space?). The log analysis will be skipped." "$NC"
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
