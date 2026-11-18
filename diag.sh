@@ -1500,22 +1500,37 @@ mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readli
 # moeglicherweise Binaermuell (NUL-Bytes) einzelner Adapter.
 # - ANSI-Codes strippen, sonst matchen die Muster (' - error: ') nicht
 # - grep -a verarbeitet Zeilen mit NUL-Bytes trotzdem als Text
+#
+# Der komplette Logbestand wird einmalig gelesen, entpackt und ANSI-gefiltert in
+# einer temporaeren Datei abgelegt; alle Analysen greifen nur noch diese Datei
+# ab. Zuvor wurde der Bestand (inkl. .gz-Archive) fuer jede Analyse erneut
+# gelesen und entpackt (Performance-Hinweis aus dem Review zu #792).
 ESEQ=$(printf '\033')
-read_logs() {
-    local f
-    for f in "${EXISTINGLOGS[@]}"; do
-        case "$f" in
-            *.gz) gzip -dc -- "$f" 2>/dev/null ;;
-            *) cat -- "$f" 2>/dev/null ;;
-        esac
-    done | sed "s/${ESEQ}\[[0-9;]*m//g"
-}
+TMPLOG=""
+if ((${#EXISTINGLOGS[@]} > 0)); then
+    if TMPLOG=$(mktemp "${TMPDIR:-/tmp}/iobdiag.XXXXXXXX" 2>/dev/null); then
+        # Aufraeumen bei Skript-Ende, auch bei den spaeteren exit-Aufrufen
+        trap 'rm -f -- "$TMPLOG"' EXIT
+        for f in "${EXISTINGLOGS[@]}"; do
+            case "$f" in
+                *.gz) gzip -dc -- "$f" 2>/dev/null ;;
+                *) cat -- "$f" 2>/dev/null ;;
+            esac
+        done | sed "s/${ESEQ}\[[0-9;]*m//g" > "$TMPLOG"
+    fi
+fi
 
 if ((${#EXISTINGLOGS[@]} == 0)); then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "%s\n" "In /opt/iobroker/log/ wurden keine lesbaren Logdateien gefunden."
     else
         printf "%s\n" "No readable log files found in /opt/iobroker/log/."
+    fi
+elif [[ -z "$TMPLOG" ]]; then
+    if [[ "$SKRPTLANG" == "--de" ]]; then
+        printf "%b%s%b\n" "$RED" "FEHLER: Es konnte keine temporäre Datei für die Log-Analyse angelegt werden (mktemp). Die Log-Analyse wird übersprungen." "$NC"
+    else
+        printf "%b%s%b\n" "$RED" "ERROR: Could not create a temporary file for the log analysis (mktemp). The log analysis will be skipped." "$NC"
     fi
 else
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1526,8 +1541,8 @@ else
         printf "%s\n" "${EXISTINGLOGS[@]}"
     fi
 
-    LOGERRTOTAL=$(read_logs | grep -ac -- ' - error: ')
-    LOGWARNTOTAL=$(read_logs | grep -ac -- ' - warn: ')
+    LOGERRTOTAL=$(grep -ac -- ' - error: ' "$TMPLOG")
+    LOGWARNTOTAL=$(grep -ac -- ' - warn: ' "$TMPLOG")
     printf "\n%s%d%s%d\n" "Errors: " "$LOGERRTOTAL" " / Warnings: " "$LOGWARNTOTAL"
 
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1536,7 +1551,7 @@ else
         printf "\n%s\n" "Errors and warnings per instance (top 10):"
     fi
     printf "%-10s %-10s %s\n" "Errors" "Warnings" "Instance"
-    LOGSTATS=$(read_logs | grep -aE -- ' - (error|warn): ' | awk '
+    LOGSTATS=$(grep -aE -- ' - (error|warn): ' "$TMPLOG" | awk '
         match($0, /- (error|warn): /) {
             lvl = substr($0, RSTART+2, RLENGTH-4)
             rest = substr($0, RSTART+RLENGTH)
@@ -1573,7 +1588,7 @@ else
     fi
 
     # Instanz-Starts und Restart-Schleifen aus den verfügbaren Logdateien
-    RESTARTCOUNTS=$(read_logs | grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+( .*)? started with pid' | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
+    RESTARTCOUNTS=$(grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+( .*)? started with pid' "$TMPLOG" | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
     if [[ -n "$RESTARTCOUNTS" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
             printf "\n%s\n" "Instanz-Starts innerhalb der verfügbaren Logdateien:"
@@ -1582,7 +1597,7 @@ else
         fi
         printf "%s\n" "$RESTARTCOUNTS"
     fi
-    LOOPCOUNT=$(read_logs | grep -ac -- 'restart loop detected')
+    LOOPCOUNT=$(grep -ac -- 'restart loop detected' "$TMPLOG")
     if ((LOOPCOUNT > 0)); then
         if [[ "$SKRPTLANG" == "--de" ]]; then
             printf "%b%s%d%s%b\n" "$RED" "ACHTUNG: Es wurde eine RESTART-SCHLEIFE erkannt (" "$LOOPCOUNT" " Vorkommnisse)! Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
@@ -1591,7 +1606,7 @@ else
         fi
     fi
 
-    if read_logs | grep -qaP -- '\x00'; then
+    if grep -qaP -- '\x00' "$TMPLOG"; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
             printf "%b%s%b\n" "$YELLOW" "WARNUNG: Mindestens ein Adapter loggt Binärmüll (NUL-Bytes) ins Log! Die Zählung bleibt davon unberührt, der Verursacher sollte aber geprüft werden." "$NC"
         else
