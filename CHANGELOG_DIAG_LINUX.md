@@ -1,4 +1,9 @@
 # Changelog for Linux-Diag-Script
+## 2026-11-18
+* Log analysis: the decompressed log snapshot is now kept off tmpfs if possible (Debian 13 mounts /tmp as tmpfs by default, which would place the whole decompressed log data in RAM); a directory on a regular disk is preferred (/opt/iobroker), the classic TMPDIR/tmp remains the fallback and the new IOB_DIAG_TMPDIR environment variable allows an explicit override
+* Log analysis: if the snapshot file cannot be written completely (e.g. a full tmpfs or disk), the analysis is now skipped with a red error message (EN/DE) instead of silently reporting truncated counts
+* SKRIPTV bumped to 2026-11-18; all German comments in diag.sh translated to English
+
 ## 2026-11-16
 * smartctl now runs via non-interactive sudo (sudo -n), so a sudo password prompt can no longer appear inside the diag output; the existing "SMART data could not be read" message covers this case
 * CPU temperature output localized: German verdict lines for the --de variant

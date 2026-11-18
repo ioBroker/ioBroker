@@ -11,12 +11,12 @@
 #
 # THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SKRIPTV="2026-11-16" #version of this script
+SKRIPTV="2026-11-18" #version of this script
 
 # written to help getting information about the environment the ioBroker installation is running in
 
 ## --help
-# Funktion zur Anzeige der Hilfe
+# Function to display the help text
 show_help() {
     cat <<EOF
 ioBroker Diagnose-Skript - Hilfe
@@ -43,7 +43,7 @@ Hinweis: Für eine vollständige Diagnose sollten keine Optionen außer --de ode
 EOF
 }
 
-# Prüfe, ob --help übergeben wurde
+# Check whether --help was passed
 if [[ "$*" == *"--help"* ]]; then
     show_help
     exit 0
@@ -79,7 +79,7 @@ if ! command -v distro-info >/dev/null; then
     fi
 fi
 
-# Farbdefinitionen
+# Color definitions
 GREEN=$(printf '\033[0;32m')
 RED=$(printf '\033[0;31m')
 YELLOW=$(printf '\033[1;33m')
@@ -110,14 +110,14 @@ NODENOTCORR=0
 IOBLISTINST=$(iobroker list instances $ALLOWROOT)
 NPMLS=$(cd /opt/iobroker && npm ls -a)
 
-# Installationsdatum ermitteln: Fallback-Kette mit Kennung der verwendeten Methode
+# Determine the installation date: fallback chain with annotation of the method used
 get_install_info() {
-    # 1) Birth Time des Root-Inodes (Epoch-Sekunden; "-", "0" oder leer = nicht verfügbar)
+    # 1) Birth time of the root inode (epoch seconds; "-", "0" or empty = not available)
     local btime
     btime=$(stat -c %W / 2>/dev/null)
     [[ "$btime" =~ ^[0-9]+$ && "$btime" -gt 0 ]] && { echo "$btime birthtime"; return; }
 
-    # 2) Arch-basierte Systeme: erster pacman-Log-Eintrag ≈ Installationsdatum
+    # 2) Arch-based systems: first pacman.log entry ≈ installation date
     local first_log ts
     first_log=$(head -n1 /var/log/pacman.log 2>/dev/null)
     if [[ "$first_log" =~ ^\[([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+-]+)\] ]]; then
@@ -125,7 +125,7 @@ get_install_info() {
         [[ -n "$ts" ]] && { echo "$ts pacmanlog"; return; }
     fi
 
-    # 2b) Debian-basierte Systeme: erster Eintrag des ältesten dpkg-Logs ≈ Installationsdatum
+    # 2b) Debian-based systems: first entry of the oldest dpkg.log ≈ installation date
     local dpkg_oldest first_line
     dpkg_oldest=$(ls -v1 /var/log/dpkg.log* 2>/dev/null | tail -n1)
     if [[ -n "$dpkg_oldest" ]]; then
@@ -136,12 +136,12 @@ get_install_info() {
         fi
     fi
 
-    # 3) Älteste Datei in /etc (Birth Time), funktioniert auch bei kopierten Systemen
+    # 3) Oldest file in /etc (birth time), also works on copied systems
     local oldest
     oldest=$(stat -c '%W %n' /etc/* 2>/dev/null | awk '$1>0' | sort -n | head -n1 | cut -d' ' -f1)
     [[ -n "$oldest" ]] && { echo "$oldest etc-birthtime"; return; }
 
-    # 4) Last Resort: mtime von / – unzuverlässig, daher nur als letzter Fallback
+    # 4) Last resort: mtime of / - unreliable, therefore only the final fallback
     local mtime_root
     mtime_root=$(stat -c %Y / 2>/dev/null)
     [[ "$mtime_root" =~ ^[0-9]+$ && "$mtime_root" -gt 0 ]] && echo "$mtime_root root-mtime"
@@ -160,7 +160,7 @@ fi
 
 CODENAME=$(grep -oP 'VERSION_CODENAME=\K.*' /usr/lib/os-release && echo "$VERSION_CODENAME")
 
-# Prüfe, ob distro-info verfügbar ist (enthält ubuntu-distro-info und debian-distro-info)
+# Check whether distro-info is available (contains ubuntu-distro-info and debian-distro-info)
 DISTRO_INFO_AVAILABLE=false
 if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-info >/dev/null 2>&1; then
     DISTRO_INFO_AVAILABLE=true
@@ -178,7 +178,7 @@ if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-inf
         debian-distro-info --all 2>/dev/null
         ubuntu-distro-info --all 2>/dev/null
     )
-    # Prüfen ob CODENAME gesetzt und in ALLRELEASES enthalten ist, Meldung in RELEASESTATUS schreiben
+    # Check whether CODENAME is set and contained in ALLRELEASES, write the message to RELEASESTATUS
     if [[ "$SKRPTLANG" == "--de" ]]; then
         if [ -z "${CODENAME:-}" ]; then
             RELEASESTATUS+="Unbenannte Veröffentlichung - Bitte den Status selber prüfen"
@@ -199,7 +199,7 @@ if command -v ubuntu-distro-info >/dev/null 2>&1 || command -v debian-distro-inf
 
 fi
 
-# Warnung, falls distro-info fehlt
+# Warning if distro-info is missing
 if [[ "$DISTRO_INFO_AVAILABLE" == false ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         echo -e "\n${YELLOW}WARNUNG: Das Paket 'distro-info' ist nicht installiert.${NC}"
@@ -212,7 +212,7 @@ if [[ "$DISTRO_INFO_AVAILABLE" == false ]]; then
         echo "Install it manually with:"
         echo "  sudo apt-get update && sudo apt-get install distro-info"
     fi
-    UNKNOWNRELEASE=1 # Überspringe die Prüfung
+    UNKNOWNRELEASE=1 # skip the check
 fi
 
 clear
@@ -356,7 +356,7 @@ printf "\n%s\n" "Systemuptime and Load:"
 uptime
 printf "%s%s\n" "CPU threads     : " "$(grep -c processor /proc/cpuinfo)"
 
-# CPU-Temperatur ermitteln (vcgencmd auf Raspberry Pi, sonst thermal_zone)
+# Get the CPU temperature (vcgencmd on Raspberry Pi, otherwise thermal_zone)
 CPU_TEMP=""
 if command -v vcgencmd >/dev/null 2>&1; then
     CPU_TEMP=$(vcgencmd measure_temp 2>/dev/null | sed "s/temp=//;s/'C//")
@@ -393,7 +393,7 @@ if [[ "$CPU_TEMP" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
     esac
 fi
 
-# Root-Dateisystem: SD-Karte? Plus SMART-Kurzbefund, falls smartctl vorhanden
+# Root filesystem: SD card? Plus a brief SMART summary if smartctl is available
 ROOTONSD=0
 if [ ! -f "$DOCKER" ]; then
     ROOTSRC=$(findmnt -no SOURCE / 2>/dev/null)
@@ -474,7 +474,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         fi
     done
 
-    # --- UBUSUP als Schleife einbinden (Deutsch) ---
+    # --- UBUSUP loop include (German output) ---
     for RELEASE in "${UBUSUP[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             IS_LTS=0
@@ -521,7 +521,7 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
         if [[ -z "$CODENAME" ]]; then
             RELEASESTATUS="Die Version ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
         else
-            # Prüfe ob CODENAME in ALLRELEASES vorkommt
+            # Check whether CODENAME appears in ALLRELEASES
             if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
                 RELEASESTATUS="Die Version $CODENAME ist unbekannt. Bitte selber prüfen ob das Release aktiv unterstützt wird."
             fi
@@ -557,7 +557,7 @@ else
         fi
     done
 
-    # --- Ubuntu-Prüfungen (Englisch) ---
+    # --- Ubuntu checks (English) ---
     for RELEASE in "${EOLUBU[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[31mUbuntu Release codenamed '$CODENAME' reached its END OF LIFE and needs to be updated to the latest LTS release '${UBULTS[0]}' NOW!\e[0m"
@@ -574,10 +574,10 @@ else
         fi
     done
 
-    # --- NEU: UBUSUP als Schleife einbinden ---
+    # --- NEW: include UBUSUP as a loop ---
     for RELEASE in "${UBUSUP[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
-            # Prüfe, ob RELEASE in UBULTS enthalten ist
+            # Check whether RELEASE is contained in UBULTS
             IS_LTS=0
             for LTS in "${UBULTS[@]}"; do
                 if [[ "$RELEASE" == "$LTS" ]]; then
@@ -585,7 +585,7 @@ else
                     break
                 fi
             done
-            # Nur ausgeben, wenn es KEINE LTS-Version ist
+            # Only print if it is NOT an LTS version
             if ((IS_LTS == 0)); then
                 RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is an aging Ubuntu release! Please upgrade to the latest LTS release '${UBULTS[0]}' in due time!\e[0m"
                 UNKNOWNRELEASE=0
@@ -594,7 +594,7 @@ else
         fi
     done
 
-    # --- Weitere Prüfungen (TESTING, etc.) ---
+    # --- Further checks (TESTING, etc.) ---
     for RELEASE in "${TESTING[@]}"; do
         if [[ -n "$RELEASE" && -n "$CODENAME" && "$RELEASE" == "$CODENAME" ]]; then
             RELEASESTATUS="\e[1;33mOperating System codenamed '$CODENAME' is a testing release! Please use it only for testing purposes!\e[0m"
@@ -624,7 +624,7 @@ else
         if [[ -z "$CODENAME" ]]; then
             RELEASESTATUS="The version is unknown. Please check yourself if the release is actively supported."
         else
-            # Prüfe ob CODENAME in ALLRELEASES vorkommt
+            # Check whether CODENAME appears in ALLRELEASES
             if ! printf '%s\n' "${ALLRELEASES[@]}" | grep -qxF "$CODENAME"; then
                 RELEASESTATUS="The version $CODENAME is unknown. Please check yourself if the release is actively supported."
             fi
@@ -805,7 +805,7 @@ free -th --mega
 printf "\n%s\t%d\n\n" "Active iob-Instances: " "$(grep -c '^+' <<<"$IOBLISTINST")"
 vmstat -S M -s | head -n 10
 
-# Swap-Typ bewerten: zram, Device oder gar kein Swap
+# Evaluate the swap type: zram, device or no swap at all
 if [[ -r /proc/swaps ]]; then
     if grep -q '^/dev/zram' /proc/swaps; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -828,7 +828,7 @@ if [[ -r /proc/swaps ]]; then
     fi
 fi
 
-# Speicherverbrauch der ioBroker-Prozesse (RSS, Top 10)
+# Memory usage of the ioBroker processes (RSS, top 10)
 if pgrep -f iobroker.js-controller >/dev/null; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%s\n" "Speicherverbrauch der ioBroker-Prozesse (RSS, Top 10):"
@@ -842,7 +842,7 @@ fi
 printf "\n%b%s%b\n" "$HEADLINE" "*** top - Table Of Processes  ***" "\033[0m"
 top -b -n 1 | head -n 5
 
-# Zombie-Prozesse benennen
+# Name the zombie processes
 printf "\n%b%s%b\n" "$HEADLINE" "*** ZOMBIE PROCESSES ***" "$NC"
 ZOMBIES=$(ps -eo pid=,ppid=,stat=,comm= 2>/dev/null | awk '$3 ~ /^Z/')
 if [[ -n "$ZOMBIES" ]]; then
@@ -910,7 +910,7 @@ fi
 printf "\n%b%s%b\n" "$GREEN" "/opt/iobroker/backups:" "$NC"
 du -h /opt/iobroker/backups/ | sort -rh | head -5
 
-# Frische des letzten lokalen Backups prüfen
+# Check the freshness of the last local backup
 printf "\n%b%s%b\n" "$GREEN" "Last local backup:" "$NC"
 NEWESTBACKUPFILE=$(find /opt/iobroker/backups/ -type f -exec stat -c '%Y %n' {} + 2>/dev/null | sort -rn | head -n1)
 if [[ -n "$NEWESTBACKUPFILE" ]]; then
@@ -943,7 +943,7 @@ du -h /opt/iobroker/iobroker-data/ | sort -rh | head -5
 printf "\n%b%s%b\n" "$GREEN" "The five largest files in iobroker-data are:" "$NC"
 find /opt/iobroker/iobroker-data -maxdepth 15 -type f -exec du -sh {} + | sort -rh | head -n 5
 
-# history-Adapter: Speicherbedarf pro Datenpunkt aggregieren
+# history adapter: aggregate the storage usage per data point
 if [[ -d /opt/iobroker/iobroker-data/history ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%b%s%b\n" "$GREEN" "History-Speicherbedarf pro Datenpunkt (Top 10, Standardpfad):" "$NC"
@@ -962,7 +962,7 @@ if [[ -d /opt/iobroker/iobroker-data/history ]]; then
     fi
 fi
 
-# USB-Geräte by-id
+# USB devices by-id
 printf "\n%b%s%b\n" "$GREEN" "USB-Devices by-id:" "$NC"
 if [[ "$SKRPTLANG" == "--de" ]]; then
     printf "USB-Sticks - Vermeide direkte Links zu /dev/tty* in deinen Adapter-Einstellungen,\n"
@@ -972,7 +972,7 @@ else
     printf "please always prefer the links 'by-id':\n\n"
 fi
 
-# Finde alle USB-Geräte by-id
+# Find all USB devices by-id
 SYSZIGBEEPORT=$(find /dev/serial/by-id/ -maxdepth 1 -mindepth 1 2>/dev/null)
 
 if [[ -n "$SYSZIGBEEPORT" ]]; then
@@ -985,7 +985,7 @@ else
     fi
 fi
 
-# Prüfe ob überhaupt ZigBee-Daten existieren
+# Check whether any ZigBee data exists at all
 for d in /opt/iobroker/iobroker-data/zigbee_*; do
     if [[ -d "$d" ]]; then
         printf "\n%b%s%b" "$HEADLINE" "*** ZigBee Settings ***" "$NC"
@@ -1155,7 +1155,7 @@ if [[ ${#instances[@]} -gt 0 ]]; then
     print_zigbee_port_table "$SKRPTLANG" "${SYSZIGBEEPORTS[@]}"
 fi
 
-############ TESTCODE ENDE ####################
+############ TESTCODE END ####################
 
 #### NODEJS-CHECK
 
@@ -1169,9 +1169,9 @@ VERNPM=$(npm -v 2>/dev/null)
 VERNPX=$(npx -v 2>/dev/null)
 
 check_nodejs_installation() {
-    local show_messages="${1:-true}" # Standard: Zeige Meldungen
+    local show_messages="${1:-true}" # default: show messages
 
-    # Sammle alle Probleme
+    # Collect all problems
     local problems=()
 
     [[ "$PATHNODEJS" != "/usr/bin/nodejs" ]] && problems+=(" nodejs path ")
@@ -1181,7 +1181,7 @@ check_nodejs_installation() {
     [[ "$VERNODEJS" != "$VERNODE" ]] && problems+=(" nodejs/node version mismatch ")
     [[ "$VERNPM" != "$VERNPX" ]] && problems+=(" npm/npx version mismatch ")
 
-    # Wenn Probleme gefunden wurden
+    # If any problems were found
     if [[ ${#problems[@]} -gt 0 ]]; then
         if [[ "$show_messages" == "true" ]]; then
             NODENOTCORR=1
@@ -1222,7 +1222,7 @@ printf "\n%s\t\t%s" "$PATHNPX" "$VERNPX"
 
 check_nodejs_installation
 
-# Node.js/npm: Pre-Release- und Major-Abweichungs-Erkennung
+# Node.js/npm: pre-release and major-version deviation detection
 NODE_PRERELEASE=0
 if [[ "$VERNODE" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+- ]]; then
     NODE_PRERELEASE=1
@@ -1255,7 +1255,7 @@ if [[ -n "$RECNPMMAJOR" && -n "$NPMMAJOR" && "$NPMMAJOR" != "$RECNPMMAJOR" ]]; t
     fi
 fi
 
-# Capabilities auf dem Node-Binary prüfen (z. B. für BLE-/Raw-Socket-Adapter nötig)
+# Check capabilities on the node binary (e.g. needed for BLE/raw-socket adapters)
 if command -v getcap >/dev/null 2>&1 && [[ -n "$PATHNODE" ]]; then
     NODECAPS=$(getcap "$PATHNODE" 2>/dev/null)
     if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1351,7 +1351,7 @@ printf "\n%b%s%b\n" "$GREEN" "Hosts:" "$NC"
 IOBHOSTS=$(iob list hosts $ALLOWROOT 2>/dev/null)
 printf "%s\n" "$IOBHOSTS"
 
-# Controller-Uptime gegen System-Uptime prüfen (Neustart nach Systemboot?)
+# Compare controller uptime with system uptime (restart after system boot?)
 if [ ! -f "$DOCKER" ] && [[ -r /proc/uptime ]]; then
     CONTROLLERUPTIME=$(printf '%s\n' "$IOBHOSTS" | grep -o 'uptime: [0-9]*' | head -n1 | grep -o '[0-9]*')
     SYSUPTIME=$(cut -d. -f1 /proc/uptime 2>/dev/null)
@@ -1377,7 +1377,7 @@ fi
 printf "\n%s\t\t%s" "admin: " "$(iob version admin $ALLOWROOT)"
 printf "\n%s\t%s" "javascript: " "$(iob version javascript $ALLOWROOT)"
 
-# Admin-Authentifizierungs-Status (native.auth von admin.0)
+# Admin authentication status (native.auth of admin.0)
 printf "\n"
 ADMAUTHRESULT=$(iobroker object get system.adapter.admin.0 $ALLOWROOT 2>/dev/null | tr -d '[:space:]')
 if grep -q '"auth":true' <<<"$ADMAUTHRESULT" 2>/dev/null; then
@@ -1491,36 +1491,36 @@ EXISTINGLOGS=()
 for CURLOG in /opt/iobroker/log/iobroker.current.log /opt/iobroker/log/iobroker.????????.log /opt/iobroker/log/iobroker.????-??-??.log /opt/iobroker/log/iobroker.????-??-??.log.gz; do
     [[ -r "$CURLOG" ]] && EXISTINGLOGS+=("$CURLOG")
 done
-# iobroker.current.log ist ein Symlink auf die Tagesdatei -> Duplikate entfernen,
-# sonst wird jede Zeile doppelt gezaehlt
+# iobroker.current.log is a symlink to the daily file -> remove the duplicates,
+# otherwise every line would be counted twice
 mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readlink -f -- | sort -u)
 
-# ioBroker-Logdateien enthalten per Default ANSI-Farbcodes um den Schweregrad
-# (js-controller aktiviert winston-colorize per Default) und zusaetzlich
-# moeglicherweise Binaermuell (NUL-Bytes) einzelner Adapter.
-# - ANSI-Codes strippen, sonst matchen die Muster (' - error: ') nicht
-# - grep -a verarbeitet Zeilen mit NUL-Bytes trotzdem als Text
+# ioBroker log files carry ANSI color codes around the severity level by default
+# (js-controller enables winston-colorize by default) and additionally
+# possibly binary garbage (NUL bytes) from individual adapters.
+# - strip ANSI codes, otherwise the patterns (' - error: ') do not match
+# - grep -a still processes lines containing NUL bytes as text
 #
-# Der komplette Logbestand wird einmalig gelesen, entpackt und ANSI-gefiltert in
-# einer temporaeren Datei abgelegt; alle Analysen greifen nur noch diese Datei
-# ab. Zuvor wurde der Bestand (inkl. .gz-Archive) fuer jede Analyse erneut
-# gelesen und entpackt (Performance-Hinweis aus dem Review zu #792).
+# The complete log data is read, decompressed and ANSI-filtered once into
+# a temporary file; all analyses only access that file from now on. Previously
+# the data (including the .gz archives) was read and decompressed again for every
+# single analysis (performance hint from the review of #792).
 #
-# Ablageort (Hinweise aus dem Review zu #793): Debian 13 mounted /tmp per
-# Default als tmpfs; der komplett entpackte Logbestand wuerde also im RAM
-# liegen, was auf kleinen Systemen (Pi) mit vielen/grossen .gz-Archiven eng
-# werden kann. Bevorzugt wird daher ein Verzeichnis auf einer 'echten' Platte
-# (die ioBroker-Installation selbst), das klassische TMPDIR/tmp bleibt
-# Fallback. IOB_DIAG_TMPDIR erlaubt jederzeit einen bewussten Override (z. B.
-# Docker mit read-only /opt).
-# Schlaegt das Schreiben des Snapshots fehl (z. B. voller tmpfs), wird die
-# Analyse uebersprungen statt still zu niedrige Zaehlergebnisse auszugeben.
+# Snapshot location (hints from the review of #793): Debian 13 mounts /tmp as
+# tmpfs by default; the completely decompressed log data would therefore live
+# in RAM, which can become tight on small systems (Pi) with many/large .gz
+# archives. A directory on a 'real' disk is therefore preferred (the ioBroker
+# installation itself), while the classic TMPDIR/tmp remains the fallback.
+# IOB_DIAG_TMPDIR allows an explicit override at any time (e.g. Docker with a
+# read-only /opt).
+# If writing the snapshot fails (e.g. a full tmpfs), the analysis is skipped
+# instead of silently reporting truncated counts.
 ESEQ=$(printf '\033')
 
-# Verzeichnis der temporaeren Log-Snapshot-Datei bestimmen
+# Determine the directory for the temporary log snapshot file
 get_tmplog_dir() {
     local d fs
-    # expliziter Override gewinnt
+    # an explicit override wins
     if [[ -n ${IOB_DIAG_TMPDIR:-} && -d ${IOB_DIAG_TMPDIR:-} ]]; then
         printf '%s\n' "$IOB_DIAG_TMPDIR"
         return
@@ -1528,13 +1528,13 @@ get_tmplog_dir() {
     for d in "${TMPDIR:-/tmp}" /opt/iobroker; do
         [[ -d $d ]] || continue
         fs=$(df -PT -- "$d" 2>/dev/null | awk 'NR==2 {print $2}')
-        # kein tmpfs -> Verzeichnis auf einer 'echten' Platte
+        # not a tmpfs -> directory on a 'real' disk
         if [[ $fs != tmpfs ]]; then
             printf '%s\n' "$d"
             return
         fi
     done
-    # nur tmpfs verfuegbar -> klassisches Verhalten beibehalten
+    # only tmpfs available -> keep the classic behaviour
     printf '%s\n' "${TMPDIR:-/tmp}"
 }
 
@@ -1543,15 +1543,15 @@ LOGWRITEOK=0
 if ((${#EXISTINGLOGS[@]} > 0)); then
     TMPLOGDIR=$(get_tmplog_dir)
     if ! TMPLOG=$(mktemp "$TMPLOGDIR/iobdiag.XXXXXXXX" 2>/dev/null); then
-        # gewaehltes Verzeichnis ist doch nicht beschreibbar -> klassischer Fallback
+        # chosen directory is not writable after all -> classic fallback
         TMPLOG=$(mktemp "${TMPDIR:-/tmp}/iobdiag.XXXXXXXX" 2>/dev/null)
     fi
     if [[ -n "$TMPLOG" ]]; then
-        # Aufraeumen bei Skript-Ende, auch bei den spaeteren exit-Aufrufen
+        # Clean up when the script ends, also for the later exit calls
         trap 'rm -f -- "$TMPLOG"' EXIT
-        # Exit-Status des Schreibens pruefen: ein (fast) voller tmpfs wuerde
-        # sonst ein still abgebrochenes Snapshot hinterlassen und die
-        # Zaehlergebnisse waeren ohne Warnung zu niedrig.
+        # Check the exit status of the write: an (almost) full tmpfs would
+        # otherwise leave a silently truncated snapshot behind and the
+        # counts would be too low without any warning.
         if { for f in "${EXISTINGLOGS[@]}"; do
                 case "$f" in
                     *.gz) gzip -dc -- "$f" 2>/dev/null ;;
@@ -1625,8 +1625,8 @@ else
         fi
     fi
 
-    # Erhoehtes globales Loglevel des js-controllers unterdrueckt Host-Meldungen
-    # ('instance ... started with pid'), Instanz-Starts sind dann nicht zaehlbar
+    # An elevated global log level of the js-controller suppresses host messages
+    # ('instance ... started with pid'), instance starts cannot be counted then
     IOLOGLEVEL=$(awk '/"log" *:/ {inlog=1} inlog && match($0, /"level" *: *"[a-z]+"/) {lvl=substr($0, RSTART, RLENGTH); sub(/^.*:/, "", lvl); gsub(/[" ]/, "", lvl); print lvl; exit}' /opt/iobroker/iobroker-data/iobroker.json 2>/dev/null)
     if [[ "$IOLOGLEVEL" == 'warn' || "$IOLOGLEVEL" == 'error' ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1636,7 +1636,7 @@ else
         fi
     fi
 
-    # Instanz-Starts und Restart-Schleifen aus den verfügbaren Logdateien
+    # Instance starts and restart loops from the available log files
     RESTARTCOUNTS=$(grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+( .*)? started with pid' "$TMPLOG" | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
     if [[ -n "$RESTARTCOUNTS" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
@@ -1749,7 +1749,7 @@ else
     printf "\n%s\t%s" "Pending iob updates: " "$(iob update -u $ALLOWROOT | grep -c 'Updatable\|Updateable')"
 fi
 
-# Ergänzende Diagnose-Kurzinfos
+# Additional short diagnostic info
 if [[ "${NODE_PRERELEASE:-0}" == 1 ]]; then
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%b%s%s (%s)%b\n" "$RED" "Node.js-VORABVERSION im Einsatz: " "$VERNODE" "$NODERECOM" "$NC"
@@ -1809,16 +1809,16 @@ if [[ "$SKRPTLANG" == "--de" ]]; then
 else
     printf "\n\n%s%s%s%s" "Recommended versions are nodejs " "$NODERECOM" " and npm " "$NPMRECOM"
 fi
-# Nutze die bereits existierende Funktion
+# Use the already existing function
 if check_nodejs_installation false; then
-    # Return 0 = Alles OK
+    # Return 0 = all good
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n%b%s%b" "$GREEN" "✓ Node.js ist korrekt installiert" "$NC"
     else
         printf "\n%b%s%b" "$GREEN" "✓ Node.js installation is correct" "$NC"
     fi
 else
-    # Return 1 = Fehler gefunden
+    # Return 1 = error found
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "\n\n%b%s%b" "$RED" "⚠ Node.js ist nicht korrekt installiert!" "$NC"
         printf "\n%b%s%b" "$RED" "Bitte den Befehl 'iob nodejs-update' zur Korrektur ausführen." "$NC"
