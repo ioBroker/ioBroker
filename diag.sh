@@ -1506,58 +1506,37 @@ mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readli
 # the data (including the .gz archives) was read and decompressed again for every
 # single analysis (performance hint from the review of #792).
 #
-# Snapshot location (hints from the review of #793): Debian 13 mounts /tmp as
-# tmpfs by default; the completely decompressed log data would therefore live
-# in RAM, which can become tight on small systems (Pi) with many/large .gz
-# archives. A directory on a 'real' disk is therefore preferred (the ioBroker
-# installation itself), while the classic TMPDIR/tmp remains the fallback.
-# IOB_DIAG_TMPDIR allows an explicit override at any time (e.g. Docker with a
-# read-only /opt).
-# If writing the snapshot fails (e.g. a full tmpfs), the analysis is skipped
-# instead of silently reporting truncated counts.
+# The snapshot only keeps the lines the analyses actually need (' - error: ',
+# ' - warn: ', 'started with pid', 'restart loop detected' and lines containing
+# NUL bytes). Info/debug lines make up the bulk of the data, so the snapshot
+# shrinks to a fraction of the decompressed history and stays small enough
+# even on Debian 13, where /tmp is a tmpfs by default. NOTE: a later analysis
+# requiring other lines must extend the filter pattern. grep -P is required
+# anyway for the NUL byte check of the snapshot.
+# If the snapshot cannot be written completely (e.g. a full tmpfs), it is
+# removed immediately and the analysis is skipped instead of silently reporting
+# truncated counts: grep exits 1 when no line matches at all (not an error)
+# and 2 when the write fails.
 ESEQ=$(printf '\033')
-
-# Determine the directory for the temporary log snapshot file
-get_tmplog_dir() {
-    local d fs
-    # an explicit override wins
-    if [[ -n ${IOB_DIAG_TMPDIR:-} && -d ${IOB_DIAG_TMPDIR:-} ]]; then
-        printf '%s\n' "$IOB_DIAG_TMPDIR"
-        return
-    fi
-    for d in "${TMPDIR:-/tmp}" /opt/iobroker; do
-        [[ -d $d ]] || continue
-        fs=$(df -PT -- "$d" 2>/dev/null | awk 'NR==2 {print $2}')
-        # not a tmpfs -> directory on a 'real' disk
-        if [[ $fs != tmpfs ]]; then
-            printf '%s\n' "$d"
-            return
-        fi
-    done
-    # only tmpfs available -> keep the classic behaviour
-    printf '%s\n' "${TMPDIR:-/tmp}"
-}
 
 TMPLOG=""
 LOGWRITEOK=0
 if ((${#EXISTINGLOGS[@]} > 0)); then
-    TMPLOGDIR=$(get_tmplog_dir)
-    if ! TMPLOG=$(mktemp "$TMPLOGDIR/iobdiag.XXXXXXXX" 2>/dev/null); then
-        # chosen directory is not writable after all -> classic fallback
-        TMPLOG=$(mktemp "${TMPDIR:-/tmp}/iobdiag.XXXXXXXX" 2>/dev/null)
-    fi
+    TMPLOG=$(mktemp "${TMPDIR:-/tmp}/iobdiag.XXXXXXXX" 2>/dev/null)
     if [[ -n "$TMPLOG" ]]; then
         # Clean up when the script ends, also for the later exit calls
         trap 'rm -f -- "$TMPLOG"' EXIT
-        # Check the exit status of the write: an (almost) full tmpfs would
-        # otherwise leave a silently truncated snapshot behind and the
-        # counts would be too low without any warning.
-        if { for f in "${EXISTINGLOGS[@]}"; do
-                case "$f" in
-                    *.gz) gzip -dc -- "$f" 2>/dev/null ;;
-                    *) cat -- "$f" 2>/dev/null ;;
-                esac
-            done | sed "s/${ESEQ}\[[0-9;]*m//g" > "$TMPLOG"; }; then
+        # Filter while reading: the exit status of the group is the status of
+        # grep, the last command of the pipeline (0 = lines kept,
+        # 1 = no matching lines, 2 = write error).
+        { for f in "${EXISTINGLOGS[@]}"; do
+            case "$f" in
+                *.gz) gzip -dc -- "$f" 2>/dev/null ;;
+                *) cat -- "$f" 2>/dev/null ;;
+            esac
+          done | sed "s/${ESEQ}\[[0-9;]*m//g" \
+            | grep -aP -- ' - (?:error|warn): |started with pid|restart loop detected|\x00' > "$TMPLOG" 2>/dev/null; }
+        if (( $? <= 1 )); then
             LOGWRITEOK=1
         fi
     fi
@@ -1576,6 +1555,9 @@ elif [[ -z "$TMPLOG" ]]; then
         printf "%b%s%b\n" "$RED" "ERROR: Could not create a temporary file for the log analysis (mktemp). The log analysis will be skipped." "$NC"
     fi
 elif ((LOGWRITEOK == 0)); then
+    # Remove the partially written snapshot right away, so the filesystem
+    # does not stay (almost) full for the rest of the run.
+    rm -f -- "$TMPLOG"
     if [[ "$SKRPTLANG" == "--de" ]]; then
         printf "%b%s%b\n" "$RED" "FEHLER: Die temporäre Datei für die Log-Analyse konnte nicht vollständig geschrieben werden (kein Speicherplatz mehr?). Die Log-Analyse wird übersprungen." "$NC"
     else
