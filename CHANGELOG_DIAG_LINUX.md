@@ -1,4 +1,7 @@
 # Changelog for Linux-Diag-Script
+## 2026-11-18
+* Log analysis: the temporary log snapshot is now filtered down to the lines needed by the analyses (error/warn messages, instance starts, restart loops, NUL-containing lines) instead of keeping the complete decompressed history; an incompletely written snapshot (e.g. full tmpfs) is removed immediately and the analysis is skipped with a red error message (EN/DE) instead of silently reporting truncated counts
+
 ## 2026-11-16
 * smartctl now runs via non-interactive sudo (sudo -n), so a sudo password prompt can no longer appear inside the diag output; the existing "SMART data could not be read" message covers this case
 * CPU temperature output localized: German verdict lines for the --de variant
