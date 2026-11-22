@@ -1507,7 +1507,7 @@ mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readli
 # single analysis (performance hint from the review of #792).
 #
 # The snapshot only keeps the lines the analyses actually need (' - error: ',
-# ' - warn: ', 'started with pid', 'restart loop detected' and lines containing
+# ' - warn: ', 'started with pid' and lines containing
 # NUL bytes). Info/debug lines make up the bulk of the data, so the snapshot
 # shrinks to a fraction of the decompressed history and stays small enough
 # even on Debian 13, where /tmp is a tmpfs by default. NOTE: a later analysis
@@ -1535,7 +1535,7 @@ if ((${#EXISTINGLOGS[@]} > 0)); then
                 *) cat -- "$f" 2>/dev/null ;;
             esac
           done | sed "s/${ESEQ}\[[0-9;]*m//g" \
-            | grep -aP -- ' - (?:error|warn): |started with pid|restart loop detected|\x00' > "$TMPLOG" 2>/dev/null; }
+            | grep -aP -- ' - (?:error|warn): |started with pid|\x00' > "$TMPLOG" 2>/dev/null; }
         if (( $? <= 1 )); then
             LOGWRITEOK=1
         fi
@@ -1628,12 +1628,42 @@ else
         fi
         printf "%s\n" "$RESTARTCOUNTS"
     fi
-    LOOPCOUNT=$(grep -ac -- 'restart loop detected' "$TMPLOG")
-    if ((LOOPCOUNT > 0)); then
+    # A restart loop is present if an instance was started three times within
+    # three minutes. Scheduled adapters start on their fixed schedule and sleep
+    # again in between - frequently seen instance starts alone are no restart
+    # loop, no matter how often the schedule wakes the instance up.
+    # The full date at the beginning of every start line makes the window check
+    # independent of the day boundaries; the sort makes the chronological order
+    # independent of the order in which the log lines were read.
+    RESTARTLOOPS=$(grep -aE -- 'instance system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+( .*)? started with pid' "$TMPLOG" \
+        | sort | awk '
+        match($0, /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]/) {
+            ts = substr($0, RSTART, RLENGTH)
+            gsub(/[^0-9]/, " ", ts)
+            split(ts, T, " ")
+            match($0, /system\.adapter\.[A-Za-z0-9_-]+\.[0-9]+/)
+            inst = substr($0, RSTART, RLENGTH)
+            # mktime expects "YYYY MM DD HH MM SS"; all log lines share the
+            # local time zone of the host that wrote them
+            sec = mktime(T[1] " " T[2] " " T[3] " " T[4] " " T[5] " " T[6])
+            # third start of this instance within 180 seconds: restart loop
+            if (prev2[inst] >= 0 && sec - prev2[inst] <= 180)
+                loops[inst] = 1
+            prev2[inst] = prev1[inst]
+            prev1[inst] = sec
+        }
+        END {
+            for (inst in loops) print inst
+        }' | sort)
+    if [[ -n "$RESTARTLOOPS" ]]; then
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "%b%s%d%s%b\n" "$RED" "ACHTUNG: Es wurde eine RESTART-SCHLEIFE erkannt (" "$LOOPCOUNT" " Vorkommnisse)! Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
+            printf "\n%b%s\n" "$RED" "ACHTUNG: RESTART-SCHLEIFE erkannt! Die folgenden Instanzen wurden innerhalb von 3 Minuten mindestens dreimal gestartet:"
+            printf "%s\n" "$RESTARTLOOPS"
+            printf "%s%b\n" "Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
         else
-            printf "%b%s%d%s%b\n" "$RED" "ATTENTION: A RESTART LOOP was detected (" "$LOOPCOUNT" " occurrences)! Check the log or 'iobroker logs' for details." "$NC"
+            printf "\n%b%s\n" "$RED" "ATTENTION: A RESTART LOOP was detected! The following instances were started at least three times within three minutes:"
+            printf "%s\n" "$RESTARTLOOPS"
+            printf "%s%b\n" "Check the log or 'iobroker logs' for details." "$NC"
         fi
     fi
 
