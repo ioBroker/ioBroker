@@ -1507,7 +1507,7 @@ mapfile -t EXISTINGLOGS < <(printf '%s\n' "${EXISTINGLOGS[@]}" | xargs -r readli
 # single analysis (performance hint from the review of #792).
 #
 # The snapshot only keeps the lines the analyses actually need (' - error: ',
-# ' - warn: ', 'started with pid' and lines containing
+# ' - warn: ', 'started with pid', 'restart loop detected' and lines containing
 # NUL bytes). Info/debug lines make up the bulk of the data, so the snapshot
 # shrinks to a fraction of the decompressed history and stays small enough
 # even on Debian 13, where /tmp is a tmpfs by default. NOTE: a later analysis
@@ -1535,7 +1535,7 @@ if ((${#EXISTINGLOGS[@]} > 0)); then
                 *) cat -- "$f" 2>/dev/null ;;
             esac
           done | sed "s/${ESEQ}\[[0-9;]*m//g" \
-            | grep -aP -- ' - (?:error|warn): |started with pid|\x00' > "$TMPLOG" 2>/dev/null; }
+            | grep -aP -- ' - (?:error|warn): |started with pid|restart loop detected|\x00' > "$TMPLOG" 2>/dev/null; }
         if (( $? <= 1 )); then
             LOGWRITEOK=1
         fi
