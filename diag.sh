@@ -1628,12 +1628,29 @@ else
         fi
         printf "%s\n" "$RESTARTCOUNTS"
     fi
+    # Restart loops: the js-controller itself detects restart loops (several
+    # crashes of an instance within ten minutes) and logs
+    # 'Do not restart adapter system.adapter.X.N because restart loop detected'
+    # for the affected instance (into the log file as a warning, so the lines
+    # reach the snapshot through the ' - warn: ' pattern). The diag analysis
+    # only evaluates these js-controller messages, no own filter logic:
+    # scheduled adapters, which are woken up by their schedule and sleep again
+    # in between, never produce such a message, no matter how often they start.
     LOOPCOUNT=$(grep -ac -- 'restart loop detected' "$TMPLOG")
     if ((LOOPCOUNT > 0)); then
+        LOOPINSTANCES=$(grep -a -- 'restart loop detected' "$TMPLOG" | grep -o 'system\.adapter\.[A-Za-z0-9_-]*\.[0-9]*' | sort | uniq -c | sort -rn)
         if [[ "$SKRPTLANG" == "--de" ]]; then
-            printf "%b%s%d%s%b\n" "$RED" "ACHTUNG: Es wurde eine RESTART-SCHLEIFE erkannt (" "$LOOPCOUNT" " Vorkommnisse)! Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
+            printf "\n%b%s%d%s\n" "$RED" "ACHTUNG: Es wurde eine RESTART-SCHLEIFE erkannt (" "$LOOPCOUNT" " Vorkommnisse)! Betroffene Instanzen:"
+            if [[ -n "$LOOPINSTANCES" ]]; then
+                printf "%s\n" "$LOOPINSTANCES"
+            fi
+            printf "%s%b\n" "Details im Log bzw. unter 'iobroker logs' prüfen." "$NC"
         else
-            printf "%b%s%d%s%b\n" "$RED" "ATTENTION: A RESTART LOOP was detected (" "$LOOPCOUNT" " occurrences)! Check the log or 'iobroker logs' for details." "$NC"
+            printf "\n%b%s%d%s\n" "$RED" "ATTENTION: A RESTART LOOP was detected (" "$LOOPCOUNT" " occurrences)! Affected instances:"
+            if [[ -n "$LOOPINSTANCES" ]]; then
+                printf "%s\n" "$LOOPINSTANCES"
+            fi
+            printf "%s%b\n" "Check the log or 'iobroker logs' for details." "$NC"
         fi
     fi
 

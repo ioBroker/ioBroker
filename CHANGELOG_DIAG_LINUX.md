@@ -1,4 +1,7 @@
 # Changelog for Linux-Diag-Script
+## 2026-11-22
+* Log analysis: the restart loop warning now names the affected instances (with the number of detected restart loops per instance), so the originator can be addressed directly. The detection itself is left completely to the js-controller: only its "restart loop detected" log lines (an instance that crashed several times within ten minutes) are counted, no own filter logic. Frequent instance starts alone (e.g. scheduled adapters, which are woken up by their schedule and sleep again in between) never produce such a message.
+
 ## 2026-11-18
 * Log analysis: the temporary log snapshot is now filtered down to the lines needed by the analyses (error/warn messages, instance starts, restart loops, NUL-containing lines) instead of keeping the complete decompressed history; an incompletely written snapshot (e.g. full tmpfs) is removed immediately and the analysis is skipped with a red error message (EN/DE) instead of silently reporting truncated counts
 
